@@ -91,7 +91,7 @@ public class EximUtil {
         if (testMode) {
           scheme = "pfile";
         } else {
-          scheme = "hdfs";
+          scheme = "maprfs";
         }
       }
 
