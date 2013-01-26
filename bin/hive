@@ -20,12 +20,6 @@ case "`uname`" in
    CYGWIN*) cygwin=true;;
 esac
 
-BASEMAPR=${MAPR_HOME:-/opt/mapr}
-export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
-MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
-MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
-MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
-
 hive_rotate_log ()
 {
   log=$1;
@@ -72,6 +66,12 @@ bin=$(get_canonical_dir "$0")
 bin=`cd "$bin"; pwd`
 
 . "$bin"/hive-config.sh
+
+#BASEMAPR should be set by hive-config.sh
+export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
+MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
+MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
 
 SERVICE=""
 HELP=""
