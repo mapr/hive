@@ -1,0 +1,23 @@
+ hive/release-0.9.0/ivy/libraries.properties | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/hive/release-0.9.0/ivy/libraries.properties b/hive/release-0.9.0/ivy/libraries.properties
+index 9e9966b..4159ed1 100644
+--- a/hive/release-0.9.0/ivy/libraries.properties
++++ b/hive/release-0.9.0/ivy/libraries.properties
+@@ -38,7 +38,8 @@ commons-logging-api.version=1.0.4
+ commons-pool.version=1.5.4
+ derby.version=10.4.2.0
+ guava.version=r09
+-hbase.version=0.92.0
++hbase.version=0.92.2
++hbase-test.version=0.92.2
+ jackson.version=1.8.8
+ javaewah.version=0.3.2
+ jdo-api.version=2.3-ec
+@@ -55,4 +56,4 @@ rat.version=0.8
+ slf4j-api.version=1.6.1
+ slf4j-log4j12.version=1.6.1
+ velocity.version=1.5
+-zookeeper.version=3.4.3
++zookeeper.version=3.3.2

@@ -1,0 +1,59 @@
+diff -urBpN build.xml build.xml
+--- build.xml	2012-04-24 11:49:23.000000000 -0700
++++ build.xml	2012-06-13 14:23:01.317808003 -0700
+@@ -446,6 +446,8 @@
+     <copy todir="${target.conf.dir}">
+      <fileset dir="${basedir}/conf">
+        <include name="*.template"/>
++       <!-- MapR empty hive-site.xml -->
++       <include name="hive-site.xml"/>
+      </fileset>
+     </copy>
+     <copy file="${basedir}/common/src/java/conf/hive-log4j.properties"
+@@ -516,6 +518,8 @@
+         <exclude name="**/velocity*.jar"/>
+         <exclude name="**/antlr-3*.jar"/>
+         <exclude name="**/antlr-2*.jar"/>
++        <!-- MapR: Exclude hbase jar -->
++        <exclude name="hbase-0.94.0*.jar"/>
+       </fileset>
+     </copy>
+     <copy todir="${target.example.dir}/files" preservelastmodified="true" flatten="true">
+@@ -532,6 +536,12 @@
+     <copy file="${basedir}/NOTICE" todir="${target.dir}"/>
+     <copy file="${basedir}/LICENSE" todir="${target.dir}"/>
+     <copy file="${basedir}/RELEASE_NOTES.txt" todir="${target.dir}"/>
++    <!-- Add MapR Patches -->
++    <mkdir dir="${target.dir}/mapr-hive-patches"/>
++    <copy todir="${target.dir}/mapr-hive-patches">
++      <fileset dir="${basedir}/mapr-hive-patches"/>
++    </copy>
++    <copy file="${basedir}/mapr-hive-patches.txt" todir="${target.dir}"/>
+     <copy todir="${target.example.dir}/queries" preservelastmodified="true" flatten="true">
+       <fileset dir="${ql.test.query.dir}/positive" includes="*.q" excludes="${vcs.excludes}"/>
+     </copy>
+@@ -721,7 +731,7 @@
+   <!-- Make release tarball                                               -->
+   <!-- ================================================================== -->
+ 
+-  <target name="tar" depends="package, docs, javadoc" description="Make release tarball">
++  <target name="tar" depends="package" description="Make release tarball">
+     <echo message="Project: ${ant.project.name}"/>
+     <macro_tar param.destfile="${build.dir.hive}/${tar.final.name}.tar.gz">
+       <param.listofitems>
+@@ -739,6 +749,7 @@
+           <exclude name="bin/**"/>
+           <exclude name="lib/py/**/*-remote"/>
+         </tarfileset>
++        <!-- MapR: Don't package source code 
+         <tarfileset dir="${hive.root}" mode="664" prefix="${tar.final.name}/src"
+                     excludes="${vcs.excludes}">
+           <exclude name="build/**" />
+@@ -757,6 +768,7 @@
+           <include name="metastore/scripts/**" />
+           <include name="ql/src/test/scripts/**" />
+         </tarfileset>
++        -->
+       </param.listofitems>
+     </macro_tar>
+   </target>

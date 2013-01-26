@@ -1,0 +1,168 @@
+ hive/release-0.9.0/bin/ext/metastore.sh | 59 ++++++++++++++++++++++++++++++++-
+ hive/release-0.9.0/bin/hive             | 37 +++++++++++++++++----
+ hive/release-0.9.0/bin/hive-config.sh   |  6 ++++
+ 3 files changed, 95 insertions(+), 7 deletions(-)
+
+diff --git a/hive/release-0.9.0/bin/ext/metastore.sh b/hive/release-0.9.0/bin/ext/metastore.sh
+index 22b2d5d..00b756c 100644
+--- a/hive/release-0.9.0/bin/ext/metastore.sh
++++ b/hive/release-0.9.0/bin/ext/metastore.sh
+@@ -13,7 +13,7 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-THISSERVICE=metastore
++THISSERVICE="metastore start_metastore stop_metastore status_metastore "
+ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
+ 
+ metastore() {
+@@ -30,6 +30,63 @@ metastore() {
+   exec $HADOOP jar $JAR $CLASS "$@"
+ }
+ 
++HIVE_METASTORE_LOG="${HIVE_LOG_DIR}/hive-${USER}-metastore.log"
++HIVE_METASTORE_PID="${HIVE_PID_DIR}/hive-${USER}-metastore.pid"
++
++start_metastore() {
++  if [ -f $HIVE_METASTORE_PID ]; then
++    if kill -0 `cat $HIVE_METASTORE_PID` > /dev/null 2>&1; then
++      echo Hive Metastore Server is running as process `cat $HIVE_METASTORE_PID`.  Stop it first.
++      exit 1
++    fi
++  fi
++  echo "`date` Starting Hive Metastore Server"
++  # create dirs first
++  mkdir -p ${HIVE_LOG_DIR} 
++  mkdir -p ${HIVE_PID_DIR}
++  CLASS=org.apache.hadoop.hive.metastore.HiveMetaStore
++  if $cygwin; then
++    HIVE_LIB=`cygpath -w "$HIVE_LIB"`
++  fi
++  JAR=${HIVE_LIB}/hive-service-*.jar
++  # rotate logs 
++  hive_rotate_log $HIVE_METASTORE_LOG
++  # change max heapsize to 1GB
++  export HADOOP_HEAPSIZE="1024" 
++  # hadoop 20 or newer - skip the aux_jars option and hiveconf
++  exec nohup $HADOOP jar $JAR $CLASS "$@" >> $HIVE_METASTORE_LOG 2>&1 &
++  pid=$!
++  echo "pid is $pid"
++  echo $pid > $HIVE_METASTORE_PID
++}
++
++stop_metastore() {
++  if [ -f "$HIVE_METASTORE_PID" ]; then
++    if kill -0 `cat $HIVE_METASTORE_PID` > /dev/null 2>&1; then
++      echo "Stopping Hive Metastore Server"
++      kill -9 `cat $HIVE_METASTORE_PID`
++      echo "`date` Hive Metastore Server stopped, pid `cat $HIVE_METASTORE_PID`"
++    else
++      echo "Hive Metastore Server is not running"
++    fi
++  else
++    echo "Hive Metastore Server is not running. pid file $HIVE_METASTORE_PID does not exist."
++  fi
++}
++
++status_metastore() {
++  if [ -f "$HIVE_METASTORE_PID" ]; then
++    if kill -0 `cat $HIVE_METASTORE_PID` > /dev/null 2>&1; then
++      echo Hive Metastore Server running as process `cat $HIVE_METASTORE_PID`.
++      exit 0
++    fi
++    echo "$HIVE_METASTORE_PID exists with pid `cat $HIVE_METASTORE_PID` but no process running."
++    exit 1
++  fi
++  echo "Hive Metastore Server not running."
++  exit 1
++}
++
+ metastore_help() {
+   metastore -h
+ }
+diff --git a/hive/release-0.9.0/bin/hive b/hive/release-0.9.0/bin/hive
+index 49fd19d..cf6b6a6 100644
+--- a/hive/release-0.9.0/bin/hive
++++ b/hive/release-0.9.0/bin/hive
+@@ -22,9 +22,27 @@ esac
+ 
+ BASEMAPR=${MAPR_HOME:-/opt/mapr}
+ export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
+-MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-${BASEMAPR}/hbase/hbase-0.92.0/}
++MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
++MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+ MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
+ 
++hive_rotate_log ()
++{
++  log=$1;
++  num=5;
++  if [ -n "$2" ]; then
++    num=$2
++  fi
++  if [ -f "$log" ]; then # rotate logs
++    while [ $num -gt 1 ]; do                                              
++      prev=`expr $num - 1`                                                        
++      [ -f "$log.$prev" ] && mv -f "$log.$prev" "$log.$num"
++      num=$prev
++    done
++    mv -f "$log" "$log.$num";
++  fi
++}
++
+ function get_canonical_dir() {
+   target="$1"
+   canonical_name=`readlink -f ${target} 2>/dev/null`
+@@ -61,7 +79,14 @@ while [ $# -gt 0 ]; do
+   case "$1" in
+     --service)
+       shift
+-      SERVICE=$1
++      SERVICE_OPTION=$1
++      if [ "$SERVICE_OPTION" = "start" ] || [ "$SERVICE_OPTION" = "stop" ] || [ "$SERVICE_OPTION" = "status" ]; then
++        shift
++        SERVICE="${SERVICE_OPTION}_${1}"
++      else
++        SERVICE=$SERVICE_OPTION
++        SERVICE_OPTION=""
++      fi
+       shift
+       ;;
+     --rcfilecat)
+@@ -125,12 +150,12 @@ for f in ${HIVE_LIB}/*.jar; do
+ done
+ 
+ # Add mapr hbase, zookeeper path overrides any jars in hive/lib
+-if [ -f "${MAPR_HBASE_HOME}/hbase-0.92.0.jar" ] ; then
+-  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-0.92.0.jar;
++if [ -f "${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}.jar" ] ; then
++  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}.jar;
+ fi
+ 
+-if [ -f "${MAPR_HBASE_HOME}/hbase-0.92.0-tests.jar" ] ; then
+-  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-0.92.0-tests.jar;
++if [ -f "${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}-tests.jar" ] ; then
++  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}-tests.jar;
+ fi
+ 
+ if [ -f "${MAPR_ZK_HOME}/zookeeper-3.3.2.jar" ] ; then
+diff --git a/hive/release-0.9.0/bin/hive-config.sh b/hive/release-0.9.0/bin/hive-config.sh
+index d52b84e..27129a4 100644
+--- a/hive/release-0.9.0/bin/hive-config.sh
++++ b/hive/release-0.9.0/bin/hive-config.sh
+@@ -62,9 +62,15 @@ done
+ 
+ # Allow alternate conf dir location.
+ HIVE_CONF_DIR="${HIVE_CONF_DIR:-$HIVE_HOME/conf}"
++# pid and log dir
++HIVE_LOG_DIR="${HIVE_LOG_DIR:-$HIVE_HOME/logs}"
++HIVE_PID_DIR="${HIVE_PID_DIR:-$HIVE_HOME/pid}"
+ 
+ export HIVE_CONF_DIR=$HIVE_CONF_DIR
+ export HIVE_AUX_JARS_PATH=$HIVE_AUX_JARS_PATH
+ 
++export HIVE_LOG_DIR=$HIVE_LOG_DIR
++export HIVE_PID_DIR=$HIVE_PID_DIR
++
+ # Default to use 256MB 
+ export HADOOP_HEAPSIZE=${HADOOP_HEAPSIZE:-256}

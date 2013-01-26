@@ -1,0 +1,45 @@
+ hive/release-0.9.0/bin/hive           | 12 ++++++------
+ hive/release-0.9.0/bin/hive-config.sh |  3 +++
+ 2 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/hive/release-0.9.0/bin/hive b/hive/release-0.9.0/bin/hive
+index cf6b6a6..3c977d9 100644
+--- a/hive/release-0.9.0/bin/hive
++++ b/hive/release-0.9.0/bin/hive
+@@ -20,12 +20,6 @@ case "`uname`" in
+    CYGWIN*) cygwin=true;;
+ esac
+ 
+-BASEMAPR=${MAPR_HOME:-/opt/mapr}
+-export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
+-MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
+-MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+-MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
+-
+ hive_rotate_log ()
+ {
+   log=$1;
+@@ -73,6 +67,12 @@ bin=`cd "$bin"; pwd`
+ 
+ . "$bin"/hive-config.sh
+ 
++#BASEMAPR should be set by hive-config.sh
++export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
++MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
++MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
++MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
++
+ SERVICE=""
+ HELP=""
+ while [ $# -gt 0 ]; do
+diff --git a/hive/release-0.9.0/bin/hive-config.sh b/hive/release-0.9.0/bin/hive-config.sh
+index 27129a4..84f4a1f 100644
+--- a/hive/release-0.9.0/bin/hive-config.sh
++++ b/hive/release-0.9.0/bin/hive-config.sh
+@@ -74,3 +74,6 @@ export HIVE_PID_DIR=$HIVE_PID_DIR
+ 
+ # Default to use 256MB 
+ export HADOOP_HEAPSIZE=${HADOOP_HEAPSIZE:-256}
++export BASEMAPR=${MAPR_HOME:-/opt/mapr}
++env=${BASEMAPR}/conf/env.sh
++[ -f $env ] && . $env
