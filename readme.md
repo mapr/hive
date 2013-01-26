@@ -59,7 +59,7 @@ Getting Started
 $ mkdir mapr-hive-0.9.0
 $ cd mapr-hive-0.9.0
 $ git clone git://github.com/mapr/hive.git .
-$ git checkout 0.9.0-mapr
+$ git checkout branch-0.9-mapr
 $ ant maven-build
 
 To install in the local maven repository on the local filesystem (${HOME}/.m2):
