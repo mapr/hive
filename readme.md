@@ -76,6 +76,12 @@ To install/deploy the jars in a remote SNAPSHOT repository:
 $ export MAPR_SNAPSHOTS_REPO=<URL:/path/to/snapshots/>
 $ ant maven-publish
 
+To generate tarball:
+
+ant tar -Ddist.dir=build
+
+The tarball is located in the build/ directory as hive-0.9.0.tar.gz
+
 ```
 
 - A quick tutorial can be found at:
