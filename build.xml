@@ -1175,8 +1175,8 @@
             file="${mvn.jar.dir}/hive-${hive.project}-${version}.jar">
           <pom refid="hive.project.pom" />
           <remoteRepository
-              id="apache.staging.https"
-              url="https://repository.apache.org/service/local/staging/deploy/maven2" />
+              id="mapr-releases"
+              url="${env.MAPR_RELEASES_REPO}" />
           <attach file="${mvn.jar.dir}/hive-${hive.project}-${version}.jar.asc"
                   type="jar.asc"/>
           <attach file="${mvn.pom.dir}/hive-${hive.project}-${version}.pom.asc"
@@ -1196,7 +1196,7 @@
         <artifact:deploy
             file="${mvn.jar.dir}/hive-${hive.project}-${version}.jar">
           <pom refid="hive.project.pom" />
-          <remoteRepository id="${mvn.deploy.id}" url="${mvn.deploy.url}"/>
+	    	  <remoteRepository id="mapr-snapshots" url="${env.MAPR_SNAPSHOTS_REPO}"/>
         </artifact:deploy>
       </else>
     </if>
