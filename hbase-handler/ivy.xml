@@ -26,7 +26,7 @@
     <include file="${ivy.conf.dir}/common-configurations.xml"/>
   </configurations>  
   <dependencies>
-    <dependency org="org.apache.hive" name="hive-exec" rev="${version}"
+    <dependency org="${hive.ivy.org}" name="hive-exec" rev="${version}"
                 conf="compile->default" />
     <dependency org="commons-logging" name="commons-logging" rev="${commons-logging.version}"
                 transitive="false"/>
