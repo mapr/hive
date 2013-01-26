@@ -22,8 +22,26 @@ esac
 
 BASEMAPR=${MAPR_HOME:-/opt/mapr}
 export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
-MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-${BASEMAPR}/hbase/hbase-0.92.0/}
+MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
+MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
 MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
+
+hive_rotate_log ()
+{
+  log=$1;
+  num=5;
+  if [ -n "$2" ]; then
+    num=$2
+  fi
+  if [ -f "$log" ]; then # rotate logs
+    while [ $num -gt 1 ]; do                                              
+      prev=`expr $num - 1`                                                        
+      [ -f "$log.$prev" ] && mv -f "$log.$prev" "$log.$num"
+      num=$prev
+    done
+    mv -f "$log" "$log.$num";
+  fi
+}
 
 function get_canonical_dir() {
   target="$1"
@@ -61,7 +79,14 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --service)
       shift
-      SERVICE=$1
+      SERVICE_OPTION=$1
+      if [ "$SERVICE_OPTION" = "start" ] || [ "$SERVICE_OPTION" = "stop" ] || [ "$SERVICE_OPTION" = "status" ]; then
+        shift
+        SERVICE="${SERVICE_OPTION}_${1}"
+      else
+        SERVICE=$SERVICE_OPTION
+        SERVICE_OPTION=""
+      fi
       shift
       ;;
     --rcfilecat)
@@ -125,12 +150,12 @@ for f in ${HIVE_LIB}/*.jar; do
 done
 
 # Add mapr hbase, zookeeper path overrides any jars in hive/lib
-if [ -f "${MAPR_HBASE_HOME}/hbase-0.92.0.jar" ] ; then
-  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-0.92.0.jar;
+if [ -f "${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}.jar" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}.jar;
 fi
 
-if [ -f "${MAPR_HBASE_HOME}/hbase-0.92.0-tests.jar" ] ; then
-  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-0.92.0-tests.jar;
+if [ -f "${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}-tests.jar" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_HOME}/hbase-${MAPR_HBASE_VERSION}-tests.jar;
 fi
 
 if [ -f "${MAPR_ZK_HOME}/zookeeper-3.3.2.jar" ] ; then

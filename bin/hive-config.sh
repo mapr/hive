@@ -62,9 +62,15 @@ done
 
 # Allow alternate conf dir location.
 HIVE_CONF_DIR="${HIVE_CONF_DIR:-$HIVE_HOME/conf}"
+# pid and log dir
+HIVE_LOG_DIR="${HIVE_LOG_DIR:-$HIVE_HOME/logs}"
+HIVE_PID_DIR="${HIVE_PID_DIR:-$HIVE_HOME/pid}"
 
 export HIVE_CONF_DIR=$HIVE_CONF_DIR
 export HIVE_AUX_JARS_PATH=$HIVE_AUX_JARS_PATH
+
+export HIVE_LOG_DIR=$HIVE_LOG_DIR
+export HIVE_PID_DIR=$HIVE_PID_DIR
 
 # Default to use 256MB 
 export HADOOP_HEAPSIZE=${HADOOP_HEAPSIZE:-256}
