@@ -130,7 +130,8 @@ public class ExportSemanticAnalyzer extends BaseSemanticAnalyzer {
       inputs.add(new ReadEntity(ts.tableHandle));
     }
     outputs.add(new WriteEntity(toURI.toString(),
-        toURI.getScheme().equals("hdfs") ? true : false));
+          (toURI.getScheme().equals("hdfs") || 
+           toURI.getScheme().equals("maprfs")) ? true : false));
   }
 
 }

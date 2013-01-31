@@ -594,7 +594,7 @@ public class SessionState {
    * are permissible for download as a resource.
    */
   public static String getMatchingSchemaAsRegex() {
-    String[] matchingSchema = {"s3", "s3n", "hdfs"};
+    String[] matchingSchema = {"s3", "s3n", "hdfs", "maprfs"};
     return StringUtils.join(matchingSchema, "|");
   }
 
