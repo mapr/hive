@@ -536,12 +536,6 @@
     <copy file="${basedir}/NOTICE" todir="${target.dir}"/>
     <copy file="${basedir}/LICENSE" todir="${target.dir}"/>
     <copy file="${basedir}/RELEASE_NOTES.txt" todir="${target.dir}"/>
-    <!-- Add MapR Patches -->
-    <mkdir dir="${target.dir}/mapr-hive-patches"/>
-    <copy todir="${target.dir}/mapr-hive-patches">
-      <fileset dir="${basedir}/mapr-hive-patches"/>
-    </copy>
-    <copy file="${basedir}/mapr-hive-patches.txt" todir="${target.dir}"/>
     <copy todir="${target.example.dir}/queries" preservelastmodified="true" flatten="true">
       <fileset dir="${ql.test.query.dir}/positive" includes="*.q" excludes="${vcs.excludes}"/>
     </copy>
