@@ -27,13 +27,13 @@
     <include file="${ivy.conf.dir}/common-configurations.xml"/>
   </configurations>
   <dependencies>
-    <dependency org="org.apache.hive" name="hive-common" rev="${version}"
+    <dependency org="${hive.ivy.org}" name="hive-common" rev="${version}"
                 conf="runtime" transitive="false"/>
-    <dependency org="org.apache.hive" name="hive-metastore" rev="${version}"
+    <dependency org="${hive.ivy.org}" name="hive-metastore" rev="${version}"
                 conf="runtime" transitive="false"/>
-    <dependency org="org.apache.hive" name="hive-serde" rev="${version}"
+    <dependency org="${hive.ivy.org}" name="hive-serde" rev="${version}"
                 conf="runtime" transitive="false"/>
-    <dependency org="org.apache.hive" name="hive-service" rev="${version}"
+    <dependency org="${hive.ivy.org}" name="hive-service" rev="${version}"
                 conf="runtime" transitive="false"/>
     <dependency org="org.apache.thrift" name="libthrift" rev="${libthrift.version}"
                 transitive="false"/>
