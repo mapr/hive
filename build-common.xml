@@ -202,6 +202,8 @@
 
   <target name="init" depends="create-dirs">
     <echo message="Project: ${ant.project.name}"/>
+    <antcall target="mapr-version" inheritRefs="true" inheritall="true"/>
+    <property file="${basedir}/mapr-build.properties"/>
   </target>
 
   <target name="test-init">
@@ -246,8 +248,12 @@
         <!-- Not putting these in their own manifest section, since that inserts
         a new-line, which breaks the reading of the attributes. -->
         <attribute name="Implementation-Title" value="Hive"/>
-        <attribute name="Implementation-Version" value="${version}"/>
-        <attribute name="Implementation-Vendor" value="Apache"/>
+		<attribute name="MapR-BuildDate" value="${mapr.builddate}"/>
+		<attribute name="MapR-BuildHost" value="${mapr.buildhost}"/>
+		<attribute name="MapR-BuildPlatform" value="${mapr.builduname}"/>
+		<attribute name="MapR-BuildRevision" value="${mapr.buildversion}"/>
+		<attribute name="MapR-BuildURL" value="${mapr.buildurl}"/>
+		<attribute name="MapR-BuildUser" value="${mapr.builduser}"/>		
       </manifest>
       <metainf dir="${hive.root}" includes="LICENSE,NOTICE"/>
     </jar>
@@ -465,5 +471,50 @@
       </replacevalue>
     </replace>
   </target>
+  
+  <target name="mapr-version">
+	<echo file="${build.dir}/mapr-version.sh">
+#!/bin/bash
+build_user=`whoami`
+build_date=`date`
+build_cwd=`pwd`
+build_hostname=`hostname`
 
+if git status &gt; /dev/null 2&gt;&amp;1 ; then
+scm=git
+build_revision=`git log -1 --pretty=format:&quot;%H&quot;`
+build_url=`git config --get remote.origin.url`
+elif hg st &gt; /dev/null 2&gt;&amp;1 ; then
+scm=hg
+build_revision=`hg ident -n | sed 's/[^0-9]//g'`
+build_url=`hg paths | grep 'default' | sed 's/.*default[^=]*=\s*//g'`
+elif svn info &gt; /dev/null 2&gt;&amp;1 ; then
+scm=svn
+build_revision=`svn info | sed -n -e 's/Last Changed Rev: \(.*\)/\1/p'`
+build_url=`svn info | sed -n -e 's/URL: \(.*\)/\1/p'`
+else
+scm=file
+build_revision=&quot;Unknown&quot;
+fi
+
+if [ &quot;${build_url}&quot; = &quot;&quot; ] ; then 
+build_url=&quot;${scm}://${build_hostname}${build_cwd}&quot;
+fi
+
+build_uname=`uname -a`
+#MapR Version Info
+cat &gt;mapr-build.properties &lt;&lt;EOF
+mapr.buildurl=$build_url
+mapr.builddate=$build_date
+mapr.builduser=$build_user
+mapr.builduname=$build_uname
+mapr.buildhost=$build_hostname
+mapr.buildversion=$build_revision
+EOF
+	</echo>
+ 	<chmod file="${build.dir}/mapr-version.sh" perm="u+x"/>
+	<exec executable="sh" failonerror="true">
+	  <arg line="${build.dir}/mapr-version.sh"/>
+	</exec>
+  </target>
 </project>
