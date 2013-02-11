@@ -72,7 +72,8 @@
     <mkdir dir="${test.log.dir}/hbase-handler"/>
     <mkdir dir="${hbase-handler.test.results.dir}"/>
 
-    <qtestgen outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
+    <qtestgen hiveRootDirectory="${hive.root}"
+              outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
               templatePath="${ql.hbase.test.template.dir}" template="TestHBaseCliDriver.vm" 
               queryDirectory="${hbase-handler.test.query.dir}" 
               queryFile="${qfile}"
@@ -81,7 +82,8 @@
               resultsDirectory="${hbase-handler.test.results.dir}" className="TestHBaseCliDriver"
               logFile="${test.log.dir}/testhbaseclidrivergen.log"
               logDirectory="${test.log.dir}/hbase-handler"/>
-    <qtestgen outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
+    <qtestgen hiveRootDirectory="${hive.root}"
+              outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
               templatePath="${ql.hbase.test.template.dir}" template="TestHBaseCliDriver.vm" 
               queryDirectory="${hbase-handler.test.query.dir}" 
               queryFile="hbase_bulk.m"

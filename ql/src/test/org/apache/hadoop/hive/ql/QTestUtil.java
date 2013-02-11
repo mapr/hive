@@ -190,6 +190,14 @@ public class QTestUtil {
     this(outDir, logDir, false, "0.20");
   }
 
+  public String getOutputDirectory() {
+     return outDir;
+  }
+
+  public String getLogDirectory() {
+    return logDir;
+  }
+
   private String getHadoopMainVersion(String input) {
     if (input == null) {
       return null;
