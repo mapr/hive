@@ -105,7 +105,12 @@ public class CombineHiveInputFormat<K extends WritableComparable, V extends Writ
           PartitionDesc part = HiveFileFormatUtils
               .getPartitionDescFromPathRecursively(pathToPartitionInfo,
                   ipaths[0], IOPrepareCache.get().getPartitionDescMap());
-          inputFormatClassName = part.getInputFileFormatClass().getName();
+          if (part.getPartSpec() != null) {
+            inputFormatClassName = part.getInputFileFormatClass().getName();
+          }
+          else {
+            inputFormatClassName = part.getTableDesc().getInputFileFormatClassName();
+          }
         }
       }
     }

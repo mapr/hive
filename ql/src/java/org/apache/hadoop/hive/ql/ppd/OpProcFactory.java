@@ -582,15 +582,21 @@ public final class OpProcFactory {
         ExprWalkerInfo ewi, Set<String> aliases, boolean ignoreAliases)
         throws SemanticException {
       boolean hasUnpushedPredicates = false;
-      if (nd.getChildren() == null || nd.getChildren().size() > 1) {
+      Operator<?> current = (Operator<?>) nd;
+      List<Operator<?>> children = current.getChildOperators();
+      if (children == null || children.isEmpty()) {
+        return hasUnpushedPredicates;
+      }
+      if (children.size() > 1) {
         // ppd for multi-insert query is not yet implemented
         // no-op for leafs
+        for (Operator<?> child : children) {
+          removeCandidates(child, owi); // remove candidated filters on this branch
+        }
         return hasUnpushedPredicates;
       }
       Operator<? extends Serializable> op = (Operator<? extends Serializable>) nd;
-      ExprWalkerInfo childPreds = owi
-          .getPrunedPreds((Operator<? extends Serializable>) nd.getChildren()
-          .get(0));
+      ExprWalkerInfo childPreds = owi.getPrunedPreds(children.get(0));
       if (childPreds == null) {
         return hasUnpushedPredicates;
       }
@@ -616,6 +622,17 @@ public final class OpProcFactory {
       }
       owi.putPrunedPreds((Operator<? extends Serializable>) nd, ewi);
       return hasUnpushedPredicates;
+    }
+
+    private void removeCandidates(Operator<?> operator, OpWalkerInfo owi) {
+      if (operator instanceof FilterOperator) {
+        owi.getCandidateFilterOps().remove(operator);
+      }
+      if (operator.getChildOperators() != null) {
+        for (Operator<?> child : operator.getChildOperators()) {
+          removeCandidates(child, owi);
+        }
+      }
     }
 
     protected ExprWalkerInfo mergeChildrenPred(Node nd, OpWalkerInfo owi,
