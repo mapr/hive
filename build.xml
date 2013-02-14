@@ -58,6 +58,13 @@
   <property name="rat.build.dir" location="${build.dir.hive}/rat"/>
   <property name="md5sum.format" value="{0}  {1}"/>
 
+  <!-- Allow override of MAVEN CENTRAL form command line for ivy purposes -->
+  <property environment="env" />
+  <condition property="forivy.MAVEN_CENTRAL" value="${env.MAVEN_CENTRAL}">
+    <isset property="env.MAVEN_CENTRAL" />
+  </condition>
+  <property name="forivy.MAVEN_CENTRAL" value="http://repo1.maven.org/maven2/" />
+
   <!-- Ignore Postgres upgrade scripts unless 'include.postgres' is true -->
   <condition property="metastore.excludes"
              value="${vcs.excludes}" else="${vcs.excludes},**/postgres/**">

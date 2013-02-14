@@ -30,7 +30,7 @@
           http://www.ibiblio.net/pub/packages/maven2
   -->
 
-  <property name="repo.maven.org" value="http://repo1.maven.org/maven2/" override="false"/>
+  <property name="repo.maven.org" value="${forivy.MAVEN_CENTRAL}" override="false"/>
   <property name="snapshot.apache.org" value="https://repository.apache.org/content/repositories/snapshots/" override="false"/>
   <property name="maven2.pattern" value="[organisation]/[module]/[revision]/[module]-[revision](-[classifier])"/>
   <property name="repo.dir" value="${user.home}/.m2/repository" override="false"/>
@@ -38,7 +38,6 @@
   <property name="sourceforge-repo" value="http://www.sourceforge.net/projects"/>
   <property name="resolvers" value="default" override="false"/>
   <!-- pull in the local repository -->
-  <include url="${user.home}/.ivy2/ivysettings-public.xml"/>
   <include url="${ivy.default.conf.dir}/ivyconf-local.xml"/>
   <settings defaultResolver="${resolvers}"/>
 
@@ -65,7 +64,6 @@
            checkmodified="true" 
            changingPattern="${ivy.changingPattern}">
       <resolver ref="local" />
-      <resolver ref="mapr-central"/>
       <resolver ref="apache-snapshot"/>
       <resolver ref="maven2"/>
       <resolver ref="datanucleus-repo"/>
@@ -74,7 +72,6 @@
 
     <chain name="internal" dual="true">
       <resolver ref="local" />
-      <resolver ref="mapr-central"/>
       <resolver ref="fs"/>
       <resolver ref="apache-snapshot"/>
       <resolver ref="maven2"/>
@@ -82,7 +79,6 @@
     </chain>
 
     <chain name="external">
-      <resolver ref="mapr-central"/>
       <resolver ref="maven2"/>
       <resolver ref="datanucleus-repo"/>
     </chain>
