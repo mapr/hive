@@ -74,6 +74,8 @@ public class MapredLocalTask extends Task<MapredLocalWork> implements Serializab
   public static MemoryMXBean memoryMXBean;
   private static final Log LOG = LogFactory.getLog(MapredLocalTask.class);
 
+  private Process executor;
+
   // not sure we need this exec context; but all the operators in the work
   // will pass this context throught
   private final ExecMapperContext execContext = new ExecMapperContext();
@@ -157,7 +159,6 @@ public class MapredLocalTask extends Task<MapredLocalWork> implements Serializab
       }
 
       LOG.info("Executing: " + cmdLine);
-      Process executor = null;
 
       // Inherit Java system variables
       String hadoopOpts;
@@ -481,4 +482,12 @@ public class MapredLocalTask extends Task<MapredLocalWork> implements Serializab
     return StageType.MAPREDLOCAL;
   }
 
+  @Override
+  public void shutdown() {
+    super.shutdown();
+    if (executor != null) {
+      executor.destroy();
+      executor = null;
+    }
+  }
 }
