@@ -1,8 +1,19 @@
 -- Table `PARTITION_EVENTS` for classes [org.apache.hadoop.hive.metastore.model.MPartitionEvent]
 SELECT '< HIVE-2215 Add api for marking  querying set of partitions for events >' AS ' ';
 
-CREATE TABLE IF NOT EXISTS `PARTITION_EVENTS`
-(
+DELIMITER $$
+DROP PROCEDURE IF EXISTS PARTITION_EVENTS_TABLE $$
+
+CREATE PROCEDURE PARTITION_EVENTS_TABLE()
+  BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+    SHOW ERRORS ;
+    SET @upgrade07to08status = 'Failed to upgrade Metastore schema' ;
+    END ;
+
+    CREATE TABLE IF NOT EXISTS `PARTITION_EVENTS`
+    (
     `PART_NAME_ID` BIGINT NOT NULL,
     `DB_NAME` VARCHAR(128) BINARY NULL,
     `EVENT_TIME` BIGINT NOT NULL,
@@ -10,9 +21,12 @@ CREATE TABLE IF NOT EXISTS `PARTITION_EVENTS`
     `PARTITION_NAME` VARCHAR(767) BINARY NULL,
     `TBL_NAME` VARCHAR(128) BINARY NULL,
     PRIMARY KEY (`PART_NAME_ID`)
-) ENGINE=INNODB DEFAULT CHARSET=latin1;
+    ) ENGINE=INNODB DEFAULT CHARSET=latin1;
 
--- Constraints for table `PARTITION_EVENTS` for class(es) [org.apache.hadoop.hive.metastore.model.MPartitionEvent]
-CREATE INDEX `PARTITIONEVENTINDEX` ON `PARTITION_EVENTS` (`PARTITION_NAME`);
+    -- Constraints for table `PARTITION_EVENTS` for class(es) [org.apache.hadoop.hive.metastore.model.MPartitionEvent]
+    CREATE INDEX `PARTITIONEVENTINDEX` ON `PARTITION_EVENTS` (`PARTITION_NAME`);
+  END $$
 
+DELIMITER ;
 
+CALL PARTITION_EVENTS_TABLE();

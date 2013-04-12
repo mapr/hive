@@ -42,20 +42,37 @@ CREATE PROCEDURE REVERT()
  */
 CREATE PROCEDURE ALTER_SDS()
   BEGIN
-    ALTER TABLE SDS
-      ADD COLUMN CD_ID bigint(20) NULL
-      AFTER SD_ID
-    ;
-    SELECT 'Added the column CD_ID to SD_ID';
-    ALTER TABLE SDS
-      ADD CONSTRAINT `SDS_FK2`
-      FOREIGN KEY (`CD_ID`) REFERENCES `CDS` (`CD_ID`)
-    ;
-    SELECT 'Created a FK Constraint on CD_ID in SDS';
-    CREATE INDEX `SDS_N50` ON SDS
-      (CD_ID)
-    ;
-    SELECT 'Added an index on CD_ID in SDS';
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA=DATABASE()
+      AND COLUMN_NAME='CD_ID' AND TABLE_NAME='SDS' ) THEN
+        ALTER TABLE SDS
+          ADD COLUMN CD_ID bigint(20) NULL
+          AFTER SD_ID
+        ;
+        SELECT 'Added the column CD_ID to SDS';
+    ELSE
+      SELECT 'Column CD_ID already exists';
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.KEY_COLUMN_USAGE 
+      WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='SDS' AND COLUMN_NAME='CD_ID' 
+      AND REFERENCED_TABLE_NAME='CDS' AND REFERENCED_COLUMN_NAME='CD_ID') THEN
+        ALTER TABLE SDS
+          ADD CONSTRAINT `SDS_FK2`
+          FOREIGN KEY (`CD_ID`) REFERENCES `CDS` (`CD_ID`)
+        ;
+      SELECT 'Created a FK Constraint on CD_ID in SDS';
+    ELSE
+      SELECT 'FK Constraint on CD_ID in SDS already exists';
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.STATISTICS
+      WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='SDS' AND COLUMN_NAME='CD_ID') THEN
+        CREATE INDEX `SDS_N50` ON SDS
+          (CD_ID)
+        ;
+        SELECT 'Added an index on CD_ID in SDS';
+    ELSE
+      SELECT 'Index on CD_ID in SDS already exists';
+    END IF;
   END $$
 
 /*
@@ -141,12 +158,17 @@ CREATE PROCEDURE MIGRATE_TABLES()
  */
 CREATE PROCEDURE MIGRATE_PARTITIONS()
   BEGIN
-    UPDATE SDS sd
-    JOIN PARTITIONS p on p.SD_ID = sd.SD_ID
-    JOIN TBLS t on t.TBL_ID = p.TBL_ID
-    SET sd.CD_ID = t.SD_ID
-    where p.SD_ID is not null;
-    SELECT 'Updated CD_IDs in SDS for partitions';
+    IF EXISTS (SELECT * FROM information_schema.TABLES 
+      WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='PARTITIONS') THEN 
+      UPDATE SDS sd
+      JOIN PARTITIONS p on p.SD_ID = sd.SD_ID
+      JOIN TBLS t on t.TBL_ID = p.TBL_ID
+      SET sd.CD_ID = t.SD_ID
+      where p.SD_ID is not null;
+      SELECT 'Updated CD_IDs in SDS for partitions';
+    ELSE
+      SELECT 'There is no PARTITIONS table to migrate';
+    END IF;
   END $$
 
 /*
@@ -159,29 +181,34 @@ CREATE PROCEDURE MIGRATE_IDXS()
     /* In the migration, there is a 1:1 mapping between CD_ID and SD_ID
      * for indexes. For speed, just let CD_ID = SD_ID for indexes
      */
-    INSERT INTO CDS (CD_ID)
-    SELECT SD_ID FROM IDXS
-    WHERE SD_ID IS NOT NULL;
-    SELECT 'Inserted into CDS for IDXS';
+    IF EXISTS (SELECT * FROM information_schema.TABLES 
+      WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='IDXS') THEN 
+        INSERT INTO CDS (CD_ID)
+        SELECT SD_ID FROM IDXS
+        WHERE SD_ID IS NOT NULL;
+        SELECT 'Inserted into CDS for IDXS';
 
-    UPDATE SDS
-      SET CD_ID = SD_ID
-    WHERE SD_ID in
-    (SELECT i.SD_ID FROM IDXS i WHERE i.SD_ID IS NOT NULL);
-    SELECT 'Updated CD_ID in SDS for IDXS';
+        UPDATE SDS
+          SET CD_ID = SD_ID
+        WHERE SD_ID in
+        (SELECT i.SD_ID FROM IDXS i WHERE i.SD_ID IS NOT NULL);
+        SELECT 'Updated CD_ID in SDS for IDXS';
 
-    INSERT INTO COLUMNS_V2
-      (CD_ID, COMMENT, COLUMN_NAME, TYPE_NAME, INTEGER_IDX)
-    SELECT
-      c.SD_ID, c.COMMENT, c.COLUMN_NAME, c.TYPE_NAME, c.INTEGER_IDX
-    FROM
-      COLUMNS c
-    JOIN
-      IDXS i
-    ON
-      i.SD_ID = c.SD_ID
-    ;
-    SELECT 'Inserted table columns into COLUMNS_V2';
+        INSERT INTO COLUMNS_V2
+          (CD_ID, COMMENT, COLUMN_NAME, TYPE_NAME, INTEGER_IDX)
+        SELECT
+          c.SD_ID, c.COMMENT, c.COLUMN_NAME, c.TYPE_NAME, c.INTEGER_IDX
+        FROM
+          COLUMNS c
+        JOIN
+          IDXS i
+        ON
+          i.SD_ID = c.SD_ID
+        ;
+      SELECT 'Inserted table columns into COLUMNS_V2';
+    ELSE
+      SELECT 'There is no IDXS table to migrate';
+    END IF;
   END $$
 
 /*
@@ -189,6 +216,7 @@ CREATE PROCEDURE MIGRATE_IDXS()
  */
 CREATE PROCEDURE CREATE_TABLE_SDS()
   BEGIN
+    DROP TABLE IF EXISTS TABLE_SDS;
     CREATE TEMPORARY TABLE `TABLE_SDS` (
       `SD_ID` bigint(20) NOT NULL,
       PRIMARY KEY (`SD_ID`)
@@ -236,6 +264,12 @@ CREATE PROCEDURE POST_MIGRATE()
  */
 CREATE PROCEDURE MIGRATE()
   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+    SHOW ERRORS ;
+    SET @upgrade07to08status = 'Failed to upgrade Metastore schema' ;
+    END ;
+
     call PRE_MIGRATE();
     SELECT 'Completed pre migration';
     call MIGRATE_TABLES();
