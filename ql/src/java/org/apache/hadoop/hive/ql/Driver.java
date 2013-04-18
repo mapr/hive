@@ -112,8 +112,6 @@ public class Driver implements CommandProcessor {
   static final private Log LOG = LogFactory.getLog(Driver.class.getName());
   static final private LogHelper console = new LogHelper(LOG);
 
-  private static final Object compileMonitor = new Object();
-  
   private int maxRows = 100;
   ByteStream.Output bos = new ByteStream.Output();
 
@@ -892,10 +890,7 @@ public class Driver implements CommandProcessor {
     perfLogger.PerfLogBegin(LOG, PerfLogger.DRIVER_RUN);
     perfLogger.PerfLogBegin(LOG, PerfLogger.TIME_TO_SUBMIT);
 
-    int ret;
-    synchronized (compileMonitor) {
-      ret = compile(command);
-    }
+    int ret = compile(command);
     if (ret != 0) {
       releaseLocks(ctx.getHiveLocks());
       return new CommandProcessorResponse(ret, errorMessage, SQLState);

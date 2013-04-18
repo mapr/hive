@@ -40,8 +40,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Client;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.thrift.client.TUGIAssumingTransport;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
@@ -64,7 +62,6 @@ import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.apache.thrift.transport.TTransportFactory;
 
-import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
 
  /**
   * Functions that bridge Thrift's SASL transports to Hadoop's
@@ -75,14 +72,6 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
 
    @Override
    public Client createClient() {
-     return new Client();
-   }
-
-   @Override
-   public Client createClientWithConf(String authType) {
-     Configuration conf = new Configuration();
-     conf.set(HADOOP_SECURITY_AUTHENTICATION, authType);
-     UserGroupInformation.setConfiguration(conf);
      return new Client();
    }
 
@@ -244,7 +233,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
      /**
       * Create a server with a kerberos keytab/principal.
       */
-     protected Server(String keytabFile, String principalConf)
+     private Server(String keytabFile, String principalConf)
        throws TTransportException {
        if (keytabFile == null || keytabFile.isEmpty()) {
          throw new TTransportException("No keytab specified");
@@ -304,15 +293,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
       */
      @Override
      public TProcessor wrapProcessor(TProcessor processor) {
-       return new TUGIAssumingProcessor(processor, secretManager, true);
-     }
-
-     /**
-      * Wrap a TProcessor to capture the client information like connecting userid, ip etc
-      */
-     @Override
-     public TProcessor wrapNonAssumingProcessor(TProcessor processor) {
-      return new TUGIAssumingProcessor(processor, secretManager, false);
+      return new TUGIAssumingProcessor(processor, secretManager);
      }
 
     protected DelegationTokenStore getTokenStore(Configuration conf)
@@ -417,18 +398,6 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
        }
      };
 
-     private static ThreadLocal<String> remoteUser = new ThreadLocal<String> () {
-       @Override
-       protected synchronized String initialValue() {
-         return null;
-       }
-     };
-
-     @Override
-     public String getRemoteUser() {
-       return remoteUser.get();
-     }
-     
     /** CallbackHandler for SASL DIGEST-MD5 mechanism */
     // This code is pretty much completely based on Hadoop's
     // SaslRpcServer.SaslDigestCallbackHandler - the only reason we could not
@@ -510,15 +479,12 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
       *
       * This is used on the server side to set the UGI for each specific call.
       */
-     protected class TUGIAssumingProcessor implements TProcessor {
+     private class TUGIAssumingProcessor implements TProcessor {
        final TProcessor wrapped;
        DelegationTokenSecretManager secretManager;
-       boolean useProxy;
-       TUGIAssumingProcessor(TProcessor wrapped, DelegationTokenSecretManager secretManager,
-           boolean useProxy) {
+       TUGIAssumingProcessor(TProcessor wrapped, DelegationTokenSecretManager secretManager) {
          this.wrapped = wrapped;
          this.secretManager = secretManager;
-         this.useProxy = useProxy;
        }
 
        public boolean process(final TProtocol inProt, final TProtocol outProt) throws TException {
@@ -547,22 +513,17 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
          remoteAddress.set(socket.getInetAddress());
          UserGroupInformation clientUgi = null;
          try {
-           if (useProxy) {
-             clientUgi = UserGroupInformation.createProxyUser(
-               endUser, UserGroupInformation.getLoginUser());
-             return clientUgi.doAs(new PrivilegedExceptionAction<Boolean>() {
-                 public Boolean run() {
-                   try {
-                     return wrapped.process(inProt, outProt);
-                   } catch (TException te) {
-                     throw new RuntimeException(te);
-                   }
+           clientUgi = UserGroupInformation.createProxyUser(
+              endUser, UserGroupInformation.getLoginUser());
+           return clientUgi.doAs(new PrivilegedExceptionAction<Boolean>() {
+               public Boolean run() {
+                 try {
+                   return wrapped.process(inProt, outProt);
+                 } catch (TException te) {
+                   throw new RuntimeException(te);
                  }
-               });
-           } else {
-             remoteUser.set(endUser);
-             return wrapped.process(inProt, outProt);
-           }
+               }
+             });
          } catch (RuntimeException rte) {
            if (rte.getCause() instanceof TException) {
              throw (TException)rte.getCause();

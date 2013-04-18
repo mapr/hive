@@ -72,12 +72,13 @@ public class CopyTask extends Task<CopyWork> implements Serializable {
       }
 
       if (!dstFs.mkdirs(toPath)) {
-        console.printError("Cannot make target directory: " + toPath.toString());
+        console
+            .printError("Cannot make target directory: " + toPath.toString());
         return 2;
       }
 
       for (FileStatus oneSrc : srcs) {
-        console.printInfo("Copying file: " + oneSrc.getPath().toString());
+        System.out.println("Copying file: " + oneSrc.getPath().toString());
         LOG.debug("Copying file: " + oneSrc.getPath().toString());
         if (!FileUtil.copy(srcFs, oneSrc.getPath(), dstFs, toPath, false, // delete
             // source

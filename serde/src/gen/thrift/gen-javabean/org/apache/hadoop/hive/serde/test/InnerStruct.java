@@ -6,7 +6,6 @@
  */
 package org.apache.hadoop.hive.serde.test;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.thrift.scheme.IScheme;
 import org.apache.thrift.scheme.SchemeFactory;
 import org.apache.thrift.scheme.StandardScheme;
@@ -227,14 +226,7 @@ public class InnerStruct implements org.apache.thrift.TBase<InnerStruct, InnerSt
 
   @Override
   public int hashCode() {
-    HashCodeBuilder builder = new HashCodeBuilder();
-
-    boolean present_field0 = true;
-    builder.append(present_field0);
-    if (present_field0)
-      builder.append(field0);
-
-    return builder.toHashCode();
+    return 0;
   }
 
   public int compareTo(InnerStruct other) {

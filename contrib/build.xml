@@ -49,8 +49,7 @@
     <mkdir dir="${test.log.dir}/contribclientpositive"/>
     <mkdir dir="${test.log.dir}/contribclientnegative"/>
 
-    <qtestgen hiveRootDirectory="${hive.root}"
-              outputDirectory="${test.build.src}/org/apache/hadoop/hive/ql/parse" 
+    <qtestgen outputDirectory="${test.build.src}/org/apache/hadoop/hive/ql/parse" 
               templatePath="${ql.test.template.dir}" template="TestParse.vm" 
               queryDirectory="${contrib.test.query.dir}/positive"
               queryFile="${qfile}"
@@ -72,8 +71,7 @@
               logDirectory="${test.log.dir}/contribnegative"/>
    -->
 
-    <qtestgen hiveRootDirectory="${hive.root}"
-              outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
+    <qtestgen outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
               templatePath="${ql.test.template.dir}" template="TestCliDriver.vm" 
               queryDirectory="${contrib.test.query.dir}/clientpositive" 
               queryFile="${qfile}"
@@ -86,8 +84,7 @@
               hadoopVersion="${hadoopVersion}"
     />
 
-    <qtestgen hiveRootDirectory="${hive.root}"
-              outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
+    <qtestgen outputDirectory="${test.build.src}/org/apache/hadoop/hive/cli" 
               templatePath="${ql.test.template.dir}" template="TestNegativeCliDriver.vm" 
               queryDirectory="${contrib.test.query.dir}/clientnegative" 
               queryFile="${qfile}"
