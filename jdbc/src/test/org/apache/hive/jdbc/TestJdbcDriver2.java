@@ -825,7 +825,7 @@ public class TestJdbcDriver2 extends TestCase {
     DatabaseMetaData meta = con.getMetaData();
 
     assertEquals("Hive", meta.getDatabaseProductName());
-    assertEquals("0.10.0", meta.getDatabaseProductVersion());
+    assertEquals("0.9.0", meta.getDatabaseProductVersion());
     assertEquals(DatabaseMetaData.sqlStateSQL99, meta.getSQLStateType());
     assertFalse(meta.supportsCatalogsInTableDefinitions());
     assertFalse(meta.supportsSchemasInTableDefinitions());
