@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.serde2.lazy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import org.apache.commons.logging.Log;
@@ -37,6 +38,8 @@ import org.apache.hadoop.hive.serde2.lazy.objectinspector.primitive.LazyTimestam
  */
 public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, TimestampWritable> {
   static final private Log LOG = LogFactory.getLog(LazyTimestamp.class);
+  static final private int NANOSECONDS_PERSEC=1000000000;
+  static final private BigDecimal NANOSECONDS_PERSEC_BD = new BigDecimal(NANOSECONDS_PERSEC);
 
   public LazyTimestamp(LazyTimestampObjectInspector oi) {
     super(oi);
@@ -71,7 +74,38 @@ public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, T
       t = null;
       logExceptionMessage(bytes, start, length, "TIMESTAMP");
     } else {
-      t = Timestamp.valueOf(s);
+      // Supported timestamp formats:
+      // 1. Integer: UNIX epoch seconds
+      // 2. Floating point: UNIX epoch seconds plus nanoseconds 
+      // 3. Strings: JDBC compliant java.sql.Timestamp format
+      //      "YYYY-MM-DD HH:MM:SS.fffffffff" (9 decimal place precision)
+
+      // Assume the given format is JDBC compliant and try to convert
+      // if it fails fall back to conversion from other two formats
+      try {
+        t = Timestamp.valueOf(s);
+      } catch (IllegalArgumentException e) {
+        LOG.debug("Timestamp is not in JDBC compliant format. So trying to convert "+
+                  "from seconds/seconds with decmimal precision formats");
+      BigDecimal value = new BigDecimal(s);
+      t = new Timestamp(value.longValue()*1000);
+
+      // if the value has any decimal part process it to get the nanoseconds part
+      if (value.scale()>0) {
+        if (value.scale()>9) {
+          LOG.error("Timestamp: epoch seconds decimal part precision beyond the expected 9 digits");
+          throw new NumberFormatException("Wrong epoch seconds decimal part precision");
+        }
+
+        // convert the decimal part of the seconds into nanoseconds
+        value = value.subtract(new BigDecimal(value.longValue()));
+        value = value.multiply(NANOSECONDS_PERSEC_BD);
+
+        // Truncate the nanoseconds to 999,999,999.
+        // Timestamp.setNanos() accepts values between 0-999,999,999
+        t.setNanos(Math.min(value.intValue(), NANOSECONDS_PERSEC-1));
+        }
+      }
     }
     data.set(t);
   }
