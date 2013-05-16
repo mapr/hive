@@ -78,6 +78,8 @@
 
     <!-- Test Dependencies -->
     <dependency org="junit" name="junit" rev="${junit.version}" conf="test->default" />
+    <dependency org="${hive.ivy.org}" name="hive-testutils" rev="${version}"
+                conf="test->default" transitive="false"/>
 
   </dependencies>
 </ivy-module>
