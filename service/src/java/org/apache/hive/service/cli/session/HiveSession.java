@@ -136,7 +136,7 @@ public class HiveSession {
       case CLI_DBMS_NAME:
         return new GetInfoValue("Apache Hive");
       case CLI_DBMS_VER:
-        return new GetInfoValue("0.10.0");
+        return new GetInfoValue("0.10");
       case CLI_MAX_COLUMN_NAME_LEN:
         return new GetInfoValue(128);
       case CLI_MAX_SCHEMA_NAME_LEN:

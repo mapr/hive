@@ -250,7 +250,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
 
   public String getDatabaseProductVersion() throws SQLException {
     // TODO: Fetch this from the server side
-    return "0.10.0";
+    return "0.10";
   }
 
   public int getDefaultTransactionIsolation() throws SQLException {
