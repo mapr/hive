@@ -850,6 +850,7 @@ public class HiveConf extends Configuration {
     if (restrictList.contains(name)) {
       throw new IllegalArgumentException("Cann't modify " + name + " at runtime");
     }
+    set(name, value);
   }
 
   public static int getIntVar(Configuration conf, ConfVars var) {
