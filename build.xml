@@ -1304,6 +1304,14 @@
         input.file="${mvn.pom.dir}/hive-beeline-${version}.pom"
         output.file="${mvn.pom.dir}/hive-beeline-${version}.pom.asc"
         gpg.passphrase="${gpg.passphrase}"/>
+     <sign-artifact
+        input.file="${mvn.jar.dir}/hive-builtins-${version}.jar"
+        output.file="${mvn.jar.dir}/hive-builtins-${version}.jar.asc"
+        gpg.passphrase="${gpg.passphrase}"/>
+    <sign-artifact
+        input.file="${mvn.pom.dir}/hive-builtins-${version}.pom"
+        output.file="${mvn.pom.dir}/hive-builtins-${version}.pom.asc"
+        gpg.passphrase="${gpg.passphrase}"/>
     <sign-artifact
         input.file="${mvn.jar.dir}/hive-cli-${version}.jar"
         output.file="${mvn.jar.dir}/hive-cli-${version}.jar.asc"
