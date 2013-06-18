@@ -216,8 +216,16 @@ fi
 # supress the HADOOP_HOME warnings in 1.x.x
 export HADOOP_HOME_WARN_SUPPRESS=true 
 
+for f in ${HIVE_LIB}/libthrift-0.9.0.jar; do
+  if $cygwin; then
+      libthrift=`cygpath -w "$f"`  
+  else
+      libthrift=$f
+  fi    
+done
+
 # pass classpath to hadoop
-export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${CLASSPATH}"
+export HADOOP_CLASSPATH="${libthrift}:${HADOOP_CLASSPATH}:${CLASSPATH}"
 
 # check for hadoop in the path
 HADOOP_IN_PATH=`which hadoop 2>/dev/null`
