@@ -59,9 +59,9 @@
   <property name="rat.build.dir" location="${build.dir.hive}/rat"/>
   <property name="md5sum.format" value="{0}  {1}"/>
   <!-- Properties for maven repositories -->
-  <property name="mvn.staging.repo.id" value="apache.staging.https"/>
+  <property name="mvn.staging.repo.id" value="mapr-snapshots"/>
   <property name="mvn.staging.repo.url"
-    value="https://repository.apache.org/service/local/staging/deploy/maven2" />
+    value="${env.MAPR_SNAPSHOTS_REPO}" />
 
 
   <condition property="is-offline" value="true" else="false">
@@ -413,6 +413,8 @@
     <copy todir="${target.conf.dir}">
      <fileset dir="${basedir}/conf">
        <include name="*.template"/>
+       <!-- MapR: include empty hive-site.xml -->
+       <include name="hive-site.xml"/>
      </fileset>
     </copy>
     <copy file="${basedir}/common/src/java/conf/hive-log4j.properties"
@@ -487,6 +489,8 @@
         <exclude name="**/mockito*.jar"/>
         <exclude name="**/velocity*.jar"/>
         <exclude name="**/antlr-3*.jar"/>
+        <!-- MapR: exclude hbase jars from package -->
+        <exclude name="hbase-*.jar"/>
       </fileset>
     </copy>
     <copy todir="${target.example.dir}/files" preservelastmodified="true" flatten="true">
@@ -693,7 +697,7 @@
   <!-- Make release tarball                                               -->
   <!-- ================================================================== -->
 
-  <target name="tar" depends="package, docs, javadoc" description="Make release tarball">
+  <target name="tar" depends="package" description="Make release tarball">
     <echo message="Project: ${ant.project.name}"/>
     <macro_tar param.destfile="${build.dir.hive}/${tar.final.name}.tar.gz">
       <param.listofitems>
@@ -711,6 +715,7 @@
           <exclude name="bin/**"/>
           <exclude name="lib/py/**/*-remote"/>
         </tarfileset>
+        <!-- MapR: Don't package source files
         <tarfileset dir="${hive.root}" mode="664" prefix="${tar.final.name}/src"
                     excludes="${vcs.excludes}">
           <exclude name="build/**" />
@@ -731,6 +736,7 @@
           <include name="metastore/scripts/**" />
           <include name="ql/src/test/scripts/**" />
         </tarfileset>
+        -->
       </param.listofitems>
     </macro_tar>
   </target>

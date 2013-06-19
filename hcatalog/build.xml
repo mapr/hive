@@ -305,7 +305,7 @@
     Distribution Section
     ===============================================================================
     -->
-    <target name="package" depends="jar, docs" description="Create an HCatalog release">
+    <target name="package" depends="jar" description="Create an HCatalog release">
         <mkdir dir="${dist.dir}"/>
         <mkdir dir="${dist.dir}/share/${ant.project.name}/lib"/>
         <mkdir dir="${dist.dir}/etc/hcatalog"/>
@@ -313,11 +313,12 @@
         <mkdir dir="${dist.dir}/sbin"/>
         <mkdir dir="${dist.dir}/share/${ant.project.name}/scripts"/>
         <mkdir dir="${dist.dir}/share/${ant.project.name}/templates/conf"/>
+        <!-- MapR: don't package docs
         <mkdir dir="${dist.dir}/share/doc/${ant.project.name}"/>
         <mkdir dir="${dist.dir}/share/doc/${ant.project.name}/api"/>
         <mkdir dir="${dist.dir}/share/doc/${ant.project.name}/jdiff"/>
         <mkdir dir="${dist.dir}/share/doc/${ant.project.name}/license"/>
-
+        -->
         <copy todir="${dist.dir}/share/${ant.project.name}" includeEmptyDirs="false">
             <fileset dir="core/build">
                 <include name="hcatalog-*.jar"/>
@@ -396,11 +397,13 @@
         </copy>
 
         <!-- Copy the licenses and such -->
+        <!-- MapR: don't include docs in the packaging 
         <copy todir="${dist.dir}/share/doc/${ant.project.name}">
             <fileset dir=".">
                 <include name="*.txt"/>
             </fileset>
         </copy>
+        -->
 
         <chmod perm="ugo+x" type="file">
             <fileset dir="${dist.dir}/bin"/>
