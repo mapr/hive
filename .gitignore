@@ -13,4 +13,4 @@ common/src/gen
 *.iml
 *.ipr
 *.iws
-
+mapr-build.properties
