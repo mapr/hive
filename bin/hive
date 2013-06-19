@@ -20,10 +20,43 @@ case "`uname`" in
    CYGWIN*) cygwin=true;;
 esac
 
-bin=`dirname "$0"`
+function get_canonical_dir() {
+  target="$1"
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
+
+bin=$(get_canonical_dir "$0")
 bin=`cd "$bin"; pwd`
 
 . "$bin"/hive-config.sh
+
+#BASEMAPR should be set by hive-config.sh
+export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
+MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion`
+MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
+MAPR_HBASE_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}-.*[^s]\.jar" -print 2> /dev/null)
+MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}.*tests\.jar" -print 2> /dev/null)
 
 SERVICE=""
 HELP=""
@@ -92,6 +125,19 @@ fi
 for f in ${HIVE_LIB}/*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
+
+# Add mapr hbase, zookeeper path overrides any jars in hive/lib
+if [ ! -z "${MAPR_HBASE_JAR}" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_JAR};
+fi
+
+if [ ! -z "${MAPR_HBASE_TEST_JAR}" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_TEST_JAR};
+fi
+
+if [ -f "${MAPR_ZK_HOME}/zookeeper-3.3.2.jar" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_ZK_HOME}/zookeeper-3.3.2.jar;
+fi
 
 # add the auxillary jars such as serdes
 if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
