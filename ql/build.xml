@@ -286,6 +286,8 @@
         <!-- Not putting these in their own manifest section, since that inserts
              a new-line, which breaks the reading of the attributes. -->
         <attribute name="Implementation-Title" value="Hive"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Vendor" value="Apache"/>
         <attribute name="MapR-BuildDate" value="${mapr.builddate}"/>
         <attribute name="MapR-BuildHost" value="${mapr.buildhost}"/>
         <attribute name="MapR-BuildPlatform" value="${mapr.builduname}"/>
