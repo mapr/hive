@@ -28,7 +28,7 @@ import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hdfs.web.AuthFilter;
+import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.eclipse.jetty.rewrite.handler.RedirectPatternRule;
@@ -185,14 +185,13 @@ public class Main {
     // Configure the AuthFilter with the Kerberos params iff security
     // is enabled.
     public FilterHolder makeAuthFilter() {
-        FilterHolder authFilter = new FilterHolder(AuthFilter.class);
+
+        FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
         if (UserGroupInformation.isSecurityEnabled()) {
-            authFilter.setInitParameter("dfs.web.authentication.signature.secret",
-                conf.kerberosSecret());
-            authFilter.setInitParameter("dfs.web.authentication.kerberos.principal",
-                conf.kerberosPrincipal());
-            authFilter.setInitParameter("dfs.web.authentication.kerberos.keytab",
-                conf.kerberosKeytab());
+            // TODO:
+        } else {
+            //authFilter.setInitParameter("simple.anonymous.allowed", "true");
+            authFilter.setInitParameter("type", "simple");
         }
         return authFilter;
     }
