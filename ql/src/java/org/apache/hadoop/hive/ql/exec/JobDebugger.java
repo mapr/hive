@@ -95,7 +95,7 @@ public class JobDebugger implements Runnable {
     }
   }
   private String getTaskAttemptLogUrl(String taskTrackerHttpAddress, String taskAttemptId) {
-    return taskTrackerHttpAddress + "/tasklog?taskid=" + taskAttemptId + "&start=-8193";
+    return taskTrackerHttpAddress + "/tasklog?attemptid=" + taskAttemptId + "&start=-8193";
   }
 
   class TaskLogGrabber implements Runnable {
@@ -176,6 +176,12 @@ public class JobDebugger implements Runnable {
 
 
     console.printError("Error during job, obtaining debugging information...");
+
+    if (!conf.get("mapred.job.tracker", "local").equals("local")) {
+      // Show Tracking URL for remotely running jobs.
+      console.printError("Job Tracking URL: " + rj.getTrackingURL());
+    }
+
     // Loop to get all task completion events because getTaskCompletionEvents
     // only returns a subset per call
     TaskLogGrabber tlg = new TaskLogGrabber();
@@ -206,13 +212,10 @@ public class JobDebugger implements Runnable {
     }
 
     // Display Error Message for tasks with the highest failure count
-    String jtUrl = JobTrackerURLResolver.getURL(conf);
-
     for (String task : failures.keySet()) {
       if (failures.get(task).intValue() == maxFailures) {
         TaskInfo ti = taskIdToInfo.get(task);
         String jobId = ti.getJobId();
-        String taskUrl = jtUrl + "/taskdetails.jsp?jobid=" + jobId + "&tipid=" + task.toString();
 
         TaskLogProcessor tlp = new TaskLogProcessor(conf);
         for (String logUrl : ti.getLogUrls()) {
@@ -239,7 +242,6 @@ public class JobDebugger implements Runnable {
           sb.append("Task with the most failures(" + maxFailures + "): \n");
           sb.append("-----\n");
           sb.append("Task ID:\n  " + task + "\n\n");
-          sb.append("URL:\n  " + taskUrl + "\n");
 
           for (ErrorAndSolution e : errors) {
             sb.append("\n");
