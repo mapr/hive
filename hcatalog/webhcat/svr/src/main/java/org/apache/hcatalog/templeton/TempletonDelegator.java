@@ -18,10 +18,13 @@
  */
 package org.apache.hcatalog.templeton;
 
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
  * The helper class for all the Templeton delegator classes. A
@@ -30,14 +33,24 @@ import org.apache.hadoop.net.NetUtils;
  */
 public class TempletonDelegator {
     protected AppConfig appConf;
+    private static final Log LOG = LogFactory.getLog(TempletonDelegator.class);
 
     public TempletonDelegator(AppConfig appConf) {
         this.appConf = appConf;
     }
     
     public static InetSocketAddress getAddress(Configuration conf) {
-        String jobTrackerStr =
-                conf.get("mapred.job.tracker", "localhost:8012");
-        return NetUtils.createSocketAddr(jobTrackerStr);
+        try {
+            FileSystem fs = FileSystem.get(conf);
+            Class fscls = Class.forName("org.apache.hadoop.fs.FileSystem");
+            Method method = fscls.getDeclaredMethod("getJobTrackerAddrs", new Class[] { Configuration.class });
+            InetSocketAddress[] jobTrackerAddr = (InetSocketAddress[]) method.invoke(fs, conf);
+            if (jobTrackerAddr == null || jobTrackerAddr[0] == null)
+                throw new Exception("JobTracker HA returned is not valid");
+            return jobTrackerAddr[0];
+        } catch (Exception e) {
+            LOG.error("Unable to get JobTracker address: " + e.getMessage());
+        }
+        return null;
     }
 }
