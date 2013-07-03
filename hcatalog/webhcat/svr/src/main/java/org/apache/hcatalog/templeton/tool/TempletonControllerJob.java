@@ -243,10 +243,11 @@ public class TempletonControllerJob extends Configured implements Tool {
 
         @Override
         public void run() {
+            PrintWriter writer = null;
             try {
                 InputStreamReader isr = new InputStreamReader(in);
                 BufferedReader reader = new BufferedReader(isr);
-                PrintWriter writer = new PrintWriter(out);
+                writer = new PrintWriter(out);
 
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -275,6 +276,9 @@ public class TempletonControllerJob extends Configured implements Tool {
                 writer.flush();
             } catch (IOException e) {
                 System.err.println("templeton: execute error: " + e);
+            } finally {
+                if (writer != null)
+                    writer.close();
             }
         }
     }
