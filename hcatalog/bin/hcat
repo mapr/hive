@@ -119,19 +119,19 @@ done
 # Put external jars, hcat jar, and config file in the classpath
 HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${HCAT_CLASSPATH}:${HCAT_JAR}:${HIVE_CONF_DIR}
 
-# Look for HBase in a BigTop-compatible way. Avoid thrift version
-# conflict with modern versions of HBase.
-HBASE_HOME=${HBASE_HOME:-"/usr/lib/hbase"}
-HBASE_CONF_DIR=${HBASE_CONF_DIR:-"${HBASE_HOME}/conf"}
-if [ -d ${HBASE_HOME} ] ; then
-   for jar in $(find $HBASE_HOME -name *.jar -not -name thrift\*.jar); do
-      HBASE_CLASSPATH=$HBASE_CLASSPATH:${jar}
-   done
-   export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${HBASE_CLASSPATH}"
+# Look for HBase in a MapR-compatible way.
+export BASEMAPR=${BASEMAPR:-"/opt/mapr"}
+if [ -f $BASEMAPR/hbase/hbaseversion ]; then
+  MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion 2>/dev/null`
+else
+  MAPR_HBASE_VERSION="*"
 fi
-if [ -d $HBASE_CONF_DIR ] ; then
-    HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${HBASE_CONF_DIR}"
-fi
+MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+MAPR_HBASE_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}-.*[^s]\.jar" -print 2> /dev/null)
+MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}.*tests\.jar" -print 2> /dev/null)
+MAPR_HBASE_CONF_DIR=${MAPR_HBASE_CONF_DIR:-"${MAPR_HBASE_HOME}/conf"}
+
+HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${MAPR_HBASE_JAR}:${MAPR_HBASE_TEST_JAR}:${MAPR_HBASE_CONF_DIR}"
 
 export HADOOP_CLASSPATH=$HADOOP_CLASSPATH
 export HADOOP_OPTS=$HADOOP_OPTS
