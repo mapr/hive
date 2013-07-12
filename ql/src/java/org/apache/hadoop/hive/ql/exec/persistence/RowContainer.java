@@ -18,15 +18,22 @@
 
 package org.apache.hadoop.hive.ql.exec.persistence;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -46,6 +53,8 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.net.DNS;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
@@ -116,6 +125,15 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
   JobConf jobCloneUsingLocalFs = null;
   private LocalFileSystem localFs;
 
+  // Used when writing the tmp file to DFS
+  private JobConf jobCloneUsingDfs = null;
+  private FileSystem dfs = null;
+  private String tmpParentDfs = null;
+  private String tmpFileDfs = null;
+  private String tmpDirDfs = null;
+
+  private boolean fTmpFileOnDfs = false;
+
   public RowContainer(Configuration jc) throws HiveException {
     this(BLOCKSIZE, jc);
   }
@@ -134,6 +152,7 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
     this.serde = null;
     this.standardOI = null;
     this.jc = jc;
+    this.fTmpFileOnDfs = jc.getBoolean("hive.exec.tmp.maprfsvolume", false);
   }
   
   private JobConf getLocalFSJobConfClone(Configuration jc) {
@@ -144,6 +163,23 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
     return this.jobCloneUsingLocalFs;
   }
 
+  private JobConf getDFSJobConfClone(Configuration jc) {
+    if (this.jobCloneUsingDfs == null) {
+      this.jobCloneUsingDfs = new JobConf(jc);
+    }
+    return this.jobCloneUsingDfs;
+  }
+
+  private FileSystem getDFS() {
+    if(dfs == null) {
+       try {
+         dfs = FileSystem.get(getDFSJobConfClone(jc));
+       } catch(IOException e) {
+         LOG.error(e);
+       }
+    }
+    return dfs;
+  }
 
   public void setSerDe(SerDe sd, ObjectInspector oi) {
     this.serde = sd;
@@ -197,20 +233,28 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
         this.readBlockSize = this.addCursor;
         this.currentReadBlock = this.currentWriteBlock;
       } else {
-        JobConf localJc = getLocalFSJobConfClone(jc);
+        JobConf jobConf = null;
+        String tmpFilePathEscaped = null;
+        if (fTmpFileOnDfs) {
+          jobConf = getDFSJobConfClone(jc);
+          tmpFilePathEscaped = org.apache.hadoop.util.StringUtils.escapeString(tmpParentDfs);
+        } else {
+          jobConf = getLocalFSJobConfClone(jc);
+          tmpFilePathEscaped = org.apache.hadoop.util.StringUtils.escapeString(parentFile.getAbsolutePath());
+        }
+
         if (inputSplits == null) {
           if (this.inputFormat == null) {
             inputFormat = (InputFormat<WritableComparable, Writable>) ReflectionUtils.newInstance(
-                tblDesc.getInputFileFormatClass(), localJc);
+                tblDesc.getInputFileFormatClass(), jobConf);
           }
 
-          HiveConf.setVar(localJc, HiveConf.ConfVars.HADOOPMAPREDINPUTDIR,
-              org.apache.hadoop.util.StringUtils.escapeString(parentFile.getAbsolutePath()));
-          inputSplits = inputFormat.getSplits(localJc, 1);
+          HiveConf.setVar(jobConf, HiveConf.ConfVars.HADOOPMAPREDINPUTDIR, tmpFilePathEscaped);
+          inputSplits = inputFormat.getSplits(jobConf, 1);
           acutalSplitNum = inputSplits.length;
         }
         currentSplitPointer = 0;
-        rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer], localJc, Reporter.NULL);
+        rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer], jobConf, Reporter.NULL);
         currentSplitPointer++;
 
         nextBlock();
@@ -275,40 +319,170 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
     }
   }
 
+  public String getDfsTmpDir()
+  {
+    if (tmpDirDfs != null)
+      return tmpDirDfs;
+
+    // Create tmp files under the local maprfs spill directory
+    // construct spill path on local maprfs volume from following
+    // 1. mapr.localvolumes.path (ex. /var/mapr/local/)
+    tmpDirDfs = jc.get("mapr.localvolumes.path", "/var/mapr/local");
+    tmpDirDfs += "/";
+
+    // 2. hostname from /opt/mapr/hostname
+    tmpDirDfs += getMapRHostname();
+
+    // 3. append "mapred/taskTracker/"
+    tmpDirDfs += "/mapred/taskTracker/";
+
+    // 4. append spill directory (spill or spill.U) from job config parameters
+    tmpDirDfs += jc.get("mapr.localspill.dir", "spill");
+    if (!jc.getBoolean("mapreduce.maprfs.use.compression", true))
+      tmpDirDfs += ".U";
+
+    // 5. append jobId/taskId (retrieve job id, task id from current working directory)
+    String workDirSplits[]=null;
+    String workDir=null;
+    try {
+      workDir = new File(".").getCanonicalPath();
+      workDirSplits = workDir.split("/");
+    }
+    catch(IOException e) {
+      LOG.error(e);
+    }
+
+    // sample workDir: /tmp/mapr-hadoop/mapred/local/taskTracker/vkorukanti/jobcache/job_201306061142_0008/attempt_201306061142_0008_m_000000_0/work
+    // extract the job id and task id names
+    tmpDirDfs += "/" + workDirSplits[workDirSplits.length-3];
+    tmpDirDfs += "/" + workDirSplits[workDirSplits.length-2];
+
+    LOG.debug("tmpDirDfs: "+tmpDirDfs);
+
+    return tmpDirDfs;
+  }
+
+  /* Read hostname from /opt/mapr/hostname */
+  public String getMapRHostname() {
+    // Get hostname. If its set in conf file use it
+    String hostName = jc.get("slave.host.name");
+    if (hostName != null) {
+      return hostName;
+    }
+
+    String maprHome = System.getProperty("mapr.home.dir");
+    if (maprHome == null) {
+      maprHome = System.getenv("MAPR_HOME");
+      if (maprHome == null) {
+        maprHome = "/opt/mapr/";
+      }
+    }
+
+    String hostNameFile = maprHome+"/hostname";
+
+    BufferedReader breader = null;
+    FileReader     freader = null;
+    try {
+      freader = new FileReader(hostNameFile);
+      breader = new BufferedReader(freader);
+      return breader.readLine();
+    } catch (Exception e) {
+      /* On any exception while reading hostname return null */
+      if (LOG.isWarnEnabled()) {
+        LOG.warn("Error while reading " + hostNameFile, e);
+      }
+    } finally {
+      try {
+        if (breader != null) {
+          breader.close();
+        }
+      } catch (Throwable t) {
+        if (LOG.isErrorEnabled()) {
+          LOG.error("Failed to close breader", t);
+        }
+      }
+
+      try {
+        if (freader != null) {
+          freader.close();
+        }
+      } catch (Throwable t) {
+        if (LOG.isErrorEnabled()) {
+          LOG.error("Failed to close " + hostNameFile, t);
+        }
+      }
+    }
+
+    if (hostName == null) {
+      try {
+        hostName = DNS.getDefaultHost(
+                        jc.get("mapred.tasktracker.dns.interface", "default"),
+                        jc.get("mapred.tasktracker.dns.nameserver", "default"));
+      } catch (IOException ioe) {
+        if (LOG.isErrorEnabled()) {
+          LOG.error("Failed to retrieve local host name", ioe);
+         }
+         throw new RuntimeException(ioe);
+        }
+    }
+
+    return hostName;
+  }
+
   ArrayList<Object> row = new ArrayList<Object>(2);
 
   private void spillBlock(Row[] block, int length) throws HiveException {
     try {
-      if (tmpFile == null) {
+      if ( (fTmpFileOnDfs ? tmpFileDfs : tmpFile) == null) {
 
         String suffix = ".tmp";
         if (this.keyObject != null) {
           suffix = "." + this.keyObject.toString() + suffix;
         }
 
-        while (true) {
-          parentFile = File.createTempFile("hive-rowcontainer", "");
-          boolean success = parentFile.delete() && parentFile.mkdir();
-          if (success) {
-            break;
+        if (fTmpFileOnDfs) {
+          getDFS().mkdirs(new Path(getDfsTmpDir()));
+          while (true) {
+            tmpParentDfs = tmpDirDfs + "/hive-rowcontainer"+(new Random()).nextInt();
+            Path tmpParentDfsPath = new Path(tmpParentDfs);
+            if (!getDFS().exists(tmpParentDfsPath)) {
+              getDFS().mkdirs(tmpParentDfsPath);
+              break;
+            }
+            LOG.debug("retry creating tmp row-container directory...");
           }
-          LOG.debug("retry creating tmp row-container directory...");
+          tmpFileDfs = tmpParentDfs + "/RowContainer"+suffix;
+          LOG.info("RowContainer created temp file " + tmpFileDfs);
+
+          HiveOutputFormat<?, ?> hiveOutputFormat = tblDesc.getOutputFileFormatClass().newInstance();
+          tempOutPath = new Path(tmpFileDfs.toString());
+          rw = HiveFileFormatUtils.getRecordWriter(getDFSJobConfClone(jc), hiveOutputFormat,
+               serde.getSerializedClass(), false, tblDesc.getProperties(), tempOutPath);
+        } else {
+          while (true) {
+            parentFile = File.createTempFile("hive-rowcontainer", "");
+            boolean success = parentFile.delete() && parentFile.mkdir();
+            if (success) {
+              break;
+            }
+            LOG.debug("retry creating tmp row-container directory...");
+          }
+
+          tmpFile = File.createTempFile("RowContainer", suffix, parentFile);
+          LOG.info("RowContainer created temp file " + tmpFile.getAbsolutePath());
+          // Delete the temp file if the JVM terminate normally through Hadoop job
+          // kill command.
+          // Caveat: it won't be deleted if JVM is killed by 'kill -9'.
+          parentFile.deleteOnExit();
+          tmpFile.deleteOnExit();
+
+          // rFile = new RandomAccessFile(tmpFile, "rw");
+          HiveOutputFormat<?, ?> hiveOutputFormat = tblDesc.getOutputFileFormatClass().newInstance();
+          tempOutPath = new Path(tmpFile.toString());
+          JobConf localJc = getLocalFSJobConfClone(jc);
+          rw = HiveFileFormatUtils.getRecordWriter(this.jobCloneUsingLocalFs, hiveOutputFormat, serde
+               .getSerializedClass(), false, tblDesc.getProperties(), tempOutPath);
         }
-
-        tmpFile = File.createTempFile("RowContainer", suffix, parentFile);
-        LOG.info("RowContainer created temp file " + tmpFile.getAbsolutePath());
-        // Delete the temp file if the JVM terminate normally through Hadoop job
-        // kill command.
-        // Caveat: it won't be deleted if JVM is killed by 'kill -9'.
-        parentFile.deleteOnExit();
-        tmpFile.deleteOnExit();
-
-        // rFile = new RandomAccessFile(tmpFile, "rw");
-        HiveOutputFormat<?, ?> hiveOutputFormat = tblDesc.getOutputFileFormatClass().newInstance();
-        tempOutPath = new Path(tmpFile.toString());
-        JobConf localJc = getLocalFSJobConfClone(jc);
-        rw = HiveFileFormatUtils.getRecordWriter(this.jobCloneUsingLocalFs, hiveOutputFormat, serde
-            .getSerializedClass(), false, tblDesc.getProperties(), tempOutPath);
       } else if (rw == null) {
         throw new HiveException("RowContainer has already been closed for writing.");
       }
@@ -379,9 +553,9 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
       }
 
       if (nextSplit && this.currentSplitPointer < this.acutalSplitNum) {
-        JobConf localJc = getLocalFSJobConfClone(jc);
         // open record reader to read next split
-        rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer], jobCloneUsingLocalFs,
+        rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer],
+            ( fTmpFileOnDfs ? getDFSJobConfClone(jc) : getLocalFSJobConfClone(jc)),
             Reporter.NULL);
         currentSplitPointer++;
         return nextBlock();
@@ -408,10 +582,14 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
       return;
     }
     this.closeWriter();
-    LOG.info("RowContainer copied temp file " + tmpFile.getAbsolutePath() + " to dfs directory "
+    LOG.info("RowContainer copied temp file " + (fTmpFileOnDfs ? tmpFileDfs : tmpFile.getAbsolutePath() ) + " to dfs directory "
         + destPath.toString());
-    destFs
-        .copyFromLocalFile(true, tempOutPath, new Path(destPath, new Path(tempOutPath.getName())));
+    if (fTmpFileOnDfs) {
+      FileUtil.copy(getDFS(), tempOutPath, destFs, new Path(destPath, new Path(tempOutPath.getName())), false, getDFSJobConfClone(jc));
+    } else {
+      destFs
+          .copyFromLocalFile(true, tempOutPath, new Path(destPath, new Path(tempOutPath.getName())));
+    }
     clear();
   }
 
@@ -445,9 +623,21 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
     } finally {
       rw = null;
       rr = null;
-      tmpFile = null;
-      deleteLocalFile(parentFile, true);
-      parentFile = null;
+      if (fTmpFileOnDfs) {
+        try {
+          if (tmpParentDfs != null)
+            getDFS().delete(new Path(tmpParentDfs), true);
+        } catch(IOException e) {
+          LOG.error(e);
+        }
+        tmpParentDfs = null;
+        tmpFileDfs = null;
+        tmpDirDfs = null;
+      } else {
+        tmpFile = null;
+        deleteLocalFile(parentFile, true);
+        parentFile = null;
+      }
     }
   }
 
