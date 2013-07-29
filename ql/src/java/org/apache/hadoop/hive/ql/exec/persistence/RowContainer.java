@@ -95,7 +95,7 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
   private int blockSize; // number of objects in the block before it is spilled
   // to disk
   private int numFlushedBlocks; // total # of blocks
-  private int size; // total # of elements in the RowContainer
+  private long size;    // total # of elements in the RowContainer
   private File tmpFile; // temporary file holding the spilled blocks
   Path tempOutPath = null;
   private File parentFile;
@@ -445,7 +445,7 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
     return hostName;
   }
 
-  ArrayList<Object> row = new ArrayList<Object>(2);
+  private final ArrayList<Object> row = new ArrayList<Object>(2);
 
   private void spillBlock(Row[] block, int length) throws HiveException {
     try {
@@ -542,7 +542,7 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
    * @return number of elements in the RowContainer
    */
   @Override
-  public int size() {
+  public long size() {
     return size;
   }
 
