@@ -553,6 +553,8 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
       }
 
       if (nextSplit && this.currentSplitPointer < this.acutalSplitNum) {
+        if (rr != null)
+          rr.close();
         // open record reader to read next split
         rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer],
             ( fTmpFileOnDfs ? getDFSJobConfClone(jc) : getLocalFSJobConfClone(jc)),
