@@ -92,7 +92,7 @@ public class JoinOperator extends CommonJoinOperator<JoinDesc> implements
       }
 
       // number of rows for the key in the given table
-      int sz = storage.get(alias).size();
+      long sz = storage.get(alias).size();
       StructObjectInspector soi = (StructObjectInspector) inputObjInspectors[tag];
       StructField sf = soi.getStructFieldRef(Utilities.ReduceField.KEY
           .toString());
