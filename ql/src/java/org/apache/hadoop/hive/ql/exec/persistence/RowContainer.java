@@ -570,15 +570,12 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
       }
 
       if (nextSplit && this.currentSplitPointer < this.acutalSplitNum) {
-        if (fTmpFileOnDfs) {
-          rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer], getDFSJobConfClone(jc),
-              reporter);
-        } else {
-          JobConf localJc = getLocalFSJobConfClone(jc);
-          // open record reader to read next split
-          rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer], jobCloneUsingLocalFs,
-              reporter);
-        }
+        if (rr != null)
+          rr.close();
+        // open record reader to read next split
+        rr = inputFormat.getRecordReader(inputSplits[currentSplitPointer],
+            ( fTmpFileOnDfs ? getDFSJobConfClone(jc) : getLocalFSJobConfClone(jc)),
+            reporter);
         currentSplitPointer++;
         return nextBlock();
       }
