@@ -707,6 +707,9 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_THRIFT_PORT("hive.server2.thrift.port", 10000),
     HIVE_SERVER2_THRIFT_BIND_HOST("hive.server2.thrift.bind.host", ""),
 
+    HIVE_SERVER2_ENABLE_SSL("hive.server2.enable.ssl", false),
+    HIVE_SERVER2_SSL_KEYSTORE("hive.server2.ssl.keystore", ""),
+    HIVE_SERVER2_SSL_KEYSTORE_PASSWORD("hive.server2.ssl.keystore.password", ""),
 
     // HiveServer2 auth configuration
     HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication", "NONE"),

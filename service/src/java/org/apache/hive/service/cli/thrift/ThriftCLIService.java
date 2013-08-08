@@ -46,6 +46,7 @@ import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportFactory;
 
@@ -418,12 +419,26 @@ public class ThriftCLIService extends AbstractService implements TCLIService.Ifa
         serverAddress = new  InetSocketAddress(portNum);
       }
 
+      TServerSocket serverTransport;
+      if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_SSL)) {
+        TSSLTransportFactory.TSSLTransportParameters sslParams =
+          new TSSLTransportFactory.TSSLTransportParameters();
+        sslParams.setKeyStore(hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE),
+                              hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
+
+        serverTransport = TSSLTransportFactory.getServerSocket(
+          portNum,
+          0, /*clientTimeout*/
+          serverAddress.getAddress(),
+          sslParams);
+      } else {
+        serverTransport = new TServerSocket(serverAddress);
+      }
 
       minWorkerThreads = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_MIN_WORKER_THREADS);
       maxWorkerThreads = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_MAX_WORKER_THREADS);
 
-
-      TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(new TServerSocket(serverAddress))
+      TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverTransport)
       .processorFactory(processorFactory)
       .transportFactory(transportFactory)
       .protocolFactory(new TBinaryProtocol.Factory())

@@ -54,6 +54,7 @@ import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
@@ -70,6 +71,10 @@ public class HiveConnection implements java.sql.Connection {
   private static final String HIVE_AUTH_PASSWD = "password";
   private static final String HIVE_ANONYMOUS_USER = "anonymous";
   private static final String HIVE_ANONYMOUS_PASSWD = "anonymous";
+  private static final String HIVE_SSL = "ssl";
+  private static final String HIVE_SSL_ENABLED = "true";
+  private static final String HIVE_SSL_TRUSTSTORE="sslTrustStore";
+  private static final String HIVE_SSL_TRUSTSTORE_PASSWD = "sslTrustStorePassword";
 
   private TTransport transport;
   private TCLIService.Iface client;
@@ -124,7 +129,32 @@ public class HiveConnection implements java.sql.Connection {
 
   private void openTransport(String uri, String host, int port, Map<String, String> sessConf )
       throws SQLException {
-    transport = new TSocket(host, port);
+    if (sessConf.containsKey(HIVE_SSL) &&
+        sessConf.get(HIVE_SSL).equals(HIVE_SSL_ENABLED)) {
+
+      try {
+        // validate SSL parameters
+        if (!sessConf.containsKey(HIVE_SSL_TRUSTSTORE) ||
+            sessConf.get(HIVE_SSL_TRUSTSTORE) == null ||
+            !sessConf.containsKey(HIVE_SSL_TRUSTSTORE_PASSWD) ||
+            sessConf.get(HIVE_SSL_TRUSTSTORE_PASSWD) == null) {
+          throw new Exception("Invalid SSL parameters. Make sure to pass SSL TrustStore and TrustStore password. " +
+          "Ex: jdbc:hive2://host:port/dbname;ssl=true;sslTrustStore=<pathToTrustStore>;sslTrustStorePassword=<TrustStorePassword>");
+        }
+
+        TSSLTransportFactory.TSSLTransportParameters sslParams = new TSSLTransportFactory.TSSLTransportParameters();
+        sslParams.setTrustStore(sessConf.get(HIVE_SSL_TRUSTSTORE), sessConf.get(HIVE_SSL_TRUSTSTORE_PASSWD));
+
+        transport = TSSLTransportFactory.getClientSocket(host, port, 0/*timeout*/, sslParams);
+      } catch(Exception e) {
+        e.printStackTrace();
+        throw new SQLException("Could not establish SSL transport"
+          + uri + ": " + e.getMessage(), " 08S01");
+      }
+    } else {
+      transport = new TSocket(host, port);
+    }
+
 
     // handle secure connection if specified
     if (!sessConf.containsKey(HIVE_AUTH_TYPE)
