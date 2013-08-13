@@ -69,9 +69,11 @@ public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, T
       s = "";
     }
 
-    Timestamp t;
-    if (s.compareTo("NULL") == 0) {
+    Timestamp t=null;
+    isNull = false;
+    if (s.compareToIgnoreCase("NULL") == 0) {
       t = null;
+      isNull = true;
       logExceptionMessage(bytes, start, length, "TIMESTAMP");
     } else {
       // Supported timestamp formats:
@@ -85,25 +87,28 @@ public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, T
       try {
         t = Timestamp.valueOf(s);
       } catch (IllegalArgumentException e) {
-        LOG.debug("Timestamp is not in JDBC compliant format. So trying to convert "+
-                  "from seconds/seconds with decmimal precision formats");
-      BigDecimal value = new BigDecimal(s);
-      t = new Timestamp(value.longValue()*1000);
+        try {
+          BigDecimal value = new BigDecimal(s);
+          t = new Timestamp(value.longValue()*1000);
 
-      // if the value has any decimal part process it to get the nanoseconds part
-      if (value.scale()>0) {
-        if (value.scale()>9) {
-          LOG.error("Timestamp: epoch seconds decimal part precision beyond the expected 9 digits");
-          throw new NumberFormatException("Wrong epoch seconds decimal part precision");
-        }
+          // if the value has any decimal part process it to get the nanoseconds part
+          if (value.scale()>0) {
+            if (value.scale()>9) {
+              LOG.error("Timestamp: epoch seconds decimal part precision beyond the expected 9 digits");
+              throw new NumberFormatException("Wrong epoch seconds decimal part precision");
+            }
 
-        // convert the decimal part of the seconds into nanoseconds
-        value = value.subtract(new BigDecimal(value.longValue()));
-        value = value.multiply(NANOSECONDS_PERSEC_BD);
+            // convert the decimal part of the seconds into nanoseconds
+            value = value.subtract(new BigDecimal(value.longValue()));
+            value = value.multiply(NANOSECONDS_PERSEC_BD);
 
-        // Truncate the nanoseconds to 999,999,999.
-        // Timestamp.setNanos() accepts values between 0-999,999,999
-        t.setNanos(Math.min(value.intValue(), NANOSECONDS_PERSEC-1));
+            // Truncate the nanoseconds to 999,999,999.
+            // Timestamp.setNanos() accepts values between 0-999,999,999
+            t.setNanos(Math.min(value.intValue(), NANOSECONDS_PERSEC-1));
+          }
+        } catch(Exception ex) {
+          isNull = true;
+          logExceptionMessage(bytes, start, length, "TIMESTAMP");
         }
       }
     }
