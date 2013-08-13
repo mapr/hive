@@ -215,8 +215,8 @@ public class LazyStruct extends LazyNonPrimitive<LazySimpleStructObjectInspector
       return null;
     }
     if (!fieldInited[fieldID]) {
-      fieldInited[fieldID] = true;
       fields[fieldID].init(bytes, fieldByteBegin, fieldLength);
+      fieldInited[fieldID] = true;
     }
     return fields[fieldID].getObject();
   }

@@ -70,7 +70,8 @@ public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, T
     }
 
     Timestamp t = null;
-    if (s.compareTo("NULL") == 0) {
+    isNull = false;
+    if (s.compareToIgnoreCase("NULL") == 0) {
       isNull = true;
       logExceptionMessage(bytes, start, length, "TIMESTAMP");
     } else {
