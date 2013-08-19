@@ -152,7 +152,20 @@ public class RowContainer<Row extends List<Object>> extends AbstractRowContainer
     this.serde = null;
     this.standardOI = null;
     this.jc = jc;
-    this.fTmpFileOnDfs = jc.getBoolean("hive.exec.tmp.maprfsvolume", false);
+
+    fTmpFileOnDfs = HiveConf.getBoolVar(jc, HiveConf.ConfVars.TMP_MAPRFS_VOLUME);
+    if (fTmpFileOnDfs) {
+      try {
+        tmpDirDfs = getDfsTmpDir();
+        getDFS().mkdirs(new Path(tmpDirDfs));
+      } catch(Exception ex) {
+        LOG.info("Failed to create temporary directory on MapRFS local volume. " +
+          "Continuing with creating temporary files on local filesystem.");
+        LOG.debug("Error: ", ex);
+      }
+      if (tmpDirDfs == null)
+        fTmpFileOnDfs = false;
+    }
   }
   
   private JobConf getLocalFSJobConfClone(Configuration jc) {
