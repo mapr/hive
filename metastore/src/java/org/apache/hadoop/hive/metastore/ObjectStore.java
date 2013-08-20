@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.jdo.JDOException;
 import javax.jdo.JDOHelper;
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
@@ -306,14 +307,19 @@ public class ObjectStore implements RawStore, Configurable {
 
   public boolean openTransaction() {
     openTrasactionCalls++;
-    if (openTrasactionCalls == 1) {
-      currentTransaction = pm.currentTransaction();
-      currentTransaction.begin();
-      transactionStatus = TXN_STATUS.OPEN;
-    } else {
-      // something is wrong since openTransactionCalls is greater than 1 but
-      // currentTransaction is not active
-      assert ((currentTransaction != null) && (currentTransaction.isActive()));
+    try {
+      if (openTrasactionCalls == 1) {
+        currentTransaction = pm.currentTransaction();
+        currentTransaction.begin();
+        transactionStatus = TXN_STATUS.OPEN;
+      } else {
+        // something is wrong since openTransactionCalls is greater than 1 but
+        // currentTransaction is not active
+        assert ((currentTransaction != null) && (currentTransaction.isActive()));
+      }
+    } catch(JDOException e) {
+      openTrasactionCalls--;
+      throw e;
     }
     return currentTransaction.isActive();
   }
@@ -342,7 +348,12 @@ public class ObjectStore implements RawStore, Configurable {
     openTrasactionCalls--;
     if ((openTrasactionCalls == 0) && currentTransaction.isActive()) {
       transactionStatus = TXN_STATUS.COMMITED;
-      currentTransaction.commit();
+      try {
+        currentTransaction.commit();
+      } catch(JDOException e) {
+        openTrasactionCalls++;
+        throw e;
+      }
     }
     return true;
   }

@@ -134,6 +134,7 @@ public class RetryingRawStore implements InvocationHandler {
           String.format(
               "JDO datastore error. Retrying metastore command " +
                   "after %d ms (attempt %d of %d)", retryInterval, retryCount, retryLimit));
+      LOG.error("JDO datastore error: "+caughtException.getMessage(), caughtException);
       Thread.sleep(retryInterval);
       // If we have a connection error, the JDO connection URL hook might
       // provide us with a new URL to access the datastore.
