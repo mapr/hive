@@ -23,6 +23,7 @@ hiveserver2() {
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
+  setMaprHadoopOpts "HYBRID" 
 
   exec $HADOOP jar $JAR $CLASS "$@"
 }

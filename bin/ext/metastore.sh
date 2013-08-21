@@ -27,6 +27,7 @@ metastore() {
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
 
   export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
+  setMaprHadoopOpts "KERBEROS" 
   exec $HADOOP jar $JAR $CLASS "$@"
 }
 

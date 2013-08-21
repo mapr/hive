@@ -18,6 +18,7 @@ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 cli () {
   CLASS=org.apache.hadoop.hive.cli.CliDriver
+  setMaprHadoopOpts "HYBRID"
   execHiveCmd $CLASS "$@"
 }
 

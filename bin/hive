@@ -139,8 +139,8 @@ if [ ! -z "${MAPR_HBASE_TEST_JAR}" ] ; then
   CLASSPATH=${CLASSPATH}:${MAPR_HBASE_TEST_JAR};
 fi
 
-if [ -f "${MAPR_ZK_HOME}/zookeeper-3.3.2.jar" ] ; then
-  CLASSPATH=${CLASSPATH}:${MAPR_ZK_HOME}/zookeeper-3.3.2.jar;
+if [ -f "${MAPR_ZK_HOME}/zookeeper-*.jar" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_ZK_HOME}/zookeeper-*.jar;
 fi
 
 # add the auxillary jars such as serdes
