@@ -18,8 +18,10 @@
 
 package org.apache.hive.service.cli.thrift;
 
+import java.io.Console;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -423,9 +425,21 @@ public class ThriftCLIService extends AbstractService implements TCLIService.Ifa
       if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_SSL)) {
         TSSLTransportFactory.TSSLTransportParameters sslParams =
           new TSSLTransportFactory.TSSLTransportParameters();
-        sslParams.setKeyStore(hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE),
-                              hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
 
+        String keyStorePath = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE);
+        String keyStorePassword = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD);
+
+        if (keyStorePassword == null || keyStorePassword.isEmpty()) {
+          String passwordPrompt = "Enter password for keystore: '" + keyStorePath + "': ";
+          Console cons;
+          char[] passwd;
+          if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s] ", passwordPrompt)) != null) {
+            keyStorePassword = new String(passwd);
+            Arrays.fill(passwd, ' ');
+          }
+        }
+
+        sslParams.setKeyStore(keyStorePath, keyStorePassword);
         serverTransport = TSSLTransportFactory.getServerSocket(
           portNum,
           0, /*clientTimeout*/

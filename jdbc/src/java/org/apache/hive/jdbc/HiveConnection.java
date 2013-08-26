@@ -132,24 +132,28 @@ public class HiveConnection implements java.sql.Connection {
     if (sessConf.containsKey(HIVE_SSL) &&
         sessConf.get(HIVE_SSL).equals(HIVE_SSL_ENABLED)) {
 
+      String prevTS = System.getProperty("javax.net.ssl.trustStore");
+      String prevTSP = System.getProperty("javax.net.ssl.trustStorePassword");
+
       try {
-        // validate SSL parameters
-        if (!sessConf.containsKey(HIVE_SSL_TRUSTSTORE) ||
-            sessConf.get(HIVE_SSL_TRUSTSTORE) == null ||
-            !sessConf.containsKey(HIVE_SSL_TRUSTSTORE_PASSWD) ||
-            sessConf.get(HIVE_SSL_TRUSTSTORE_PASSWD) == null) {
-          throw new Exception("Invalid SSL parameters. Make sure to pass SSL TrustStore and TrustStore password. " +
-          "Ex: jdbc:hive2://host:port/dbname;ssl=true;sslTrustStore=<pathToTrustStore>;sslTrustStorePassword=<TrustStorePassword>");
-        }
+        String ts = sessConf.get(HIVE_SSL_TRUSTSTORE);
+        if (ts != null)
+          System.setProperty("javax.net.ssl.trustStore", ts);
 
-        TSSLTransportFactory.TSSLTransportParameters sslParams = new TSSLTransportFactory.TSSLTransportParameters();
-        sslParams.setTrustStore(sessConf.get(HIVE_SSL_TRUSTSTORE), sessConf.get(HIVE_SSL_TRUSTSTORE_PASSWD));
+        String tsp = sessConf.get(HIVE_SSL_TRUSTSTORE_PASSWD);
+        if (tsp != null)
+          System.setProperty("javax.net.ssl.trustStorePassword", tsp);
 
-        transport = TSSLTransportFactory.getClientSocket(host, port, 0/*timeout*/, sslParams);
+        transport = TSSLTransportFactory.getClientSocket(host, port, 0/*timeout*/);
       } catch(Exception e) {
         e.printStackTrace();
         throw new SQLException("Could not establish SSL transport"
           + uri + ": " + e.getMessage(), " 08S01");
+      } finally {
+        if (prevTS != null)
+          System.setProperty("javax.net.ssl.trustStore", prevTS);
+        if (prevTSP != null)
+          System.setProperty("javax.net.ssl.trustStorePassword", prevTSP);
       }
     } else {
       transport = new TSocket(host, port);
