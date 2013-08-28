@@ -36,10 +36,18 @@ public class PamAuthenticationProvider implements PasswdAuthenticationProvider {
 
       String pamSchemes[] = hivePamProfiles.split(",");
       for (String pamScheme : pamSchemes) {
-        Pam pam = new Pam(pamScheme);
-        PamReturnValue err = pam.authenticate(user, password);
-        if (err != PamReturnValue.PAM_SUCCESS) {
-          throw new AuthenticationException("Error validating user through PAM");
+        pamScheme = pamScheme.trim();
+        if (pamScheme.isEmpty())
+          continue;
+
+        try {
+          Pam pam = new Pam(pamScheme);
+          PamReturnValue err = pam.authenticate(user, password);
+          if (err != PamReturnValue.PAM_SUCCESS) {
+            throw new AuthenticationException("Error validating user through PAM. PamReturnValue=" + err);
+          }
+        } catch(LinkageError ex) {
+          throw new AuthenticationException("Link Error", ex);
         }
       }
     }
