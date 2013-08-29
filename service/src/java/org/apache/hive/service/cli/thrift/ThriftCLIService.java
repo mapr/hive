@@ -422,7 +422,8 @@ public class ThriftCLIService extends AbstractService implements TCLIService.Ifa
       }
 
       TServerSocket serverTransport;
-      if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_SSL)) {
+      boolean fSslEnabled = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_SSL);
+      if (fSslEnabled) {
         TSSLTransportFactory.TSSLTransportParameters sslParams =
           new TSSLTransportFactory.TSSLTransportParameters();
 
@@ -445,6 +446,7 @@ public class ThriftCLIService extends AbstractService implements TCLIService.Ifa
           0, /*clientTimeout*/
           serverAddress.getAddress(),
           sslParams);
+        System.out.println("SSL Enabled in HiveServer2");
       } else {
         serverTransport = new TServerSocket(serverAddress);
       }
@@ -461,7 +463,7 @@ public class ThriftCLIService extends AbstractService implements TCLIService.Ifa
 
       server = new TThreadPoolServer(sargs);
 
-      LOG.info("ThriftCLIService listening on " + serverAddress);
+      LOG.info("ThriftCLIService "+ (fSslEnabled ? "(with SSL) " : "") + "listening on " + serverAddress);
 
       server.serve();
     } catch (Throwable t) {
