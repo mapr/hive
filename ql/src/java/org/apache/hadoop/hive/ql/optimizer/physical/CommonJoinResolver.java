@@ -506,7 +506,7 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
               HiveConf.ConfVars.HIVECONVERTJOINNOCONDITIONALTASKTHRESHOLD);
 
           boolean bigTableFound = false;
-          long largestBigTableCandidateSize = 0;
+          long largestBigTableCandidateSize = -1;
           long sumTableSizes = 0;
           for (String alias : aliasToWork.keySet()) {
             int tablePosition = getPosition(currWork, joinOp, alias);
