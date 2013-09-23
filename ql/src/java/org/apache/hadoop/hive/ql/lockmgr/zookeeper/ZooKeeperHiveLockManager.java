@@ -92,9 +92,22 @@ public class ZooKeeperHiveLockManager implements HiveLockManager {
    * host1:port, host2:port..
    **/
   private static String getQuorumServers(HiveConf conf) {
-    String hosts = conf.getVar(HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM);
+    String[] hosts = conf.getVar(HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM).split(",");
     String port = conf.getVar(HiveConf.ConfVars.HIVE_ZOOKEEPER_CLIENT_PORT);
-    return hosts + ":" + port;
+    StringBuilder quorum = new StringBuilder();
+    for(int i=0; i<hosts.length; i++) {
+      quorum.append(hosts[i].trim());
+      if (!hosts[i].contains(":")) {
+        // if the hostname doesn't contain a port, add the configured port to hostname
+        quorum.append(":");
+        quorum.append(port);
+      }
+
+      if (i != hosts.length-1)
+        quorum.append(",");
+    }
+
+    return quorum.toString();
   }
 
   /**
