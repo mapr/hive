@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-THISSERVICE="metastore start_metastore stop_metastore status_metastore "
+THISSERVICE=metastore
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 metastore() {
@@ -30,64 +30,67 @@ metastore() {
   exec $HADOOP jar $JAR $CLASS "$@"
 }
 
-HIVE_METASTORE_LOG="${HIVE_LOG_DIR}/hive-${USER}-metastore.log"
-HIVE_METASTORE_PID="${HIVE_PID_DIR}/hive-${USER}-metastore.pid"
 
-start_metastore() {
-  if [ -f $HIVE_METASTORE_PID ]; then
-    if kill -0 `cat $HIVE_METASTORE_PID` > /dev/null 2>&1; then
-      echo Hive Metastore Server is running as process `cat $HIVE_METASTORE_PID`.  Stop it first.
+metastore_help() {
+  metastore -h
+}
+
+metastore_start() {
+log=$HIVE_LOG_DIR/hive-$HIVE_IDENT_STRING-metastore-$HOSTNAME.out
+pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
+
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid` > /dev/null 2>&1; then
+      echo metastore running as process `cat $pid`.  Stop it first.
       exit 1
     fi
   fi
-  echo "`date` Starting Hive Metastore Server"
-  # create dirs first
-  mkdir -p ${HIVE_LOG_DIR} 
-  mkdir -p ${HIVE_PID_DIR}
+
+#  echo starting metastore, logging to $log
+  echo "Starting Hive Metastore Server, logging to $log"
   CLASS=org.apache.hadoop.hive.metastore.HiveMetaStore
   if $cygwin; then
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
-  # rotate logs 
-  hive_rotate_log $HIVE_METASTORE_LOG
-  # change max heapsize to 1GB
-  export HADOOP_HEAPSIZE="1024" 
+
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
-  exec nohup $HADOOP jar $JAR $CLASS "$@" >> $HIVE_METASTORE_LOG 2>&1 &
-  pid=$!
-  echo "pid is $pid"
-  echo $pid > $HIVE_METASTORE_PID
+
+  export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
+
+  nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
+  echo $! > $pid
+  echo "`date` metastore started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
 }
 
-stop_metastore() {
-  if [ -f "$HIVE_METASTORE_PID" ]; then
-    if kill -0 `cat $HIVE_METASTORE_PID` > /dev/null 2>&1; then
-      echo "Stopping Hive Metastore Server"
-      kill -9 `cat $HIVE_METASTORE_PID`
-      echo "`date` Hive Metastore Server stopped, pid `cat $HIVE_METASTORE_PID`"
+metastore_stop() {
+log=$HIVE_LOG_DIR/hive-$HIVE_IDENT_STRING-metastore-$HOSTNAME.out
+pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid` > /dev/null 2>&1; then
+      echo stopping metastore
+      kill `cat $pid`
+      echo "`date` metastore stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
     else
-      echo "Hive Metastore Server is not running"
+      echo no metastore to stop
     fi
   else
-    echo "Hive Metastore Server is not running. pid file $HIVE_METASTORE_PID does not exist."
+    echo no metastore to stop
   fi
 }
 
-status_metastore() {
-  if [ -f "$HIVE_METASTORE_PID" ]; then
-    if kill -0 `cat $HIVE_METASTORE_PID` > /dev/null 2>&1; then
-      echo Hive Metastore Server running as process `cat $HIVE_METASTORE_PID`.
+metastore_status() {
+log=$HIVE_LOG_DIR/hive-$HIVE_IDENT_STRING-metastore-$HOSTNAME.out
+pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid`; then
+      echo metastore running as process `cat $pid`.
       exit 0
     fi
-    echo "$HIVE_METASTORE_PID exists with pid `cat $HIVE_METASTORE_PID` but no process running."
+    echo $pid exists with pid `cat $pid` but no metastore.
     exit 1
   fi
-  echo "Hive Metastore Server not running."
+  echo metastore not running.
   exit 1
-}
-
-metastore_help() {
-  metastore -h
 }
 

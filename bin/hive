@@ -82,18 +82,16 @@ MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\
 
 SERVICE=""
 HELP=""
+START=""
+STOP=""
+STATUS=""
+FINAL_OPT=""
+count=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --service)
       shift
-      SERVICE_OPTION=$1
-      if [ "$SERVICE_OPTION" = "start" ] || [ "$SERVICE_OPTION" = "stop" ] || [ "$SERVICE_OPTION" = "status" ]; then
-        shift
-        SERVICE="${SERVICE_OPTION}_${1}"
-      else
-        SERVICE=$SERVICE_OPTION
-        SERVICE_OPTION=""
-      fi
+      SERVICE=$1
       shift
       ;;
     --rcfilecat)
@@ -102,6 +100,26 @@ while [ $# -gt 0 ]; do
       ;;
     --help)
       HELP=_help
+      FINAL_OPT=$HELP
+      ((count++))
+      shift
+      ;;
+    --start)
+      START=_start
+      FINAL_OPT=$START
+      ((count++))
+      shift
+      ;;
+    --stop)
+      STOP=_stop
+      FINAL_OPT=$STOP
+      ((count++))
+      shift
+      ;;
+    --status)
+      STATUS=_status
+      FINAL_OPT=$STATUS
+      ((count++))
       shift
       ;;
     --debug*)
@@ -113,6 +131,11 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ "$count" -gt 1 ]; then
+   echo "Can have only start, stop, status or help option"
+   exit 1;
+fi
 
 if [ "$SERVICE" = "" ] ; then
   if [ "$HELP" = "_help" ] ; then
@@ -293,10 +316,25 @@ if [ "$DEBUG" ]; then
   fi
 fi
 
+HIVE_PID_DIR=$HIVE_HOME/pids
+if [ "$HIVE_IDENT_STRING" = "" ]; then
+  export HIVE_IDENT_STRING=`id -nu`
+fi
+# get log directory
+if [ "$HIVE_LOG_DIR" = "" ]; then
+  export HIVE_LOG_DIR="$HIVE_HOME/logs"
+fi
+mkdir -p "$HIVE_LOG_DIR"
+mkdir -p "$HIVE_PID_DIR"
+
+if [ "$HIVE_PID_DIR" = "" ]; then
+  export HIVE_PID_DIR="$HIVE_HOME/pids"
+fi
+
 TORUN=""
 for j in $SERVICE_LIST ; do
   if [ "$j" = "$SERVICE" ] ; then
-    TORUN=${j}$HELP
+    TORUN=${j}$FINAL_OPT
   fi
 done
 
