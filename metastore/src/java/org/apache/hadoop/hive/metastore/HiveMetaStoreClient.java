@@ -519,14 +519,21 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     }
 
     if (cascade) {
-       List<String> tableList = getAllTables(name);
-       for (String table : tableList) {
-         try {
-            dropTable(name, table, deleteData, false);
-         } catch (UnsupportedOperationException e) {
-           // Ignore Index tables, those will be dropped with parent tables
-         }
+      List<String> tableList = getAllTables(name);
+      for (String tablename : tableList) {
+        Table table = null;
+        try {
+          getTable(name, tablename);
+        } catch (NoSuchObjectException ignore) {
+          // It is possible that "tablename" is an index table which is deleted
+          // when deleting the table that has index. As we get the table list
+          // at once in the beginning, the list may contain tables that are
+          // already deleted
         }
+
+        if (table != null)
+          dropTable(table, deleteData, false, null);
+      }
     }
     client.drop_database(name, deleteData, cascade);
   }
@@ -646,13 +653,23 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     if (isIndexTable(tbl)) {
       throw new UnsupportedOperationException("Cannot drop index tables");
     }
+
+    dropTable(tbl, deleteData, ignoreUnknownTab, envContext);
+  }
+
+  public void dropTable(Table tbl, boolean deleteData,
+      boolean ignoreUnknownTab, EnvironmentContext envContext) throws MetaException, TException,
+      NoSuchObjectException, UnsupportedOperationException {
+    if (tbl == null)
+      throw new NoSuchObjectException();
+
     HiveMetaHook hook = getHook(tbl);
     if (hook != null) {
       hook.preDropTable(tbl);
     }
     boolean success = false;
     try {
-      client.drop_table_with_environment_context(dbname, name, deleteData, envContext);
+      client.drop_table_with_environment_context(tbl.getDbName(), tbl.getTableName(), deleteData, envContext);
       if (hook != null) {
         hook.commitDropTable(tbl, deleteData);
       }
