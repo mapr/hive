@@ -531,7 +531,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
           // already deleted
         }
 
-        if (table != null)
+        if (table != null && !isIndexTable(table))
           dropTable(table, deleteData, false, null);
       }
     }
