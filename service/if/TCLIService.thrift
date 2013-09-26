@@ -208,7 +208,7 @@ struct TUnionTypeEntry {
 }
 
 struct TUserDefinedTypeEntry {
-  // The fully qualified name of the class implementing this type.
+ // The fully qualified name of the class implementing this type.
   1: required string typeClassName
 }
 
@@ -995,6 +995,22 @@ struct TFetchResultsResp {
   3: optional TRowSet results
 }
 
+// GetLog()
+//
+// Fetch operation log from the server corresponding to
+// a particular OperationHandle.
+struct TGetLogReq {
+  // Operation whose log is requested
+  1: required TOperationHandle operationHandle
+}
+
+struct TGetLogResp {
+  1: required TStatus status
+
+  2: required string log
+
+}
+
 service TCLIService {
 
   TOpenSessionResp OpenSession(1:TOpenSessionReq req);
@@ -1028,4 +1044,6 @@ service TCLIService {
   TGetResultSetMetadataResp GetResultSetMetadata(1:TGetResultSetMetadataReq req);
   
   TFetchResultsResp FetchResults(1:TFetchResultsReq req);
+
+  TGetLogResp GetLog(1:TGetLogReq req);
 }

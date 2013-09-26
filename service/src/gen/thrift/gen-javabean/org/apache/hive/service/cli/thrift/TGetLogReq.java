@@ -31,22 +31,22 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.io.Serializable, Cloneable {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("TRow");
+public class TGetLogReq implements org.apache.thrift.TBase<TGetLogReq, TGetLogReq._Fields>, java.io.Serializable, Cloneable {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("TGetLogReq");
 
-  private static final org.apache.thrift.protocol.TField COL_VALS_FIELD_DESC = new org.apache.thrift.protocol.TField("colVals", org.apache.thrift.protocol.TType.LIST, (short)1);
+  private static final org.apache.thrift.protocol.TField OPERATION_HANDLE_FIELD_DESC = new org.apache.thrift.protocol.TField("operationHandle", org.apache.thrift.protocol.TType.STRUCT, (short)1);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
-    schemes.put(StandardScheme.class, new TRowStandardSchemeFactory());
-    schemes.put(TupleScheme.class, new TRowTupleSchemeFactory());
+    schemes.put(StandardScheme.class, new TGetLogReqStandardSchemeFactory());
+    schemes.put(TupleScheme.class, new TGetLogReqTupleSchemeFactory());
   }
 
-  private List<TColumnValue> colVals; // required
+  private TOperationHandle operationHandle; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    COL_VALS((short)1, "colVals");
+    OPERATION_HANDLE((short)1, "operationHandle");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -61,8 +61,8 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // COL_VALS
-          return COL_VALS;
+        case 1: // OPERATION_HANDLE
+          return OPERATION_HANDLE;
         default:
           return null;
       }
@@ -106,90 +106,70 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.COL_VALS, new org.apache.thrift.meta_data.FieldMetaData("colVals", org.apache.thrift.TFieldRequirementType.REQUIRED, 
-        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
-            new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, TColumnValue.class))));
+    tmpMap.put(_Fields.OPERATION_HANDLE, new org.apache.thrift.meta_data.FieldMetaData("operationHandle", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, TOperationHandle.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
-    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(TRow.class, metaDataMap);
+    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(TGetLogReq.class, metaDataMap);
   }
 
-  public TRow() {
+  public TGetLogReq() {
   }
 
-  public TRow(
-    List<TColumnValue> colVals)
+  public TGetLogReq(
+    TOperationHandle operationHandle)
   {
     this();
-    this.colVals = colVals;
+    this.operationHandle = operationHandle;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public TRow(TRow other) {
-    if (other.isSetColVals()) {
-      List<TColumnValue> __this__colVals = new ArrayList<TColumnValue>();
-      for (TColumnValue other_element : other.colVals) {
-        __this__colVals.add(new TColumnValue(other_element));
-      }
-      this.colVals = __this__colVals;
+  public TGetLogReq(TGetLogReq other) {
+    if (other.isSetOperationHandle()) {
+      this.operationHandle = new TOperationHandle(other.operationHandle);
     }
   }
 
-  public TRow deepCopy() {
-    return new TRow(this);
+  public TGetLogReq deepCopy() {
+    return new TGetLogReq(this);
   }
 
   @Override
   public void clear() {
-    this.colVals = null;
+    this.operationHandle = null;
   }
 
-  public int getColValsSize() {
-    return (this.colVals == null) ? 0 : this.colVals.size();
+  public TOperationHandle getOperationHandle() {
+    return this.operationHandle;
   }
 
-  public java.util.Iterator<TColumnValue> getColValsIterator() {
-    return (this.colVals == null) ? null : this.colVals.iterator();
+  public void setOperationHandle(TOperationHandle operationHandle) {
+    this.operationHandle = operationHandle;
   }
 
-  public void addToColVals(TColumnValue elem) {
-    if (this.colVals == null) {
-      this.colVals = new ArrayList<TColumnValue>();
-    }
-    this.colVals.add(elem);
+  public void unsetOperationHandle() {
+    this.operationHandle = null;
   }
 
-  public List<TColumnValue> getColVals() {
-    return this.colVals;
+  /** Returns true if field operationHandle is set (has been assigned a value) and false otherwise */
+  public boolean isSetOperationHandle() {
+    return this.operationHandle != null;
   }
 
-  public void setColVals(List<TColumnValue> colVals) {
-    this.colVals = colVals;
-  }
-
-  public void unsetColVals() {
-    this.colVals = null;
-  }
-
-  /** Returns true if field colVals is set (has been assigned a value) and false otherwise */
-  public boolean isSetColVals() {
-    return this.colVals != null;
-  }
-
-  public void setColValsIsSet(boolean value) {
+  public void setOperationHandleIsSet(boolean value) {
     if (!value) {
-      this.colVals = null;
+      this.operationHandle = null;
     }
   }
 
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
-    case COL_VALS:
+    case OPERATION_HANDLE:
       if (value == null) {
-        unsetColVals();
+        unsetOperationHandle();
       } else {
-        setColVals((List<TColumnValue>)value);
+        setOperationHandle((TOperationHandle)value);
       }
       break;
 
@@ -198,8 +178,8 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
-    case COL_VALS:
-      return getColVals();
+    case OPERATION_HANDLE:
+      return getOperationHandle();
 
     }
     throw new IllegalStateException();
@@ -212,8 +192,8 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
     }
 
     switch (field) {
-    case COL_VALS:
-      return isSetColVals();
+    case OPERATION_HANDLE:
+      return isSetOperationHandle();
     }
     throw new IllegalStateException();
   }
@@ -222,21 +202,21 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof TRow)
-      return this.equals((TRow)that);
+    if (that instanceof TGetLogReq)
+      return this.equals((TGetLogReq)that);
     return false;
   }
 
-  public boolean equals(TRow that) {
+  public boolean equals(TGetLogReq that) {
     if (that == null)
       return false;
 
-    boolean this_present_colVals = true && this.isSetColVals();
-    boolean that_present_colVals = true && that.isSetColVals();
-    if (this_present_colVals || that_present_colVals) {
-      if (!(this_present_colVals && that_present_colVals))
+    boolean this_present_operationHandle = true && this.isSetOperationHandle();
+    boolean that_present_operationHandle = true && that.isSetOperationHandle();
+    if (this_present_operationHandle || that_present_operationHandle) {
+      if (!(this_present_operationHandle && that_present_operationHandle))
         return false;
-      if (!this.colVals.equals(that.colVals))
+      if (!this.operationHandle.equals(that.operationHandle))
         return false;
     }
 
@@ -247,28 +227,28 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
   public int hashCode() {
     HashCodeBuilder builder = new HashCodeBuilder();
 
-    boolean present_colVals = true && (isSetColVals());
-    builder.append(present_colVals);
-    if (present_colVals)
-      builder.append(colVals);
+    boolean present_operationHandle = true && (isSetOperationHandle());
+    builder.append(present_operationHandle);
+    if (present_operationHandle)
+      builder.append(operationHandle);
 
     return builder.toHashCode();
   }
 
-  public int compareTo(TRow other) {
+  public int compareTo(TGetLogReq other) {
     if (!getClass().equals(other.getClass())) {
       return getClass().getName().compareTo(other.getClass().getName());
     }
 
     int lastComparison = 0;
-    TRow typedOther = (TRow)other;
+    TGetLogReq typedOther = (TGetLogReq)other;
 
-    lastComparison = Boolean.valueOf(isSetColVals()).compareTo(typedOther.isSetColVals());
+    lastComparison = Boolean.valueOf(isSetOperationHandle()).compareTo(typedOther.isSetOperationHandle());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetColVals()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.colVals, typedOther.colVals);
+    if (isSetOperationHandle()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.operationHandle, typedOther.operationHandle);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -290,14 +270,14 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("TRow(");
+    StringBuilder sb = new StringBuilder("TGetLogReq(");
     boolean first = true;
 
-    sb.append("colVals:");
-    if (this.colVals == null) {
+    sb.append("operationHandle:");
+    if (this.operationHandle == null) {
       sb.append("null");
     } else {
-      sb.append(this.colVals);
+      sb.append(this.operationHandle);
     }
     first = false;
     sb.append(")");
@@ -306,11 +286,14 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
 
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
-    if (!isSetColVals()) {
-      throw new org.apache.thrift.protocol.TProtocolException("Required field 'colVals' is unset! Struct:" + toString());
+    if (!isSetOperationHandle()) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'operationHandle' is unset! Struct:" + toString());
     }
 
     // check for sub-struct validity
+    if (operationHandle != null) {
+      operationHandle.validate();
+    }
   }
 
   private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
@@ -329,15 +312,15 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
     }
   }
 
-  private static class TRowStandardSchemeFactory implements SchemeFactory {
-    public TRowStandardScheme getScheme() {
-      return new TRowStandardScheme();
+  private static class TGetLogReqStandardSchemeFactory implements SchemeFactory {
+    public TGetLogReqStandardScheme getScheme() {
+      return new TGetLogReqStandardScheme();
     }
   }
 
-  private static class TRowStandardScheme extends StandardScheme<TRow> {
+  private static class TGetLogReqStandardScheme extends StandardScheme<TGetLogReq> {
 
-    public void read(org.apache.thrift.protocol.TProtocol iprot, TRow struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol iprot, TGetLogReq struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
       while (true)
@@ -347,21 +330,11 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
           break;
         }
         switch (schemeField.id) {
-          case 1: // COL_VALS
-            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
-              {
-                org.apache.thrift.protocol.TList _list102 = iprot.readListBegin();
-                struct.colVals = new ArrayList<TColumnValue>(_list102.size);
-                for (int _i103 = 0; _i103 < _list102.size; ++_i103)
-                {
-                  TColumnValue _elem104; // required
-                  _elem104 = new TColumnValue();
-                  _elem104.read(iprot);
-                  struct.colVals.add(_elem104);
-                }
-                iprot.readListEnd();
-              }
-              struct.setColValsIsSet(true);
+          case 1: // OPERATION_HANDLE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.operationHandle = new TOperationHandle();
+              struct.operationHandle.read(iprot);
+              struct.setOperationHandleIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -375,20 +348,13 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
       struct.validate();
     }
 
-    public void write(org.apache.thrift.protocol.TProtocol oprot, TRow struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol oprot, TGetLogReq struct) throws org.apache.thrift.TException {
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.colVals != null) {
-        oprot.writeFieldBegin(COL_VALS_FIELD_DESC);
-        {
-          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.colVals.size()));
-          for (TColumnValue _iter105 : struct.colVals)
-          {
-            _iter105.write(oprot);
-          }
-          oprot.writeListEnd();
-        }
+      if (struct.operationHandle != null) {
+        oprot.writeFieldBegin(OPERATION_HANDLE_FIELD_DESC);
+        struct.operationHandle.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -397,41 +363,26 @@ public class TRow implements org.apache.thrift.TBase<TRow, TRow._Fields>, java.i
 
   }
 
-  private static class TRowTupleSchemeFactory implements SchemeFactory {
-    public TRowTupleScheme getScheme() {
-      return new TRowTupleScheme();
+  private static class TGetLogReqTupleSchemeFactory implements SchemeFactory {
+    public TGetLogReqTupleScheme getScheme() {
+      return new TGetLogReqTupleScheme();
     }
   }
 
-  private static class TRowTupleScheme extends TupleScheme<TRow> {
+  private static class TGetLogReqTupleScheme extends TupleScheme<TGetLogReq> {
 
     @Override
-    public void write(org.apache.thrift.protocol.TProtocol prot, TRow struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol prot, TGetLogReq struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
-      {
-        oprot.writeI32(struct.colVals.size());
-        for (TColumnValue _iter106 : struct.colVals)
-        {
-          _iter106.write(oprot);
-        }
-      }
+      struct.operationHandle.write(oprot);
     }
 
     @Override
-    public void read(org.apache.thrift.protocol.TProtocol prot, TRow struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol prot, TGetLogReq struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      {
-        org.apache.thrift.protocol.TList _list107 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.colVals = new ArrayList<TColumnValue>(_list107.size);
-        for (int _i108 = 0; _i108 < _list107.size; ++_i108)
-        {
-          TColumnValue _elem109; // required
-          _elem109 = new TColumnValue();
-          _elem109.read(iprot);
-          struct.colVals.add(_elem109);
-        }
-      }
-      struct.setColValsIsSet(true);
+      struct.operationHandle = new TOperationHandle();
+      struct.operationHandle.read(iprot);
+      struct.setOperationHandleIsSet(true);
     }
   }
 

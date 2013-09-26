@@ -91,4 +91,6 @@ public interface ICLIService {
   public abstract RowSet fetchResults(OperationHandle opHandle)
       throws HiveSQLException;
 
+  public abstract String getLog(OperationHandle opHandle)
+      throws HiveSQLException;
 }
