@@ -485,14 +485,21 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     }
 
     if (cascade) {
-       List<String> tableList = getAllTables(name);
-       for (String table : tableList) {
-         try {
-            dropTable(name, table, deleteData, false);
-         } catch (UnsupportedOperationException e) {
-           // Ignore Index tables, those will be dropped with parent tables
-         }
+      List<String> tableList = getAllTables(name);
+      for (String tablename : tableList) {
+        Table table = null;
+        try {
+          getTable(name, tablename);
+        } catch (NoSuchObjectException ignore) {
+          // It is possible that "tablename" is an index table which is deleted
+          // when deleting the table that has index. As we get the table list
+          // at once in the beginning, the list may contain tables that are
+          // already deleted
         }
+
+        if (table != null)
+          dropTable(table, deleteData, false);
+      }
     }
     client.drop_database(name, deleteData, cascade);
   }
@@ -573,14 +580,14 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
    *      java.lang.String, boolean)
    */
   public void dropTable(String dbname, String name, boolean deleteData,
-      boolean ignoreUknownTab) throws MetaException, TException,
+      boolean ignoreUnknownTab) throws MetaException, TException,
       NoSuchObjectException, UnsupportedOperationException {
 
     Table tbl;
     try {
       tbl = getTable(dbname, name);
     } catch (NoSuchObjectException e) {
-      if (!ignoreUknownTab) {
+      if (!ignoreUnknownTab) {
         throw e;
       }
       return;
@@ -588,19 +595,29 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     if (isIndexTable(tbl)) {
       throw new UnsupportedOperationException("Cannot drop index tables");
     }
+    dropTable(tbl, deleteData, ignoreUnknownTab);
+  }
+
+  public void dropTable(Table tbl, boolean deleteData,
+      boolean ignoreUnknownTab) throws MetaException, TException,
+      NoSuchObjectException, UnsupportedOperationException {
+
+    if (tbl == null)
+      throw new NoSuchObjectException();
+
     HiveMetaHook hook = getHook(tbl);
     if (hook != null) {
       hook.preDropTable(tbl);
     }
     boolean success = false;
     try {
-      client.drop_table(dbname, name, deleteData);
+      client.drop_table(tbl.getDbName(), tbl.getTableName(), deleteData);
       if (hook != null) {
         hook.commitDropTable(tbl, deleteData);
       }
       success=true;
     } catch (NoSuchObjectException e) {
-      if (!ignoreUknownTab) {
+      if (!ignoreUnknownTab) {
         throw e;
       }
     } finally {
