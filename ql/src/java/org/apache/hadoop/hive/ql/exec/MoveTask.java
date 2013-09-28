@@ -84,8 +84,12 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
       String mesg_detail = " from " + sourcePath.toString();
       console.printInfo(mesg, mesg_detail);
 
-      // delete the output directory if it already exists
-      fs.delete(targetPath, true);
+      if (fs.exists(targetPath)) {
+        Hive.cleanupDest(fs, targetPath, conf);
+      } else {
+        fs.mkdirs(targetPath);
+      }
+
       // if source exists, rename. Otherwise, create a empty directory
       if (fs.exists(sourcePath)) {
         Path deletePath = null;
@@ -94,7 +98,8 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
         if (HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_INSERT_INTO_MULTILEVEL_DIRS)) {
         deletePath = createTargetPath(targetPath, fs);
         }
-        if (!fs.rename(sourcePath, targetPath)) {
+
+        if (!Hive.moveResultFilesToDest(fs, sourcePath, targetPath)) {
           try {
             if (deletePath != null) {
               fs.delete(deletePath, true);

@@ -67,7 +67,8 @@ public class Context {
   private final Map<String, ContentSummary> pathToCS = new ConcurrentHashMap<String, ContentSummary>();
 
   // scratch path to use for all non-local (ie. hdfs) file system tmp folders
-  private final Path nonLocalScratchPath;
+  private Path nonLocalScratchPath;
+  private boolean fNonLocalScratchDirUsed = false;
 
   // scratch directory to use for local file system tmp folders
   private final String localScratchDir;
@@ -118,6 +119,18 @@ public class Context {
             executionId).toUri().getPath();
   }
 
+  public void changeDFSScratchDir(String newScratchDir) {
+    if (fNonLocalScratchDirUsed)
+      throw new RuntimeException("Configured scratchdir already in use");
+
+    nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
+  }
+
+  private Path getNonLocalScratchDir() {
+    if (!fNonLocalScratchDirUsed)
+      fNonLocalScratchDirUsed = true;
+    return nonLocalScratchPath;
+  }
 
   public Map<LoadTableDesc, WriteEntity> getLoadTableOutputMap() {
     return loadTableOutputMap;
@@ -226,11 +239,10 @@ public class Context {
     }
 
     try {
-      Path dir = FileUtils.makeQualified(nonLocalScratchPath, conf);
+      Path dir = FileUtils.makeQualified(getNonLocalScratchDir(), conf);
       URI uri = dir.toUri();
       return getScratchDir(uri.getScheme(), uri.getAuthority(),
                            !explain, uri.getPath());
-
     } catch (IOException e) {
       throw new RuntimeException(e);
     } catch (IllegalArgumentException e) {
@@ -241,7 +253,7 @@ public class Context {
 
   private String getExternalScratchDir(URI extURI) {
     return getScratchDir(extURI.getScheme(), extURI.getAuthority(),
-                         !explain, nonLocalScratchPath.toUri().getPath());
+                         !explain, getNonLocalScratchDir().toUri().getPath());
   }
 
   /**

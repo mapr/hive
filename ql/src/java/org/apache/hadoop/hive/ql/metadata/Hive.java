@@ -2165,6 +2165,37 @@ private void constructOneLBLocationMap(FileStatus fSta,
     }
   }
 
+  public static void cleanupDest(FileSystem fs, Path destf, HiveConf conf)
+    throws IOException {
+    // delete all files under the destination except the scratch dir, because
+    // scratchdir contains the intermediate results which are moved under
+    // the destination directory
+    FileStatus[] fileStatuses = fs.listStatus(destf);
+    for(FileStatus fileStatus : fileStatuses) {
+      Path file = fileStatus.getPath();
+      if (!file.getName().toLowerCase().startsWith(
+        conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST).toLowerCase())) {
+        fs.delete(file, true);
+      }
+    }
+  }
+
+  public static boolean moveResultFilesToDest(FileSystem fs, Path srcd, Path destd)
+    throws IOException, HiveException {
+
+    // rename all files under the source directory to destination
+    FileStatus[] fileStatuses = fs.listStatus(srcd);
+    for(FileStatus fileStatus : fileStatuses) {
+      Path file = fileStatus.getPath();
+      if (!fs.rename(file, destd)) {
+        throw new HiveException("Unable to move result file " + file
+          + " to destination directory: " + destd);
+      }
+    }
+
+    return true;
+  }
+
   /**
    * Replaces files in the partition with new data set specified by srcf. Works
    * by renaming directory of srcf to the destination file.
@@ -2199,7 +2230,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       List<List<Path[]>> result = checkPaths(conf, fs, srcs, destf, true);
 
       // point of no return -- delete oldPath
-      if (oldPath != null) {
+      if (oldPath != null && !oldPath.equals(destf)) {
         try {
           FileSystem fs2 = oldPath.getFileSystem(conf);
           if (fs2.exists(oldPath)) {
@@ -2221,14 +2252,12 @@ private void constructOneLBLocationMap(FileStatus fSta,
           fs.mkdirs(destf.getParent());
         }
         if (fs.exists(destf)) {
-          fs.delete(destf, true);
+          cleanupDest(fs, destf, conf);
+        } else {
+          fs.mkdirs(destf);
         }
 
-        boolean b = fs.rename(srcs[0].getPath(), destf);
-        if (!b) {
-          throw new HiveException("Unable to move results from " + srcs[0].getPath()
-              + " to destination directory: " + destf);
-        }
+        boolean b = moveResultFilesToDest(fs, srcs[0].getPath(), destf);
         LOG.debug("Renaming:" + srcf.toString() + " to " + destf.toString()  + ",Status:" + b);
       } else { // srcf is a file or pattern containing wildcards
         if (!fs.exists(destf)) {

@@ -271,6 +271,25 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     int nextNum;
   }
 
+  private boolean isInsertQueryForOptimize = false;
+  private String destClauseForInsertOptimizer;
+
+  public boolean getIsInsertQueryForOptimize() {
+    return isInsertQueryForOptimize;
+  }
+
+  public void setIsInsertQueryForOptimize(boolean val) {
+    isInsertQueryForOptimize = val;
+  }
+
+  public String getDestClauseForInsertOptimizer() {
+    return destClauseForInsertOptimizer;
+  }
+
+  public void setDestClauseForInsertOptimizer(String destClause) {
+    this.destClauseForInsertOptimizer = destClause;
+  }
+
   public SemanticAnalyzer(HiveConf conf) throws SemanticException {
 
     super(conf);
@@ -763,6 +782,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return alias;
   }
 
+  private boolean hasInsertOptimizeTokens(ASTNode dest) {
+    int destTokenType = dest.getToken().getType();
+
+    return (destTokenType == HiveParser.TOK_DIR && // If dest is a dir make sure it is not local and tmp dir
+            ((ASTNode) dest.getChild(0)).getToken().getType() != HiveParser.TOK_TMP_FILE &&
+            ((ASTNode) dest.getChild(0)).getToken().getType() != HiveParser.TOK_LOCAL_DIR
+           )
+            ||
+           (destTokenType == HiveParser.TOK_TAB);
+  }
+
   /**
    * Phase 1: (including, but not limited to):
    *
@@ -834,6 +864,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           }
         }
         qbp.setDestForClause(ctx_1.dest, (ASTNode) ast.getChild(0));
+        if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) &&
+          hasInsertOptimizeTokens((ASTNode) ast.getChild(0)) &&
+          !getIsInsertQueryForOptimize()) {
+
+          setIsInsertQueryForOptimize(true);
+          setDestClauseForInsertOptimizer(ctx_1.dest);
+        }
         break;
 
       case HiveParser.TOK_FROM:
@@ -8675,6 +8712,47 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     getMetaData(qb);
     LOG.info("Completed getting MetaData in Semantic Analysis");
+
+    // change the scratch dir to optimize insert query
+    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) &&
+      getIsInsertQueryForOptimize()) {
+
+      String destClause = getDestClauseForInsertOptimizer();
+      QBMetaData qbm = qb.getMetaData();
+      Integer dest_type = qbm.getDestTypeForAlias(destClause);
+      String scratchDir = Path.SEPARATOR + conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST);
+      switch(dest_type) {
+        case QBMetaData.DEST_TABLE: {
+          Table dest_tab = qbm.getDestTableForAlias(destClause);
+          if (!dest_tab.isNonNative()) {
+            ctx.changeDFSScratchDir(dest_tab.getPath().toString() + scratchDir);
+          }
+          break;
+        }
+
+        case QBMetaData.DEST_PARTITION: {
+          Partition dest_part = qbm.getDestPartitionForAlias(destClause);
+          Table dest_tab = dest_part.getTable();
+          Path tabPath = dest_tab.getPath();
+          Path partPath = dest_part.getPartitionPath();
+
+          Path dest_path = new Path(tabPath.toUri().getScheme(),
+            tabPath.toUri().getAuthority(), partPath.toUri().getPath());
+
+          ctx.changeDFSScratchDir(dest_path.toString() + scratchDir);
+          break;
+        }
+
+        case QBMetaData.DEST_DFS_FILE: {
+          Path dest_path = new Path(qbm.getDestFileForAlias(destClause));
+          ctx.changeDFSScratchDir(dest_path.toString() + scratchDir);
+          break;
+        }
+
+        default:
+          LOG.error("Unknown destination type");
+      }
+    }
 
     // Save the result schema derived from the sink operator produced
     // by genPlan. This has the correct column names, which clients
