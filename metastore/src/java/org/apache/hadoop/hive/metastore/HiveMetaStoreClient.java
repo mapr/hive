@@ -489,7 +489,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
       for (String tablename : tableList) {
         Table table = null;
         try {
-          getTable(name, tablename);
+          table = getTable(name, tablename);
         } catch (NoSuchObjectException ignore) {
           // It is possible that "tablename" is an index table which is deleted
           // when deleting the table that has index. As we get the table list
