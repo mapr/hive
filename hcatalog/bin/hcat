@@ -17,25 +17,52 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Resolve our absolute path                                                      
-# resolve links - $0 may be a softlink                                           
-this="${BASH_SOURCE-$0}"                                                         
-while [ -h "$this" ]; do                                                         
-    ls=`ls -ld "$this"`                                                          
-    link=`expr "$ls" : '.*-> \(.*\)$'`                                           
-    if expr "$link" : '.*/.*' > /dev/null; then                                  
-        this="$link"                                                             
-    else                                                                         
-        this=`dirname "$this"`/"$link"                                           
-    fi                                                                           
-done                                                                             
-                                                                                 
+function get_canonical_dir() {
+  target="$1"
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
+
+#get home dir for scripts in home/bin
+function get_home_dir() {
+  exec_path=`which $1 2>/dev/null`
+  exec_dir=`dirname $exec_path`
+  if [ -f ${exec_path} ]; then
+    #dir of script
+    exec_dir=$(get_canonical_dir "$exec_path")
+    #one level up for home dir
+    exec_dir=`dirname "$exec_dir"`
+  fi
+  echo $exec_dir;
+}
+
 # convert relative path to absolute path                                         
-bin=`dirname "$this"`                                                            
-script=`basename "$this"`                                                        
+bin=$(get_canonical_dir "$0")
+script=`basename "$0"`                                                        
 bin=`unset CDPATH; cd "$bin"; pwd`                                               
 this="$bin/$script"                                                              
 
+HADOOP_DIR=$(get_home_dir "hadoop")
+export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
 
 if [ -e "$bin/../libexec/hcat-config.sh" ]; then
   . "$bin"/../libexec/hcat-config.sh
@@ -59,13 +86,7 @@ for f in $@; do
 done
 
 # check for hive in the path
-HIVE_IN_PATH=`which hive 2>/dev/null`
-if [ -f ${HIVE_IN_PATH} ]; then
-  #dir of hive scrip
-  HIVE_DIR=`dirname "$HIVE_IN_PATH"`
-  #one level up for base dir
-  HIVE_DIR=`dirname "$HIVE_DIR"`
-fi
+HIVE_DIR=$(get_home_dir "hive")
 
 # HIVE_HOME env variable overrides hive in the path
 HIVE_HOME=${HIVE_HOME:-$HIVE_DIR}
