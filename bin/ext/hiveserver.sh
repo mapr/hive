@@ -23,9 +23,8 @@ hiveserver() {
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
-
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
-
+  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_SERVER_LOGIN_OPTS}"
   exec $HADOOP jar $JAR $CLASS "$@"
 }
 

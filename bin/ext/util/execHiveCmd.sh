@@ -30,20 +30,3 @@ execHiveCmd () {
   # hadoop 20 or newer - skip the aux_jars option. picked up from hiveconf
   exec $HADOOP jar ${HIVE_LIB}/hive-cli-*.jar $CLASS $HIVE_OPTS "$@"
 }
-
-setMaprHadoopOpts () {
-  LOGIN_TYPE=$1;
-
-  if [ "$LOGIN_TYPE" = "KERBEROS" ]
-  then
-    export HADOOP_OPTS="$HADOOP_OPTS ${KERBEROS_LOGIN_OPTS}"
-  elif [ "$LOGIN_TYPE" = "HYBRID" ]
-  then
-    export HADOOP_OPTS="$HADOOP_OPTS ${HYBRID_LOGIN_OPTS}"
-  elif [ "$LOGIN_TYPE" = "MAPRSASL" ]
-  then
-    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_LOGIN_OPTS}"
-  else
-    export HADOOP_OPTS="$HADOOP_OPTS ${SIMPLE_LOGIN_OPTS}"
-  fi
-}

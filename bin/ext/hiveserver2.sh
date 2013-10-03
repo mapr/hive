@@ -24,8 +24,8 @@ hiveserver2() {
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
-  setMaprHadoopOpts "HYBRID" 
 
+  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_SERVER_LOGIN_OPTS}"
   exec $HADOOP jar $JAR $CLASS "$@"
 }
 
@@ -51,6 +51,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
 
+  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_SERVER_LOGIN_OPTS}"
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
   echo "`date` hiveserver2 started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
