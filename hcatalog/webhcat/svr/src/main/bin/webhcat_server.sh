@@ -204,6 +204,9 @@ if [[ -z "$CLASSPATH" ]]; then
 fi
 CLASSPATH="$JAR:$CLASSPATH"
 
+#include conf dir
+CLASSPATH="$CLASSPATH:$WEBHCAT_CONF_DIR"
+
 if [[ -z "$HADOOP_CLASSPATH" ]]; then
         export HADOOP_CLASSPATH="$CLASSPATH"
 else
@@ -213,15 +216,17 @@ fi
 if [[ -z "$WEBHCAT_LOG4J" ]]; then
         if [[ -f "$base_dir/conf/webhcat-log4j.properties" ]]; then
                 WEBHCAT_LOG4J="$base_dir/conf/webhcat-log4j.properties";
-        elif [[ -f "$base_dir/conf/webhcat-log4j.properties" ]]; then
-                WEBHCAT_LOG4J="$base_dir/conf/webhcat-log4j.properties";
+        elif [[ -f "$WEBHCAT_CONF_DIR/webhcat-log4j.properties" ]]; then
+                WEBHCAT_LOG4J="$WEBHCAT_CONF_DIR/webhcat-log4j.properties";
         else
                 WEBHCAT_LOG4J="webhcat-log4j.properties";
         fi
 fi
 
+HADOOP_CLASSPATH="$HADOOP_CLASSPATH:$WEBHCAT_LOG4J"
+
 export HADOOP_USER_CLASSPATH_FIRST=true
-export HADOOP_OPTS="${HADOOP_OPTS} -Dwebhcat.log.dir=$WEBHCAT_LOG_DIR -Dlog4j.configuration=$WEBHCAT_LOG4J"
+export HADOOP_OPTS="${HADOOP_OPTS} -Dwebhcat.log.dir=$WEBHCAT_LOG_DIR -Dlog4j.configuration=webhcat-log4j.properties"
 
 start_cmd="$HADOOP_PREFIX/bin/hadoop jar $JAR org.apache.hcatalog.templeton.Main  "
 

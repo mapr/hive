@@ -48,20 +48,20 @@ function get_home_dir() {
   exec_dir=`dirname $exec_path`
   if [ -f ${exec_path} ]; then
     #dir of script
-    exec_dir=$(get_canonical_dir "$exec_path")
+    exec_dir=`get_canonical_dir $exec_path`
     #one level up for home dir
-    exec_dir=`dirname "$exec_dir"`
+    exec_dir=`dirname $exec_dir`
   fi
   echo $exec_dir;
 }
 
 # convert relative path to absolute path                                         
-bin=$(get_canonical_dir "$0")
+bin=`get_canonical_dir "${BASH_SOURCE-$0}"`
 script=`basename "$0"`                                                        
 bin=`unset CDPATH; cd "$bin"; pwd`                                               
 this="$bin/$script"                                                              
 
-HADOOP_DIR=$(get_home_dir "hadoop")
+HADOOP_DIR=`get_home_dir "hadoop"`
 export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
 
 if [ -e "$bin/../libexec/hcat-config.sh" ]; then
@@ -86,7 +86,7 @@ for f in $@; do
 done
 
 # check for hive in the path
-HIVE_DIR=$(get_home_dir "hive")
+HIVE_DIR=`get_home_dir "hive"`
 
 # HIVE_HOME env variable overrides hive in the path
 HIVE_HOME=${HIVE_HOME:-$HIVE_DIR}
