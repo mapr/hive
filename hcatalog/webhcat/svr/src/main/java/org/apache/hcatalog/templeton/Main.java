@@ -111,7 +111,7 @@ public class Main {
             LOG.info("Templeton listening on port " + port);
         } catch (Exception e) {
             System.err.println("templeton: Server failed to start: " + e.getMessage());
-            LOG.fatal("Server failed to start: " + e);
+            LOG.fatal("Server failed to start: " + e, e);
             System.exit(1);
         }
     }
@@ -188,9 +188,10 @@ public class Main {
 
         FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
         if (UserGroupInformation.isSecurityEnabled()) {
-            // TODO:
+            authFilter.setInitParameter("signature.secret", conf.kerberosSecret());
+            authFilter.setInitParameter("kerberos.principal", conf.kerberosPrincipal());
+            authFilter.setInitParameter("kerberos.keytab", conf.kerberosKeytab());
         } else {
-            //authFilter.setInitParameter("simple.anonymous.allowed", "true");
             authFilter.setInitParameter("type", "simple");
         }
         return authFilter;

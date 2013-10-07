@@ -95,3 +95,8 @@ else
 fi
 
 export HADOOP_CONF_DIR=${HADOOP_HOME}/conf
+
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+export HADOOP_OPTS="${HADOOP_OPTS} ${WEBHCAT_LOGIN_OPTS}"
+
