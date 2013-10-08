@@ -44,6 +44,7 @@ import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.TaskGraphWalker;
 import org.apache.hadoop.hive.ql.lib.TaskGraphWalker.TaskGraphWalkerContext;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.optimizer.GenMapRedUtils;
 import org.apache.hadoop.hive.ql.optimizer.MapJoinProcessor;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
@@ -437,6 +438,24 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
 
       MapredWork currWork = currTask.getWork();
 
+      Configuration conf = context.getConf();
+
+      /* Get the small table threshold */
+      long ThresholdOfSmallTblSizeSum = HiveConf.getLongVar(conf, HiveConf.ConfVars.HIVESMALLTABLESFILESIZE);
+
+      /* Get the map join threshold
+       * This is the threshold that the user has specified to fit in mapjoin
+       */
+      long mapJoinSize = HiveConf.getLongVar(conf, HiveConf.ConfVars.HIVECONVERTJOINNOCONDITIONALTASKTHRESHOLD);
+
+      /* We want to turn off map join optimization if the table is not managed by hive itself.
+       * For eg. if we create a hive table using HBaseStorageHandler. To do this we set the size
+       * of such tables to be the max of mapJoinSize and ThresholdOfSmallTblSizeSum.
+       */
+      long pseudoSize = Math.max(ThresholdOfSmallTblSizeSum, mapJoinSize) + 1;
+
+
+
       // create conditional work list and task list
       List<Serializable> listWorks = new ArrayList<Serializable>();
       List<Task<? extends Serializable>> listTasks = new ArrayList<Task<? extends Serializable>>();
@@ -465,6 +484,8 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
         // size for each input alias.
         Utilities.getInputSummary(context, currWork, null).getLength();
 
+        Hive db = Hive.get(new HiveConf());
+
         // set alias to size mapping, this can be used to determine if one table
         // is choosen as big table, what's the total size of left tables, which
         // are going to be small tables.
@@ -473,8 +494,20 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
           List<String> aliasList = entry.getValue();
           ContentSummary cs = context.getCS(path);
           if (cs != null) {
-            long size = cs.getLength();
+
             for (String alias : aliasList) {
+
+              long size;
+
+              /* If the table is not maintained by hive, set the size
+               * of the table to be pseudoSize, otherwise the size is 0
+               * and we apply the map join optimization in cases we shouldn't
+               */
+              if (db.getTable(alias).getStorageHandler() != null)
+                  size = pseudoSize;
+              else
+                  size = cs.getLength();
+
               aliasTotalKnownInputSize += size;
               Long es = aliasToSize.get(alias);
               if (es == null) {
@@ -493,18 +526,12 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
           return null;
         }
 
-        Configuration conf = context.getConf();
-
         // If sizes of atleast n-1 tables in a n-way join is known, and their sum is smaller than
         // the threshold size, convert the join into map-join and don't create a conditional task
         boolean convertJoinMapJoin = HiveConf.getBoolVar(conf,
             HiveConf.ConfVars.HIVECONVERTJOINNOCONDITIONALTASK);
         int bigTablePosition = -1;
         if (convertJoinMapJoin) {
-          // This is the threshold that the user has specified to fit in mapjoin
-          long mapJoinSize = HiveConf.getLongVar(conf,
-              HiveConf.ConfVars.HIVECONVERTJOINNOCONDITIONALTASKTHRESHOLD);
-
           boolean bigTableFound = false;
           long largestBigTableCandidateSize = -1;
           long sumTableSizes = 0;
@@ -576,8 +603,6 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
           return newTask;
         }
 
-        long ThresholdOfSmallTblSizeSum = HiveConf.getLongVar(conf,
-            HiveConf.ConfVars.HIVESMALLTABLESFILESIZE);
         String xml = currWork.toXML();
         for (int i = 0; i < numAliases; i++) {
           // this table cannot be big table
