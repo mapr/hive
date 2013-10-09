@@ -42,26 +42,16 @@ function get_canonical_dir() {
   echo $ret
 }
 
-#get home dir for scripts in home/bin
-function get_home_dir() {
-  exec_path=`which $1 2>/dev/null`
-  exec_dir=`dirname $exec_path`
-  if [ -f ${exec_path} ]; then
-    #dir of script
-    exec_dir=`get_canonical_dir $exec_path`
-    #one level up for home dir
-    exec_dir=`dirname $exec_dir`
-  fi
-  echo $exec_dir;
-}
-
 # convert relative path to absolute path                                         
 bin=`get_canonical_dir "${BASH_SOURCE-$0}"`
 script=`basename "$0"`                                                        
 bin=`unset CDPATH; cd "$bin"; pwd`                                               
 this="$bin/$script"                                                              
 
-HADOOP_DIR=`get_home_dir "hadoop"`
+export BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+export HADOOP_DIR="${BASEMAPR}/hadoop/hadoop-0.20.2"
 export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
 
 if [ -e "$bin/../libexec/hcat-config.sh" ]; then
@@ -85,8 +75,8 @@ for f in $@; do
      fi
 done
 
-# check for hive in the path
-HIVE_DIR=`get_home_dir "hive"`
+# derive HIVE_HOME relative to hcat binary location
+HIVE_DIR="$bin/../../"
 
 # HIVE_HOME env variable overrides hive in the path
 HIVE_HOME=${HIVE_HOME:-$HIVE_DIR}
@@ -103,8 +93,6 @@ if [ "$HIVE_HOME" == '/usr' ] || [ "$HIVE_HOME" == '/usr/' ]; then
     HIVE_HOME='/usr/lib/hive/';
   fi
 fi
-
-
 
 HIVE_LIB_DIR=${HIVE_HOME}/lib
 if [ ! -d "$HIVE_LIB_DIR" ]; then
@@ -138,7 +126,7 @@ for jar in ${HIVE_LIB_DIR}/*.jar ; do
 done
 
 # Put external jars, hcat jar, and config file in the classpath
-HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${HCAT_CLASSPATH}:${HCAT_JAR}:${HIVE_CONF_DIR}
+HADOOP_CLASSPATH=${HIVE_CONF_DIR}:${HADOOP_CLASSPATH}:${HCAT_CLASSPATH}:${HCAT_JAR}
 
 # Look for HBase in a MapR-compatible way.
 export BASEMAPR=${BASEMAPR:-"/opt/mapr"}
@@ -155,7 +143,10 @@ MAPR_HBASE_CONF_DIR=${MAPR_HBASE_CONF_DIR:-"${MAPR_HBASE_HOME}/conf"}
 HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${MAPR_HBASE_JAR}:${MAPR_HBASE_TEST_JAR}:${MAPR_HBASE_CONF_DIR}"
 
 export HADOOP_CLASSPATH=$HADOOP_CLASSPATH
+
+HADOOP_OPTS="$HADOOP_OPTS ${HIVE_METASTORE_CLIENT_LOGIN_OPTS}"
 export HADOOP_OPTS=$HADOOP_OPTS
+
 # run it
 if [ "$debug" == "true" ]; then
 	echo "Would run:"

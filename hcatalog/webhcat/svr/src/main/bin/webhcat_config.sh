@@ -50,6 +50,9 @@ SLEEP_TIME_AFTER_START=10
 # the root of the WEBHCAT installation
 export WEBHCAT_PREFIX=`dirname "$this"`/..
 export HCAT_PREFIX=${WEBHCAT_PREFIX}
+export HIVE_DIR=${HCAT_PREFIX}"/.."
+export HIVE_HOME="${HIVE_HOME:-$HIVE_DIR}"
+export HIVE_CONF_DIR="${HIVE_HOME}/conf"
 
 #check to see if the conf dir is given as an optional argument
 if [ $# -gt 1 ]
