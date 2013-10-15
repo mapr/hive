@@ -1481,6 +1481,8 @@ public final class Utilities {
         // Step3: move to the file destination
         log.info("Moving tmp dir: " + intermediatePath + " to: " + finalPath);
         Utilities.renameOrMoveFiles(fs, intermediatePath, finalPath);
+        if (fs.exists(intermediatePath))
+          fs.delete(intermediatePath, true);
       }
     } else {
       fs.delete(tmpPath, true);
