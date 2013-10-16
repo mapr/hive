@@ -124,6 +124,8 @@ public class Context {
       throw new RuntimeException("Configured scratchdir already in use");
 
     nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
+
+    LOG.info("INSERT/CTAS query optimization: scratchdir changed to '" + nonLocalScratchPath + "'");
   }
 
   private Path getNonLocalScratchDir() {

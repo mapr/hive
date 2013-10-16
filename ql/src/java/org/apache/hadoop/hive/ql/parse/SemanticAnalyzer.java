@@ -8325,29 +8325,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           assert (oneLoadFile); // should not have more than 1 load file for
           // CTAS
           // make the movetask's destination directory the table's destination.
-          String location = qb.getTableDesc().getLocation();
-          if (location == null) {
-            // get the table's default location
-            Table dumpTable;
-            Path targetPath;
-            try {
-              dumpTable = db.newTable(qb.getTableDesc().getTableName());
-              if (!db.databaseExists(dumpTable.getDbName())) {
-                throw new SemanticException("ERROR: The database " + dumpTable.getDbName()
-                    + " does not exist.");
-              }
-              Warehouse wh = new Warehouse(conf);
-              targetPath = wh.getTablePath(db.getDatabase(dumpTable.getDbName()), dumpTable
-                  .getTableName());
-            } catch (HiveException e) {
-              throw new SemanticException(e);
-            } catch (MetaException e) {
-              throw new SemanticException(e);
-            }
-
-            location = targetPath.toString();
-          }
-          lfd.setTargetDir(location);
+          lfd.setTargetDir(getCTASTableLocation());
 
           oneLoadFile = false;
         }
@@ -8494,6 +8472,37 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
     }
   }
+
+  private String getCTASTableLocation() throws SemanticException {
+    if (qb.getTableDesc() == null)
+      return null;
+
+    String location = qb.getTableDesc().getLocation();
+    if (location == null) {
+      // get the table's default location
+      Table dumpTable;
+      Path targetPath;
+      try {
+        dumpTable = db.newTable(qb.getTableDesc().getTableName());
+        if (!db.databaseExists(dumpTable.getDbName())) {
+          throw new SemanticException("ERROR: The database " + dumpTable.getDbName()
+            + " does not exist.");
+        }
+        Warehouse wh = new Warehouse(conf);
+        targetPath = wh.getTablePath(db.getDatabase(dumpTable.getDbName()), dumpTable
+          .getTableName());
+      } catch (HiveException e) {
+        throw new SemanticException(e);
+      } catch (MetaException e) {
+        throw new SemanticException(e);
+      }
+
+      location = targetPath.toString();
+    }
+
+    return location;
+  }
+
 
   /**
    * Find all leaf tasks of the list of root tasks.
@@ -8684,6 +8693,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       if ((child = analyzeCreateTable(ast, qb)) == null) {
         return;
       }
+
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) && qb.isCTAS()) {
+        // query is CREATE TABLE AS .. SELECT ... type
+        String dest_path = getCTASTableLocation();
+        ctx.changeDFSScratchDir(dest_path + Path.SEPARATOR + conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST));
+      }
     } else {
       SessionState.get().setCommandType(HiveOperation.QUERY);
     }
@@ -8716,7 +8731,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // change the scratch dir to optimize insert query
     if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) &&
       getIsInsertQueryForOptimize()) {
-
+      // query is an INSERT [INTO/OVERWRITE] query
       String destClause = getDestClauseForInsertOptimizer();
       QBMetaData qbm = qb.getMetaData();
       Integer dest_type = qbm.getDestTypeForAlias(destClause);
