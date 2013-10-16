@@ -61,6 +61,7 @@ MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION
 MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
 MAPR_HBASE_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}-.*[^s]\.jar" -print 2> /dev/null)
 MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}.*tests\.jar" -print 2> /dev/null)
+export MAPR_IMPERSONATION_ENABLED=true
 
 SERVICE=""
 HELP=""
