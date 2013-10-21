@@ -68,7 +68,7 @@ public class AvroSerdeUtils {
     try {
       if(schemaString.toLowerCase().startsWith("maprfs://") ||
          schemaString.toLowerCase().startsWith("hdfs://"))
-        return getSchemaFromDFS(schemaString, new Configuration());
+        return getSchemaFromHDFS(schemaString, new Configuration());
     } catch(IOException ioe) {
       throw new AvroSerdeException("Unable to read schema from DFS: " + schemaString, ioe);
     }
@@ -97,7 +97,7 @@ public class AvroSerdeUtils {
     }
   }
   // Protected for testing and so we can pass in a conf for testing.
-  protected static Schema getSchemaFromDFS(String schemaDFSUrl,
+  protected static Schema getSchemaFromHDFS(String schemaDFSUrl,
                                             Configuration conf) throws IOException {
     FileSystem fs = FileSystem.get(conf);
     FSDataInputStream in = null;
