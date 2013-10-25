@@ -679,6 +679,8 @@ public class Hive {
       StorageDescriptor baseTblSd = baseTbl.getSd();
 
       SerDeInfo serdeInfo = new SerDeInfo();
+      serdeInfo.setName(indexTblName);
+
       if(serde != null) {
         serdeInfo.setSerializationLib(serde);
       } else {
@@ -691,6 +693,7 @@ public class Hive {
         }
       }
 
+      serdeInfo.setParameters(new HashMap<String, String>());
       if (fieldDelim != null) {
         serdeInfo.getParameters().put(FIELD_DELIM, fieldDelim);
         serdeInfo.getParameters().put(SERIALIZATION_FORMAT, fieldDelim);
