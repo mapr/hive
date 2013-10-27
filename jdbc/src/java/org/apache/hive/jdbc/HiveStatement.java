@@ -44,6 +44,7 @@ import org.apache.hive.service.cli.thrift.TSessionHandle;
  *
  */
 public class HiveStatement implements java.sql.Statement {
+  private final HiveConnection connection;
   private TCLIService.Iface client;
   private TOperationHandle stmtHandle = null;
   private final TSessionHandle sessHandle;
@@ -78,7 +79,9 @@ public class HiveStatement implements java.sql.Statement {
   /**
    *
    */
-  public HiveStatement(TCLIService.Iface client, TSessionHandle sessHandle) {
+  public HiveStatement(HiveConnection connection, TCLIService.Iface client,
+      TSessionHandle sessHandle) {
+    this.connection = connection;
     this.client = client;
     this.sessHandle = sessHandle;
   }
@@ -246,8 +249,8 @@ public class HiveStatement implements java.sql.Statement {
       }
       return false;
     }
-    resultSet =  new HiveQueryResultSet.Builder().setClient(client).setSessionHandle(sessHandle)
-        .setStmtHandle(stmtHandle).setHiveStatement(this).setMaxRows(maxRows).setFetchSize(fetchSize)
+    resultSet =  new HiveQueryResultSet.Builder(this).setClient(client).setSessionHandle(sessHandle)
+        .setStmtHandle(stmtHandle).setMaxRows(maxRows).setFetchSize(fetchSize)
         .build();
     return true;
   }
@@ -372,7 +375,7 @@ public class HiveStatement implements java.sql.Statement {
    */
 
   public Connection getConnection() throws SQLException {
-    throw new SQLException("Method not supported");
+    return this.connection;
   }
 
   /*
