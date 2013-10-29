@@ -45,6 +45,8 @@ import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.TaskGraphWalker;
 import org.apache.hadoop.hive.ql.lib.TaskGraphWalker.TaskGraphWalkerContext;
 import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.optimizer.GenMapRedUtils;
 import org.apache.hadoop.hive.ql.optimizer.MapJoinProcessor;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
@@ -497,16 +499,19 @@ public class CommonJoinResolver implements PhysicalPlanResolver {
 
             for (String alias : aliasList) {
 
-              long size;
+              long size = cs.getLength();
+              Table tableDesc = null;
 
               /* If the table is not maintained by hive, set the size
                * of the table to be pseudoSize, otherwise the size is 0
                * and we apply the map join optimization in cases we shouldn't
                */
-              if (db.getTable(alias).getStorageHandler() != null)
-                  size = pseudoSize;
-              else
-                  size = cs.getLength();
+              try {
+                  tableDesc = db.getTable(alias);
+                  if (tableDesc.getStorageHandler() != null)
+                      size = pseudoSize;
+              } catch (InvalidTableException ex) {
+              }
 
               aliasTotalKnownInputSize += size;
               Long es = aliasToSize.get(alias);
