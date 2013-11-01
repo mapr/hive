@@ -66,10 +66,11 @@ public class AvroSerdeUtils {
       throw new AvroSerdeException(EXCEPTION_MESSAGE);
 
     try {
-      if(schemaString.toLowerCase().startsWith("hdfs://"))
+      if(schemaString.toLowerCase().startsWith("maprfs://") ||
+          schemaString.toLowerCase().startsWith("hdfs://"))
         return getSchemaFromHDFS(schemaString, new Configuration());
     } catch(IOException ioe) {
-      throw new AvroSerdeException("Unable to read schema from HDFS: " + schemaString, ioe);
+      throw new AvroSerdeException("Unable to read schema from MapRFS: " + schemaString, ioe);
     }
 
     return Schema.parse(new URL(schemaString).openStream());

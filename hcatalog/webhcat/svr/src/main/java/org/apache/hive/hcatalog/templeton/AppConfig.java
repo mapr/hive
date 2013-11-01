@@ -63,7 +63,7 @@ import org.apache.hive.hcatalog.templeton.tool.ZooKeeperStorage;
  */
 public class AppConfig extends Configuration {
   public static final String[] HADOOP_CONF_FILENAMES = {
-    "core-default.xml", "core-site.xml", "mapred-default.xml", "mapred-site.xml", "hdfs-site.xml"
+    "core-default.xml", "core-site.xml", "mapred-default.xml", "mapred-site.xml"
   };
 
   public static final String[] HADOOP_PREFIX_VARS = {
