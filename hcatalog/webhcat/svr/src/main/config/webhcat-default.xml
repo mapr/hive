@@ -39,22 +39,22 @@
 
   <property>
     <name>templeton.jar</name>
-    <value>${env.TEMPLETON_HOME}/share/webhcat/svr/webhcat-0.6.0-SNAPSHOT.jar</value>
+    <value>${env.WEBHCAT_PREFIX}/share/webhcat/svr/webhcat-0.6.0-SNAPSHOT.jar</value>
     <description>The path to the Templeton jar file.</description>
   </property>
 
   <property>
     <name>templeton.libjars</name>
-    <value>${env.TEMPLETON_HOME}/share/webhcat/svr/lib/zookeeper-3.4.3.jar</value>
+    <value>${env.WEBHCAT_PREFIX}/share/webhcat/svr/lib/zookeeper-3.4.3.jar</value>
     <description>Jars to add to the classpath.</description>
   </property>
 
   <property>
     <name>templeton.override.jars</name>
-    <value>hdfs:///user/templeton/ugi.jar</value>
+    <value>maprfs:///user/templeton/ugi.jar</value>
     <description>
         Jars to add the the HADOOP_CLASSPATH for all Map Reduce jobs.
-        This is a list of jars that must exist on hdfs that are added
+        This is a list of jars that must exist on maprfs that are added
         to the Distributed Cache.
     </description>
   </property>
@@ -69,8 +69,8 @@
 
   <property>
     <name>templeton.streaming.jar</name>
-    <value>hdfs:///user/templeton/hadoop-streaming.jar</value>
-    <description>The hdfs path to the Hadoop streaming jar file.</description>
+    <value>maprfs:///user/templeton/hadoop-streaming.jar</value>
+    <description>The maprfs path to the Hadoop streaming jar file.</description>
   </property>
 
   <property>

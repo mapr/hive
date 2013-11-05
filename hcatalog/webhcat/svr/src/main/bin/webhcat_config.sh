@@ -29,11 +29,12 @@ function die() {
 #====================================
 
 # The directory,file containing the running pid
-PID_DIR=${WEBHCAT_PID_DIR:-.}
+PID_DIR=${WEBHCAT_PID_DIR:-/tmp/`id -u -n`/webhcat}
 PID_FILE=${PID_DIR}/webhcat.pid
+mkdir $PID_DIR 2>/dev/null
 
 #default log directory
-WEBHCAT_LOG_DIR=${WEBHCAT_LOG_DIR:-.}
+WEBHCAT_LOG_DIR=${WEBHCAT_LOG_DIR:-/tmp/`id -u -n`/webhcat}
 
 # The console error log
 ERROR_LOG=${WEBHCAT_LOG_DIR}/webhcat-console-error.log
@@ -54,6 +55,10 @@ SLEEP_TIME_AFTER_START=10
 #These parameters can be overriden by webhcat-env.sh
 # the root of the WEBHCAT installation  ('this' is defined in webhcat_server.sh)
 export WEBHCAT_PREFIX=`dirname "$this"`/..
+export HCAT_PREFIX=${WEBHCAT_PREFIX}
+export HIVE_DIR=${HCAT_PREFIX}"/.."
+export HIVE_HOME="${HIVE_HOME:-$HIVE_DIR}"
+export HIVE_CONF_DIR="${HIVE_HOME}/conf"
 
 #check to see if the conf dir is given as an optional argument
 if [ $# -gt 1 ]
@@ -114,15 +119,18 @@ fi
 #====================================
 #determine where hadoop is
 #====================================
+export BASEMAPR=${MAPR_HOME:-/opt/mapr}
+export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
 
 #check HADOOP_HOME and then check HADOOP_PREFIX
 if [ -f ${HADOOP_HOME}/bin/hadoop ]; then
-  HADOOP_PREFIX=$HADOOP_HOME
-#if this is an rpm install check for /usr/bin/hadoop
-elif [ -f ${WEBHCAT_PREFIX}/bin/hadoop ]; then
-  HADOOP_PREFIX=$WEBHCAT_PREFIX
-#otherwise see if HADOOP_PREFIX is defined
-elif [ ! -f ${HADOOP_PREFIX}/bin/hadoop ]; then
+  export HADOOP_PREFIX=$HADOOP_HOME
+  export HADOOP_CONF_DIR=${HADOOP_HOME}/conf
+else
   echo "${this}: Hadoop not found."
   exit 1
 fi
+
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+export HADOOP_OPTS="${HADOOP_OPTS} ${WEBHCAT_LOGIN_OPTS}"

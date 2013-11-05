@@ -20,13 +20,57 @@ case "`uname`" in
    CYGWIN*) cygwin=true;;
 esac
 
-bin=`dirname "$0"`
+
+function get_canonical_dir() {
+  target="$1"
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
+
+bin=$(get_canonical_dir "$0")
 bin=`cd "$bin"; pwd`
 
 . "$bin"/hive-config.sh
 
+#BASEMAPR should be set by hive-config.sh
+export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
+if [ -f $BASEMAPR/hbase/hbaseversion ]; then
+  MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion 2>/dev/null`
+else
+  MAPR_HBASE_VERSION="*"
+fi
+MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
+MAPR_HBASE_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}-.*[^s]\.jar" -print 2> /dev/null)
+MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}.*tests\.jar" -print 2> /dev/null)
+export MAPR_IMPERSONATION_ENABLED=true
+
 SERVICE=""
 HELP=""
+START=""
+STOP=""
+STATUS=""
+FINAL_OPT=""
+count=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --service)
@@ -44,6 +88,26 @@ while [ $# -gt 0 ]; do
       ;;
     --help)
       HELP=_help
+      FINAL_OPT=$HELP
+      ((count++))
+      shift
+      ;;
+    --start)
+      START=_start
+      FINAL_OPT=$START
+      ((count++))
+      shift
+      ;;
+    --stop)
+      STOP=_stop
+      FINAL_OPT=$STOP
+      ((count++))
+      shift
+      ;;
+    --status)
+      STATUS=_status
+      FINAL_OPT=$STATUS
+      ((count++))
       shift
       ;;
     --debug*)
@@ -55,6 +119,11 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ "$count" -gt 1 ]; then
+   echo "Can have only start, stop, status or help option"
+   exit 1;
+fi
 
 if [ "$SERVICE" = "" ] ; then
   if [ "$HELP" = "_help" ] ; then
@@ -92,6 +161,19 @@ fi
 for f in ${HIVE_LIB}/*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
+
+# Add mapr hbase, zookeeper path overrides any jars in hive/lib
+if [ ! -z "${MAPR_HBASE_JAR}" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_JAR};
+fi
+
+if [ ! -z "${MAPR_HBASE_TEST_JAR}" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_TEST_JAR};
+fi
+
+if [ -f "${MAPR_ZK_HOME}/zookeeper-*.jar" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_ZK_HOME}/zookeeper-*.jar;
+fi
 
 # add the auxillary jars such as serdes
 if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
@@ -218,10 +300,25 @@ if [ "$DEBUG" ]; then
   fi
 fi
 
+HIVE_PID_DIR=$HIVE_HOME/pids
+if [ "$HIVE_IDENT_STRING" = "" ]; then
+  export HIVE_IDENT_STRING=`id -nu`
+fi
+# get log directory
+if [ "$HIVE_LOG_DIR" = "" ]; then
+  export HIVE_LOG_DIR="$HIVE_HOME/logs"
+fi
+mkdir -p "$HIVE_LOG_DIR"
+mkdir -p "$HIVE_PID_DIR"
+
+if [ "$HIVE_PID_DIR" = "" ]; then
+  export HIVE_PID_DIR="$HIVE_HOME/pids"
+fi
+
 TORUN=""
 for j in $SERVICE_LIST ; do
   if [ "$j" = "$SERVICE" ] ; then
-    TORUN=${j}$HELP
+    TORUN=${j}$FINAL_OPT
   fi
 done
 
