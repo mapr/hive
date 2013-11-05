@@ -35,6 +35,7 @@
   <import file="deploy.xml"/>
   <import file="findbugs.xml"/>
   <import file="test.xml"/>
+  <import file="${path.to.basedir}/../build-mapr.xml"/>
 
   <macrodef name="_javac">
     <attribute name="srcDir"/>
@@ -99,8 +100,21 @@
 
   <target name="jar" depends="mvn-dependencies,compile,compile-resource">
     <echo message="${ant.project.name}"/>
+    <antcall target="mapr-version" inheritRefs="true" inheritall="true"/>
+    <property file="${basedir}/mapr-build.properties"/>
     <jar jarfile="${build.dir}/${jar.name}" basedir="${build.classes}">
       <metainf dir="${path.to.basedir}" includes="**/LICENSE.txt,**/NOTICE.txt"/>
+      <manifest>
+        <attribute name="Implementation-Title" value="Hive"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Vendor" value="Apache"/>
+        <attribute name="MapR-BuildDate" value="${mapr.builddate}"/>
+        <attribute name="MapR-BuildHost" value="${mapr.buildhost}"/>
+        <attribute name="MapR-BuildPlatform" value="${mapr.builduname}"/>
+        <attribute name="MapR-BuildRevision" value="${mapr.buildversion}"/>
+        <attribute name="MapR-BuildURL" value="${mapr.buildurl}"/>
+        <attribute name="MapR-BuildUser" value="${mapr.builduser}"/>
+      </manifest>
     </jar>
     <artifact:install file="${build.dir}/${ant.project.name}-${hcatalog.version}.jar">
       <artifact:pom file="${pom.file}"/>

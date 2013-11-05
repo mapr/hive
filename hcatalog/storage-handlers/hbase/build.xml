@@ -82,6 +82,9 @@
         <mkdir dir="${build.classes}" />
         <mkdir dir="${test.build.classes}" />
     </target>
+
+    <import file="${path.to.basedir}/../build-mapr.xml"/>
+
     <!--
     ================================================================================
     Main Build and Jar Section
@@ -89,6 +92,8 @@
     -->
     <!-- Compile src files -->
     <target name="compile-src" depends="init">
+        <antcall target="mapr-version" inheritRefs="true" inheritall="true"/>
+        <property file="${basedir}/mapr-build.properties"/>
         <javac encoding="${build.encoding}" srcdir="${src.dir}:${basedir}/src/gen-java:${basedir}/src/resources" excludes="${excludes}"
                includes="**/*.java" destdir="${build.classes}" debug="${javac.debug}"
                optimize="${javac.optimize}" target="${javac.version}"
@@ -106,7 +111,20 @@
                 <include name="*"/>
             </fileset>
         </copy>
-        <jar jarfile="${build.dir}/${handler.jar}" basedir="${build.classes}"/>
+        <jar jarfile="${build.dir}/${handler.jar}" basedir="${build.classes}">
+          <manifest>
+            <attribute name="Implementation-Title" value="Hive"/>
+            <attribute name="Implementation-Version" value="${version}"/>
+            <attribute name="Implementation-Vendor" value="Apache"/>
+            <attribute name="MapR-BuildDate" value="${mapr.builddate}"/>
+            <attribute name="MapR-BuildHost" value="${mapr.buildhost}"/>
+            <attribute name="MapR-BuildPlatform" value="${mapr.builduname}"/>
+            <attribute name="MapR-BuildRevision" value="${mapr.buildversion}"/>
+            <attribute name="MapR-BuildURL" value="${mapr.buildurl}"/>
+            <attribute name="MapR-BuildUser" value="${mapr.builduser}"/>
+          </manifest>
+          <metainf dir="${path.to.basedir}" includes="**/LICENSE.txt,**/NOTICE.txt"/>
+        </jar>
     </target>
 
     <!--

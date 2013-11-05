@@ -467,6 +467,7 @@
     <copy todir="${target.conf.dir}">
      <fileset dir="${basedir}/conf">
        <include name="*.template"/>
+       <include name="hive-site.xml"/>
      </fileset>
     </copy>
     <copy file="${basedir}/common/src/java/conf/hive-log4j.properties"
@@ -541,6 +542,7 @@
         <exclude name="**/mockito*.jar"/>
         <exclude name="**/velocity*.jar"/>
         <exclude name="**/antlr-3*.jar"/>
+        <exclude name="hbase-*.jar"/>
       </fileset>
     </copy>
     <copy todir="${target.example.dir}/files" preservelastmodified="true" flatten="true">
@@ -764,7 +766,7 @@
   <!-- Make release tarball                                               -->
   <!-- ================================================================== -->
 
-  <target name="tar" depends="package, docs, javadoc" description="Make release tarball">
+  <target name="tar" depends="package" description="Make release tarball">
     <echo message="Project: ${ant.project.name}"/>
     <macro_tar param.destfile="${build.dir.hive}/${tar.final.name}.tar.gz">
       <param.listofitems>
@@ -776,11 +778,22 @@
                     excludes="${vcs.excludes}">
           <include name="lib/py/**/*-remote"/>
         </tarfileset>
+        <tarfileset dir="${build.dir.hive}/dist" mode="755" prefix="${tar.final.name}"
+                    excludes="${vcs.excludes}">
+          <include name="hcatalog/bin/**"/>
+          <include name="hcatalog/libexec/**"/>
+          <include name="hcatalog/sbin/**"/>
+          <include name="hcatalog/share/hcatalog/scripts/**"/>
+        </tarfileset>
         <tarfileset dir="${build.dir.hive}/dist" mode="664" prefix="${tar.final.name}"
                     excludes="${vcs.excludes}">
           <include name="**"/>
           <exclude name="bin/**"/>
           <exclude name="lib/py/**/*-remote"/>
+          <exclude name="hcatalog/bin/**"/>
+          <exclude name="hcatalog/libexec/**"/>
+          <exclude name="hcatalog/sbin/**"/>
+          <exclude name="hcatalog/share/hcatalog/scripts/**"/>
         </tarfileset>
         <tarfileset dir="${hive.root}" mode="664" prefix="${tar.final.name}/src"
                     excludes="${vcs.excludes}">

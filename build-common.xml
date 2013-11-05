@@ -230,8 +230,12 @@
     </copy>
   </target>
 
+  <import file="build-mapr.xml"/>
+
   <target name="init" depends="create-dirs">
     <echo message="Project: ${ant.project.name}"/>
+    <antcall target="mapr-version" inheritRefs="true" inheritall="true"/>
+    <property file="${basedir}/mapr-build.properties"/>
   </target>
 
   <target name="test-init" depends="set-test-classpath">
@@ -279,6 +283,12 @@
         <attribute name="Implementation-Title" value="Hive"/>
         <attribute name="Implementation-Version" value="${version}"/>
         <attribute name="Implementation-Vendor" value="Apache"/>
+        <attribute name="MapR-BuildDate" value="${mapr.builddate}"/>
+        <attribute name="MapR-BuildHost" value="${mapr.buildhost}"/>
+        <attribute name="MapR-BuildPlatform" value="${mapr.builduname}"/>
+        <attribute name="MapR-BuildRevision" value="${mapr.buildversion}"/>
+        <attribute name="MapR-BuildURL" value="${mapr.buildurl}"/>
+        <attribute name="MapR-BuildUser" value="${mapr.builduser}"/>
       </manifest>
       <metainf dir="${hive.root}" includes="LICENSE,NOTICE"/>
     </jar>
@@ -569,5 +579,4 @@
       </replacevalue>
     </replace>
   </target>
-
 </project>

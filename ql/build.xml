@@ -316,6 +316,12 @@
         <attribute name="Implementation-Title" value="Hive"/>
         <attribute name="Implementation-Version" value="${version}"/>
         <attribute name="Implementation-Vendor" value="Apache"/>
+        <attribute name="MapR-BuildDate" value="${mapr.builddate}"/>
+        <attribute name="MapR-BuildHost" value="${mapr.buildhost}"/>
+        <attribute name="MapR-BuildPlatform" value="${mapr.builduname}"/>
+        <attribute name="MapR-BuildRevision" value="${mapr.buildversion}"/>
+        <attribute name="MapR-BuildURL" value="${mapr.buildurl}"/>
+        <attribute name="MapR-BuildUser" value="${mapr.builduser}"/>
       </manifest>
       <metainf dir="${hive.root}" includes="LICENSE,NOTICE"/>
     </jar>

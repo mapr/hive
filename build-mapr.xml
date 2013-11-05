@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<project name="maprhivecommon" default="mapr-version">
+  <target name="mapr-version">
+    <echo file="${build.dir}/mapr-version.sh">
+#!/bin/bash
+build_user=`whoami`
+build_date=`date`
+build_cwd=`pwd`
+build_hostname=`hostname`
+
+if git status &gt; /dev/null 2&gt;&amp;1 ; then
+  scm=git
+  build_revision=`git log -1 --pretty=format:&quot;%H&quot;`
+  build_url=`git config --get remote.origin.url`
+elif hg st &gt; /dev/null 2&gt;&amp;1 ; then
+  scm=hg
+  build_revision=`hg ident -n | sed 's/[^0-9]//g'`
+  build_url=`hg paths | grep 'default' | sed 's/.*default[^=]*=\s*//g'`
+elif svn info &gt; /dev/null 2&gt;&amp;1 ; then
+  scm=svn
+  build_revision=`svn info | sed -n -e 's/Last Changed Rev: \(.*\)/\1/p'`
+  build_url=`svn info | sed -n -e 's/URL: \(.*\)/\1/p'`
+else
+  scm=file
+  build_revision=&quot;Unknown&quot;
+fi
+
+if [ &quot;${build_url}&quot; = &quot;&quot; ] ; then
+  build_url=&quot;${scm}://${build_hostname}${build_cwd}&quot;
+fi
+
+build_uname=`uname -a`
+#MapR Version Info
+cat &gt;mapr-build.properties &lt;&lt;EOF
+mapr.buildurl=$build_url
+mapr.builddate=$build_date
+mapr.builduser=$build_user
+mapr.builduname=$build_uname
+mapr.buildhost=$build_hostname
+mapr.buildversion=$build_revision
+EOF
+    </echo>
+    <chmod file="${build.dir}/mapr-version.sh" perm="u+x"/>
+    <exec executable="sh" failonerror="true">
+      <arg line="${build.dir}/mapr-version.sh"/>
+    </exec>
+  </target>
+</project>
