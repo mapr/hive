@@ -1,0 +1,274 @@
+PREHOOK: query: DROP TABLE IF EXISTS timestamp_4
+PREHOOK: type: DROPTABLE
+POSTHOOK: query: DROP TABLE IF EXISTS timestamp_4
+POSTHOOK: type: DROPTABLE
+PREHOOK: query: CREATE TABLE timestamp_4 (t TIMESTAMP)
+PREHOOK: type: CREATETABLE
+POSTHOOK: query: CREATE TABLE timestamp_4 (t TIMESTAMP)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: default@timestamp_4
+PREHOOK: query: ALTER TABLE timestamp_4 SET SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+PREHOOK: type: ALTERTABLE_SERIALIZER
+PREHOOK: Input: default@timestamp_4
+PREHOOK: Output: default@timestamp_4
+POSTHOOK: query: ALTER TABLE timestamp_4 SET SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+POSTHOOK: type: ALTERTABLE_SERIALIZER
+POSTHOOK: Input: default@timestamp_4
+POSTHOOK: Output: default@timestamp_4
+PREHOOK: query: -- timestamp_data.txt contains timestamps in below supported formats
+-- 1. Integer: UNIX epoch seconds
+-- 2. Floating point: UNIX epoch seconds plus nanoseconds
+-- 3. Strings: JDBC compliant java.sql.Timestamp format
+--             "YYYY-MM-DD HH:MM:SS.fffffffff" (9 decimal place precision)
+LOAD DATA LOCAL INPATH '../data/files/timestamp_data.txt' INTO TABLE timestamp_4
+PREHOOK: type: LOAD
+PREHOOK: Output: default@timestamp_4
+POSTHOOK: query: -- timestamp_data.txt contains timestamps in below supported formats
+-- 1. Integer: UNIX epoch seconds
+-- 2. Floating point: UNIX epoch seconds plus nanoseconds
+-- 3. Strings: JDBC compliant java.sql.Timestamp format
+--             "YYYY-MM-DD HH:MM:SS.fffffffff" (9 decimal place precision)
+LOAD DATA LOCAL INPATH '../data/files/timestamp_data.txt' INTO TABLE timestamp_4
+POSTHOOK: type: LOAD
+POSTHOOK: Output: default@timestamp_4
+PREHOOK: query: SELECT t                   FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT t                   FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+2013-04-22 16:11:25
+2013-04-22 16:12:13.594127116
+2013-04-22 16:11:25
+1969-12-31 16:00:01
+NULL
+2013-04-22 16:12:13.594127876
+1969-12-31 16:01:07
+2013-04-22 16:12:13.999999999
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS TINYINT)  FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS TINYINT)  FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+-99
+-51
+-99
+1
+NULL
+-51
+67
+-51
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS SMALLINT) FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS SMALLINT) FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+-15459
+-15411
+-15459
+1
+NULL
+-15411
+67
+-15411
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS INT)      FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS INT)      FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+1366672285
+1366672333
+1366672285
+1
+NULL
+1366672333
+67
+1366672333
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS BIGINT)   FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS BIGINT)   FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+1366672285
+1366672333
+1366672285
+1
+NULL
+1366672333
+67
+1366672333
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS FLOAT)    FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS FLOAT)    FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+1.36667226E9
+1.36667238E9
+1.36667226E9
+1.0
+NULL
+1.36667238E9
+67.0
+1.36667238E9
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS DOUBLE)   FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS DOUBLE)   FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+1.366672285E9
+1.3666723335941272E9
+1.366672285E9
+1.0
+NULL
+1.366672333594128E9
+67.0
+1.366672334E9
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT CAST(t AS STRING)   FROM timestamp_4
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT CAST(t AS STRING)   FROM timestamp_4
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+2013-04-22 16:11:25
+2013-04-22 16:12:13.594127116
+2013-04-22 16:11:25
+1969-12-31 16:00:01
+NULL
+2013-04-22 16:12:13.594127876
+1969-12-31 16:01:07
+2013-04-22 16:12:13.999999999
+NULL
+NULL
+NULL
+NULL
+NULL
+PREHOOK: query: SELECT * FROM timestamp_4 ORDER BY t
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM timestamp_4 ORDER BY t
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+NULL
+NULL
+NULL
+NULL
+NULL
+NULL
+1969-12-31 16:00:01
+1969-12-31 16:01:07
+2013-04-22 16:11:25
+2013-04-22 16:11:25
+2013-04-22 16:12:13.594127116
+2013-04-22 16:12:13.594127876
+2013-04-22 16:12:13.999999999
+PREHOOK: query: SELECT * FROM timestamp_4 WHERE t = '2013-04-22 16:11:25'
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM timestamp_4 WHERE t = '2013-04-22 16:11:25'
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+2013-04-22 16:11:25
+2013-04-22 16:11:25
+PREHOOK: query: SELECT * FROM timestamp_4 WHERE t > '2013-04-22 16:11:25'
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM timestamp_4 WHERE t > '2013-04-22 16:11:25'
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+2013-04-22 16:12:13.594127116
+2013-04-22 16:12:13.594127876
+2013-04-22 16:12:13.999999999
+PREHOOK: query: SELECT * FROM timestamp_4 WHERE t < '2013-04-22 16:11:25'
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM timestamp_4 WHERE t < '2013-04-22 16:11:25'
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+1969-12-31 16:00:01
+1969-12-31 16:01:07
+PREHOOK: query: SELECT * FROM timestamp_4 WHERE t <> '2013-04-22 16:11:25'
+PREHOOK: type: QUERY
+PREHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM timestamp_4 WHERE t <> '2013-04-22 16:11:25'
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@timestamp_4
+#### A masked pattern was here ####
+2013-04-22 16:12:13.594127116
+1969-12-31 16:00:01
+2013-04-22 16:12:13.594127876
+1969-12-31 16:01:07
+2013-04-22 16:12:13.999999999
+PREHOOK: query: DROP TABLE timestamp_4
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@timestamp_4
+PREHOOK: Output: default@timestamp_4
+POSTHOOK: query: DROP TABLE timestamp_4
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@timestamp_4
+POSTHOOK: Output: default@timestamp_4
