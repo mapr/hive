@@ -20,6 +20,7 @@ package org.apache.hcatalog.hbase;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -239,6 +240,7 @@ class HbaseSnapshotRecordReader implements RecordReader<ImmutableBytesWritable, 
     } else {
       KeyValue[] kvArray = new KeyValue[finalKeyVals.size()];
       finalKeyVals.toArray(kvArray);
+      Arrays.sort(kvArray, KeyValue.COMPARATOR);
       return new Result(kvArray);
     }
   }
