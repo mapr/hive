@@ -50,7 +50,7 @@ public class PathUtil {
   static String getRunningTxnInfoPath(String baseDir, String tableName,
                     String columnFamily) {
     String txnBasePath = getTransactionBasePath(baseDir);
-    String path = txnBasePath + "/" + tableName + "/" + columnFamily
+    String path = txnBasePath + (isM7Table(tableName) ? "" : "/") + tableName + "/" + columnFamily
       + "/runningTxns";
     return path;
   }
@@ -66,7 +66,7 @@ public class PathUtil {
   static String getAbortInformationPath(String baseDir, String tableName,
                       String columnFamily) {
     String txnBasePath = getTransactionBasePath(baseDir);
-    String path = txnBasePath + "/" + tableName + "/" + columnFamily
+    String path = txnBasePath + (isM7Table(tableName) ? "" : "/") + tableName + "/" + columnFamily
       + "/abortData";
     return path;
   }
@@ -80,7 +80,7 @@ public class PathUtil {
    */
   static String getRevisionIDNode(String baseDir, String tableName) {
     String rmBasePath = getTransactionBasePath(baseDir);
-    String revisionIDNode = rmBasePath + "/" + tableName + "/idgen";
+    String revisionIDNode = rmBasePath + (isM7Table(tableName) ? "" : "/") + tableName + "/idgen";
     return revisionIDNode;
   }
 
@@ -115,7 +115,7 @@ public class PathUtil {
    */
   static String getTxnDataPath(String baseDir, String tableName) {
     String txnBasePath = getTransactionBasePath(baseDir);
-    String path = txnBasePath + "/" + tableName;
+    String path = txnBasePath + (isM7Table(tableName) ? "" : "/") +  tableName;
     return path;
   }
 
@@ -128,5 +128,15 @@ public class PathUtil {
   static String getClockPath(String baseDir) {
     String clockNode = baseDir + CLOCK_NODE;
     return clockNode;
+  }
+
+  /**
+   * This method returns true if the table is an M7 table
+   *
+   * @param tableName
+   * @return true if the table is M7 table
+   */
+  static boolean isM7Table(String tableName) {
+    return tableName != null && tableName.startsWith("/");
   }
 }
