@@ -29,7 +29,7 @@
   <dependencies>
     <dependency org="org.apache.hive" name="hive-exec" rev="${version}"
                 conf="compile->default" />
-
+    <dependency org="net.sf.jpam" name="jpam" rev="${jpam.version}"/>
     <!-- Test Dependencies -->
   </dependencies>
 </ivy-module>

@@ -29,14 +29,19 @@ public class CustomAuthenticationProviderImpl
   PasswdAuthenticationProvider customProvider;
 
   @SuppressWarnings("unchecked")
-  CustomAuthenticationProviderImpl () {
+  CustomAuthenticationProviderImpl ()
+    throws AuthenticationException {
     HiveConf conf = new HiveConf();
-    this.customHandlerClass = (Class<? extends PasswdAuthenticationProvider>)
+    try {
+      this.customHandlerClass = (Class<? extends PasswdAuthenticationProvider>)
         conf.getClass(
-            HiveConf.ConfVars.HIVE_SERVER2_CUSTOM_AUTHENTICATION_CLASS.name(),
+            HiveConf.ConfVars.HIVE_SERVER2_CUSTOM_AUTHENTICATION_CLASS.varname,
             PasswdAuthenticationProvider.class);
-    this.customProvider =
+      this.customProvider =
         ReflectionUtils.newInstance(this.customHandlerClass, conf);
+    } catch (Exception e) {
+      throw new AuthenticationException(e.toString());
+    }
   }
 
   @Override
