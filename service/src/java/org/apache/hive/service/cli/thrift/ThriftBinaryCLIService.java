@@ -18,7 +18,9 @@
 
 package org.apache.hive.service.cli.thrift;
 
+import java.io.Console;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.service.auth.HiveAuthFactory;
@@ -27,6 +29,7 @@ import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TTransportFactory;
 
 
@@ -61,10 +64,42 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
         serverAddress = new  InetSocketAddress(portNum);
       }
 
+      TServerSocket serverTransport;
+      boolean fSslEnabled = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_SSL);
+      if (fSslEnabled) {
+        TSSLTransportFactory.TSSLTransportParameters sslParams =
+          new TSSLTransportFactory.TSSLTransportParameters();
+
+        String keyStorePath = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE);
+        String keyStorePassword = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD);
+
+        if (keyStorePassword == null || keyStorePassword.isEmpty()) {
+          String passwordPrompt = "Enter password for keystore: '" + keyStorePath + "': ";
+          Console cons;
+          char[] passwd;
+          if ((cons = System.console()) != null &&
+            (passwd = cons.readPassword("[%s] ", passwordPrompt)) != null) {
+            keyStorePassword = new String(passwd);
+            Arrays.fill(passwd, ' ');
+          }
+        }
+
+        sslParams.setKeyStore(keyStorePath, keyStorePassword);
+        serverTransport = TSSLTransportFactory.getServerSocket(
+          portNum,
+          0, /*clientTimeout*/
+          serverAddress.getAddress(),
+          sslParams);
+
+        System.out.println("SSL Enabled in HiveServer2");
+      } else {
+        serverTransport = new TServerSocket(serverAddress);
+      }
+
       minWorkerThreads = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_MIN_WORKER_THREADS);
       maxWorkerThreads = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_MAX_WORKER_THREADS);
 
-      TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(new TServerSocket(serverAddress))
+      TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverTransport)
       .processorFactory(processorFactory)
       .transportFactory(transportFactory)
       .protocolFactory(new TBinaryProtocol.Factory())
@@ -73,7 +108,8 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
 
       server = new TThreadPoolServer(sargs);
 
-      LOG.info("ThriftBinaryCLIService listening on " + serverAddress);
+      LOG.info("ThriftCLIService "+ (fSslEnabled ? "(with SSL) " : "") + "listening on " +
+        serverAddress);
 
       server.serve();
 

@@ -62,6 +62,7 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.THttpClient;
 import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
@@ -78,6 +79,10 @@ public class HiveConnection implements java.sql.Connection {
   private static final String HIVE_AUTH_PASSWD = "password";
   private static final String HIVE_ANONYMOUS_USER = "anonymous";
   private static final String HIVE_ANONYMOUS_PASSWD = "anonymous";
+  private static final String HIVE_SSL = "ssl";
+  private static final String HIVE_SSL_ENABLED = "true";
+  private static final String HIVE_SSL_TRUSTSTORE="sslTrustStore";
+  private static final String HIVE_SSL_TRUSTSTORE_PASSWD = "sslTrustStorePassword";
   private final String jdbcURI;
   private final String host;
   private final int port;
@@ -177,7 +182,36 @@ public class HiveConnection implements java.sql.Connection {
   }
 
   private TTransport createBinaryTransport() throws SQLException {
-    transport = new TSocket(host, port);
+    if (sessConfMap.containsKey(HIVE_SSL) &&
+      sessConfMap.get(HIVE_SSL).equals(HIVE_SSL_ENABLED)) {
+
+      String prevTS = System.getProperty("javax.net.ssl.trustStore");
+      String prevTSP = System.getProperty("javax.net.ssl.trustStorePassword");
+
+      try {
+        String ts = sessConfMap.get(HIVE_SSL_TRUSTSTORE);
+        if (ts != null)
+          System.setProperty("javax.net.ssl.trustStore", ts);
+
+        String tsp = sessConfMap.get(HIVE_SSL_TRUSTSTORE_PASSWD);
+        if (tsp != null)
+          System.setProperty("javax.net.ssl.trustStorePassword", tsp);
+
+        transport = TSSLTransportFactory.getClientSocket(host, port, 0/*timeout*/);
+      } catch(Exception e) {
+        e.printStackTrace();
+        throw new SQLException("Could not establish SSL transport"
+          + jdbcURI + ": " + e.getMessage(), " 08S01");
+      } finally {
+        if (prevTS != null)
+          System.setProperty("javax.net.ssl.trustStore", prevTS);
+        if (prevTSP != null)
+          System.setProperty("javax.net.ssl.trustStorePassword", prevTSP);
+      }
+    } else {
+      transport = new TSocket(host, port);
+    }
+
     // handle secure connection if specified
     if (!sessConfMap.containsKey(HIVE_AUTH_TYPE)
         || !sessConfMap.get(HIVE_AUTH_TYPE).equals(HIVE_AUTH_SIMPLE)) {
