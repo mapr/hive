@@ -215,6 +215,9 @@ public class HiveConf extends Configuration {
     TASKLOG_DEBUG_TIMEOUT("hive.exec.tasklog.debug.timeout", 20000),
     OUTPUT_FILE_EXTENSION("hive.output.file.extension", null),
 
+    // Should write RowContainer tmp files on MapRFS local volume?
+    TMP_MAPRFS_VOLUME("hive.exec.tmp.maprfsvolume", true),
+
     // should hive determine whether to run in local mode automatically ?
     LOCALMODEAUTO("hive.exec.mode.local.auto", false),
     // if yes:
