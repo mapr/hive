@@ -105,12 +105,14 @@ public class MetaStoreSchemaInfo {
     if (toVersion == null) {
       toVersion = getHiveSchemaVersion();
     }
-    String initScriptName = INIT_FILE_PREFIX + toVersion + "." +
+
+    String version = toVersion.replace("-mapr", ".0");
+    String initScriptName = INIT_FILE_PREFIX + version + "." +
         dbType + SQL_FILE_EXTENSION;
     // check if the file exists
     if (!(new File(getMetaStoreScriptDir() + File.separatorChar +
           initScriptName).exists())) {
-      throw new HiveMetaException("Unknown version specified for initialization: " + toVersion);
+      throw new HiveMetaException("Unknown version specified for initialization: " + version);
     }
     return initScriptName;
   }
@@ -132,7 +134,9 @@ public class MetaStoreSchemaInfo {
 
   // Current hive version, remove the 'SNAPSHOT' part if needed
   public static String getHiveSchemaVersion() {
-    return HiveVersionInfo.getVersion().replace("-SNAPSHOT", "");
+    String version = HiveVersionInfo.getVersion().replace("-mapr", ".0");
+    return version.replace("-SNAPSHOT", "");
+
   }
 
 }

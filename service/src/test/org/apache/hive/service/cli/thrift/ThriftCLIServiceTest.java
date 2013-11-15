@@ -237,8 +237,11 @@ public abstract class ThriftCLIServiceTest {
   @Test
   public void testDoAs() throws HiveSQLException, LoginException, IOException {
     HiveConf hconf = new HiveConf();
-    assertTrue("default value of hive server2 doAs should be true",
+
+    // In MapR Hive by default impersonation is disabled
+    assertFalse("default value of hive server2 doAs should be false",
         hconf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS));
+    hconf.setBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS, true);
 
     hconf.setVar(ConfVars.HIVE_SERVER2_AUTHENTICATION,
         HiveAuthFactory.AuthTypes.KERBEROS.toString());
