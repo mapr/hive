@@ -339,6 +339,8 @@
             <fileset dir="webhcat/svr/build/lib/compile/">
                 <include name="*.jar"/>
                 <exclude name="hadoop*.jar"/>
+                <exclude name="zookeeper*.jar"/>
+                <exclude name="hbase*.jar"/>
             </fileset>
         </copy>
         <copy todir="${dist.dir}/share/webhcat/java-client/" includeEmptyDirs="false">
