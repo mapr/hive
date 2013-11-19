@@ -1868,6 +1868,11 @@
   </description>
 </property>
 
+<property>
+  <name>hive.server2.thrift.sasl.qop</name>
+  <value>auth-conf</auth>
+  <description>Sasl QOP value; one of 'auth', 'auth-int' and 'auth-conf'</description>
+</property>
 
 </configuration>
 
