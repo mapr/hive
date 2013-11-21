@@ -133,4 +133,4 @@ fi
 
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
-export HADOOP_OPTS="${HADOOP_OPTS} ${WEBHCAT_LOGIN_OPTS}"
+export HADOOP_OPTS="${HADOOP_OPTS} ${MAPR_ECOSYSTEM_LOGIN_OPTS}"

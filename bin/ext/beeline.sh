@@ -19,7 +19,7 @@ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 beeline () {
   CLASS=org.apache.hive.beeline.BeeLine;
-  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_CLIENT_LOGIN_OPTS}"
+  export HADOOP_OPTS="$HADOOP_OPTS ${KERBEROS_LOGIN_OPTS}"
   execHiveCmd $CLASS "$@"
 }
 

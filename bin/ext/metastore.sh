@@ -28,7 +28,7 @@ metastore() {
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
 
   export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
-  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_METASTORE_LOGIN_OPTS}"
+  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
   exec $HADOOP jar $JAR $CLASS "$@"
 }
 
@@ -58,7 +58,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
 
   export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
-  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_METASTORE_LOGIN_OPTS}"
+  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
 
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
