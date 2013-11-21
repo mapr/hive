@@ -872,12 +872,13 @@ public class Server {
    * Notify on a completed job.  Called by JobTracker.
    */
   @GET
-  @Path("internal/complete/{jobid}")
+  @Path("internal/complete/{jobid}/{user}")
   @Produces({MediaType.APPLICATION_JSON})
-  public CompleteBean completeJob(@PathParam("jobid") String jobid)
-    throws CallbackFailedException, IOException {
+  public CompleteBean completeJob(@PathParam("jobid") String jobid,
+                                  @PathParam("user") String user)
+    throws CallbackFailedException, IOException, InterruptedException {
     CompleteDelegator d = new CompleteDelegator(appConf);
-    return d.run(jobid);
+    return d.run(user, jobid);
   }
 
   /**
@@ -964,8 +965,15 @@ public class Server {
       return null;
     if (theUriInfo.getBaseUri() == null)
       return null;
-    return theUriInfo.getBaseUri() + VERSION
-      + "/internal/complete/$jobId";
+
+    String user = getDoAsUser();
+    if (user != null && !user.isEmpty() && user.contains("/"));
+      user = user.split("/")[0];
+
+    String url = theUriInfo.getBaseUri() + VERSION
+      + "/internal/complete/$jobId" + (user != null ? "/"+user : "");
+
+    return url;
   }
 
   /**

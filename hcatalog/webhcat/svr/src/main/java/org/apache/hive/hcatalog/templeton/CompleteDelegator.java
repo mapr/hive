@@ -21,10 +21,12 @@ package org.apache.hive.hcatalog.templeton;
 import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.hcatalog.templeton.tool.JobState;
 import org.apache.hive.hcatalog.templeton.tool.TempletonUtils;
 
@@ -51,38 +53,48 @@ public class CompleteDelegator extends TempletonDelegator {
     super(appConf);
   }
 
-  public CompleteBean run(String id)
-    throws CallbackFailedException, IOException {
+  public CompleteBean run(String user, final String id)
+    throws CallbackFailedException, IOException, InterruptedException {
     if (id == null)
       acceptWithError("No jobid given");
 
-    JobState state = null;
-    try {
-      state = new JobState(id, Main.getAppConfigInstance());
-      if (state.getCompleteStatus() == null)
-        failed("Job not yet complete. jobId=" + id, null);
+    if (user == null)
+      acceptWithError("No user id given");
 
-      Long notified = state.getNotifiedTime();
-      if (notified != null)
-        return acceptWithError("Callback already run for jobId=" + id +
-                " at " + new Date(notified));
+    UserGroupInformation ugi = UgiFactory.getUgi(user);
+    return ugi.doAs(new PrivilegedExceptionAction<CompleteBean>() {
+      public CompleteBean run() throws Exception {
+        JobState state = null;
+        try {
+          state = new JobState(id, Main.getAppConfigInstance());
+          if (state.getCompleteStatus() == null)
+            failed("Job not yet complete", null);
 
-      String callback = state.getCallback();
-      if (callback == null)
-        return new CompleteBean("No callback registered");
+          Long notified = state.getNotifiedTime();
+          if (notified != null)
+            return acceptWithError("Callback already run on "
+              + new Date(notified.longValue()));
 
-      try {
-        doCallback(state.getId(), callback);
-      } catch (Exception e) {
-        failed("Callback failed " + callback + " for " + id, e);
+          String callback = state.getCallback();
+          if (callback == null)
+            return new CompleteBean("No callback registered");
+
+          try {
+            doCallback(state.getId(), callback);
+          } catch (Exception e) {
+            failed("Callback failed " + callback + " for " + id, e);
+          }
+
+          state.setNotifiedTime(System.currentTimeMillis());
+          return new CompleteBean("Callback sent");
+        } catch (CallbackFailedException ex) {
+          throw new Exception(ex);
+        } finally {
+          if (state != null)
+            state.close();
+        }
       }
-
-      state.setNotifiedTime(System.currentTimeMillis());
-      return new CompleteBean("Callback sent");
-    } finally {
-      if (state != null)
-        state.close();
-    }
+    });
   }
 
   /**
@@ -97,7 +109,7 @@ public class CompleteDelegator extends TempletonDelegator {
     TempletonUtils.fetchUrl(new URL(url));
   }
 
-  private void failed(String msg, Exception e)
+  private static void failed(String msg, Exception e)
     throws CallbackFailedException {
     if (e != null)
       LOG.error(msg, e);
@@ -106,7 +118,7 @@ public class CompleteDelegator extends TempletonDelegator {
     throw new CallbackFailedException(msg);
   }
 
-  private CompleteBean acceptWithError(String msg) {
+  private static CompleteBean acceptWithError(String msg) {
     LOG.error(msg);
     return new CompleteBean(msg);
   }
