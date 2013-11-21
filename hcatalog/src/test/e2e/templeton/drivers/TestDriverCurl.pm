@@ -722,7 +722,7 @@ sub compare
           #first wait for job completion
           while ($NUM_RETRIES-- > 0) {
             $jobComplete = $res_hash->{'status'}->{'jobComplete'};
-            if (defined $jobComplete && lc($jobComplete) eq "true") {
+            if (defined $jobComplete && $jobComplete == JSON::true ) {
               last;
             }
             sleep $SLEEP_BETWEEN_RETRIES;
@@ -730,7 +730,7 @@ sub compare
             $json = new JSON;
             $res_hash = $json->utf8->decode($jobResult->{'body'});
           }
-          if ( (!defined $jobComplete) || lc($jobComplete) ne "true") {
+          if ( (!defined $jobComplete) || $jobComplete == JSON::false) {
             print $log "$0::$subName INFO check failed: " 
               . " timeout on wait for job completion ";
             $result = 0;
