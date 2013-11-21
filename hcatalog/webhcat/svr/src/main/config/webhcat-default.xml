@@ -45,7 +45,7 @@
 
   <property>
     <name>templeton.libjars</name>
-    <value>${env.WEBHCAT_PREFIX}/share/webhcat/svr/lib/zookeeper-3.4.3.jar</value>
+    <value></value>
     <description>Jars to add to the classpath.</description>
   </property>
 

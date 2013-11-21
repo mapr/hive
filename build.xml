@@ -557,7 +557,9 @@
         <exclude name="**/mockito*.jar"/>
         <exclude name="**/velocity*.jar"/>
         <exclude name="**/antlr-3*.jar"/>
+        <!-- MapR: exclude mapr shipped ecosystem jars from package -->
         <exclude name="hbase-*.jar"/>
+        <exclude name="zookeeper-*.jar"/>
       </fileset>
     </copy>
     <copy todir="${target.example.dir}/files" preservelastmodified="true" flatten="true">

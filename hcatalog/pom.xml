@@ -28,7 +28,7 @@
       <guava.version>11.0.2</guava.version>
       <hadoop20.version>1.0.3</hadoop20.version>
       <hadoop23.version>2.0.3-alpha</hadoop23.version>
-      <hbase.version>0.94.5</hbase.version>
+      <hbase.version>0.94.12-mapr-1310-SNAPSHOT</hbase.version>
       <hcatalog.version>${project.version}</hcatalog.version>
       <hive.version>${project.version}</hive.version>
       <jackson.version>1.9.2</jackson.version>
@@ -38,7 +38,7 @@
       <pig.version>0.10.1</pig.version>
       <slf4j.version>1.6.1</slf4j.version>
       <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
-      <zookeeper.version>3.4.3</zookeeper.version>
+      <zookeeper.version>3.4.5-mapr-SNAPSHOT</zookeeper.version>
       <metrics-core.version>2.1.2</metrics-core.version>
   </properties>
 
@@ -185,6 +185,17 @@
       <id>datanucleus</id>
       <name>datanucleus maven repository</name>
       <url>http://www.datanucleus.org/downloads/maven2</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+    </repository>
+
+    <repository>
+      <id>mapr</id>
+      <name>MapR Maven repository</name>
+      <url>http://repository.mapr.com/maven/</url>
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
