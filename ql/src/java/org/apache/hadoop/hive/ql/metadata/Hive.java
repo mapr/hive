@@ -2187,11 +2187,24 @@ private void constructOneLBLocationMap(FileStatus fSta,
   public static boolean moveResultFilesToDest(FileSystem fs, Path srcd, Path destd)
     throws IOException, HiveException {
 
+    boolean status = true;
+
     // rename all files under the source directory to destination
     FileStatus[] fileStatuses = fs.listStatus(srcd);
     for(FileStatus fileStatus : fileStatuses) {
       Path file = fileStatus.getPath();
-      if (!fs.rename(file, destd)) {
+
+      if (fileStatus.isDir()) {
+        // directory rename works different from file rename.
+        // For file rename: the files is moved under the destination dir.
+        // For directory rename:
+        //  if the destdir exists and empty it is renamed to the destination directory
+        //  if the destdir exists but NOT empty then it is moved under the dest directory
+        status = fs.rename(file, new Path(destd, file.getName()));
+      } else {
+        status = fs.rename(file, destd);
+      }
+      if (!status) {
         throw new HiveException("Unable to move result file " + file
           + " to destination directory: " + destd);
       }
