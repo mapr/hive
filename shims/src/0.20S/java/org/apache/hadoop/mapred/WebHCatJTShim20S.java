@@ -16,14 +16,18 @@
  * limitations under the License.
  */
 package org.apache.hadoop.mapred;
-
+ 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.shims.HadoopShims.WebHCatJTShim;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
 /**
@@ -31,6 +35,7 @@ import java.net.InetSocketAddress;
  * JobSubmissionProtocol which is package private
  */
 public class WebHCatJTShim20S implements WebHCatJTShim {
+    private static final Log LOG = LogFactory.getLog(WebHCatJTShim20S.class);
     private JobSubmissionProtocol cnx;
 
     /**
@@ -92,8 +97,18 @@ public class WebHCatJTShim20S implements WebHCatJTShim {
       RPC.stopProxy(cnx);
     }
     private InetSocketAddress getAddress(Configuration conf) {
-      String jobTrackerStr = conf.get("mapred.job.tracker", "localhost:8012");
-      return NetUtils.createSocketAddr(jobTrackerStr);
+      try {
+        FileSystem fs = FileSystem.get(conf);
+        Class fscls = Class.forName("org.apache.hadoop.fs.FileSystem");
+        Method method = fscls.getDeclaredMethod("getJobTrackerAddrs", new Class[] { Configuration.class });
+        InetSocketAddress[] jobTrackerAddr = (InetSocketAddress[]) method.invoke(fs, conf);
+        if (jobTrackerAddr == null || jobTrackerAddr[0] == null)
+          throw new Exception("JobTracker HA returned is not valid");
+            return jobTrackerAddr[0];
+      } catch (Exception e) {
+        LOG.error("Unable to get JobTracker address: " + e.getMessage());
+      }
+      return null;
     }
   }
 

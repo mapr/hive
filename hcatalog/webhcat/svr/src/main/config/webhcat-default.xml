@@ -81,7 +81,7 @@
 
   <property>
     <name>templeton.python</name>
-    <value>${env.PYTHON_CMD}</value>
+    <value>/usr/bin/python</value>
     <description>The path to the python executable.</description>
   </property>
 
