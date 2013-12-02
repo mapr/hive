@@ -259,10 +259,8 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public OperationState getOperationStatus(OperationHandle opHandle)
       throws HiveSQLException {
-    startLogCapture(opHandle);
     OperationState opState = sessionManager.getOperationManager().getOperationState(opHandle);
     LOG.info(opHandle + ": getOperationStatus()");
-    stopLogCapture();
     return opState;
   }
 
