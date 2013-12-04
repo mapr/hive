@@ -64,6 +64,7 @@ public class HBaseStorageHandler extends DefaultStorageHandler
 
   final static public String DEFAULT_PREFIX = "default.";
 
+  private Configuration jobConf;
   private Configuration hbaseConf;
   private HBaseAdmin admin;
 
@@ -231,6 +232,7 @@ public class HBaseStorageHandler extends DefaultStorageHandler
 
   @Override
   public void setConf(Configuration conf) {
+    jobConf = conf;
     hbaseConf = HBaseConfiguration.create(conf);
   }
 
@@ -290,6 +292,25 @@ public class HBaseStorageHandler extends DefaultStorageHandler
       }
     }
     jobProperties.put(HBaseSerDe.HBASE_TABLE_NAME, tableName);
+    if (jobConf != null)
+      addHBaseResources(jobConf, jobProperties);
+  }
+
+  /**
+   * Utility method to add hbase-default.xml and hbase-site.xml properties to a new map
+   * if they are not already present in the jobConf.
+   * @param jobConf Job configuration
+   * @param newJobProperties  Map to which new properties should be added
+   */
+  private void addHBaseResources(Configuration jobConf,
+                                 Map<String, String> newJobProperties) {
+    Configuration conf = new Configuration(false);
+    HBaseConfiguration.addHbaseResources(conf);
+    for (Map.Entry<String, String> entry : conf) {
+      if (jobConf.get(entry.getKey()) == null) {
+        newJobProperties.put(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   @Override
