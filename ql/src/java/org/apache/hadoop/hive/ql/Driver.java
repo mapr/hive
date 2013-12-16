@@ -1375,6 +1375,7 @@ public class Driver implements CommandProcessor {
       try {
         SessionState.get().getHiveHistory().logPlanProgress(plan);
       } catch (Exception e) {
+        // ignore
       }
     }
     console.printInfo("OK");
@@ -1442,7 +1443,6 @@ public class Driver implements CommandProcessor {
       tskRun.runSequential();
     }
     running.put(tskRes, tskRun);
-    return;
   }
 
   /**
@@ -1486,14 +1486,17 @@ public class Driver implements CommandProcessor {
         Thread.sleep(SLEEP_TIME);
       } catch (InterruptedException ie) {
         // Do Nothing
-        ;
       }
       resultIterator = results.iterator();
     }
   }
 
-  public boolean getResults(ArrayList<String> res) throws IOException, CommandNeedRetryException {
-    if (plan != null && plan.getFetchTask() != null) {
+  public boolean isFetchingTable() {
+    return plan != null && plan.getFetchTask() != null;
+  }
+
+  public boolean getResults(List res) throws IOException, CommandNeedRetryException {
+    if (isFetchingTable()) {
       FetchTask ft = plan.getFetchTask();
       ft.setMaxRows(maxRows);
       return ft.fetch(res);

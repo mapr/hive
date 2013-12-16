@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.DriverContext;
 import org.apache.hadoop.hive.ql.QueryPlan;
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -89,7 +88,7 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
 
   public static enum FeedType {
     DYNAMIC_PARTITIONS, // list of dynamic partitions
-  };
+  }
 
   // Bean methods
 
@@ -166,12 +165,6 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
    */
   protected abstract int execute(DriverContext driverContext);
 
-  // dummy method - FetchTask overwrites this
-  public boolean fetch(ArrayList<String> res) throws IOException, CommandNeedRetryException {
-    assert false;
-    return false;
-  }
-
   public void setChildTasks(List<Task<? extends Serializable>> childTasks) {
     this.childTasks = childTasks;
   }
@@ -241,8 +234,6 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
         childTsk.removeFromChildrenTasks();
       }
     }
-
-    return;
   }
 
 

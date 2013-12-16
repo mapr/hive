@@ -94,6 +94,9 @@ public class HiveSessionImpl implements HiveSession {
     // set an explicit session name to control the download directory name
     hiveConf.set(ConfVars.HIVESESSIONID.varname,
         sessionHandle.getHandleIdentifier().toString());
+    // use thrift transportable formatter
+    hiveConf.set(ListSinkOperator.OUTPUT_FORMATTER,
+        FetchFormatter.ThriftFormatter.class.getName());
     sessionState = new SessionState(hiveConf);
 
     // create a new metastore connection for this particular user session
