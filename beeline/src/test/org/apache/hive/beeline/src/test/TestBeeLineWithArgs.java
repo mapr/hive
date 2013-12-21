@@ -188,13 +188,35 @@ public class TestBeeLineWithArgs {
    * @throws Throwable
    */
   @Test
-  public void testBeelineCommandLineHiveVariable() throws Throwable {
+  public void testBeelineHiveVariable() throws Throwable {
     List<String> argList = getBaseArgs(JDBC_URL);
     argList.add("--hivevar");
     argList.add("DUMMY_TBL=dummy");
     final String TEST_NAME = "testHiveCommandLineHiveVariable";
     final String SCRIPT_TEXT = "create table ${DUMMY_TBL} (d int);\nshow tables;\n";
     final String EXPECTED_PATTERN = "dummy";
+    testScriptFile(TEST_NAME, SCRIPT_TEXT, EXPECTED_PATTERN, true, argList);
+  }
+
+
+  /**
+   * Test Beeline -hivevar option. User can specify --hivevar name=value on Beeline command line.
+   * This test defines multiple variables using repeated --hivevar flags.
+   * @throws Throwable
+   */
+  @Test
+  public void testBeelineMultiHiveVariable() throws Throwable {
+    List<String> argList = getBaseArgs(JDBC_URL);
+    argList.add("--hivevar");
+    argList.add("TABLE_NAME=dummy2");
+    argList.add("--hivevar");
+    argList.add("COMMAND=create");
+    argList.add("--hivevar");
+    argList.add("OBJECT=table");
+
+    final String TEST_NAME = "testHiveCommandLineHiveVariable";
+    final String SCRIPT_TEXT = "${COMMAND} ${OBJECT} ${TABLE_NAME} (d int);\nshow tables;\n";
+    final String EXPECTED_PATTERN = "dummy2";
     testScriptFile(TEST_NAME, SCRIPT_TEXT, EXPECTED_PATTERN, true, argList);
   }
 
