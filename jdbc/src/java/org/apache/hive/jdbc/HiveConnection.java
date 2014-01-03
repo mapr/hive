@@ -92,11 +92,12 @@ public class HiveConnection implements java.sql.Connection {
   private final Map<String, String> hiveVarMap;
   private final boolean isEmbeddedMode;
   private TTransport transport;
-  private TCLIService.Iface client;
+  private TCLIService.Iface client;   // todo should be replaced by CliServiceClient
   private boolean isClosed = true;
   private SQLWarning warningChain = null;
   private TSessionHandle sessHandle = null;
   private final List<TProtocolVersion> supportedProtocols = new LinkedList<TProtocolVersion>();
+  private TProtocolVersion protocol;
 
   public HiveConnection(String uri, Properties info) throws SQLException {
     jdbcURI = uri;
@@ -133,6 +134,7 @@ public class HiveConnection implements java.sql.Connection {
     supportedProtocols.add(TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V1);
     supportedProtocols.add(TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V2);
     supportedProtocols.add(TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V3);
+    supportedProtocols.add(TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V4);
 
     // open client session
     openSession();
@@ -276,8 +278,10 @@ public class HiveConnection implements java.sql.Connection {
       if (!supportedProtocols.contains(openResp.getServerProtocolVersion())) {
         throw new TException("Unsupported Hive2 protocol");
       }
+      protocol = openResp.getServerProtocolVersion();
       sessHandle = openResp.getSessionHandle();
     } catch (TException e) {
+      e.printStackTrace();
       throw new SQLException("Could not establish connection to "
           + jdbcURI + ": " + e.getMessage(), " 08S01", e);
     }
@@ -925,4 +929,7 @@ public class HiveConnection implements java.sql.Connection {
     throw new SQLException("Method not supported");
   }
 
+  public TProtocolVersion getProtocol() {
+    return protocol;
+  }
 }

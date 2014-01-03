@@ -32,6 +32,8 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.exec.FetchFormatter;
+import org.apache.hadoop.hive.ql.exec.ListSinkOperator;
 import org.apache.hadoop.hive.ql.history.HiveHistory;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -55,6 +57,7 @@ import org.apache.hive.service.cli.operation.GetTableTypesOperation;
 import org.apache.hive.service.cli.operation.GetTypeInfoOperation;
 import org.apache.hive.service.cli.operation.MetadataOperation;
 import org.apache.hive.service.cli.operation.OperationManager;
+import org.apache.hive.service.cli.thrift.TProtocolVersion;
 
 /**
  * HiveSession
@@ -62,7 +65,8 @@ import org.apache.hive.service.cli.operation.OperationManager;
  */
 public class HiveSessionImpl implements HiveSession {
 
-  private final SessionHandle sessionHandle = new SessionHandle();
+  private final SessionHandle sessionHandle;
+
   private String username;
   private final String password;
   private final Map<String, String> sessionConf = new HashMap<String, String>();
@@ -81,10 +85,11 @@ public class HiveSessionImpl implements HiveSession {
   private IMetaStoreClient metastoreClient = null;
   private final Set<OperationHandle> opHandleSet = new HashSet<OperationHandle>();
 
-  public HiveSessionImpl(String username, String password, Map<String, String> sessionConf)
-      throws HiveSQLException{
+  public HiveSessionImpl(TProtocolVersion protocol, String username, String password,
+      Map<String, String> sessionConf) throws HiveSQLException{
     this.username = username;
     this.password = password;
+    this.sessionHandle = new SessionHandle(protocol);
 
     if (sessionConf != null) {
       for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
@@ -97,6 +102,7 @@ public class HiveSessionImpl implements HiveSession {
     // use thrift transportable formatter
     hiveConf.set(ListSinkOperator.OUTPUT_FORMATTER,
         FetchFormatter.ThriftFormatter.class.getName());
+    hiveConf.setInt(ListSinkOperator.OUTPUT_PROTOCOL, protocol.getValue());
     sessionState = new SessionState(hiveConf);
 
     // create a new metastore connection for this particular user session
@@ -106,6 +112,10 @@ public class HiveSessionImpl implements HiveSession {
     } catch (HiveException e) {
       throw new HiveSQLException("Failed to setup metastore connection", e);
     }
+  }
+
+  public TProtocolVersion getProtocolVersion() {
+    return sessionHandle.getProtocolVersion();
   }
 
   public SessionManager getSessionManager() {

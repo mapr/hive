@@ -131,7 +131,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(catalogResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(catalogResp.getOperationHandle())
@@ -215,7 +215,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(colResp.getStatus());
     // build the resultset from response
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(colResp.getOperationHandle())
@@ -330,7 +330,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(funcResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(funcResp.getOperationHandle())
@@ -343,7 +343,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
 
   public ResultSet getImportedKeys(String catalog, String schema, String table)
       throws SQLException {
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setEmptyResultSet(true)
     .setSchema(
@@ -485,7 +485,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(null).setClient(client).setEmptyResultSet(true).
+    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true).
         setSchema(Arrays.asList("TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "KEY_SEQ", "PK_NAME" ),
             Arrays.asList("STRING",    "STRING",      "STRING",     "STRING",       "INT",  "STRING"))
             .build();
@@ -496,7 +496,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(null).setClient(client).setEmptyResultSet(true).
+    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true).
                   setSchema(
                     Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "COLUMN_NAME", "COLUMN_TYPE",
                               "DATA_TYPE", "TYPE_NAME", "PRECISION", "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS",
@@ -517,7 +517,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       String procedureNamePattern) throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(null).setClient(client).setEmptyResultSet(true).
+    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true).
                   setSchema(
                     Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "RESERVERD", "RESERVERD",
                                   "RESERVERD", "REMARKS", "PROCEDURE_TYPE", "SPECIFIC_NAME"),
@@ -571,7 +571,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(schemaResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(schemaResp.getOperationHandle())
@@ -615,7 +615,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(tableTypeResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(tableTypeResp.getOperationHandle())
@@ -648,7 +648,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(getTableResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(getTableResp.getOperationHandle())
@@ -704,7 +704,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       throw new SQLException(e.getMessage(), "08S01", e);
     }
     Utils.verifySuccess(getTypeInfoResp.getStatus());
-    return new HiveQueryResultSet.Builder(null)
+    return new HiveQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(getTypeInfoResp.getOperationHandle())

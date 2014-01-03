@@ -29,6 +29,7 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.RowSet;
+import org.apache.hive.service.cli.RowSetFactory;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.TableSchema;
 
@@ -63,7 +64,7 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setConfiguration(configuration);
       TOpenSessionResp resp = cliService.OpenSession(req);
       checkStatus(resp.getStatus());
-      return new SessionHandle(resp.getSessionHandle());
+      return new SessionHandle(resp.getSessionHandle(), resp.getServerProtocolVersion());
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -145,7 +146,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setRunAsync(isAsync);
       TExecuteStatementResp resp = cliService.ExecuteStatement(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -162,7 +164,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       TGetTypeInfoReq req = new TGetTypeInfoReq(sessionHandle.toTSessionHandle());
       TGetTypeInfoResp resp = cliService.GetTypeInfo(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -179,7 +182,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       TGetCatalogsReq req = new TGetCatalogsReq(sessionHandle.toTSessionHandle());
       TGetCatalogsResp resp = cliService.GetCatalogs(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -200,7 +204,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setSchemaName(schemaName);
       TGetSchemasResp resp = cliService.GetSchemas(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -222,7 +227,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setSchemaName(schemaName);
       TGetTablesResp resp = cliService.GetTables(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -239,7 +245,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       TGetTableTypesReq req = new TGetTableTypesReq(sessionHandle.toTSessionHandle());
       TGetTableTypesResp resp = cliService.GetTableTypes(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -263,7 +270,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setColumnName(columnName);
       TGetColumnsResp resp = cliService.GetColumns(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -283,7 +291,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setSchemaName(schemaName);
       TGetFunctionsResp resp = cliService.GetFunctions(req);
       checkStatus(resp.getStatus());
-      return new OperationHandle(resp.getOperationHandle());
+      TProtocolVersion protocol = sessionHandle.getProtocolVersion();
+      return new OperationHandle(resp.getOperationHandle(), protocol);
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {
@@ -372,7 +381,7 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       req.setMaxRows(maxRows);
       TFetchResultsResp resp = cliService.FetchResults(req);
       checkStatus(resp.getStatus());
-      return new RowSet(resp.getResults());
+      return RowSetFactory.create(resp.getResults(), opHandle.getProtocolVersion());
     } catch (HiveSQLException e) {
       throw e;
     } catch (Exception e) {

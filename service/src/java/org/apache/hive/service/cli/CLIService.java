@@ -37,12 +37,20 @@ import org.apache.hive.service.ServiceException;
 import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.log.OperationLog;
 import org.apache.hive.service.cli.session.SessionManager;
+import org.apache.hive.service.cli.thrift.TProtocolVersion;
 
 /**
  * CLIService.
  *
  */
 public class CLIService extends CompositeService implements ICLIService {
+
+  public static final TProtocolVersion SERVER_VERSION;
+
+  static {
+    TProtocolVersion[] protocols = TProtocolVersion.values();
+    SERVER_VERSION = protocols[protocols.length - 1];
+  }
 
   private final Log LOG = LogFactory.getLog(CLIService.class.getName());
 
@@ -95,6 +103,21 @@ public class CLIService extends CompositeService implements ICLIService {
     super.stop();
   }
 
+  public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
+      Map<String, String> configuration) throws HiveSQLException {
+    SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password, configuration, false, null);
+    LOG.info(sessionHandle + ": openSession()");
+    return sessionHandle;
+  }
+
+  public SessionHandle openSessionWithImpersonation(TProtocolVersion protocol, String username,
+      String password, Map<String, String> configuration, String delegationToken)
+      throws HiveSQLException {
+    SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password, configuration,
+        true, delegationToken);
+    LOG.info(sessionHandle + ": openSession()");
+    return sessionHandle;
+  }
 
   /* (non-Javadoc)
    * @see org.apache.hive.service.cli.ICLIService#openSession(java.lang.String, java.lang.String, java.util.Map)
@@ -102,7 +125,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public SessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws HiveSQLException {
-    SessionHandle sessionHandle = sessionManager.openSession(username, password, configuration, false, null);
+    SessionHandle sessionHandle = sessionManager.openSession(SERVER_VERSION, username, password, configuration, false, null);
     LOG.info(sessionHandle + ": openSession()");
     return sessionHandle;
   }
@@ -113,7 +136,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public SessionHandle openSessionWithImpersonation(String username, String password, Map<String, String> configuration,
        String delegationToken) throws HiveSQLException {
-    SessionHandle sessionHandle = sessionManager.openSession(username, password, configuration,
+    SessionHandle sessionHandle = sessionManager.openSession(SERVER_VERSION, username, password, configuration,
           true, delegationToken);
     LOG.info(sessionHandle + ": openSession()");
     return sessionHandle;
