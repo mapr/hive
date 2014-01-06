@@ -17,38 +17,61 @@
  */
 package org.apache.hive.service.auth;
 
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.LoginException;
+import javax.security.auth.login.LoginContext;
 import javax.security.sasl.AuthenticationException;
-import net.sf.jpam.Pam;
-import net.sf.jpam.PamReturnValue;
+
 import org.apache.hadoop.hive.conf.HiveConf;
+
+import java.io.IOException;
 
 public class PamAuthenticationProvider implements PasswdAuthenticationProvider {
 
-    @Override
-    public void Authenticate(String user, String  password)
-            throws AuthenticationException {
+  private String pamJaasConfig;
 
-      HiveConf conf = new HiveConf();
-      String hivePamProfiles = conf.get("hive.server2.authentication.pam.profiles");
-      if (hivePamProfiles == null || hivePamProfiles.trim().isEmpty()) {
-        throw new AuthenticationException("PAM profiles not configured for hive");
-      }
+  public PamAuthenticationProvider() {
+    HiveConf conf = new HiveConf();
+    pamJaasConfig = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_PAM_JAAS_CONFIG);
+  }
 
-      String pamSchemes[] = hivePamProfiles.split(",");
-      for (String pamScheme : pamSchemes) {
-        pamScheme = pamScheme.trim();
-        if (pamScheme.isEmpty())
-          continue;
+  @Override
+  public void Authenticate(String user, String  password)
+          throws AuthenticationException {
 
-        try {
-          Pam pam = new Pam(pamScheme);
-          PamReturnValue err = pam.authenticate(user, password);
-          if (err != PamReturnValue.PAM_SUCCESS) {
-            throw new AuthenticationException("Error validating user through PAM. PamReturnValue=" + err);
-          }
-        } catch(LinkageError ex) {
-          throw new AuthenticationException("Link Error", ex);
-        }
+    try {
+      LoginContext ctx = new LoginContext(pamJaasConfig, new JAASCallbackHandler(user, password));
+      ctx.login();
+    } catch (LoginException ex) {
+      throw new AuthenticationException("Failed authentication for user " + user, ex);
+    } catch(LinkageError ex) {
+      throw new AuthenticationException("Link Error. Failed to authenticate user " + user, ex);
+    }
+  }
+
+  static class JAASCallbackHandler implements CallbackHandler {
+    private String user;
+    private String pass;
+
+    public JAASCallbackHandler(String user, String pass) {
+      this.user = user;
+      this.pass = pass;
+    }
+
+    public void handle(Callback[] callbacks)
+      throws IOException, UnsupportedCallbackException {
+      for (int i = 0; i < callbacks.length; i++) {
+        if (callbacks[i] instanceof NameCallback)
+          ((NameCallback)callbacks[i]).setName(user);
+        else if (callbacks[i] instanceof PasswordCallback)
+          ((PasswordCallback)callbacks[i]).setPassword(pass.toCharArray());
+        else
+          throw new UnsupportedCallbackException(callbacks[i], "unsupported callback - " + callbacks[i].getClass().getName());
       }
     }
+  }
 }
