@@ -1860,18 +1860,6 @@
 </property>
 
 <property>
-  <name>hive.server2.authentication.pam.jaas.config</name>
-  <value></value>
-  <description>
-    JAAS config used in PAM authenticator of HiveServer2. Default JAAS config is
-    "jpamLogin" which is defined in $HIVE_HOME/conf/hive.server2.pam.config.
-    To specify a different JAAS config file export the file full path in environment
-    varible HIVE_PAM_CONFIG. If the config name within the config file is different from
-    "jpamLogin" then set this particular property to the config name
-  </description>
-</property>
-
-<property>
   <name>hive.server2.enable.doAs</name>
   <value>true</value>
   <description>

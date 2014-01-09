@@ -415,7 +415,6 @@
        <include name="*.template"/>
        <!-- MapR: include empty hive-site.xml -->
        <include name="hive-site.xml"/>
-       <include name="hive.server2.pam.config"/>
      </fileset>
     </copy>
     <copy file="${basedir}/common/src/java/conf/hive-log4j.properties"
