@@ -25,7 +25,6 @@ hiveserver2() {
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
 
-  HADOOP_OPTS="$HADOOP_OPTS -Djava.security.auth.login.config=$HIVE_PAM_CONFIG"
   export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
   exec $HADOOP jar $JAR $CLASS "$@"
 }
@@ -52,7 +51,6 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
 
-  HADOOP_OPTS="$HADOOP_OPTS -Djava.security.auth.login.config=$HIVE_PAM_CONFIG"
   export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
