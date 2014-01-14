@@ -38,7 +38,7 @@
       <pig.version>0.10.1</pig.version>
       <slf4j.version>1.6.1</slf4j.version>
       <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
-      <zookeeper.version>3.4.5-mapr-SNAPSHOT</zookeeper.version>
+      <zookeeper.version>3.4.5-mapr-1401</zookeeper.version>
       <metrics-core.version>2.1.2</metrics-core.version>
   </properties>
 
