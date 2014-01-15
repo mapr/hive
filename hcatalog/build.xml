@@ -55,6 +55,9 @@
     <property name="package.buildroot" value="${build.dir}/rpm/hcatalog_package_build_${user.name}"/>
     <property name="package.build.dir" value="${build.dir}/rpm/hcatalog_package_build_${user.name}/BUILD"/>
 
+    <property name="mvn.deploy.repo.id" value="mapr-releases" />
+    <property name="mvn.deploy.repo.url" value="${env.MAPR_MAVEN_REPO}" />
+
     <target name="init">
         <mkdir dir="${dist.dir}"/>
     </target>
