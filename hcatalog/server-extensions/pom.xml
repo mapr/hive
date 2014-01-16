@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.hcatalog</groupId>
         <artifactId>hcatalog</artifactId>
-        <version>0.11-mapr</version>
+        <version>0.11-mapr-1401</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
