@@ -28,7 +28,7 @@
       <guava.version>11.0.2</guava.version>
       <hadoop20.version>1.0.3</hadoop20.version>
       <hadoop23.version>2.0.3-alpha</hadoop23.version>
-      <hbase.version>0.94.12-mapr-1310</hbase.version>
+      <hbase.version>0.94.12-mapr-1310-SNAPSHOT</hbase.version>
       <hcatalog.version>${project.version}</hcatalog.version>
       <hive.version>${project.version}</hive.version>
       <jackson.version>1.9.2</jackson.version>
