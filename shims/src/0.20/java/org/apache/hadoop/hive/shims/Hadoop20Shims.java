@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -728,6 +730,25 @@ public class Hadoop20Shims implements HadoopShims {
   @Override
   public short getDefaultReplication(FileSystem fs, Path path) {
     return fs.getDefaultReplication();
+  }
+
+  @Override
+  public Map<String, String> getHadoopConfNames() {
+    Map<String, String> ret = new HashMap<String, String>();
+    ret.put("HADOOPFS", "fs.default.name");
+    ret.put("HADOOPMAPFILENAME", "map.input.file");
+    ret.put("HADOOPMAPREDINPUTDIR", "mapred.input.dir");
+    ret.put("HADOOPMAPREDINPUTDIRRECURSIVE", "mapred.input.dir.recursive");
+    ret.put("MAPREDMAXSPLITSIZE", "mapred.max.split.size");
+    ret.put("MAPREDMINSPLITSIZE", "mapred.min.split.size");
+    ret.put("MAPREDMINSPLITSIZEPERNODE", "mapred.min.split.size.per.rack");
+    ret.put("MAPREDMINSPLITSIZEPERRACK", "mapred.min.split.size.per.node");
+    ret.put("HADOOPNUMREDUCERS", "mapred.reduce.tasks");
+    ret.put("HADOOPJOBNAME", "mapred.job.name");
+    ret.put("HADOOPSPECULATIVEEXECREDUCERS", "mapred.reduce.tasks.speculative.execution");
+    ret.put("MAPREDSETUPCLEANUPNEEDED", "mapred.committer.job.setup.cleanup.needed");
+    ret.put("MAPREDTASKCLEANUPNEEDED", "mapreduce.job.committer.task.cleanup.needed");
+    return ret;
   }
 
   @Override

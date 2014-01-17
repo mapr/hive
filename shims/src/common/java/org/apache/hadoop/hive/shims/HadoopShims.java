@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
+import java.util.Map;
 
 import javax.security.auth.login.LoginException;
 
@@ -392,6 +393,8 @@ public interface HadoopShims {
    * @return
    */
   public short getDefaultReplication(FileSystem fs, Path path);
+
+  public Map<String, String> getHadoopConfNames();
 
   /**
    * Create the proxy ugi for the given userid
