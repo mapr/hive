@@ -30,6 +30,7 @@
               description="location to place TEST-*.xml files so that hive's testreport includes them"/>
     <property name="hive.dist.dir" location="${build.dir.hive}/dist"
             description="where all hive build artifacts are placed to make binary tar ball"/>
+    <loadproperties srcfile="${basedir}/../version.properties"/>
     <loadproperties srcfile="${basedir}/build.properties"/>
 
     <!--

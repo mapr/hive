@@ -22,6 +22,7 @@
 <project name="build-common" default="jar"
          xmlns:artifact="artifact:org.apache.maven.artifact.ant">
 
+  <loadproperties srcfile="${path.to.basedir}/../version.properties"/>
   <loadproperties srcfile="${path.to.basedir}/build.properties"/>
 
   <condition property="hadoopversion" value="20">
