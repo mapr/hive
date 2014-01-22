@@ -60,6 +60,9 @@ $ mkdir mapr-hive-0.11.0
 $ cd mapr-hive-0.11.0
 $ git clone git://github.com/mapr/hive.git .
 $ git checkout branch-0.11-mapr
+
+(If required change version tag in ./version.properties file)
+
 $ ant package
 
 To install in the local maven repository on the local filesystem (${HOME}/.m2):
@@ -80,7 +83,7 @@ To generate tarball:
 
 ant tar -Ddist.dir=build
 
-The tarball is located in the build/ directory as hive-0.11.0.tar.gz
+The tarball is located in the build/ directory as hive-<version>.tar.gz
 
 ```
 

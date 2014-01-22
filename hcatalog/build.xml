@@ -27,6 +27,7 @@
 
     <property name="path.to.basedir" location="${basedir}"/>
 
+    <loadproperties srcfile="${basedir}/../version.properties"/>
     <loadproperties srcfile="${basedir}/build.properties"/>
 
     <!--
