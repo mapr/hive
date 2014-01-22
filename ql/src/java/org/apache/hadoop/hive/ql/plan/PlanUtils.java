@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.ql.io.HivePassThroughOutputFormat;
 import org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
+import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
@@ -794,11 +795,12 @@ public final class PlanUtils {
   public static void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
     String handlerClass = tableDesc.getProperties().getProperty(
         org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE);
+    if (handlerClass == null) {
+      handlerClass = DefaultStorageHandler.class.getName();
+    }
     try {
       HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(jobConf, handlerClass);
-      if (storageHandler != null) {
-        storageHandler.configureJobConf(tableDesc, jobConf);
-      }
+      storageHandler.configureJobConf(tableDesc, jobConf);
     } catch (HiveException e) {
       throw new RuntimeException(e);
     }

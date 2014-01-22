@@ -381,6 +381,7 @@ public class HBaseStorageHandler extends DefaultStorageHandler
 
   @Override
   public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
+    super.configureJobConf(tableDesc, jobConf);
     try {
       TableMapReduceUtil.addDependencyJars(jobConf);
       org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil.addDependencyJars(jobConf,

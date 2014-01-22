@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.ListSinkOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.parse.SplitSample;
+import org.apache.hadoop.mapred.JobConf;
 
 /**
  * FetchWork.
@@ -307,5 +308,16 @@ public class FetchWork implements Serializable {
     }
 
     return ret;
+  }
+
+  public void configureJobConf(JobConf jobConf) {
+    if (tblDesc != null) {
+      PlanUtils.configureJobConf(tblDesc, jobConf);
+    }
+    if (partDesc != null) {
+      for (PartitionDesc part : partDesc) {
+        PlanUtils.configureJobConf(part.getTableDesc(), jobConf);
+      }
+    }
   }
 }

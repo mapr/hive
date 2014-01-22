@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
-import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.DriverContext;
 import org.apache.hadoop.hive.ql.QueryPlan;
 import org.apache.hadoop.hive.ql.io.HiveInputFormat;
@@ -66,6 +65,7 @@ public class FetchTask extends Task<FetchWork> implements Serializable {
     try {
       // Create a file system handle
       JobConf job = new JobConf(conf);
+      work.configureJobConf(job);
 
       Operator<?> source = work.getSource();
       if (source instanceof TableScanOperator) {

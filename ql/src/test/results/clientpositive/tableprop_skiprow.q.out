@@ -1,0 +1,222 @@
+PREHOOK: query: -- kv1.* : 238, 86, 311, 27, ...
+
+-- text file
+create table skip_nrow1(key string, value string) stored as textfile TBLPROPERTIES ('skip.first.rownum'='1')
+PREHOOK: type: CREATETABLE
+POSTHOOK: query: -- kv1.* : 238, 86, 311, 27, ...
+
+-- text file
+create table skip_nrow1(key string, value string) stored as textfile TBLPROPERTIES ('skip.first.rownum'='1')
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: default@skip_nrow1
+PREHOOK: query: load data local inpath '../data/files/kv1.txt' overwrite into table skip_nrow1
+PREHOOK: type: LOAD
+PREHOOK: Output: default@skip_nrow1
+POSTHOOK: query: load data local inpath '../data/files/kv1.txt' overwrite into table skip_nrow1
+POSTHOOK: type: LOAD
+POSTHOOK: Output: default@skip_nrow1
+PREHOOK: query: -- fetch task
+explain
+select * from skip_nrow1 limit 3
+PREHOOK: type: QUERY
+POSTHOOK: query: -- fetch task
+explain
+select * from skip_nrow1 limit 3
+POSTHOOK: type: QUERY
+ABSTRACT SYNTAX TREE:
+  (TOK_QUERY (TOK_FROM (TOK_TABREF (TOK_TABNAME skip_nrow1))) (TOK_INSERT (TOK_DESTINATION (TOK_DIR TOK_TMP_FILE)) (TOK_SELECT (TOK_SELEXPR TOK_ALLCOLREF)) (TOK_LIMIT 3)))
+
+STAGE DEPENDENCIES:
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-0
+    Fetch Operator
+      limit: 3
+      Processor Tree:
+        TableScan
+          alias: skip_nrow1
+          Select Operator
+            expressions:
+                  expr: key
+                  type: string
+                  expr: value
+                  type: string
+            outputColumnNames: _col0, _col1
+            Limit
+              ListSink
+
+
+PREHOOK: query: select * from skip_nrow1 limit 3
+PREHOOK: type: QUERY
+PREHOOK: Input: default@skip_nrow1
+#### A masked pattern was here ####
+POSTHOOK: query: select * from skip_nrow1 limit 3
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@skip_nrow1
+#### A masked pattern was here ####
+86	val_86
+311	val_311
+27	val_27
+PREHOOK: query: -- mr task
+explain
+select key,value from skip_nrow1 limit 3
+PREHOOK: type: QUERY
+POSTHOOK: query: -- mr task
+explain
+select key,value from skip_nrow1 limit 3
+POSTHOOK: type: QUERY
+ABSTRACT SYNTAX TREE:
+  (TOK_QUERY (TOK_FROM (TOK_TABREF (TOK_TABNAME skip_nrow1))) (TOK_INSERT (TOK_DESTINATION (TOK_DIR TOK_TMP_FILE)) (TOK_SELECT (TOK_SELEXPR (TOK_TABLE_OR_COL key)) (TOK_SELEXPR (TOK_TABLE_OR_COL value))) (TOK_LIMIT 3)))
+
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Alias -> Map Operator Tree:
+        skip_nrow1 
+          TableScan
+            alias: skip_nrow1
+            Select Operator
+              expressions:
+                    expr: key
+                    type: string
+                    expr: value
+                    type: string
+              outputColumnNames: _col0, _col1
+              Limit
+                File Output Operator
+                  compressed: false
+                  GlobalTableId: 0
+                  table:
+                      input format: org.apache.hadoop.mapred.TextInputFormat
+                      output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: 3
+
+
+PREHOOK: query: select key,value from skip_nrow1 limit 3
+PREHOOK: type: QUERY
+PREHOOK: Input: default@skip_nrow1
+#### A masked pattern was here ####
+POSTHOOK: query: select key,value from skip_nrow1 limit 3
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@skip_nrow1
+#### A masked pattern was here ####
+86	val_86
+311	val_311
+27	val_27
+PREHOOK: query: -- sequence file
+create table skip_nrow2(key string, value string) stored as sequencefile TBLPROPERTIES ('skip.first.rownum'='1')
+PREHOOK: type: CREATETABLE
+POSTHOOK: query: -- sequence file
+create table skip_nrow2(key string, value string) stored as sequencefile TBLPROPERTIES ('skip.first.rownum'='1')
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: default@skip_nrow2
+PREHOOK: query: load data local inpath '../data/files/kv1.seq' overwrite into table skip_nrow2
+PREHOOK: type: LOAD
+PREHOOK: Output: default@skip_nrow2
+POSTHOOK: query: load data local inpath '../data/files/kv1.seq' overwrite into table skip_nrow2
+POSTHOOK: type: LOAD
+POSTHOOK: Output: default@skip_nrow2
+PREHOOK: query: -- fetch task
+explain
+select * from skip_nrow2 limit 3
+PREHOOK: type: QUERY
+POSTHOOK: query: -- fetch task
+explain
+select * from skip_nrow2 limit 3
+POSTHOOK: type: QUERY
+ABSTRACT SYNTAX TREE:
+  (TOK_QUERY (TOK_FROM (TOK_TABREF (TOK_TABNAME skip_nrow2))) (TOK_INSERT (TOK_DESTINATION (TOK_DIR TOK_TMP_FILE)) (TOK_SELECT (TOK_SELEXPR TOK_ALLCOLREF)) (TOK_LIMIT 3)))
+
+STAGE DEPENDENCIES:
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-0
+    Fetch Operator
+      limit: 3
+      Processor Tree:
+        TableScan
+          alias: skip_nrow2
+          Select Operator
+            expressions:
+                  expr: key
+                  type: string
+                  expr: value
+                  type: string
+            outputColumnNames: _col0, _col1
+            Limit
+              ListSink
+
+
+PREHOOK: query: select * from skip_nrow2 limit 3
+PREHOOK: type: QUERY
+PREHOOK: Input: default@skip_nrow2
+#### A masked pattern was here ####
+POSTHOOK: query: select * from skip_nrow2 limit 3
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@skip_nrow2
+#### A masked pattern was here ####
+86	val_86
+311	val_311
+27	val_27
+PREHOOK: query: -- mr task
+explain
+select key,value from skip_nrow2 limit 3
+PREHOOK: type: QUERY
+POSTHOOK: query: -- mr task
+explain
+select key,value from skip_nrow2 limit 3
+POSTHOOK: type: QUERY
+ABSTRACT SYNTAX TREE:
+  (TOK_QUERY (TOK_FROM (TOK_TABREF (TOK_TABNAME skip_nrow2))) (TOK_INSERT (TOK_DESTINATION (TOK_DIR TOK_TMP_FILE)) (TOK_SELECT (TOK_SELEXPR (TOK_TABLE_OR_COL key)) (TOK_SELEXPR (TOK_TABLE_OR_COL value))) (TOK_LIMIT 3)))
+
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Alias -> Map Operator Tree:
+        skip_nrow2 
+          TableScan
+            alias: skip_nrow2
+            Select Operator
+              expressions:
+                    expr: key
+                    type: string
+                    expr: value
+                    type: string
+              outputColumnNames: _col0, _col1
+              Limit
+                File Output Operator
+                  compressed: false
+                  GlobalTableId: 0
+                  table:
+                      input format: org.apache.hadoop.mapred.TextInputFormat
+                      output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: 3
+
+
+PREHOOK: query: select key,value from skip_nrow2 limit 3
+PREHOOK: type: QUERY
+PREHOOK: Input: default@skip_nrow2
+#### A masked pattern was here ####
+POSTHOOK: query: select key,value from skip_nrow2 limit 3
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@skip_nrow2
+#### A masked pattern was here ####
+86	val_86
+311	val_311
+27	val_27

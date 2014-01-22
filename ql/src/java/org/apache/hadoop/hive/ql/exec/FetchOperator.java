@@ -39,6 +39,7 @@ import org.apache.hadoop.hive.ql.exec.mr.ExecMapperContext;
 import org.apache.hadoop.hive.ql.io.HiveContextAwareRecordReader;
 import org.apache.hadoop.hive.ql.io.HiveInputFormat;
 import org.apache.hadoop.hive.ql.io.HiveRecordReader;
+import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.parse.SplitSample;
@@ -58,6 +59,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -449,7 +451,19 @@ public class FetchOperator implements Serializable {
           initIOContext(target, job, inputFormat.getClass(), reader);
     } else {
       currRecReader = reader;
+      FileSplit fileSplit = (FileSplit) target;
+      if (fileSplit.getStart() == 0) {
+        int skipRow = job.getInt(DefaultStorageHandler.TableJobProperty.SKIP_FIRST_ROWNUM.key, -1);
+        if (skipRow > 0) {
+          WritableComparable key = currRecReader.createKey();
+          Writable value = currRecReader.createValue();
+          for (;skipRow > 0; skipRow--) {
+            currRecReader.next(key, value);
+          }
+        }
+      }
     }
+
     splitNum++;
     key = currRecReader.createKey();
     value = currRecReader.createValue();
