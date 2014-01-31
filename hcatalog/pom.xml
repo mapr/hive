@@ -28,7 +28,7 @@
       <guava.version>11.0.2</guava.version>
       <hadoop20.version>1.0.3</hadoop20.version>
       <hadoop23.version>2.0.3-alpha</hadoop23.version>
-      <hbase.version>0.94.12-mapr-1310-SNAPSHOT</hbase.version>
+      <hbase.version>0.94.13-mapr-1401</hbase.version>
       <hcatalog.version>${project.version}</hcatalog.version>
       <hive.version>${project.version}</hive.version>
       <jackson.version>1.9.2</jackson.version>
@@ -38,14 +38,14 @@
       <pig.version>0.10.1</pig.version>
       <slf4j.version>1.6.1</slf4j.version>
       <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
-      <zookeeper.version>3.4.5-mapr-SNAPSHOT</zookeeper.version>
+      <zookeeper.version>3.4.5-mapr-1401</zookeeper.version>
       <metrics-core.version>2.1.2</metrics-core.version>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hcatalog</groupId>
   <artifactId>hcatalog</artifactId>
-  <version>0.11-mapr</version>
+  <version>0.11-mapr-1401-140130</version>
   <packaging>pom</packaging>
 
   <build>
