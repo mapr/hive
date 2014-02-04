@@ -187,6 +187,12 @@ this=`real_script_name "${BASH_SOURCE-$0}"`
 this_bin=`dirname $this`
 base_dir="$this_bin/.."
 
+# find hadoop home
+HADOOP_DIR=`real_script_name "/usr/bin/hadoop"`
+HADOOP_DIR=`dirname $HADOOP_DIR`
+HADOOP_DIR="$HADOOP_DIR/.."
+HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
+
 if [[ -f "$base_dir/libexec/webhcat_config.sh" ]]; then
         . "$base_dir/libexec/webhcat_config.sh"
 else

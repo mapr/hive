@@ -51,7 +51,8 @@ this="$bin/$script"
 export BASEMAPR=${MAPR_HOME:-/opt/mapr}
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
-export HADOOP_DIR="${BASEMAPR}/hadoop/hadoop-0.20.2"
+HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
+HADOOP_DIR=`dirname $HADOOP_DIR`
 export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
 
 if [ -e "$bin/../libexec/hcat-config.sh" ]; then
