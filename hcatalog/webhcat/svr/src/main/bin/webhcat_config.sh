@@ -119,9 +119,6 @@ fi
 #====================================
 #determine where hadoop is
 #====================================
-export BASEMAPR=${MAPR_HOME:-/opt/mapr}
-export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2
-
 #check HADOOP_HOME and then check HADOOP_PREFIX
 if [ -f ${HADOOP_HOME}/bin/hadoop ]; then
   export HADOOP_PREFIX=$HADOOP_HOME
@@ -131,6 +128,7 @@ else
   exit 1
 fi
 
+export BASEMAPR=${MAPR_HOME:-/opt/mapr}
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
 export HADOOP_OPTS="${HADOOP_OPTS} ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
