@@ -323,7 +323,6 @@ if [ "$DEBUG" ]; then
   fi
 fi
 
-HIVE_PID_DIR=$HIVE_HOME/pids
 if [ "$HIVE_IDENT_STRING" = "" ]; then
   export HIVE_IDENT_STRING=`id -nu`
 fi
@@ -331,8 +330,6 @@ fi
 if [ "$HIVE_LOG_DIR" = "" ]; then
   export HIVE_LOG_DIR="$HIVE_HOME/logs"
 fi
-mkdir -p "$HIVE_LOG_DIR"
-mkdir -p "$HIVE_PID_DIR"
 
 if [ "$HIVE_PID_DIR" = "" ]; then
   export HIVE_PID_DIR="$HIVE_HOME/pids"
