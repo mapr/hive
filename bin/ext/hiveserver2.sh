@@ -44,6 +44,8 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
     fi
   fi
 
+  mkdir -p "$HIVE_LOG_DIR"
+  mkdir -p "$HIVE_PID_DIR"
   echo "hiveserver2_start()"
   CLASS=org.apache.hive.service.server.HiveServer2
   if $cygwin; then

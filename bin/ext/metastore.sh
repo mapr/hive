@@ -47,6 +47,9 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
     fi
   fi
 
+  mkdir -p "$HIVE_LOG_DIR"
+  mkdir -p "$HIVE_PID_DIR"
+
 #  echo starting metastore, logging to $log
   echo "Starting Hive Metastore Server, logging to $log"
   CLASS=org.apache.hadoop.hive.metastore.HiveMetaStore
