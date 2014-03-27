@@ -41,6 +41,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.CachingPrintStream;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.DriverContext;
 import org.apache.hadoop.hive.ql.QueryPlan;
@@ -134,7 +135,7 @@ public class MapredLocalTask extends Task<MapredLocalWork> implements Serializab
       String hiveJar = conf.getJar();
 
       String hadoopExec = conf.getVar(HiveConf.ConfVars.HADOOPBIN);
-      String libJarsOption;
+      conf.setVar(ConfVars.HIVEADDEDJARS, Utilities.getResourceFiles(conf, SessionState.ResourceType.JAR));
 
       // write out the plan to a local file
       Path planPath = new Path(ctx.getLocalTmpFileURI(), "plan.xml");
