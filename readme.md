@@ -65,6 +65,9 @@ $ git checkout branch-0.12-mapr
 
 $ ant package
 
+(To build artifacts for MapR version >= 4.0, give hadoop.version=2.3.0 as an argument.
+ ant package -Dhadoop.version=2.3.0)
+
 To install in the local maven repository on the local filesystem (${HOME}/.m2):
 
 $ ant maven-publish -Dmvn.publish.repo=local

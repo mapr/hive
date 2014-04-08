@@ -22,9 +22,6 @@
 
   <property name="ql.lib.dir" value="${basedir}/lib"/>
   <property name="src.dir"  location="${basedir}/src/java"/>
-  <property name="protobuf.src.dir"  location="${basedir}/src/protobuf"/>
-  <property name="protobuf.build.dir"  
-            location="${basedir}/src/gen/protobuf/gen-java"/>
   <property name="ql.test.query.dir" location="${basedir}/src/test/queries"/>
   <property name="ql.test.template.dir" location="${basedir}/src/test/templates"/>
   <property name="ql.test.results.dir" location="${basedir}/src/test/results"/>
@@ -35,6 +32,11 @@
   <property name="ql.test.results.beelinepositive.dir" location="${ql.test.results.dir}/beelinepositive"/>
 
   <import file="../build-common.xml"/>
+  <property name="protobuf.src.dir"  location="${basedir}/src/protobuf"/>
+  <condition property="protobuf.version" value="${protobuf250.version}" else="${protobuf241.version}">
+    <matches pattern="^2.*" string="${hadoop.version}"/>
+  </condition>
+  <property name="protobuf.build.dir" location="${basedir}/src/gen/protobuf-${protobuf.version}/gen-java"/>
   <property name="ql.test.clientpositive.exclude" value="${minimr.query.files}"/>
 
   <property name="ql.test.beelinepositive.exclude" value="${test.beelinepositive.exclude}"/>
@@ -188,9 +190,11 @@
   <target name="compile" 
           depends="init, ql-init, ivy-retrieve, build-grammar">
     <echo message="Project: ${ant.project.name}"/>
+    <property name="srcDirs" value="${src.dir}:${basedir}/src/gen/thrift/gen-javabean:${build.dir}/gen/antlr/gen-java:${protobuf.build.dir}"/>
+    <echo message="Sources: ${srcDirs}"/>
     <javac
      encoding="${build.encoding}"
-     srcdir="${src.dir}:${basedir}/src/gen/thrift/gen-javabean:${build.dir}/gen/antlr/gen-java:${protobuf.build.dir}"
+     srcdir="${srcDirs}"
      includes="**/*.java"
      destdir="${build.classes}"
      debug="${javac.debug}"

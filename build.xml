@@ -565,6 +565,9 @@
         <!-- MapR: exclude mapr shipped ecosystem jars from package -->
         <exclude name="hbase-*.jar"/>
         <exclude name="zookeeper-*.jar"/>
+        <!-- Exclude protobuf jar from packaging as it is already available on all cluster nodes
+             in hadoop/lib folder -->
+        <exclude name="protobuf-java-*.jar"/>
       </fileset>
     </copy>
     <copy todir="${target.example.dir}/files" preservelastmodified="true" flatten="true">
