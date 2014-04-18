@@ -114,6 +114,20 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
   }
 
   @Override
+  public TGetLogResp GetLog(TGetLogReq req) throws TException {
+    TGetLogResp resp = new TGetLogResp();
+    try {
+      String log = cliService.getLog(new OperationHandle(req.getOperationHandle()));
+      resp.setStatus(OK_STATUS);
+      resp.setLog(log);
+    } catch (Exception e) {
+      e.printStackTrace();
+      resp.setStatus(HiveSQLException.toTStatus(e));
+    }
+    return resp;
+  }
+
+  @Override
   public TGetDelegationTokenResp GetDelegationToken(TGetDelegationTokenReq req)
       throws TException {
     TGetDelegationTokenResp resp = new TGetDelegationTokenResp();

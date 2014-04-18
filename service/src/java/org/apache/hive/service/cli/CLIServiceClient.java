@@ -44,6 +44,9 @@ public abstract class CLIServiceClient implements ICLIService {
   }
 
   @Override
+  public abstract String getLog(OperationHandle opHandle) throws HiveSQLException;
+
+  @Override
   public abstract String getDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String owner, String renewer) throws HiveSQLException;
 
