@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience;
 import org.apache.hadoop.hive.common.classification.InterfaceStability;
-import org.apache.hadoop.hdfs.web.AuthFilter;
+import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
@@ -120,7 +120,7 @@ public class Main {
       LOG.info("Templeton listening on port " + port);
     } catch (Exception e) {
       System.err.println("templeton: Server failed to start: " + e.getMessage());
-      LOG.fatal("Server failed to start: " + e);
+      LOG.fatal("Server failed to start: " + e, e);
       System.exit(1);
     }
   }
@@ -208,18 +208,14 @@ public class Main {
   // Configure the AuthFilter with the Kerberos params iff security
   // is enabled.
   public FilterHolder makeAuthFilter() {
-    FilterHolder authFilter = new FilterHolder(AuthFilter.class);
+	FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
     UserNameHandler.allowAnonymous(authFilter);
     if (UserGroupInformation.isSecurityEnabled()) {
-      //http://hadoop.apache.org/docs/r1.1.1/api/org/apache/hadoop/security/authentication/server/AuthenticationFilter.html
-      authFilter.setInitParameter("dfs.web.authentication.signature.secret",
-        conf.kerberosSecret());
-      //https://svn.apache.org/repos/asf/hadoop/common/branches/branch-1.2/src/packages/templates/conf/hdfs-site.xml
-      authFilter.setInitParameter("dfs.web.authentication.kerberos.principal",
-        conf.kerberosPrincipal());
-      //http://https://svn.apache.org/repos/asf/hadoop/common/branches/branch-1.2/src/packages/templates/conf/hdfs-site.xml
-      authFilter.setInitParameter("dfs.web.authentication.kerberos.keytab",
-        conf.kerberosKeytab());
+    	authFilter.setInitParameter("signature.secret", conf.kerberosSecret());
+    	authFilter.setInitParameter("kerberos.principal", conf.kerberosPrincipal());
+    	authFilter.setInitParameter("kerberos.keytab", conf.kerberosKeytab());
+    } else {
+    	authFilter.setInitParameter("type", "simple");
     }
     return authFilter;
   }

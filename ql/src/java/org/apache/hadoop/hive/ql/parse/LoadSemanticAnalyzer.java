@@ -117,7 +117,8 @@ public class LoadSemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // if scheme is specified but not authority then use the default authority
-    if ((!fromScheme.equals("file")) && StringUtils.isEmpty(fromAuthority)) {
+    if ((fromScheme.equals("maprfs") || fromScheme.equals("hdfs"))
+         && StringUtils.isEmpty(fromAuthority)) {
       URI defaultURI = FileSystem.get(conf).getUri();
       fromAuthority = defaultURI.getAuthority();
     }
