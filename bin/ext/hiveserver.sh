@@ -26,6 +26,7 @@ hiveserver() {
 
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
 
+  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
   exec $HADOOP jar $JAR $CLASS $HIVE_OPTS "$@"
 }
 
