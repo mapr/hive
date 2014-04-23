@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hive.shims;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -111,10 +112,24 @@ public abstract class ShimLoader {
 
   public static synchronized AppenderSkeleton getEventCounter() {
     if (eventCounter == null) {
-      eventCounter = loadShims(EVENT_COUNTER_SHIM_CLASSES, AppenderSkeleton.class);
+      eventCounter = tryAndLoadShims(AppenderSkeleton.class,
+                             "org.apache.hadoop.metrics.jvm.EventCounter",
+                             "org.apache.hadoop.log.metrics.EventCounter");
     }
     return eventCounter;
   }
+
+  private static <T> T tryAndLoadShims(Class<T> xface, String... classNames) {
+    for (String className : classNames) {
+      try {
+        return createShim(className, xface);
+      } catch (Exception e) {
+      // continue
+      }
+   }
+   throw new RuntimeException("Could not load shims in any of classes " +
+           Arrays.toString(classNames));
+}
 
   public static synchronized HadoopThriftAuthBridge getHadoopThriftAuthBridge() {
     if (hadoopThriftAuthBridge == null) {
