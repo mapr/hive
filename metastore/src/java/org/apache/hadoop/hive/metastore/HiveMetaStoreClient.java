@@ -614,15 +614,22 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     }
 
     if (cascade) {
-       List<String> tableList = getAllTables(name);
-       for (String table : tableList) {
-         try {
-            dropTable(name, table, deleteData, false);
-         } catch (UnsupportedOperationException e) {
-           // Ignore Index tables, those will be dropped with parent tables
-         }
+        List<String> tableList = getAllTables(name);
+        for (String tablename : tableList) {
+          Table table = null;
+          try {
+            table = getTable(name, tablename);
+          } catch (NoSuchObjectException ignore) {
+            // It is possible that "tablename" is an index table which is deleted when deleting
+            // the parent table. We get the table list (includes index and regular tables) in the
+            // beginning, but the index tables are not deleted from the list when its base table
+            // got dropped.
+          }
+
+          if (table != null && !isIndexTable(table))
+            dropTable(table, deleteData, false, null);
         }
-    }
+      }
     client.drop_database(name, deleteData, cascade);
   }
 
@@ -765,27 +772,36 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     if (isIndexTable(tbl)) {
       throw new UnsupportedOperationException("Cannot drop index tables");
     }
-    HiveMetaHook hook = getHook(tbl);
-    if (hook != null) {
-      hook.preDropTable(tbl);
-    }
-    boolean success = false;
-    try {
-      client.drop_table_with_environment_context(dbname, name, deleteData, envContext);
-      if (hook != null) {
-        hook.commitDropTable(tbl, deleteData);
-      }
-      success=true;
-    } catch (NoSuchObjectException e) {
-      if (!ignoreUnknownTab) {
-        throw e;
-      }
-    } finally {
-      if (!success && (hook != null)) {
-        hook.rollbackDropTable(tbl);
-      }
-    }
+    dropTable(tbl, deleteData, ignoreUnknownTab, envContext);
   }
+  
+  public void dropTable(Table tbl, boolean deleteData, boolean ignoreUnknownTab,
+	      EnvironmentContext envContext) throws MetaException, TException,
+	      NoSuchObjectException, UnsupportedOperationException {
+	    if (tbl == null)
+	      throw new NoSuchObjectException();
+
+	    HiveMetaHook hook = getHook(tbl);
+	    if (hook != null) {
+	      hook.preDropTable(tbl);
+	    }
+	    boolean success = false;
+	    try {
+	      client.drop_table_with_environment_context(tbl.getDbName(), tbl.getTableName(), deleteData, envContext);
+	      if (hook != null) {
+	        hook.commitDropTable(tbl, deleteData);
+	      }
+	      success=true;
+	    } catch (NoSuchObjectException e) {
+	      if (!ignoreUnknownTab) {
+	        throw e;
+	      }
+	    } finally {
+	      if (!success && (hook != null)) {
+	        hook.rollbackDropTable(tbl);
+	      }
+	    }
+	  }
 
   /**
    * @param type
