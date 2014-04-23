@@ -27,10 +27,71 @@ metastore() {
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
 
   export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
+  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_METASTORE_LOGIN_OPTS}"
   exec $HADOOP jar $JAR $CLASS "$@"
 }
 
 metastore_help() {
   metastore -h
+}
+
+metastore_start() {
+log=$HIVE_LOG_DIR/hive-$HIVE_IDENT_STRING-metastore-$HOSTNAME.out
+pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
+
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid` > /dev/null 2>&1; then
+      echo metastore running as process `cat $pid`.  Stop it first.
+      exit 1
+    fi
+  fi
+
+#  echo starting metastore, logging to $log
+  echo "Starting Hive Metastore Server, logging to $log"
+  CLASS=org.apache.hadoop.hive.metastore.HiveMetaStore
+  if $cygwin; then
+    HIVE_LIB=`cygpath -w "$HIVE_LIB"`
+  fi
+  JAR=${HIVE_LIB}/hive-service-*.jar
+
+  # hadoop 20 or newer - skip the aux_jars option and hiveconf
+
+  export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
+  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_METASTORE_LOGIN_OPTS}"
+
+  nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
+  echo $! > $pid
+  echo "`date` metastore started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
+}
+
+metastore_stop() {
+log=$HIVE_LOG_DIR/hive-$HIVE_IDENT_STRING-metastore-$HOSTNAME.out
+pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid` > /dev/null 2>&1; then
+      echo stopping metastore
+      kill `cat $pid`
+      echo "`date` metastore stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
+    else
+      echo no metastore to stop
+    fi
+  else
+    echo no metastore to stop
+  fi
+}
+
+metastore_status() {
+log=$HIVE_LOG_DIR/hive-$HIVE_IDENT_STRING-metastore-$HOSTNAME.out
+pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid`; then
+      echo metastore running as process `cat $pid`.
+      exit 0
+    fi
+    echo $pid exists with pid `cat $pid` but no metastore.
+    exit 1
+  fi
+  echo metastore not running.
+  exit 1
 }
 

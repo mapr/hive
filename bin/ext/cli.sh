@@ -18,6 +18,7 @@ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 cli () {
   CLASS=org.apache.hadoop.hive.cli.CliDriver
+  export HADOOP_OPTS="$HADOOP_OPTS ${HIVE_CLIENT_LOGIN_OPTS}"
   execHiveCmd $CLASS "$@"
 }
 
