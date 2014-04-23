@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.ql.index.HiveIndex;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
@@ -389,11 +390,29 @@ public class TestHive extends TestCase {
   }
 
   /**
+    * Tests creating a simple index on a skewed table.
+    *
+    * @throws Throwable
+    */
+   public void testIndexOnSkewedTable() throws Throwable {
+     testIndex(true);
+   }
+ 
+   /**
+    * Tests creating a simple index on a simple table.
+    *
+    * @throws Throwable
+    */
+  public void testIndexOnSimpleTable() throws Throwable {
+    testIndex(false);
+  }
+  
+  /**
    * Tests creating a simple index on a simple table.
    *
    * @throws Throwable
    */
-  public void testIndex() throws Throwable {
+  private void testIndex(boolean fSkewTable) throws Throwable {
     try{
       // create a simple table
       String tableName = "table_for_testindex";
@@ -416,7 +435,27 @@ public class TestHive extends TestCase {
 
       tbl.setOutputFormatClass(HiveIgnoreKeyTextOutputFormat.class);
       tbl.setInputFormatClass(SequenceFileInputFormat.class);
-
+      
+      if (fSkewTable) {
+    	 try {
+    		 List<String> skewedColNames = new ArrayList<String>();
+    		 List<String> skewedColValues = new ArrayList<String>();
+    		 List<List<String>> skewedValues = new ArrayList<List<String>>();
+    	  
+    		 skewedColNames.add("col2");
+    		 skewedColValues.add("CC");
+    		 skewedColValues.add("CH");
+    		 skewedValues.add(skewedColValues);
+    	  
+    		 SkewedInfo skewedInfo = new SkewedInfo();
+    		 skewedInfo.setSkewedColNames(skewedColNames);
+    		 skewedInfo.setSkewedColValues(skewedValues);
+    		 tbl.setSkewedInfo(skewedInfo);
+    	  } catch(HiveException e) {
+    		  e.printStackTrace();
+    		  assertTrue("Unable to set skewinfo in table: " + tableName, false);
+    	  }
+      }
       // create table
       try {
         hm.createTable(tbl);
