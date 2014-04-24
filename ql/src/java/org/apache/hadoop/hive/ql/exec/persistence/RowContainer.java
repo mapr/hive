@@ -753,6 +753,7 @@ public class RowContainer<ROW extends List<Object>>
 	        LOG.info("Failed to create temporary directory on MapRFS local volume. " +
 	          "Continuing with creating temporary files on local filesystem.");
 	        LOG.debug("Error: ", ex);
+	        tmpDirDfs = null;
 	      }
 	      if (tmpDirDfs != null)
 	        return new DFSSpillFile(tmpDirDfs, jobConf, reporter);
