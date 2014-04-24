@@ -916,7 +916,7 @@ public class HiveConf extends Configuration {
     // List of the underlying pam services that should be used when auth type is PAM
     // A file with the same name must exist in /etc/pam.d
     HIVE_SERVER2_PAM_SERVICES("hive.server2.authentication.pam.services", null),
-    HIVE_SERVER2_ENABLE_DOAS("hive.server2.enable.doAs", true),
+    HIVE_SERVER2_ENABLE_DOAS("hive.server2.enable.doAs", false),
     HIVE_SERVER2_TABLE_TYPE_MAPPING("hive.server2.table.type.mapping", "CLASSIC",
         new StringsValidator("CLASSIC", "HIVE")),
     HIVE_SERVER2_SESSION_HOOK("hive.server2.session.hook", ""),
