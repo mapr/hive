@@ -247,21 +247,12 @@ public class JobDebugger implements Runnable {
     computeMaxFailures() ;
 
     // Display Error Message for tasks with the highest failure count
-    String jtUrl = null;
-    try {
-      jtUrl = JobTrackerURLResolver.getURL(conf);
-    } catch (Exception e) {
-      console.printError("Unable to retrieve URL for Hadoop Task logs. "
-          + e.getMessage());
-    }
-
+    
     for (String task : failures.keySet()) {
       if (failures.get(task).intValue() == maxFailures) {
         TaskInfo ti = taskIdToInfo.get(task);
         String jobId = ti.getJobId();
-        String taskUrl = (jtUrl == null) ? null :
-          jtUrl + "/taskdetails.jsp?jobid=" + jobId + "&tipid=" + task.toString();
-
+ 
         TaskLogProcessor tlp = new TaskLogProcessor(conf);
         for (String logUrl : ti.getLogUrls()) {
           tlp.addTaskAttemptLogUrl(logUrl);
@@ -287,10 +278,7 @@ public class JobDebugger implements Runnable {
           sb.append("Task with the most failures(" + maxFailures + "): \n");
           sb.append("-----\n");
           sb.append("Task ID:\n  " + task + "\n\n");
-          if (taskUrl != null) {
-            sb.append("URL:\n  " + taskUrl + "\n");
-          }
-
+          
           for (ErrorAndSolution e : errors) {
             sb.append("\n");
             sb.append("Possible error:\n  " + e.getError() + "\n\n");
