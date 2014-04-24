@@ -20,9 +20,12 @@ package org.apache.hadoop.hive.ql.exec.errors;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +101,28 @@ public class TaskLogProcessor {
       ens.add(e);
     }
   }
+  
+  /**
+   * Open connection to given http or https URL
+   * If the url protocol is "https" use MaprHttpURL to handle authentication.
+   */
+  private InputStream getInputStream(URL url) throws IOException {
+    InputStream inputStream;
+    if ("https".equals(url.getProtocol())) {
+      try {
+        Class clazz = Class.forName("com.mapr.security.MaprHttpURL");
+        Method method = clazz.getMethod("openConnection", URL.class);
+        URLConnection urlConnection = (URLConnection) method.invoke(null, url);
+        inputStream = urlConnection.getInputStream();
+      } catch(Exception ex) {
+        throw new RuntimeException("Error opening secure https connection", ex);
+      }
+    } else {
+      inputStream = url.openStream();
+    }
+    return inputStream;
+  }
+
 
   /**
    * Processes the provided task logs using the known error heuristics to get
@@ -122,7 +147,7 @@ public class TaskLogProcessor {
       BufferedReader in;
       try {
         in = new BufferedReader(
-            new InputStreamReader(taskAttemptLogUrl.openStream()));
+            new InputStreamReader(getInputStream(taskAttemptLogUrl)));
         String inputLine;
         while ((inputLine = in.readLine()) != null) {
           for(ErrorHeuristic e : heuristics.keySet()) {
