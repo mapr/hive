@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.serde2.lazy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import org.apache.commons.logging.Log;
@@ -37,6 +38,7 @@ import org.apache.hadoop.hive.serde2.lazy.objectinspector.primitive.LazyTimestam
  */
 public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, TimestampWritable> {
   static final private Log LOG = LogFactory.getLog(LazyTimestamp.class);
+  static final private BigDecimal NANOSECONDS_PERSEC_BD = new BigDecimal(1000000000);
 
   public LazyTimestamp(LazyTimestampObjectInspector oi) {
     super(oi);
@@ -67,17 +69,45 @@ public class LazyTimestamp extends LazyPrimitive<LazyTimestampObjectInspector, T
     }
 
     Timestamp t = null;
-    if (s.compareTo("NULL") == 0) {
+    isNull = false;
+    if (s.compareToIgnoreCase("NULL") == 0) {
       isNull = true;
       logExceptionMessage(bytes, start, length, "TIMESTAMP");
     } else {
+    	// Supported timestamp formats:
+    	// Integer: Interpreted as UNIX timestamp in seconds
+    	// Floating point: Interpreted as UNIX timestamp in seconds with decimal precision
+    	// Strings: JDBC compliant java.sql.Timestamp format "YYYY-MM-DD HH:MM:SS.fffffffff"
+    	//          (9 decimal place precision)
+    	
+    	// Assume the given format is JDBC compliant and try to convert
+    	// if it fails fall back to conversion from other two formats
       try {
         t = Timestamp.valueOf(s);
-        isNull = false;
       } catch (IllegalArgumentException e) {
-        isNull = true;
-        logExceptionMessage(bytes, start, length, "TIMESTAMP");
-      }
+    	  try {
+    		  BigDecimal value = new BigDecimal(s.trim());
+    		  long valueAbs = value.longValue();
+    		  t = new Timestamp(valueAbs*1000);
+    		  
+    		  if (value.scale()>0) {
+    			  // convert the decimal part into nanoseconds and set it in Timestamp
+    			  if (value.scale()>9) {
+    				  // invalid nanosecond part precision.
+    				  // java.sql.Timestamp.setNanos() can't take beyond 9 decimal precision
+    				  isNull = true;
+    				  logExceptionMessage(bytes, start, length, "TIMESTAMP");
+    		      } else {
+    		    	  value = value.subtract(new BigDecimal(valueAbs));
+    		    	  value = value.multiply(NANOSECONDS_PERSEC_BD);
+    		          t.setNanos(value.intValue());
+    		      }
+    		  }
+          } catch(Exception ex) {
+              isNull = true;
+              logExceptionMessage(bytes, start, length, "TIMESTAMP");
+          }
+       }
     }
     data.set(t);
   }
