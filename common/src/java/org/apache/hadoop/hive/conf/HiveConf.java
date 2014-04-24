@@ -216,6 +216,9 @@ public class HiveConf extends Configuration {
     TASKLOG_DEBUG_TIMEOUT("hive.exec.tasklog.debug.timeout", 20000),
     OUTPUT_FILE_EXTENSION("hive.output.file.extension", null),
 
+    // Should write RowContainer tmp files on MapRFS local volume?
+    TMP_MAPRFS_VOLUME("hive.exec.tmp.maprfsvolume", true),
+
     HIVE_IN_TEST("hive.in.test", false), // internal usage only, true in test mode
 
     // should hive determine whether to run in local mode automatically ?
@@ -890,6 +893,7 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_ASYNC_EXEC_THREADS("hive.server2.async.exec.threads", 100),
     // Number of seconds HiveServer2 shutdown will wait for async threads to terminate
     HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT("hive.server2.async.exec.shutdown.timeout", 10),
+    
     // Size of the wait queue for async thread pool in HiveServer2.
     // After hitting this limit, the async thread pool will reject new requests.
     HIVE_SERVER2_ASYNC_EXEC_WAIT_QUEUE_SIZE("hive.server2.async.exec.wait.queue.size", 100),
