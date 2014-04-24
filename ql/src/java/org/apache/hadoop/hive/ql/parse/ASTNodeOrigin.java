@@ -36,11 +36,11 @@ package org.apache.hadoop.hive.ql.parse;
  * usage within the query.
  */
 public class ASTNodeOrigin {
-  private final String objectType;
-  private final String objectName;
-  private final String objectDefinition;
-  private final String usageAlias;
-  private final ASTNode usageNode;
+  private String objectType;
+  private String objectName;
+  private String objectDefinition;
+  private String usageAlias;
+  private ASTNode usageNode;
 
   public ASTNodeOrigin(String objectType, String objectName,
       String objectDefinition, String usageAlias, ASTNode usageNode) {
@@ -50,6 +50,14 @@ public class ASTNodeOrigin {
     this.usageAlias = usageAlias;
     this.usageNode = usageNode;
   }
+  
+  public ASTNodeOrigin() {
+    objectType = null;
+    objectName = null;
+	objectDefinition = null;
+	usageAlias = null;
+	usageNode = null;
+  }
 
   /**
    * @return the type of the object from which an ASTNode originated, e.g.
@@ -58,12 +66,19 @@ public class ASTNodeOrigin {
   public String getObjectType() {
     return objectType;
   }
-
+  
+  public void setObjectType(String objectType) {
+    this.objectType = objectType;
+  }
   /**
    * @return the name of the object from which an ASTNode originated, e.g. "v".
    */
   public String getObjectName() {
     return objectName;
+  }
+  
+  public void setObjectName(String objectName) {
+	this.objectName = objectName;
   }
 
   /**
@@ -73,6 +88,10 @@ public class ASTNodeOrigin {
   public String getObjectDefinition() {
     return objectDefinition;
   }
+  
+  public void setObjectDefinition(String objectDefinition) {
+    this.objectDefinition = objectDefinition;
+  }
 
   /**
    * @return the alias of the object from which an ASTNode originated, e.g. "v1"
@@ -80,6 +99,10 @@ public class ASTNodeOrigin {
    */
   public String getUsageAlias() {
     return usageAlias;
+  }
+  
+  public void setUsageAlias(String usageAlias) {
+	this.usageAlias = usageAlias;
   }
 
   /**
@@ -89,6 +112,10 @@ public class ASTNodeOrigin {
    */
   public ASTNode getUsageNode() {
     return usageNode;
+  }
+  
+  public void setUsageNode(ASTNode usageNode) {
+	this.usageNode = usageNode;
   }
 }
 
