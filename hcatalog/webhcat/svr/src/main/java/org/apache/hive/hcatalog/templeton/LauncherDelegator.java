@@ -55,19 +55,24 @@ public class LauncherDelegator extends TempletonDelegator {
     super(appConf);
   }
 
-  public void registerJob(String id, String user, String callback,
-      Map<String, Object> userArgs)
-    throws IOException {
-    JobState state = null;
-    try {
-      state = new JobState(id, Main.getAppConfigInstance());
-      state.setUser(user);
-      state.setCallback(callback);
-      state.setUserArgs(userArgs);
-    } finally {
-      if (state != null)
-        state.close();
-    }
+  public static void registerJob(UserGroupInformation ugi, final String id, final String user,
+    final String callback, final Map<String, Object> userArgs)
+    throws IOException, InterruptedException {
+    ugi.doAs(new PrivilegedExceptionAction<Void>() {
+      public Void run() throws Exception {
+        JobState state = null;
+        try {
+          state = new JobState(id, Main.getAppConfigInstance());
+          state.setUser(user);
+          state.setCallback(callback);
+          state.setUserArgs(userArgs);
+        } finally {
+          if (state != null)
+            state.close();
+        }
+        return null; // return nothing
+      }
+    });
   }
 
   /**
@@ -90,8 +95,8 @@ public class LauncherDelegator extends TempletonDelegator {
       if (id == null) {
         throw new QueueException("Unable to get job id");
       }
-      
-      registerJob(id, user, callback, userArgs);
+
+      registerJob(ugi, id, user, callback, userArgs);
 
       return new EnqueueBean(id);
     } catch (InterruptedException e) {
@@ -121,13 +126,16 @@ public class LauncherDelegator extends TempletonDelegator {
                      JobType jobType) {
     ArrayList<String> args = new ArrayList<String>();
 
-    //note that in ToolRunner this is expected to be a local FS path
-    //see GenericOptionsParser.getLibJars()
     args.add("-libjars");
 
-    // Include shim and admin specified libjars
-    String libJars = String.format("%s,%s", getShimLibjars(), appConf.libJars());
-    args.add(libJars);
+    if (TempletonUtils.isset(appConf.libJars())) {
+      //note that in ToolRunner this is expected to be a local FS path
+      //see GenericOptionsParser.getLibJars()
+      args.add("-libjars");
+      // Include shim and admin specified libjars
+      String libJars = String.format("%s,%s", getShimLibjars(), appConf.libJars());
+      args.add(libJars);
+    }
 
     addCacheFiles(args, appConf);
 
