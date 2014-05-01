@@ -331,7 +331,7 @@ fi
 # add default hiveserver2 authentication depending upon security in the cluster
 if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
   HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=CUSTOM"
-  HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth.custom.class=org.apache.hive.service.auth.PamAuthenticationProvider"
+  HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth.custom.class=org.apache.hive.service.auth.PamAuthenticationProviderImpl"
   HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth.pam.profiles=login"
 else
   HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=NONE"

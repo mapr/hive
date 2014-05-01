@@ -909,8 +909,10 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_LONG_POLLING_TIMEOUT("hive.server2.long.polling.timeout", 5000L),
 
     // HiveServer2 auth configuration
-    HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication", "NONE",
-        new StringsValidator("NOSASL", "NONE", "LDAP", "KERBEROS", "PAM", "CUSTOM")),
+    HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication",
+    	      System.getProperty("hiveserver2.auth") == null ?
+    	        "NONE" : System.getProperty("hiveserver2.auth"),
+    	        new StringsValidator("NOSASL", "NONE", "LDAP", "KERBEROS", "PAM", "CUSTOM")),
     HIVE_SERVER2_ALLOW_USER_SUBSTITUTION("hive.server2.allow.user.substitution", true),
     HIVE_SERVER2_KERBEROS_KEYTAB("hive.server2.authentication.kerberos.keytab", ""),
     HIVE_SERVER2_KERBEROS_PRINCIPAL("hive.server2.authentication.kerberos.principal", ""),
@@ -919,9 +921,12 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_PLAIN_LDAP_URL("hive.server2.authentication.ldap.url", null),
     HIVE_SERVER2_PLAIN_LDAP_BASEDN("hive.server2.authentication.ldap.baseDN", null),
     HIVE_SERVER2_PLAIN_LDAP_DOMAIN("hive.server2.authentication.ldap.Domain", null),
-    HIVE_SERVER2_CUSTOM_AUTHENTICATION_CLASS("hive.server2.custom.authentication.class", null),
-    // List of the underlying pam services that should be used when auth type is PAM
+    HIVE_SERVER2_CUSTOM_AUTHENTICATION_CLASS("hive.server2.custom.authentication.class",
+    	    System.getProperty("hiveserver2.auth.custom.class")),
+   // List of the underlying pam services that should be used when auth type is PAM
     // A file with the same name must exist in /etc/pam.d
+    HIVE_SERVER2_PAM_PROFILES("hive.server2.authentication.pam.profiles",	    		       
+    		System.getProperty("hiveserver2.auth.pam.profiles")),
     HIVE_SERVER2_PAM_SERVICES("hive.server2.authentication.pam.services", null),
     HIVE_SERVER2_ENABLE_DOAS("hive.server2.enable.doAs", false),
     HIVE_SERVER2_TABLE_TYPE_MAPPING("hive.server2.table.type.mapping", "CLASSIC",
