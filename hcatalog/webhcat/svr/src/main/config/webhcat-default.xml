@@ -259,6 +259,30 @@
     in the cluster are taken over by Templeton launcher tasks.
     </description>
   </property>
+  
+  <property>
+    <name>templeton.kerberos.secret</name>
+    <value>RANDOM_VALUE</value>
+    <description>
+      The secret used to sign the HTTP cookie value. The default value is a random value.
+      Unless multiple Templeton instances need to share the secret the random value is adequate.
+    </description>
+  </property>
+
+  <property>
+    <name>templeton.kerberos.principal</name>
+    <value>KERBEROS_PRINCIPAL</value>
+    <description>
+      The Kerberos principal to used by the server. As stated by the Kerberos SPNEGO specification,
+      it should be HTTP/${HOSTNAME}@{REALM}.
+    </description>
+  </property>
+
+  <property>
+    <name>templeton.kerberos.keytab</name>
+    <value>KEYTAB_LOCATION</value>
+    <description>The keytab file containing the credentials for the Kerberos principal.</description>
+  </property>
   <!--
   <property>
     <name>webhcat.proxyuser.#USER#.hosts</name>

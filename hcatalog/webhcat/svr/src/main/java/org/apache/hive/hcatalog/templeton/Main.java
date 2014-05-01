@@ -211,9 +211,15 @@ public class Main {
 	FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
     UserNameHandler.allowAnonymous(authFilter);
     if (UserGroupInformation.isSecurityEnabled()) {
-    	authFilter.setInitParameter("signature.secret", conf.kerberosSecret());
-    	authFilter.setInitParameter("kerberos.principal", conf.kerberosPrincipal());
-    	authFilter.setInitParameter("kerberos.keytab", conf.kerberosKeytab());
+    	if (conf.kerberosSecret() != null) {
+    		authFilter.setInitParameter("signature.secret", conf.kerberosSecret());
+    	}	
+    	if (conf.kerberosPrincipal() != null) {
+    		authFilter.setInitParameter("kerberos.principal", conf.kerberosPrincipal());
+    	}
+    	if (conf.kerberosKeytab() != null) {
+    		authFilter.setInitParameter("kerberos.keytab", conf.kerberosKeytab());
+    	}	
     } else {
     	authFilter.setInitParameter("type", "simple");
     }
