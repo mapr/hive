@@ -860,6 +860,9 @@ public class HiveConf extends Configuration {
     HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms", false),
     // whether insert into external tables is allowed
     HIVE_INSERT_INTO_EXTERNAL_TABLES("hive.insert.into.external.tables", true),
+    
+    HIVE_OPTIMIZE_INSERT_DEST_VOLUME("hive.optimize.insert.dest.volume", false),
+    HIVE_SCRATCH_DIR_IN_DEST("hive.scratchdir.in.dest", "_scratchdir"),
 
     // A comma separated list of hooks which implement HiveDriverRunHook and will be run at the
     // beginning and end of Driver.run, these will be run in the order specified
