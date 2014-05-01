@@ -2342,7 +2342,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
           //if destf is an existing file, rename is actually a replace, and do not need
           // to delete the file first
           if (replace && destStatus.getFileStatus().isDir()) {
-            fs.delete(destf, true);
+            cleanupDest(fs, destf, conf);
           }
         } catch (FileNotFoundException ignore) {
           //if dest dir does not exist, any re
@@ -2353,7 +2353,16 @@ private void constructOneLBLocationMap(FileStatus fSta,
       }
       if (!isSrcLocal) {
         // For NOT local src file, rename the file
-        success = fs.rename(srcf, destf);
+        FileStatus srcfs = fs.getFileStatus(srcf);
+        FileStatus destfs = null;
+        if (fs.exists(destf)) {
+          destfs = fs.getFileStatus(destf);
+        }
+        if (srcfs.isDir() && destfs != null && destfs.isDir()) {
+          success = moveResultFilesToDest(fs, srcf, destf);
+        } else {
+          success = fs.rename(srcf, destf);
+        }
       } else {
         // For local src file, copy to hdfs
         fs.copyFromLocalFile(srcf, destf);
@@ -2514,6 +2523,49 @@ private void constructOneLBLocationMap(FileStatus fSta,
   }
 
 
+  public static void cleanupDest(FileSystem fs, Path destf, HiveConf conf)
+    throws IOException {
+    // delete all files under the destination except the scratch dir, because
+    // scratchdir contains the intermediate results which are moved under
+    // the destination directory
+    FileStatus[] fileStatuses = fs.listStatus(destf);
+    for(FileStatus fileStatus : fileStatuses) {
+      Path file = fileStatus.getPath();
+      if (!file.getName().toLowerCase().startsWith(
+        conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST).toLowerCase())) {
+        fs.delete(file, true);
+      }
+    }
+  }
+
+  public static boolean moveResultFilesToDest(FileSystem fs, Path srcd, Path destd)
+    throws IOException, HiveException {
+
+    boolean status = true;
+
+    // rename all files under the source directory to destination
+    FileStatus[] fileStatuses = fs.listStatus(srcd);
+    for(FileStatus fileStatus : fileStatuses) {
+      Path file = fileStatus.getPath();
+
+      if (fileStatus.isDir()) {
+        // directory rename works different from file rename.
+        // For file rename: the files is moved under the destination dir.
+        // For directory rename:
+        //  if the destdir exists and empty it is renamed to the destination directory
+        //  if the destdir exists but NOT empty then it is moved under the dest directory
+        status = fs.rename(file, new Path(destd, file.getName()));
+      } else {
+        status = fs.rename(file, destd);
+      }
+      if (!status) {
+        throw new HiveException("Unable to move result file " + file
+          + " to destination directory: " + destd);
+      }
+    }
+
+     return true;
+  }
   /**
    * Replaces files in the partition with new data set specified by srcf. Works
    * by renaming directory of srcf to the destination file.

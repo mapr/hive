@@ -1572,6 +1572,11 @@ public class HiveConf extends Configuration {
     HIVE_INSERT_INTO_EXTERNAL_TABLES("hive.insert.into.external.tables", true,
         "whether insert into external tables is allowed"),
 
+    HIVE_OPTIMIZE_INSERT_DEST_VOLUME("hive.optimize.insert.dest.volume", false,
+        "For CREATE TABLE AS and INSERT queries create the scratch directory under\n" +
+        "the destination directory. This avoids the data move across volumes and improves performance."),
+    HIVE_SCRATCH_DIR_IN_DEST("hive.scratchdir.in.dest", "_scratchdir", ""),
+
     HIVE_DRIVER_RUN_HOOKS("hive.exec.driver.run.hooks", "",
         "A comma separated list of hooks which implement HiveDriverRunHook. Will be run at the beginning " +
         "and end of Driver.run, these will be run in the order specified."),
