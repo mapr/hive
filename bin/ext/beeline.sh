@@ -20,11 +20,13 @@ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 beeline () {
   CLASS=org.apache.hive.beeline.BeeLine;
   export HADOOP_OPTS="$HADOOP_OPTS ${KERBEROS_LOGIN_OPTS}"
+  HIVE_OPTS=''
   execHiveCmd $CLASS "$@"
 }
 
 beeline_help () {
   CLASS=org.apache.hive.beeline.BeeLine;
+  HIVE_OPTS=''
   execHiveCmd $CLASS "--help"
 } 
 
