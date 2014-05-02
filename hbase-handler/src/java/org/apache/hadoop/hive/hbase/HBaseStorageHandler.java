@@ -377,6 +377,7 @@ public class HBaseStorageHandler extends DefaultStorageHandler
 
   @Override
   public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
+	super.configureJobConf(tableDesc, jobConf);
     try {
       /*
        * HIVE-6356

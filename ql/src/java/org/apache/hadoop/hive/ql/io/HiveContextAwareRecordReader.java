@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.io.HiveIOExceptionHandlerUtil;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.FooterBuffer;
 import org.apache.hadoop.hive.ql.io.IOContext.Comparison;
+import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler.TableJobProperty;
 import org.apache.hadoop.hive.ql.plan.PartitionDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqual;
@@ -201,6 +202,17 @@ public abstract class HiveContextAwareRecordReader<K, V> implements RecordReader
     this.initIOContext(blockStart, blockPointer, path.makeQualified(fs));
 
     this.initIOContextSortedProps(split, recordReader, job);
+    
+    if (fileSplit.getStart() == 0) {
+        int skipRow = job.getInt(TableJobProperty.SKIP_FIRST_ROWNUM.key, -1);
+        if (skipRow > 0) {
+          K key = createKey();
+          V value = createValue();
+          for (;skipRow > 0; skipRow--) {
+            doNext(key, value);
+          }
+        }
+      }
   }
 
   public void initIOContextSortedProps(FileSplit split, RecordReader recordReader, JobConf job) {

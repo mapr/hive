@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.metadata;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
@@ -41,6 +42,13 @@ import org.apache.hadoop.mapred.SequenceFileOutputFormat;
  * metadata even though its behavior is otherwise identical to a native table).
  */
 public class DefaultStorageHandler implements HiveStorageHandler {
+  public static enum TableJobProperty {
+	SKIP_FIRST_ROWNUM("skip.first.rownum");
+	
+	public final String key;
+	private TableJobProperty(String key) { this.key = key; }
+  }
+	
   private Configuration conf;
 
   @Override
@@ -89,7 +97,13 @@ public class DefaultStorageHandler implements HiveStorageHandler {
 
   @Override
   public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
-    //do nothing by default
+	  Properties tableProperties = tableDesc.getProperties();
+	  for (TableJobProperty prop : TableJobProperty.values()) {
+	    String value = tableProperties.getProperty(prop.key);
+	    if (value != null) {
+	      jobConf.set(prop.key, value);
+	    }
+	  }
   }
 
   @Override
