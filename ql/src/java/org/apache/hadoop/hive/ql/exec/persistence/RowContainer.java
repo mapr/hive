@@ -763,46 +763,66 @@ public class RowContainer<ROW extends List<Object>>
 	    return new LocalSpillFile(jobConf, reporter);
 	  }
 
-	  private static String getDfsTmpDir(Configuration jobConf)
+	  private static String getDfsTmpDir(Configuration jobConf) throws IOException
 	  {
-	    String tmpDirDfs;
-	    // Create tmp files under the local maprfs spill directory
-	    // construct spill path on local maprfs volume from following
-	    // 1. mapr.localvolumes.path (ex. /var/mapr/local/)
-	    tmpDirDfs = jobConf.get("mapr.localvolumes.path", "/var/mapr/local");
-	    tmpDirDfs += "/";
+		// Create tmp files under the local maprfs spill directory
 
-	    // 2. hostname from /opt/mapr/hostname
-	    tmpDirDfs += getMapRHostname(jobConf);
+		String tmpDirDfs = jobConf.get("mapr.mapred.localvolume.root.dir.path");
 
-	    // 3. append "mapred/taskTracker/"
-	    tmpDirDfs += "/mapred/taskTracker/";
+		if (tmpDirDfs == null || tmpDirDfs.isEmpty()) {
+	 
+			
+		  LOG.debug("Can't find mapred volume path directly in JobConf. Constructing it from known properties in JobConf");
 
+	      // 1. mapr.localvolumes.path (ex. /var/mapr/local/)
+		  tmpDirDfs = jobConf.get("mapr.localvolumes.path", "/var/mapr/local");
+		  tmpDirDfs += "/";
+
+		  // 2. hostname from /opt/mapr/hostname
+		  tmpDirDfs += getMapRHostname(jobConf);
+
+		  // 3. append "mapred/taskTracker"
+		  tmpDirDfs += "/mapred/";
+		  tmpDirDfs += jobConf.get("mapr.mapred.localvolume.root.dir.name", "taskTracker");
+		}
+		tmpDirDfs += "/";
 	    // 4. append spill directory (spill or spill.U) from job config parameters
 	    tmpDirDfs += jobConf.get("mapr.localspill.dir", "spill");
 	    if (!jobConf.getBoolean("mapreduce.maprfs.use.compression", true))
 	      tmpDirDfs += ".U";
 
-	    // 5. append jobId/taskId (retrieve job id, task id from current working directory)
-	    String workDirSplits[]=null;
-	    String workDir=null;
-	    try {
-	      workDir = new File(".").getCanonicalPath();
-	      workDirSplits = workDir.split("/");
-	    }
-	    catch(IOException e) {
-	      LOG.error(e);
-	    }
+	    // 5. append jobId/taskId (retrieve job id, task id from JobConf)
+	    String jobId = jobConf.get("mapreduce.job.id");
+	    String taskId = jobConf.get("mapreduce.task.id");
+	    if (jobId == null || jobId.isEmpty() || taskId == null || taskId.isEmpty()) {
+	      LOG.debug("mapreduce.job.id or mapreduce.task.id are not set in JobConf");
 
-	    // sample workDir: /tmp/mapr-hadoop/mapred/local/taskTracker/user1/jobcache/job_201306061142_0008/attempt_201306061142_0008_m_000000_0/work
-	    // extract the job id and task id names
-	    tmpDirDfs += "/" + workDirSplits[workDirSplits.length-3];
-	    tmpDirDfs += "/" + workDirSplits[workDirSplits.length-2];
+	      // retrieve job id, task id from current working directory
+	      String workDirSplits[]=null;
+	      String workDir=null;
+	      try {
+	        workDir = new File(".").getCanonicalPath();
+	        workDirSplits = workDir.split("/");
+	      } catch(IOException e) {
+	        if (LOG.isDebugEnabled())
+	          LOG.debug("Failed to get the current working directory of the task: " + e);
+	        throw e;
+	      }
 
-	    LOG.debug("tmpDirDfs: "+tmpDirDfs);
+	      // sample workDir: /tmp/mapr-hadoop/mapred/local/taskTracker/user1/jobcache/job_201306061142_0008/attempt_201306061142_0008_m_000000_0/work
+	      // extract the job id and task id names
+	      jobId = workDirSplits[workDirSplits.length-3];
+	      taskId = workDirSplits[workDirSplits.length-2];
+	    }
+	    tmpDirDfs += "/" + jobId;
+	    tmpDirDfs += "/" + taskId;
+
+	    if (LOG.isDebugEnabled())
+	      LOG.debug("tmpDirDfs: "+tmpDirDfs);
 
 	    return tmpDirDfs;
 	  }
+
 
 	  /* Read hostname from /opt/mapr/hostname */
 	  private static String getMapRHostname(Configuration jobConf) {
