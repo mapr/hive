@@ -928,7 +928,7 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_PAM_PROFILES("hive.server2.authentication.pam.profiles",	    		       
     		System.getProperty("hiveserver2.auth.pam.profiles")),
     HIVE_SERVER2_PAM_SERVICES("hive.server2.authentication.pam.services", null),
-    HIVE_SERVER2_ENABLE_DOAS("hive.server2.enable.doAs", false),
+    HIVE_SERVER2_ENABLE_DOAS("hive.server2.enable.doAs", true),
     HIVE_SERVER2_TABLE_TYPE_MAPPING("hive.server2.table.type.mapping", "CLASSIC",
         new StringsValidator("CLASSIC", "HIVE")),
     HIVE_SERVER2_SESSION_HOOK("hive.server2.session.hook", ""),
