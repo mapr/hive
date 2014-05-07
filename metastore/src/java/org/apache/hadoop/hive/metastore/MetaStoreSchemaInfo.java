@@ -140,6 +140,10 @@ public class MetaStoreSchemaInfo {
 
   public static String getHiveSchemaVersion() {
     String hiveVersion = HiveVersionInfo.getShortVersion();
+    //Assume the version is of pattern 0.13.0-mapr-<ReleaseNumber>. Ex: 0.13.0-mapr-1405
+    String versionFromJar = HiveVersionInfo.getShortVersion();
+    hiveVersion = versionFromJar.substring(0, versionFromJar.indexOf("-mapr"));
+
     // if there is an equivalent version, return that, else return this version
     String equivalentVersion = EQUIVALENT_VERSIONS.get(hiveVersion);
     if (equivalentVersion != null) {
