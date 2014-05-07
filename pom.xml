@@ -49,7 +49,8 @@
     <module>testutils</module>
     <module>packaging</module>
   </modules>
-
+ 
+  
   <properties>
     <hive.version.shortname>0.13.0-mapr</hive.version.shortname>
 
@@ -144,11 +145,23 @@
     <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
     <velocity.version>1.5</velocity.version>
     <xerces.version>2.9.1</xerces.version>
-    <zookeeper.version>3.4.5</zookeeper.version>
+    <zookeeper.version>3.4.5-mapr-1401</zookeeper.version>
     <jpam.version>1.1</jpam.version>
   </properties>
 
   <repositories>
+     <repository>
+      <id>mapr</id>
+      <name>MapR Maven repository</name>
+      <url>http://repository.mapr.com/nexus/content/repositories/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>datanucleus</id>
       <name>datanucleus maven repository</name>
@@ -424,6 +437,7 @@
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
+        <scope>provided</scope>
         <exclusions>
           <exclusion>
             <groupId>org.jboss.netty</groupId>
