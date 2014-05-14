@@ -20,6 +20,9 @@ package org.apache.hive.service.server;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -32,6 +35,8 @@ import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIService;
 import org.apache.hive.service.cli.thrift.ThriftHttpCLIService;
+
+import java.io.IOException;
 
 /**
  * HiveServer2.
@@ -52,6 +57,23 @@ public class HiveServer2 extends CompositeService {
   public synchronized void init(HiveConf hiveConf) {
     cliService = new CLIService();
     addService(cliService);
+
+    if (hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
+      // When impersonation is enabled, we need to have "777" permission on root scratchdir, because
+      // query specific scratch directories under root scratchdir are created by impersonated user and
+      // if permissions are not "777" the query fails with permission denied error.
+      try {
+        Path scratchDir = new Path(HiveConf.getVar(hiveConf, HiveConf.ConfVars.SCRATCHDIR));
+        FileSystem fs = FileSystem.get(hiveConf);
+        if (!fs.exists(scratchDir)) {
+          fs.mkdirs(scratchDir);
+        }
+        // make sure permissions are 777
+        fs.setPermission(scratchDir, new FsPermission((short)0777));
+      } catch(IOException e) {
+        LOG.warn(String.format("Failed to create/change scratchdir permissions to 777: %s", e.getMessage()), e);
+      }
+    }
 
     String transportMode = System.getenv("HIVE_SERVER2_TRANSPORT_MODE");
     if(transportMode == null) {
