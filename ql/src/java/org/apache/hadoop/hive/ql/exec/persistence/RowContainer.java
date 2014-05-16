@@ -33,8 +33,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.io.FSRecordWriter;
 import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -108,7 +108,7 @@ public class RowContainer<ROW extends List<Object>>
   boolean firstCalled = false; // once called first, it will never be able to
   // write again.
   RecordReader rr = null; // record reader
-  FSRecordWriter rw = null;
+  RecordWriter rw = null;
   private ROW dummyRow = null;
   private final Reporter reporter;
 
@@ -461,7 +461,7 @@ public class RowContainer<ROW extends List<Object>>
 
   }
 
-  protected FSRecordWriter getRecordWriter() {
+  protected RecordWriter getRecordWriter() {
     return rw;
   }
 
@@ -528,7 +528,7 @@ public class RowContainer<ROW extends List<Object>>
 	    protected InputFormat<WritableComparable, Writable> inputFormat = null;
 
 	    abstract public void init(String suffix) throws IOException;
-	    abstract public FSRecordWriter initRecordWriter(TableDesc tblDesc, Reporter reporter, SerDe serde) throws Exception;
+	    abstract public RecordWriter initRecordWriter(TableDesc tblDesc, Reporter reporter, SerDe serde) throws Exception;
 	    abstract public String getParentDir();
 	    abstract public void copyToDFSDirectory(FileSystem destFs, Path destPath) throws IOException, HiveException;
 
@@ -638,7 +638,7 @@ public class RowContainer<ROW extends List<Object>>
 	    }
 
 	    @Override
-	    public FSRecordWriter initRecordWriter(TableDesc tblDesc, Reporter reporter, SerDe serde) throws Exception {
+	    public RecordWriter initRecordWriter(TableDesc tblDesc, Reporter reporter, SerDe serde) throws Exception {
 	      HiveOutputFormat<?, ?> hiveOutputFormat = tblDesc.getOutputFileFormatClass().newInstance();
 	      tmpFilePath = new Path(tmpFile.toString());
 	      return HiveFileFormatUtils.getRecordWriter(jobConf, hiveOutputFormat,
@@ -701,7 +701,7 @@ public class RowContainer<ROW extends List<Object>>
 	    }
 
 	    @Override
-	    public FSRecordWriter initRecordWriter(TableDesc tblDesc, Reporter reporter, SerDe serde) throws Exception {
+	    public RecordWriter initRecordWriter(TableDesc tblDesc, Reporter reporter, SerDe serde) throws Exception {
 	      HiveOutputFormat<?, ?> hiveOutputFormat = tblDesc.getOutputFileFormatClass().newInstance();
 	      tmpFilePath = new Path(tmpFile.toString());
 	      return HiveFileFormatUtils.getRecordWriter(jobConf, hiveOutputFormat, serde.getSerializedClass(),
