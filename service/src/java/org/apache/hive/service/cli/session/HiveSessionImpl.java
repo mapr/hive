@@ -33,6 +33,8 @@ import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.history.HiveHistory;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.common.util.HiveVersionInfo;
 import org.apache.hive.service.cli.FetchOrientation;
@@ -65,6 +67,7 @@ public class HiveSessionImpl implements HiveSession {
   private final Map<String, String> sessionConf = new HashMap<String, String>();
   private final HiveConf hiveConf = new HiveConf();
   private final SessionState sessionState;
+  private Hive sessionHive = null;
 
   private static final String FETCH_WORK_SERDE_CLASS =
       "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe";
@@ -76,7 +79,8 @@ public class HiveSessionImpl implements HiveSession {
   private IMetaStoreClient metastoreClient = null;
   private final Set<OperationHandle> opHandleSet = new HashSet<OperationHandle>();
 
-  public HiveSessionImpl(String username, String password, Map<String, String> sessionConf) {
+  public HiveSessionImpl(String username, String password, Map<String, String> sessionConf)
+      throws HiveSQLException{
     this.username = username;
     this.password = password;
 
@@ -89,6 +93,14 @@ public class HiveSessionImpl implements HiveSession {
     hiveConf.set(ConfVars.HIVESESSIONID.varname,
         sessionHandle.getHandleIdentifier().toString());
     sessionState = new SessionState(hiveConf);
+
+    // create a new metastore connection for this particular user session
+    Hive.set(null);
+    try {
+      sessionHive = Hive.get(getHiveConf());
+    } catch (HiveException e) {
+      throw new HiveSQLException("Failed to setup metastore connection", e);
+    }
   }
 
   public SessionManager getSessionManager() {
@@ -109,6 +121,11 @@ public class HiveSessionImpl implements HiveSession {
 
   protected synchronized void acquire() throws HiveSQLException {
     SessionState.start(sessionState);
+
+    // if we have a metastore connection with impersonation, then set it first
+    if (sessionHive != null) {
+      Hive.set(sessionHive);
+    }
   }
 
   protected synchronized void release() {
