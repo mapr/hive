@@ -135,7 +135,8 @@
     <netty.version>3.4.0.Final</netty.version>
     <parquet.version>1.3.2</parquet.version>
     <pig.version>0.12.0</pig.version>
-    <protobuf.version>2.5.0</protobuf.version>
+    <protobuf-250.version>2.5.0</protobuf-250.version>
+    <protobuf-241.version>2.4.1</protobuf-241.version>
     <stax.version>1.0.1</stax.version>
     <slf4j.version>1.7.5</slf4j.version>
     <ST4.version>4.0.4</ST4.version>
@@ -220,11 +221,6 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.tempus-fugit</groupId>

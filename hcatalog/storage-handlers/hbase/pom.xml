@@ -101,11 +101,23 @@
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-client</artifactId>
           <version>${hbase.hadoop1.version}</version>
+          <exclusions>
+            <exclusion>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-server</artifactId>
           <version>${hbase.hadoop1.version}</version>
+          <exclusions>
+            <exclusion>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
@@ -148,6 +160,12 @@
           <version>${hbase.hadoop1.version}</version>
           <type>test-jar</type>
           <scope>test</scope>
+          <exclusions>
+            <exclusion>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
@@ -262,8 +280,112 @@
         </dependency>
       </dependencies>
     </profile>
-  </profiles>
+    
+    <profile>
+      <id>protobuf-241</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+          <version>${protobuf-241.version}</version>
+          <scope>compile</scope>
+        </dependency>
+      </dependencies>
+       <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/gen-java/thrift</source>
+                    <source>src/gen-java/protobuf-${protobuf-241.version}</source>
+                  </sources>
+                </configuration>
+              </execution>
+          </executions>
+        </plugin>
+        </plugins>
+      </build>
+    </profile>
 
+    <profile>
+      <id>protobuf-250</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+          <version>${protobuf-250.version}</version>
+          <scope>compile</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/gen-java/thrift</source>
+                    <source>src/gen-java/protobuf-${protobuf-250.version}</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+        </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+    <profile>
+      <id>hcatalog-protobuf</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>generate-protobuf-sources</id>
+                <phase>generate-sources</phase>
+                <configuration>
+                  <target>
+                    <property name="protobuf.src.dir"  location="${basedir}/src/protobuf"/>
+                    <property name="protobuf.build.dir"  location="${basedir}/src/gen-java"/>
+                    <echo>Building ORC Protobuf</echo>
+                    <mkdir dir="${protobuf.build.dir}"/>
+                    <exec executable="protoc" failonerror="true">
+                      <arg value="--java_out=${protobuf.build.dir}"/>
+                      <arg value="-I=${protobuf.src.dir}/org/apache/hcatalog/hbase/snapshot"/>
+                      <arg value="${protobuf.src.dir}/org/apache/hcatalog/hbase/snapshot/RevisionManagerEndpoint.proto"/>
+                    </exec>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+  </profiles>
 
   <build>
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
@@ -283,24 +405,6 @@
             <goals>
               <goal>test-jar</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>src/gen-java</source>
-              </sources>
-            </configuration>
           </execution>
         </executions>
       </plugin>
