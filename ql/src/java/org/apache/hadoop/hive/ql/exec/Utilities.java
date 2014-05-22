@@ -3558,7 +3558,7 @@ public final class Utilities {
       if (origUmask != null) {
         conf.set(FsPermission.UMASK_LABEL, origUmask);
       } else {
-        conf.unset(FsPermission.UMASK_LABEL);
+        conf.setInt(FsPermission.UMASK_LABEL, 0022);
       }
     }
   }
