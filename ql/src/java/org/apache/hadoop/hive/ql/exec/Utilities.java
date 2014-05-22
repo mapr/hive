@@ -3411,7 +3411,7 @@ public final class Utilities {
     	if (origUmask != null) {
     		conf.set("fs.permissions.umask-mode", origUmask);
     	} else {
-    		conf.unset("fs.permissions.umask-mode");
+    		conf.setInt("fs.permissions.umask-mode", 0022);
     	}
     }	
     return retval;
