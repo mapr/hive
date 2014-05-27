@@ -1,0 +1,40 @@
+PREHOOK: query: create table import_auth_uri ( dep_id int comment "department id")
+  stored as textfile
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+POSTHOOK: query: create table import_auth_uri ( dep_id int comment "department id")
+  stored as textfile
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@import_auth_uri
+#### A masked pattern was here ####
+PREHOOK: query: export table import_auth_uri to 'ql/test/data/exports/import_auth_uri'
+PREHOOK: type: EXPORT
+PREHOOK: Input: default@import_auth_uri
+#### A masked pattern was here ####
+POSTHOOK: query: export table import_auth_uri to 'ql/test/data/exports/import_auth_uri'
+POSTHOOK: type: EXPORT
+POSTHOOK: Input: default@import_auth_uri
+#### A masked pattern was here ####
+PREHOOK: query: drop table import_auth_uri
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@import_auth_uri
+PREHOOK: Output: default@import_auth_uri
+POSTHOOK: query: drop table import_auth_uri
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@import_auth_uri
+POSTHOOK: Output: default@import_auth_uri
+PREHOOK: query: create database importer
+PREHOOK: type: CREATEDATABASE
+POSTHOOK: query: create database importer
+POSTHOOK: type: CREATEDATABASE
+PREHOOK: query: use importer
+PREHOOK: type: SWITCHDATABASE
+POSTHOOK: query: use importer
+POSTHOOK: type: SWITCHDATABASE
+PREHOOK: query: import from 'ql/test/data/exports/import_auth_uri'
+PREHOOK: type: IMPORT
+POSTHOOK: query: import from 'ql/test/data/exports/import_auth_uri'
+POSTHOOK: type: IMPORT
+POSTHOOK: Output: importer@import_auth_uri
+FAILED: ParseException line 3:77 cannot recognize input near '<EOF>' '<EOF>' '<EOF>'
