@@ -219,7 +219,7 @@ public class TaskLogProcessor {
       BufferedReader in;
       try {
         in = new BufferedReader(
-            new InputStreamReader(taskAttemptLogUrl.openStream()));
+        		new InputStreamReader(getInputStream(taskAttemptLogUrl)));
         String lastLine = null;
         boolean lastLineMatched = false;
         List<String> stackTrace = null;
