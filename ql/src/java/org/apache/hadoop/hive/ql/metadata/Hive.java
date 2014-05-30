@@ -2404,7 +2404,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       List<List<Path[]>> result = checkPaths(conf, fs, srcs, destf, true);
       
       // if old path is not the parent of the source path, remove the old path
-      if (oldPath != null  && !srcf.getName().startsWith(oldPath.getName())) {
+      if (oldPath != null  && !srcf.toUri().getPath().startsWith(oldPath.toUri().getPath())) {
         try {
           FileSystem fs2 = oldPath.getFileSystem(conf);
           if (fs2.exists(oldPath)) {
