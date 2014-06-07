@@ -163,7 +163,7 @@ public class SecureProxySupport {
     ugi.doAs(new PrivilegedExceptionAction<Object>() {
       public Object run() throws IOException {
         Credentials cred = new Credentials();
-        cred.addToken(fsToken.getService(), fsToken);
+        //cred.addToken(fsToken.getService(), fsToken);
         cred.addToken(msToken.getService(), msToken);
         cred.writeTokenStorageFile(tokenPath, conf);
         return null;
