@@ -219,7 +219,7 @@ public class HiveConnection implements java.sql.Connection {
         // If Kerberos
         if (sessConfMap.containsKey(HIVE_AUTH_PRINCIPAL)) {
           Map<String, String> saslProps = new HashMap<String, String>();
-          SaslQOP saslQOP = SaslQOP.AUTH;
+          SaslQOP saslQOP = SaslQOP.AUTH_CONF;
           if(sessConfMap.containsKey(HIVE_AUTH_QOP)) {
             try {
               saslQOP = SaslQOP.fromString(sessConfMap.get(HIVE_AUTH_QOP));
