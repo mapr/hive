@@ -1634,7 +1634,7 @@ public class HiveConf extends Configuration {
     // binary transport settings
     HIVE_SERVER2_THRIFT_PORT("hive.server2.thrift.port", 10000,
         "Port number of HiveServer2 Thrift interface when hive.server2.transport.mode is 'binary'."),
-    HIVE_SERVER2_THRIFT_SASL_QOP("hive.server2.thrift.sasl.qop", "auth",
+    HIVE_SERVER2_THRIFT_SASL_QOP("hive.server2.thrift.sasl.qop", "auth-conf",
         new StringSet("auth", "auth-int", "auth-conf"),
         "Sasl QOP value; set it to one of following values to enable higher levels of\n" +
         "protection for HiveServer2 communication with clients.\n" +
