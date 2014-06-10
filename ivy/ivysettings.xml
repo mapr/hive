@@ -32,7 +32,8 @@
 
   <property name="repo.maven.org" value="http://mirrors.ibiblio.org/pub/mirrors/maven2/" override="false"/>
   <property name="release.mapr.com" value="http://repository.mapr.com/maven/" override="false"/>
-  <property name="snapshot.mapr.com" value="http://maven.corp.maprtech.com/nexus/content/repositories/snapshots/" override="false"/>
+  <property name="dev.snapshot.mapr.com" value="http://maven.corp.maprtech.com/nexus/content/repositories/snapshots/" override="false"/>
+  <property name="stg.release.mapr.com" value="http://10.10.100.99/nexus/content/repositories/releases/" override="false"/>
   <property name="snapshot.apache.org" value="https://repository.apache.org/content/repositories/snapshots/" override="false"/>
   <property name="maven2.pattern" value="[organisation]/[module]/[revision]/[module]-[revision](-[classifier])"/>
   <property name="repo.dir" value="${user.home}/.m2/repository" override="false"/>
@@ -50,9 +51,11 @@
     <ibiblio name="apache-snapshot" root="${snapshot.apache.org}" m2compatible="true"
              checkmodified="${ivy.checkmodified}" 
              changingPattern="${ivy.changingPattern}"/>
-    <ibiblio name="mapr-snapshot" root="${snapshot.mapr.com}" m2compatible="true"
+    <ibiblio name="dev-mapr-snapshot" root="${dev.snapshot.mapr.com}" m2compatible="true"
              checkmodified="${ivy.checkmodified}"
              changingPattern="${ivy.changingPattern}"/>
+    <ibiblio name="stg-mapr-release" root="${stg.release.mapr.com}" m2compatible="true"
+             checkmodified="${ivy.checkmodified}"/>
 
     <url name="datanucleus-repo" m2compatible="true">
       <artifact pattern="${datanucleus.repo}/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"/>
@@ -73,7 +76,8 @@
       <resolver ref="local" />
       <resolver ref="apache-snapshot"/>
       <resolver ref="maven2"/>
-      <resolver ref="mapr-snapshot"/>
+      <resolver ref="dev-mapr-snapshot"/>
+      <resolver ref="stg-mapr-release"/>
       <resolver ref="mapr-maven2"/>
       <resolver ref="datanucleus-repo"/>
       <resolver ref="sourceforge"/>
@@ -84,7 +88,8 @@
       <resolver ref="fs"/>
       <resolver ref="apache-snapshot"/>
       <resolver ref="maven2"/>
-      <resolver ref="mapr-snapshot"/>
+      <resolver ref="dev-mapr-snapshot"/>
+      <resolver ref="stg-mapr-release"/>
       <resolver ref="mapr-maven2"/>
       <resolver ref="datanucleus-repo"/>
       <resolver ref="sourceforge"/>
