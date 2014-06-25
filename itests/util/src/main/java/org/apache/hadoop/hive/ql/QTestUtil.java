@@ -836,6 +836,7 @@ public class QTestUtil {
 
     HiveConf.setVar(conf, HiveConf.ConfVars.HIVE_AUTHENTICATOR_MANAGER,
     "org.apache.hadoop.hive.ql.security.DummyAuthenticator");
+    Utilities.clearWorkMap();
     CliSessionState ss = new CliSessionState(conf);
     assert ss != null;
     ss.in = System.in;
@@ -1266,7 +1267,8 @@ public class QTestUtil {
       "^Deleted.*",
       ".*DagName:.*",
       ".*Input:.*/data/files/.*",
-      ".*Output:.*/data/files/.*"
+      ".*Output:.*/data/files/.*",
+      ".*total number of created files now is.*"
   });
 
   public int checkCliDriverResults(String tname) throws Exception {

@@ -78,6 +78,8 @@ public class TestExecDriver extends TestCase {
   static {
     try {
       conf = new HiveConf(ExecDriver.class);
+      conf.setBoolVar(HiveConf.ConfVars.SUBMITVIACHILD, true);
+      conf.setBoolVar(HiveConf.ConfVars.SUBMITLOCALTASKVIACHILD, true);
       SessionState.start(conf);
 
       fs = FileSystem.get(conf);
