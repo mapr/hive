@@ -590,8 +590,6 @@ STAGE PLANS:
                   Map-reduce partition columns:
                         expr: _col0
                         type: string
-                        expr: _col1
-                        type: string
                   tag: -1
       Reduce Operator Tree:
         Group By Operator
@@ -2845,8 +2843,6 @@ STAGE PLANS:
                 sort order: ++
                 Map-reduce partition columns:
                       expr: key
-                      type: string
-                      expr: value
                       type: string
                 tag: -1
       Reduce Operator Tree:
