@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.hive</groupId>
   <artifactId>hive</artifactId>
-  <version>0.13.0-mapr</version>
+  <version>0.13.0-mapr-1406</version>
   <packaging>pom</packaging>
 
   <name>Hive</name>
@@ -52,7 +52,7 @@
  
   
   <properties>
-    <hive.version.shortname>0.13.0-mapr</hive.version.shortname>
+    <hive.version.shortname>0.13.0-mapr-1406</hive.version.shortname>
 
     <!-- Build Properties -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -146,7 +146,7 @@
     <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
     <velocity.version>1.5</velocity.version>
     <xerces.version>2.9.1</xerces.version>
-    <zookeeper.version>3.4.5-mapr-1401</zookeeper.version>
+    <zookeeper.version>3.4.5-mapr-1406</zookeeper.version>
     <jpam.version>1.1</jpam.version>
   </properties>
 
