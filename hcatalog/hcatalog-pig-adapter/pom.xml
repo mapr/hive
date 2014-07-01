@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.hive.hcatalog</groupId>
     <artifactId>hive-hcatalog</artifactId>
-    <version>0.13.0-mapr</version>
+    <version>0.13.0-mapr-1406-protobuf250</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
