@@ -132,7 +132,7 @@ public class MetaStoreSchemaInfo {
 
   // Current hive version, in majorVersion.minorVersion.changeVersion format
   public static String getHiveSchemaVersion() {
-    //Assume the version is of pattern 0.13.0-mapr-<ReleaseNumber>. Ex: 0.13.0-mapr-1405
+    //Assume the version is of pattern 0.13.0-mapr-1406-protobuf241-<ReleaseNumber>. Ex: 0.13.0-mapr-1406-protobuf241-1405
 	String versionFromJar = HiveVersionInfo.getShortVersion();
 	String version = versionFromJar.substring(0, versionFromJar.indexOf("-mapr"));
 	return version;
