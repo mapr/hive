@@ -136,7 +136,7 @@ STAGE PLANS:
   Stage: Stage-3
     Map Reduce
       Alias -> Map Operator Tree:
-        $INTNAME 
+        tmp:$INTNAME 
             Reduce Output Operator
               key expressions:
                     expr: _col0
@@ -151,7 +151,7 @@ STAGE PLANS:
                     type: string
                     expr: _col1
                     type: bigint
-        $INTNAME1 
+        tmp:$INTNAME1 
             Reduce Output Operator
               key expressions:
                     expr: _col0

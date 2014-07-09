@@ -149,10 +149,6 @@ public class QBJoinTree implements Serializable{
     return nextTag++;
   }
 
-  public String getJoinStreamDesc() {
-    return "$INTNAME";
-  }
-
   public JoinCond[] getJoinCond() {
     return joinCond;
   }

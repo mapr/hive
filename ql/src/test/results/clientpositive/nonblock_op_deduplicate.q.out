@@ -117,7 +117,7 @@ STAGE PLANS:
   Stage: Stage-2
     Map Reduce
       Alias -> Map Operator Tree:
-        $INTNAME 
+        tmp4:$INTNAME 
             Reduce Output Operator
               sort order: 
               tag: 1
@@ -349,7 +349,7 @@ STAGE PLANS:
   Stage: Stage-3
     Map Reduce
       Alias -> Map Operator Tree:
-        $INTNAME 
+        tmp4:$INTNAME 
             Map Join Operator
               condition map:
                    Inner Join 0 to 1

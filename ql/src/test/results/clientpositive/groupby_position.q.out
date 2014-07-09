@@ -862,7 +862,7 @@ STAGE PLANS:
   Stage: Stage-2
     Map Reduce
       Alias -> Map Operator Tree:
-        $INTNAME 
+        c:$INTNAME 
             Reduce Output Operator
               key expressions:
                     expr: _col0
@@ -877,7 +877,7 @@ STAGE PLANS:
                     type: string
                     expr: _col1
                     type: string
-        $INTNAME1 
+        c:$INTNAME1 
             Reduce Output Operator
               key expressions:
                     expr: _col0
