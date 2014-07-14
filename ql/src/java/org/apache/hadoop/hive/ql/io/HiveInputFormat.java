@@ -103,7 +103,7 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
       if (inputSplit instanceof FileSplit) {
         return ((FileSplit) inputSplit).getPath();
       }
-      return new Path("");
+      return null;
     }
 
     /** The position of the first byte in the file to process. */

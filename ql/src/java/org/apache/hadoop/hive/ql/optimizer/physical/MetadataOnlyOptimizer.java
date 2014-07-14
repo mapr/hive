@@ -236,9 +236,7 @@ public class MetadataOnlyOptimizer implements PhysicalPlanResolver {
             + newPartition.getTableName()
             + encode(newPartition.getPartSpec()));
         work.getPathToPartitionInfo().remove(path);
-        work.getPathToPartitionInfo().put(fakePath.getName(), newPartition);
-        ArrayList<String> aliases = work.getPathToAliases().remove(path);
-        work.getPathToAliases().put(fakePath.getName(), aliases);
+        work.getPathToPartitionInfo().put(path, newPartition);
       }
     }
 

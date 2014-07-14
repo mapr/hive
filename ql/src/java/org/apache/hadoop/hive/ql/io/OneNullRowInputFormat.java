@@ -25,14 +25,18 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.util.StringUtils;
+
 
 /**
  * OneNullRowInputFormat outputs one null row. Used in implementation of
@@ -47,12 +51,17 @@ public class OneNullRowInputFormat implements
   List<String> partitions;
   long len;
 
-  static public class DummyInputSplit implements InputSplit {
+  static public class DummyInputSplit extends FileSplit implements InputSplit {
     public DummyInputSplit() {
+      super((Path) null, 0, 0, (String[]) null);
+    }
+
+    public DummyInputSplit(Path path) {
+      super(path, 0, 0, (String[]) null);
     }
 
     @Override
-    public long getLength() throws IOException {
+    public long getLength(){
       return 1;
     }
 
@@ -60,15 +69,6 @@ public class OneNullRowInputFormat implements
     public String[] getLocations() throws IOException {
       return new String[0];
     }
-
-    @Override
-    public void readFields(DataInput arg0) throws IOException {
-    }
-
-    @Override
-    public void write(DataOutput arg0) throws IOException {
-    }
-
   }
 
   static public class OneNullRowRecordReader implements RecordReader<NullWritable, NullWritable> {
@@ -120,7 +120,9 @@ public class OneNullRowInputFormat implements
   @Override
   public InputSplit[] getSplits(JobConf arg0, int arg1) throws IOException {
     InputSplit[] ret = new InputSplit[1];
-    ret[0] = new DummyInputSplit();
+    String paths = arg0.get("mapred.input.dir");
+    String[] pathArray = StringUtils.split(paths);
+    ret[0] = new DummyInputSplit(new Path(pathArray[0]));
     LOG.info("Calculating splits");
     return ret;
   }
