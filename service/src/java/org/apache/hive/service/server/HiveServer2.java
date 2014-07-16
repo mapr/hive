@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
+import org.apache.hadoop.hive.common.ServerUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.service.CompositeService;
@@ -57,6 +58,7 @@ public class HiveServer2 extends CompositeService {
     cliService = new CLIService();
     addService(cliService);
 
+    ServerUtils.cleanUpScratchDir(hiveConf);
     if (hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
       // When impersonation is enabled, we need to have "777" permission on root scratchdir, because
       // query specific scratch directories under root scratchdir are created by impersonated user and
