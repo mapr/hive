@@ -60,9 +60,9 @@
   <property name="rat.build.dir" location="${build.dir.hive}/rat"/>
   <property name="md5sum.format" value="{0}  {1}"/>
   <!-- Properties for maven repositories -->
-  <property name="mvn.staging.repo.id" value="mapr-snapshots"/>
+  <property name="mvn.staging.repo.id" value="mapr-releases"/>
   <property name="mvn.staging.repo.url"
-    value="${env.MAPR_SNAPSHOTS_REPO}" />
+    value="${env.MAPR_RELEASES_REPO}" />
 
   <taskdef resource="net/sf/antcontrib/antcontrib.properties">
     <classpath>

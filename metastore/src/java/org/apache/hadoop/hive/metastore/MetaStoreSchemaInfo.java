@@ -133,7 +133,7 @@ public class MetaStoreSchemaInfo {
 
   // Current hive version, remove the 'SNAPSHOT' part if needed
   public static String getHiveSchemaVersion() {
-    // Assumes the version is of pattern 0.12-mapr-<ReleaseNumber>. Ex: 0.12-mapr-1402
+    // Assumes the version is of pattern 0.12-mapr-1407-<ReleaseNumber>. Ex: 0.12-mapr-1407-1402
     String versionFromJar = HiveVersionInfo.getVersion();
     String version = versionFromJar.substring(0, versionFromJar.indexOf("-mapr")) + ".0";
     return version.replace("-SNAPSHOT", "");
