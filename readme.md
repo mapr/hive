@@ -59,7 +59,7 @@ Getting Started
 $ mkdir mapr-hive-0.11.0
 $ cd mapr-hive-0.11.0
 $ git clone git://github.com/mapr/hive.git .
-$ git checkout branch-0.11-mapr
+$ git checkout 0.11-mapr-1407
 
 (If required change version tag in ./version.properties file)
 
