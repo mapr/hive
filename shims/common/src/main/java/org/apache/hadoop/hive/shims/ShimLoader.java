@@ -44,6 +44,7 @@ public abstract class ShimLoader {
   static {
     HADOOP_SHIM_CLASSES.put("0.20", "org.apache.hadoop.hive.shims.Hadoop20Shims");
     HADOOP_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.hive.shims.Hadoop20SShims");
+    HADOOP_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.hive.shims.Hadoop20SUnifiedShims");
     HADOOP_SHIM_CLASSES.put("0.23", "org.apache.hadoop.hive.shims.Hadoop23Shims");
   }
 
@@ -57,6 +58,7 @@ public abstract class ShimLoader {
   static {
     JETTY_SHIM_CLASSES.put("0.20", "org.apache.hadoop.hive.shims.Jetty20Shims");
     JETTY_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.hive.shims.Jetty20SShims");
+    JETTY_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.hive.shims.Jetty20SShims");
     JETTY_SHIM_CLASSES.put("0.23", "org.apache.hadoop.hive.shims.Jetty23Shims");
   }
 
@@ -69,6 +71,7 @@ public abstract class ShimLoader {
   static {
     EVENT_COUNTER_SHIM_CLASSES.put("0.20", "org.apache.hadoop.metrics.jvm.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.log.metrics.EventCounter");
+    EVENT_COUNTER_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.log.metrics.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.23", "org.apache.hadoop.log.metrics.EventCounter");
   }
 
@@ -161,7 +164,12 @@ public abstract class ShimLoader {
     case 0:
       break;
     case 1:
-      return "0.20S";
+      if (vers.toLowerCase().contains("-mapr")) {
+        // Unified Hadoop MR1 APIs have the version as format "1.0.3-mapr-1408"
+        return "0.20SUnified";
+      } else {
+        return "0.20S";
+      }
     case 2:
       return "0.23";
     default:
