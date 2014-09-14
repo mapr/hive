@@ -34,6 +34,7 @@ public abstract class ShimLoader {
   private static HadoopShims hadoopShims;
   private static JettyShims jettyShims;
   private static AppenderSkeleton eventCounter;
+  private static HadoopThriftAuthBridge hadoopThriftAuthBridge;
 
   /**
    * The names of the classes for shimming Hadoop for each major version.
@@ -74,6 +75,23 @@ public abstract class ShimLoader {
     EVENT_COUNTER_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.log.metrics.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.23", "org.apache.hadoop.log.metrics.EventCounter");
   }
+  
+  /**
+   * The names of the classes for shimming {@link HadoopThriftAuthBridge}
+   */
+  private static final HashMap<String, String> HADOOP_THRIFT_AUTH_BRIDGE_CLASSES =
+      new HashMap<String, String>();
+
+  static {
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20",
+        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20S",
+        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge20S");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20SUnified",
+        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge20S");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.23",
+        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
+  }
 
   /**
    * Factory method to get an instance of HadoopShims based on the
@@ -107,13 +125,12 @@ public abstract class ShimLoader {
   }
 
   public static synchronized HadoopThriftAuthBridge getHadoopThriftAuthBridge() {
-      if (getHadoopShims().isSecureShimImpl()) {
-          return createShim("org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge20S",
-                            HadoopThriftAuthBridge.class);
-        } else {
-          return new HadoopThriftAuthBridge();
-        }
-      }
+    if (hadoopThriftAuthBridge == null) {
+	  hadoopThriftAuthBridge = loadShims(HADOOP_THRIFT_AUTH_BRIDGE_CLASSES,
+	    HadoopThriftAuthBridge.class);
+	}
+	return hadoopThriftAuthBridge;
+  }
 
   private static <T> T loadShims(Map<String, String> classMap, Class<T> xface) {
     String vers = getMajorVersion();
