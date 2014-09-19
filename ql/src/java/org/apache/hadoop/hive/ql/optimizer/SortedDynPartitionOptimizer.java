@@ -379,7 +379,8 @@ public class SortedDynPartitionOptimizer implements Transform {
       // should honor the ordering of records provided by ORDER BY in SELECT statement
       ReduceSinkOperator parentRSOp = OperatorUtils.findSingleOperatorUpstream(parent,
           ReduceSinkOperator.class);
-      if (parentRSOp != null) {
+      boolean isOrderBy = parseCtx.getQueryProperties().hasOrderBy();
+      if (parentRSOp != null && isOrderBy) {
         String parentRSOpOrder = parentRSOp.getConf().getOrder();
         if (parentRSOpOrder != null && !parentRSOpOrder.isEmpty() && sortPositions.isEmpty()) {
           newKeyCols.addAll(parentRSOp.getConf().getKeyCols());
