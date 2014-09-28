@@ -102,12 +102,6 @@ set hive.optimize.sort.dynamic.partition=true;
 explain insert overwrite table over1k_part2 partition(ds="foo",t) select si,i,b,f,t from over1k where t is null or t=27 order by i;
 
 set hive.optimize.sort.dynamic.partition=false;
-explain insert overwrite table over1k_part2 partition(ds="foo",t) select si,i,b,f,t from over1k where t is null or t=27 group by si,i,b,f,t;
-set hive.optimize.sort.dynamic.partition=true;
--- tests for HIVE-8162, only partition column 't' should be in last RS operator
-explain insert overwrite table over1k_part2 partition(ds="foo",t) select si,i,b,f,t from over1k where t is null or t=27 group by si,i,b,f,t;
-
-set hive.optimize.sort.dynamic.partition=false;
 insert overwrite table over1k_part2 partition(ds="foo",t) select si,i,b,f,t from over1k where t is null or t=27 order by i;
 
 desc formatted over1k_part2 partition(ds="foo",t=27);
