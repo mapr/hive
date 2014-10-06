@@ -200,6 +200,9 @@ public class LoadSemanticAnalyzer extends BaseSemanticAnalyzer {
       throw new SemanticException(ErrorMsg.INVALID_PATH.getMsg(fromTree, e
           .getMessage()), e);
     }
+    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_EXTENDED_ENITITY_CAPTURE)) {
+        inputs.add(new ReadEntity(fromURI.toString(), isLocal));
+    }
 
     // initialize destination table/partition
     tableSpec ts = new tableSpec(db, conf, (ASTNode) tableTree);

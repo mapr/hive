@@ -46,6 +46,7 @@ import org.apache.hive.service.ServiceException;
 import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.log.OperationLog;
 import org.apache.hive.service.cli.operation.Operation;
+import org.apache.hive.service.cli.session.HiveSession;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
 
@@ -153,6 +154,7 @@ public class CLIService extends CompositeService implements ICLIService {
       Map<String, String> configuration) throws HiveSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password, configuration, false, null);
     LOG.debug(sessionHandle + ": openSession()");
+    sessionManager.clearIpAddress();
     return sessionHandle;
   }
 
@@ -196,6 +198,7 @@ public class CLIService extends CompositeService implements ICLIService {
       throws HiveSQLException {
     sessionManager.closeSession(sessionHandle);
     LOG.debug(sessionHandle + ": closeSession()");
+    sessionManager.clearIpAddress();
   }
 
   /* (non-Javadoc)
@@ -207,6 +210,7 @@ public class CLIService extends CompositeService implements ICLIService {
     GetInfoValue infoValue = sessionManager.getSession(sessionHandle)
         .getInfo(getInfoType);
     LOG.debug(sessionHandle + ": getInfo()");
+    sessionManager.clearIpAddress();
     return infoValue;
   }
 
@@ -221,6 +225,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .executeStatement(statement, confOverlay);
     LOG.debug(sessionHandle + ": executeStatement()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -247,6 +252,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTypeInfo();
     LOG.debug(sessionHandle + ": getTypeInfo()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -259,6 +265,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getCatalogs();
     LOG.debug(sessionHandle + ": getCatalogs()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -272,6 +279,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getSchemas(catalogName, schemaName);
     LOG.debug(sessionHandle + ": getSchemas()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -285,6 +293,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTables(catalogName, schemaName, tableName, tableTypes);
     LOG.debug(sessionHandle + ": getTables()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -297,6 +306,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTableTypes();
     LOG.debug(sessionHandle + ": getTableTypes()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -310,6 +320,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getColumns(catalogName, schemaName, tableName, columnName);
     LOG.debug(sessionHandle + ": getColumns()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -323,6 +334,7 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getFunctions(catalogName, schemaName, functionName);
     LOG.debug(sessionHandle + ": getFunctions()");
+    sessionManager.clearIpAddress();
     return opHandle;
   }
 
@@ -360,6 +372,7 @@ public class CLIService extends CompositeService implements ICLIService {
     }
     OperationStatus opStatus = operation.getStatus();
     LOG.debug(opHandle + ": getOperationStatus()");
+    sessionManager.clearIpAddress();
     return opStatus;
   }
 
@@ -373,6 +386,7 @@ public class CLIService extends CompositeService implements ICLIService {
     sessionManager.getOperationManager().getOperation(opHandle)
     .getParentSession().cancelOperation(opHandle);
     LOG.debug(opHandle + ": cancelOperation()");
+    sessionManager.clearIpAddress();
     sessionManager.getLogManager().destroyOperationLog(opHandle);
     stopLogCapture();
   }
@@ -386,6 +400,7 @@ public class CLIService extends CompositeService implements ICLIService {
     startLogCapture(opHandle);
     sessionManager.getOperationManager().getOperation(opHandle)
     .getParentSession().closeOperation(opHandle);
+    sessionManager.clearIpAddress();
     LOG.debug(opHandle + ": closeOperation");
     sessionManager.getLogManager().destroyOperationLog(opHandle);
     stopLogCapture();
@@ -402,6 +417,7 @@ public class CLIService extends CompositeService implements ICLIService {
         .getOperation(opHandle).getParentSession().getResultSetMetadata(opHandle);
     LOG.debug(opHandle + ": getResultSetMetadata()");
     stopLogCapture();
+    sessionManager.clearIpAddress();
     return tableSchema;
   }
 
@@ -416,6 +432,7 @@ public class CLIService extends CompositeService implements ICLIService {
         .getParentSession().fetchResults(opHandle, orientation, maxRows);
     LOG.debug(opHandle + ": fetchResults()");
     stopLogCapture();
+    sessionManager.clearIpAddress();
     return rowSet;
   }
 
@@ -430,6 +447,7 @@ public class CLIService extends CompositeService implements ICLIService {
         .getParentSession().fetchResults(opHandle);
     LOG.debug(opHandle + ": fetchResults()");
     stopLogCapture();
+    sessionManager.clearIpAddress();
     return rowSet;
   }
 
@@ -512,5 +530,15 @@ public class CLIService extends CompositeService implements ICLIService {
       String tokenStr) throws HiveSQLException {
     sessionManager.getSession(sessionHandle).renewDelegationToken(authFactory, tokenStr);
     LOG.info(sessionHandle  + ": renewDelegationToken()");
+  }
+
+  public void setIpAddress(SessionHandle sessionHandle, String ipAddress) {
+      try {
+          HiveSession session = sessionManager.getSession(sessionHandle);
+          session.setIpAddress(ipAddress);
+      } catch (HiveSQLException e) {
+          // This should not happen
+          LOG.error("Unable to get session to set ipAddress", e);
+      }
   }
 }

@@ -735,6 +735,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       createDatabaseDesc.setDatabaseProperties(dbProps);
     }
 
+    saveInputLocationEntity(dbLocation);
     rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(),
         createDatabaseDesc), conf));
   }
@@ -1079,6 +1080,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
         shared.serde, shared.serdeProps, rowFormatParams.collItemDelim,
         rowFormatParams.fieldDelim, rowFormatParams.fieldEscape,
         rowFormatParams.lineDelim, rowFormatParams.mapKeyDelim, indexComment);
+    saveInputLocationEntity(location);
     Task<?> createIndex =
         TaskFactory.get(new DDLWork(getInputs(), getOutputs(), crtIndexDesc), conf);
     rootTasks.add(createIndex);
@@ -1427,6 +1429,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     AlterTableDesc alterTblDesc = new AlterTableDesc(tableName, newLocation, partSpec);
 
     addInputsOutputsAlterTable(tableName, partSpec, alterTblDesc);
+    saveInputLocationEntity(newLocation);
     rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(),
         alterTblDesc), conf));
 
@@ -1977,7 +1980,19 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       descTblDesc.setPretty(descOptions == HiveParser.KW_PRETTY);
     }
 
-    inputs.add(new ReadEntity(getTable(tableName)));
+    // store the read entity for the table being described
+    if (conf.getBoolVar(ConfVars.HIVE_EXTENDED_ENITITY_CAPTURE)) {
+        Table table;
+        // table name could be db.tab format
+        if (tableName.contains(".")) {
+            String[] tokens = tableName.split("\\.");
+            table = new Table (tokens[0], tokens[1]);
+        } else {
+            table = new Table (SessionState.get().getCurrentDatabase(), tableName);
+        }
+        inputs.add(new ReadEntity(getTable(tableName)));
+    }
+
     rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(),
         descTblDesc), conf));
     setFetchTask(createFetchTask(DescTableDesc.getSchema()));
@@ -2705,6 +2720,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
 
     // add the last one
     if (currentPart != null) {
+      saveInputLocationEntity(currentLocation);
       addPartitionDesc.addPartition(currentPart, currentLocation);
     }
 
@@ -3385,5 +3401,12 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     } catch (URISyntaxException e) {
       throw new SemanticException(e);
     }
+  }
+
+  private void saveInputLocationEntity(String location) {
+      if (conf.getBoolVar(ConfVars.HIVE_EXTENDED_ENITITY_CAPTURE) &&
+              (location != null)) {
+          inputs.add(new ReadEntity(location));
+      }
   }
 }

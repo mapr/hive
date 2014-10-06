@@ -69,6 +69,7 @@ import org.apache.hadoop.mapreduce.task.JobContextImpl;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.apache.hadoop.mapreduce.util.HostUtil;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.mapred.lib.TotalOrderPartitioner;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -149,6 +150,11 @@ public class Hadoop23Shims extends HadoopShimsSecure {
   @Override
   public org.apache.hadoop.mapreduce.JobContext newJobContext(Job job) {
     return new JobContextImpl(job.getConfiguration(), job.getJobID());
+  }
+
+  public String getKerberosShortName(String kerberosLongName) throws IOException {
+      KerberosName kerberosName = new KerberosName(kerberosLongName);
+      return kerberosName.getShortName();
   }
 
   @Override
