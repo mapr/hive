@@ -340,6 +340,8 @@ TOK_VIRTUAL_TABLE;
 TOK_VIRTUAL_TABREF;
 TOK_ANONYMOUS;
 TOK_COL_NAME;
+TOK_SERVER;
+TOK_URI;
 }
 
 
@@ -1479,6 +1481,8 @@ privilegeObject
 @init {pushMsg("privilege object", state);}
 @after {popMsg(state);}
     : KW_ON privObject -> ^(TOK_PRIV_OBJECT privObject)
+    | KW_ON KW_URI (path=StringLiteral) -> ^(TOK_PRIV_OBJECT $path TOK_URI)
+    | KW_ON KW_SERVER identifier -> ^(TOK_PRIV_OBJECT identifier TOK_SERVER)
     ;
 
 // database or table type. Type is optional, default type is table
