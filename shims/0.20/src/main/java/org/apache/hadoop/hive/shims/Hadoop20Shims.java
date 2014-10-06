@@ -102,6 +102,11 @@ public class Hadoop20Shims implements HadoopShims {
     throw new IOException("Cannot run tez on current hadoop, Version: " + VersionInfo.getVersion());
   }
 
+  public String getKerberosShortName(String kerberosName) throws IOException {
+      // raise an exception
+      throw new IOException("Authentication is not supported with 0.20");
+  }
+
   /**
    * Shim for MiniMrCluster
    */

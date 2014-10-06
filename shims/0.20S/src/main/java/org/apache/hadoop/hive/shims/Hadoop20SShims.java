@@ -106,6 +106,11 @@ public class Hadoop20SShims extends HadoopShimsSecure {
     };
   }
 
+  public String getKerberosShortName(String kerberosLongName) throws IOException {
+      KerberosName kerberosName = new KerberosName(kerberosLongName);
+      return kerberosName.getShortName();
+  }
+
   @Override
   public TaskAttemptID newTaskAttemptID(JobID jobId, boolean isMap, int taskId, int id) {
     return new TaskAttemptID(jobId.getJtIdentifier(), jobId.getId(), isMap, taskId, id);

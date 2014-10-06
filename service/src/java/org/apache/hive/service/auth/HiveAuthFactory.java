@@ -166,11 +166,7 @@ public class HiveAuthFactory {
   }
 
   public String getIpAddress() {
-    if (saslServer == null || saslServer.getRemoteAddress() == null) {
-      return null;
-    } else {
-      return saslServer.getRemoteAddress().getHostAddress();
-    }
+    return saslServer != null ? saslServer.getRemoteAddress().toString() : null;
   }
 
   // Perform kerberos login using the hadoop shim API if the configuration is available

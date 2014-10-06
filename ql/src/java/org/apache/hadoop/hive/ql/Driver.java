@@ -22,6 +22,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -137,6 +138,7 @@ public class Driver implements CommandProcessor {
   private String errorMessage;
   private String SQLState;
   private Throwable downstreamError;
+  private HiveOperation hiveOperation;
 
   // A list of FileSinkOperators writing in an ACID compliant manner
   private Set<FileSinkDesc> acidSinks;
@@ -144,6 +146,10 @@ public class Driver implements CommandProcessor {
   // A limit on the number of threads that can be launched
   private int maxthreads;
   private int tryCount = Integer.MAX_VALUE;
+  
+  // This value is set only if the operation is launched through HiveServer2 and the underlying
+  // transport is derived from TSocket
+  private String ipAddress;
 
   private boolean destroyed;
 
@@ -292,6 +298,12 @@ public class Driver implements CommandProcessor {
     }
   }
 
+  public Driver(HiveConf conf, String userName, String ipAddress) {
+    this.conf = conf;
+    this.userName = userName;
+    this.ipAddress = ipAddress;
+  }
+
   /**
    * Compile a new query. Any currently-planned query associated with this Driver is discarded.
    * Do not reset id for inner queries(index, etc). Task ids are used for task identity check.
@@ -410,6 +422,8 @@ public class Driver implements CommandProcessor {
         hookCtx.setConf(conf);
         hookCtx.setUserName(userName);
         for (HiveSemanticAnalyzerHook hook : saHooks) {
+          hookCtx.setIpAddress(ipAddress);
+          hookCtx.setCommand(command);
           tree = hook.preAnalyze(hookCtx, tree);
         }
         sem.analyze(tree, ctx);
@@ -429,6 +443,7 @@ public class Driver implements CommandProcessor {
       // validate the plan
       sem.validate();
       perfLogger.PerfLogEnd(CLASS_NAME, PerfLogger.ANALYZE);
+      hiveOperation = SessionState.get().getHiveOperation();
 
       plan = new QueryPlan(command, sem, perfLogger.getStartTime(PerfLogger.DRIVER_RUN), queryId);
 
@@ -1610,6 +1625,43 @@ public class Driver implements CommandProcessor {
     return plan != null && plan.getFetchTask() != null;
   }
 
+  
+  private boolean isExecMetadataLookup(HiveOperation hiveOperation) {
+    String[] commands = {"SHOWDATABASES", "SHOWTABLES"};
+    return Arrays.binarySearch(commands, hiveOperation.getOperationName().toUpperCase()) >=0 ;
+  }
+
+  private void fireFilterHooks(List<String> res) throws CommandNeedRetryException {
+    List<HiveDriverFilterHook> filterHooks = null;
+
+    // Invoke filter hooks if a) any specified and b) operation is a metadata operation
+    try {
+      filterHooks = getHooks(HiveConf.ConfVars.HIVE_EXEC_FILTER_HOOK,
+                 HiveDriverFilterHook.class);
+      if (res != null && !res.isEmpty() && filterHooks != null && !filterHooks.isEmpty()
+          && isExecMetadataLookup(hiveOperation)) {
+        String currentDbName = SessionState.get().getCurrentDatabase();
+        HiveDriverFilterHookContext hookCtx = new HiveDriverFilterHookContextImpl(conf,
+          hiveOperation, userName, res, currentDbName);
+        HiveDriverFilterHookResult hookResult;
+        List<String> filteredValues = null;
+        for (HiveDriverFilterHook hook : filterHooks) {
+          // result set 'res' is passed to the filter hooks. The filter hooks shouldn't mutate res
+          // directly. They should return a filtered result set instead.
+          hookResult = hook.postDriverFetch(hookCtx);
+          // pass the filtered result set back to the client
+          filteredValues = hookResult.getResult();
+          ((HiveDriverFilterHookContextImpl)hookCtx).setResult(filteredValues);
+        }
+        res.clear();
+        res.addAll(filteredValues);
+      }
+    } catch (Exception e) {
+      throw new CommandNeedRetryException(e);
+    }
+
+  }
+
   @SuppressWarnings("unchecked")
   public boolean getResults(List res) throws IOException, CommandNeedRetryException {
     if (destroyed) {
@@ -1618,7 +1670,9 @@ public class Driver implements CommandProcessor {
     if (isFetchingTable()) {
       FetchTask ft = plan.getFetchTask();
       ft.setMaxRows(maxRows);
-      return ft.fetch(res);
+      boolean ret = ft.fetch(res);
+      fireFilterHooks(res);
+      return ret;
     }
 
     if (resStream == null) {
@@ -1660,6 +1714,7 @@ public class Driver implements CommandProcessor {
         return false;
       }
 
+      fireFilterHooks(res);
       if (ss == Utilities.StreamStatus.EOF) {
         resStream = ctx.getStream();
       }

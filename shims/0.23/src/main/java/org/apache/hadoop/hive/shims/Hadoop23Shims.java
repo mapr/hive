@@ -157,6 +157,11 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     return new JobContextImpl(job.getConfiguration(), job.getJobID());
   }
 
+  public String getKerberosShortName(String kerberosLongName) throws IOException {
+      KerberosName kerberosName = new KerberosName(kerberosLongName);
+      return kerberosName.getShortName();
+  }
+
   @Override
   public boolean isLocalMode(Configuration conf) {
     return "local".equals(conf.get("mapreduce.framework.name"));

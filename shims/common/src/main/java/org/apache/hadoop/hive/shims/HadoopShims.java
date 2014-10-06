@@ -143,6 +143,14 @@ public interface HadoopShims {
   void prepareJobOutput(JobConf conf);
 
   /**
+   * return the Kerberos short name
+   * @param full Kerberos name
+   * @return short Kerberos name
+   * @throws IOException
+   */
+  String getKerberosShortName(String kerberosName) throws IOException;
+
+  /**
    * Used by TaskLogProcessor to Remove HTML quoting from a string
    * @param item the string to unquote
    * @return the unquoted string

@@ -1433,6 +1433,7 @@ public class HiveConf extends Configuration {
         "Enables type checking for registered Hive configurations"),
 
     SEMANTIC_ANALYZER_HOOK("hive.semantic.analyzer.hook", "", ""),
+    HIVE_EXEC_FILTER_HOOK("hive.exec.filter.hook","", ""),
     HIVE_TEST_AUTHORIZATION_SQLSTD_HS2_MODE(
         "hive.test.authz.sstd.hs2.mode", false, "test hs2 mode from .q tests", true),
     HIVE_AUTHORIZATION_ENABLED("hive.security.authorization.enabled", false,
@@ -1585,6 +1586,7 @@ public class HiveConf extends Configuration {
         "readable text) or \"json\" (for a json object)."),
     HIVE_ENTITY_SEPARATOR("hive.entity.separator", "@",
         "Separator used to construct names of tables and partitions. For example, dbname@tablename@partitionname"),
+    HIVE_EXTENDED_ENITITY_CAPTURE("hive.entity.capture.input.URI", false, ""),
     HIVE_DISPLAY_PARTITION_COLUMNS_SEPARATELY("hive.display.partition.cols.separately", true,
         "In older Hive version (0.10 and earlier) no distinction was made between\n" +
         "partition columns or non-partition columns while displaying columns in describe\n" +
