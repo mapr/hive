@@ -1514,6 +1514,11 @@ public class Driver implements CommandProcessor {
     return plan != null && plan.getFetchTask() != null;
   }
 
+  public boolean isExecMetadataLookup() {
+    String[] commands = {"SHOWDATABASES", "SHOWTABLES"};
+    return isExecMetadataLookup(this.hiveOperation);
+  }
+
   private boolean isExecMetadataLookup(HiveOperation hiveOperation) {
       String[] commands = {"SHOWDATABASES", "SHOWTABLES"};
       return Arrays.binarySearch(commands, hiveOperation.getOperationName().toUpperCase()) >=0 ;
