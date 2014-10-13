@@ -63,12 +63,12 @@
 
   <property>
     <name>templeton.hive.archive</name>
-    <value>maprfs:///user/mapr/webhcat/hive-0.11.tar.gz</value>
+    <value>maprfs:///user/mapr/webhcat/hive-0.13.tar.gz</value>
   </property>
 
   <property>
     <name>templeton.hive.path</name>
-    <value>hive-0.11.tar.gz/hive-0.11/bin/hive</value>
+    <value>hive-0.13.tar.gz/hive-0.13/bin/hive</value>
   </property>
 
   <property>
