@@ -72,6 +72,7 @@ public class HiveSessionImpl implements HiveSession {
   private final Map<String, String> sessionConf = new HashMap<String, String>();
   private final HiveConf hiveConf = new HiveConf();
   private final SessionState sessionState;
+  private String ipAddress;
   private Hive sessionHive = null;
 
   private static final String FETCH_WORK_SERDE_CLASS =
@@ -86,9 +87,10 @@ public class HiveSessionImpl implements HiveSession {
   private final Set<OperationHandle> opHandleSet = new HashSet<OperationHandle>();
 
   public HiveSessionImpl(TProtocolVersion protocol, String username, String password,
-      Map<String, String> sessionConf) throws HiveSQLException{
+      Map<String, String> sessionConf, String ipAddress) throws HiveSQLException{
     this.username = username;
     this.password = password;
+    this.ipAddress = ipAddress;
     this.sessionHandle = new SessionHandle(protocol);
 
     if (sessionConf != null) {
@@ -369,7 +371,7 @@ public class HiveSessionImpl implements HiveSession {
 
     OperationManager operationManager = getOperationManager();
     GetColumnsOperation operation = operationManager.newGetColumnsOperation(getSession(),
-        catalogName, schemaName, tableName, columnName);
+            catalogName, schemaName, tableName, columnName);
     OperationHandle opHandle = operation.getHandle();
     try {
       //Log capture
@@ -505,5 +507,15 @@ public class HiveSessionImpl implements HiveSession {
 
   protected HiveSession getSession() {
     return this;
+  }
+
+  @Override
+  public String getIpAddress() {
+      return ipAddress;
+  }
+
+  @Override
+  public void setIpAddress(String ipAddress) {
+      this.ipAddress = ipAddress;
   }
 }

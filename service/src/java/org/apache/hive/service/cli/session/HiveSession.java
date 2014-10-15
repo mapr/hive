@@ -188,5 +188,8 @@ public interface HiveSession {
   public void setLogManager(LogManager logManager);
 
   public LogManager getLogManager();
-   
+
+  public String getIpAddress();
+
+  public void setIpAddress(String ipAddress);
 }

@@ -32,6 +32,9 @@ public class HiveSemanticAnalyzerHookContextImpl implements HiveSemanticAnalyzer
   Configuration conf;
   Set<ReadEntity> inputs = null;
   Set<WriteEntity> outputs = null;
+  private String userName;
+  private String ipAddress;
+  private String command;
 
   @Override
   public Hive getHive() throws HiveException {
@@ -64,4 +67,35 @@ public class HiveSemanticAnalyzerHookContextImpl implements HiveSemanticAnalyzer
   public Set<WriteEntity> getOutputs() {
     return outputs;
   }
+
+  @Override
+  public String getUserName() {
+    return userName;
+  }
+
+  @Override
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
+
+  @Override
+  public String getIpAddress() {
+    return ipAddress;
+  }
+
+  @Override
+  public void setIpAddress(String ipAddress) {
+    this.ipAddress = ipAddress;
+  }
+
+  @Override
+  public String getCommand() {
+    return command;
+  }
+
+  @Override
+  public void setCommand(String command) {
+    this.command = command;
+  }
+
 }

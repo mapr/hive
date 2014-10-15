@@ -681,6 +681,7 @@ public class HiveConf extends Configuration {
     HIVECONFVALIDATION("hive.conf.validation", true),
 
     SEMANTIC_ANALYZER_HOOK("hive.semantic.analyzer.hook", ""),
+    HIVE_EXEC_FILTER_HOOK("hive.exec.filter.hook",""),
 
     HIVE_AUTHORIZATION_ENABLED("hive.security.authorization.enabled", false),
     HIVE_AUTHORIZATION_MANAGER("hive.security.authorization.manager",
@@ -742,6 +743,7 @@ public class HiveConf extends Configuration {
     HIVE_DRIVER_RUN_HOOKS("hive.exec.driver.run.hooks", ""),
     HIVE_DDL_OUTPUT_FORMAT("hive.ddl.output.format", null),
     HIVE_ENTITY_SEPARATOR("hive.entity.separator", "@"),
+    HIVE_EXTENDED_ENITITY_CAPTURE("hive.entity.capture.input.URI", false),
 
     // binary or http
     HIVE_SERVER2_TRANSPORT_MODE("hive.server2.transport.mode", "binary"),
@@ -788,7 +790,9 @@ public class HiveConf extends Configuration {
 
     HIVE_SERVER2_IN_MEM_LOGGING("hive.server2.in.mem.logging", true),
     HIVE_SERVER2_IN_MEM_LOG_SIZE("hive.server2.in.mem.log.size", 128 * 1024),
-    HIVE_CONF_RESTRICTED_LIST("hive.conf.restricted.list", null),
+    HIVE_SECURITY_COMMAND_WHITELIST("hive.security.command.whitelist", "set,reset,dfs,add,delete"),
+
+    HIVE_CONF_RESTRICTED_LIST("hive.conf.restricted.list", ""),
 
     // If this is set all move tasks at the end of a multi-insert query will only begin once all
     // outputs are ready
@@ -1296,5 +1300,37 @@ public class HiveConf extends Configuration {
       return Integer.parseInt(m.group(1));
     }
   }
+
+    /**
+     * Append comma separated list of config vars to the restrict List
+     * @param restrictListStr
+     */
+    public void addToRestrictList(String restrictListStr) {
+        if (restrictListStr == null) {
+            return;
+        }
+        String oldList = this.getVar(ConfVars.HIVE_CONF_RESTRICTED_LIST);
+        if (oldList == null || oldList.isEmpty()) {
+            this.setVar(ConfVars.HIVE_CONF_RESTRICTED_LIST, restrictListStr);
+        } else {
+            this.setVar(ConfVars.HIVE_CONF_RESTRICTED_LIST, oldList + "," + restrictListStr);
+        }
+        setupRestrictList();
+    }
+
+    /**
+     * Add the HIVE_CONF_RESTRICTED_LIST values to restrictList,
+     * including HIVE_CONF_RESTRICTED_LIST itself
+     */
+    private void setupRestrictList() {
+        String restrictListStr = this.getVar(ConfVars.HIVE_CONF_RESTRICTED_LIST);
+        restrictList.clear();
+        if (restrictListStr != null) {
+            for (String entry : restrictListStr.split(",")) {
+                restrictList.add(entry.trim());
+            }
+        }
+        restrictList.add(ConfVars.HIVE_CONF_RESTRICTED_LIST.varname);
+    }
 
 }

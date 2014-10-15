@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.hadoop.hive.ql.exec.FunctionInfo;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
@@ -85,6 +86,26 @@ public class ReadEntity extends Entity implements Serializable {
     return parents;
   }
 
+  /**
+   * Constructor for URI readentity
+   * @param path
+   * @param isLocal
+   */
+  public ReadEntity (String path, boolean isLocal) {
+    super(path, isLocal);
+  }
+
+  /**
+   * Constructor for URI readentity
+   * @param path
+   */
+  public ReadEntity (String path) {
+    super(path, false);
+  }
+
+  public ReadEntity (FunctionInfo udf) {
+    super(udf);
+  }
   /**
    * Equals function.
    */

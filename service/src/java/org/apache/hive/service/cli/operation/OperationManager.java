@@ -75,7 +75,8 @@ public class OperationManager extends AbstractService {
     return sessionManager;
   }
   public ExecuteStatementOperation newExecuteStatementOperation(HiveSession parentSession,
-      String statement, Map<String, String> confOverlay, boolean runAsync) {
+      String statement, Map<String, String> confOverlay, boolean runAsync)
+    throws HiveSQLException {
     ExecuteStatementOperation executeStatementOperation = ExecuteStatementOperation
         .newExecuteStatementOperation(parentSession, statement, confOverlay, runAsync);
     addOperation(executeStatementOperation);

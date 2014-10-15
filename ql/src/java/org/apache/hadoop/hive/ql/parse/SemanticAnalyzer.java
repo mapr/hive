@@ -438,6 +438,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         if(FunctionRegistry.impliesOrder(functionName)) {
           throw new SemanticException(ErrorMsg.MISSING_OVER_CLAUSE.getMsg(functionName));
         }
+        if (conf.getBoolVar(ConfVars.HIVE_EXTENDED_ENITITY_CAPTURE)) {
+          getInputs().add(new ReadEntity(FunctionRegistry.getFunctionInfo(functionName)));
+        }
         if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
           if(containsLeadLagUDF(expressionTree)) {
             throw new SemanticException(ErrorMsg.MISSING_OVER_CLAUSE.getMsg(functionName));
@@ -2511,6 +2514,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       FunctionInfo fi = FunctionRegistry.getFunctionInfo(funcName);
       if (fi != null) {
         genericUDTF = fi.getGenericUDTF();
+        if (conf.getBoolVar(ConfVars.HIVE_EXTENDED_ENITITY_CAPTURE)) {
+          getInputs().add(new ReadEntity(fi));
+        }
       }
       isUDTF = (genericUDTF != null);
       if (isUDTF) {

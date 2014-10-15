@@ -19,6 +19,8 @@
 package org.apache.hive.service.cli.operation;
 
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.ql.plan.HiveOperation;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationState;
@@ -27,6 +29,8 @@ import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.RowSetFactory;
 import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.session.HiveSession;
+
+import java.util.List;
 
 /**
  * GetSchemasOperation.
@@ -55,18 +59,25 @@ public class GetSchemasOperation extends MetadataOperation {
    */
   @Override
   public void run() throws HiveSQLException {
-    setState(OperationState.RUNNING);
-    try {
-      IMetaStoreClient metastoreClient = getParentSession().getMetaStoreClient();
-      String schemaPattern = convertSchemaPattern(schemaName);
-      for (String dbName : metastoreClient.getDatabases(schemaPattern)) {
-        rowSet.addRow(new Object[] {dbName, DEFAULT_HIVE_CATALOG});
+      setState(OperationState.RUNNING);
+      try {
+          IMetaStoreClient metastoreClient = getParentSession().getMetaStoreClient();
+          String schemaPattern = convertSchemaPattern(schemaName);
+          List<String > dbNames = metastoreClient.getDatabases(schemaPattern);
+
+          // filter the list of dbnames
+          HiveOperation hiveOperation = HiveOperation.SHOWDATABASES;
+          String currentDbName = SessionState.get().getCurrentDatabase();
+          List<String> filteredDbNames = filterResultSet(dbNames, hiveOperation, currentDbName);
+
+          for (String dbName : filteredDbNames) {
+              rowSet.addRow(new Object[] {dbName, DEFAULT_HIVE_CATALOG});
+          }
+          setState(OperationState.FINISHED);
+      } catch (Exception e) {
+          setState(OperationState.ERROR);
+          throw new HiveSQLException(e);
       }
-      setState(OperationState.FINISHED);
-    } catch (Exception e) {
-      setState(OperationState.ERROR);
-      throw new HiveSQLException(e);
-    }
   }
 
 

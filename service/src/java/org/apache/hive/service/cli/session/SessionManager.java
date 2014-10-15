@@ -106,12 +106,12 @@ public class SessionManager extends CompositeService {
     }
     HiveSession session;
     if (withImpersonation) {
-      HiveSessionImplwithUGI hiveSessionUgi = new HiveSessionImplwithUGI(protocol, username, password,
-          sessionConf, delegationToken);
-      session = HiveSessionProxy.getProxy(hiveSessionUgi, hiveSessionUgi.getSessionUgi());
-      hiveSessionUgi.setProxySession(session);
+        HiveSessionImplwithUGI hiveSessionUgi = new HiveSessionImplwithUGI(protocol, username, password, sessionConf,
+                threadLocalIpAddress.get(), delegationToken);
+        session = (HiveSession)HiveSessionProxy.getProxy(hiveSessionUgi, hiveSessionUgi.getSessionUgi());
+        hiveSessionUgi.setProxySession(session);
     } else {
-      session = new HiveSessionImpl(protocol, username, password, sessionConf);
+      session = new HiveSessionImpl(protocol, username, password, sessionConf, threadLocalIpAddress.get());
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);
@@ -169,7 +169,7 @@ public class SessionManager extends CompositeService {
     threadLocalIpAddress.set(ipAddress);
   }
 
-  private void clearIpAddress() {
+  public static void clearIpAddress() {
     threadLocalIpAddress.remove();
   }
 
