@@ -1514,14 +1514,39 @@ public class Driver implements CommandProcessor {
     return plan != null && plan.getFetchTask() != null;
   }
 
-  public boolean isExecMetadataLookup() {
+  private boolean isExecMetadataLookup(HiveOperation hiveOperation) {
     String[] commands = {"SHOWDATABASES", "SHOWTABLES"};
-    return isExecMetadataLookup(this.hiveOperation);
+    return Arrays.binarySearch(commands, hiveOperation.getOperationName().toUpperCase()) >=0 ;
   }
 
-  private boolean isExecMetadataLookup(HiveOperation hiveOperation) {
-      String[] commands = {"SHOWDATABASES", "SHOWTABLES"};
-      return Arrays.binarySearch(commands, hiveOperation.getOperationName().toUpperCase()) >=0 ;
+  private List<Object> convertToObjectArraysList(List<Object> values) throws CommandNeedRetryException {
+    List<Object> result = new ArrayList<Object>();
+    List<HiveDriverFilterHook> filterHooks = null;
+
+    try {
+      filterHooks = getHooks(ConfVars.HIVE_EXEC_FILTER_HOOK,
+            HiveDriverFilterHook.class);
+    } catch (Exception e) {
+      throw new CommandNeedRetryException(e);
+    }
+
+    boolean isSentryHooksPresent = filterHooks != null && !filterHooks.isEmpty() && isExecMetadataLookup(hiveOperation);
+
+    for (Object value : values) {
+      if (isSentryHooksPresent) {
+        result.add(new Object[]{(String) value});
+      } else {
+        result.add(value);
+      }
+    }
+
+    return result;
+  }
+
+  private void postFireFilterHooksConvertation(List<Object> res) throws CommandNeedRetryException {
+    List<Object> filteredResult = convertToObjectArraysList(res);
+    res.clear();
+    res.addAll(filteredResult);
   }
 
   private void fireFilterHooks(List<String> res) throws CommandNeedRetryException {
@@ -1564,6 +1589,7 @@ public class Driver implements CommandProcessor {
       ft.setMaxRows(maxRows);
       boolean ret = ft.fetch(res);
       fireFilterHooks(res);
+      postFireFilterHooksConvertation(res);
       return ret;
     }
 
@@ -1607,6 +1633,7 @@ public class Driver implements CommandProcessor {
       }
 
       fireFilterHooks(res);
+      postFireFilterHooksConvertation(res);
       if (ss == Utilities.StreamStatus.EOF) {
         resStream = ctx.getStream();
       }

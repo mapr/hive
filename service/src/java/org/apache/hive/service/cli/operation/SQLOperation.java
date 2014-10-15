@@ -315,9 +315,6 @@ public class SQLOperation extends ExecuteStatementOperation {
 
   private RowSet decode(List<Object> rows, RowSet rowSet) throws Exception {
     if (driver.isFetchingTable()) {
-      if (driver.isExecMetadataLookup()) {
-        return decodeFromString(rows, rowSet);
-      }
       return prepareFromRow(rows, rowSet);
     }
     return decodeFromString(rows, rowSet);
