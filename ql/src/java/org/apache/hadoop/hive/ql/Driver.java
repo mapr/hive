@@ -1544,6 +1544,11 @@ public class Driver implements CommandProcessor {
     res.addAll(filteredResult);
   }
 
+  private void fireFilterHooksWithConvertation(List res) throws CommandNeedRetryException {
+    fireFilterHooks(res);
+    postFireFilterHooksConvertation(res);
+  }
+
   private void fireFilterHooks(List<String> res) throws CommandNeedRetryException {
     List<HiveDriverFilterHook> filterHooks = null;
 
@@ -1580,8 +1585,7 @@ public class Driver implements CommandProcessor {
       FetchTask ft = plan.getFetchTask();
       ft.setMaxRows(maxRows);
       boolean ret = ft.fetch(res);
-      fireFilterHooks(res);
-      postFireFilterHooksConvertation(res);
+      fireFilterHooksWithConvertation(res);
       return ret;
     }
 
@@ -1624,8 +1628,7 @@ public class Driver implements CommandProcessor {
         return false;
       }
 
-      fireFilterHooks(res);
-      postFireFilterHooksConvertation(res);
+      fireFilterHooksWithConvertation(res);
       if (ss == Utilities.StreamStatus.EOF) {
         resStream = ctx.getStream();
       }
