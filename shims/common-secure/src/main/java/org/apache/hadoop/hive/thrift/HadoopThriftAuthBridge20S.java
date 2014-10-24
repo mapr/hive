@@ -621,10 +621,17 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
               }
             });
           } else {
-        	// use the short user name for the request
-        	UserGroupInformation endUserUgi = UserGroupInformation.createRemoteUser(endUser);
-        	remoteUser.set(endUserUgi.getShortUserName());
-        	LOG.debug("Set remoteUser :" + remoteUser.get() + ", from endUser :" + endUser);
+            // check for kerberos v5
+            if (saslServer.getMechanismName().equals("GSSAPI")) {
+                String shortName = ShimLoader.getHadoopShims().getKerberosShortName(endUser);
+                remoteUser.set(shortName);
+            } else {
+                // use the short user name for the request
+                UserGroupInformation endUserUgi = UserGroupInformation.createRemoteUser(endUser);
+                remoteUser.set(endUserUgi.getShortUserName());
+                LOG.debug("Set remoteUser :" + remoteUser.get() + ", from endUser :" + endUser);
+            }
+
             return wrapped.process(inProt, outProt);
           }
         } catch (RuntimeException rte) {

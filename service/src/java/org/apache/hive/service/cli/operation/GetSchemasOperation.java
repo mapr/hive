@@ -20,6 +20,8 @@ package org.apache.hive.service.cli.operation;
 
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.ql.plan.HiveOperation;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationState;
@@ -28,6 +30,8 @@ import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.RowSetFactory;
 import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.session.HiveSession;
+
+import java.util.List;
 
 /**
  * GetSchemasOperation.
@@ -61,8 +65,15 @@ public class GetSchemasOperation extends MetadataOperation {
       IMetaStoreClient metastoreClient = getParentSession().getMetaStoreClient();
       if (!((HiveMetaStoreClient)metastoreClient).isMetaStoreLocal()) {
         metastoreClient = HiveMetaStoreClient.newSynchronizedClient(metastoreClient);
-      } 
+      }
       String schemaPattern = convertSchemaPattern(schemaName);
+      List<String > dbNames = metastoreClient.getDatabases(schemaPattern);
+
+      // filter the list of dbnames
+      HiveOperation hiveOperation = HiveOperation.SHOWDATABASES;
+      String currentDbName = SessionState.get().getCurrentDatabase();
+      List<String> filteredDbNames = filterResultSet(dbNames, hiveOperation, currentDbName);
+
       for (String dbName : metastoreClient.getDatabases(schemaPattern)) {
         rowSet.addRow(new Object[] {dbName, DEFAULT_HIVE_CATALOG});
       }

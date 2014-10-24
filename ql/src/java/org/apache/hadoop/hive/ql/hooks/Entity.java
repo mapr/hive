@@ -23,6 +23,7 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.ql.exec.FunctionInfo;
 import org.apache.hadoop.hive.ql.metadata.DummyPartition;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
@@ -40,7 +41,7 @@ public class Entity implements Serializable {
    * The type of the entity.
    */
   public static enum Type {
-    DATABASE, TABLE, PARTITION, DUMMYPARTITION, DFS_DIR, LOCAL_DIR
+    DATABASE, TABLE, PARTITION, DUMMYPARTITION, DFS_DIR, LOCAL_DIR, UDF
   }
 
   /**
@@ -68,6 +69,10 @@ public class Entity implements Serializable {
    */
   private String d;
 
+  /**
+   * If this is a function
+   */
+  private FunctionInfo udf;
   /**
    * This is derived from t and p, but we need to serialize this field to make
    * sure Entity.hashCode() does not need to recursively read into t and p.
@@ -209,6 +214,13 @@ public class Entity implements Serializable {
     this.complete = complete;
   }
 
+  public Entity (FunctionInfo udf) {
+      this.udf = udf;
+      typ = Type.UDF;
+      name = computeName();
+      complete = true;
+  }
+
   /**
    * Get the parameter map of the Entity.
    */
@@ -265,6 +277,13 @@ public class Entity implements Serializable {
     return t;
   }
 
+  /**
+   * Get the UDF associated with the entity.
+   */
+  public FunctionInfo getUDF() {
+      return udf;
+  }
+
   public boolean isDummy() {
     if (typ == Type.DATABASE) {
       return database.getName().equals(SemanticAnalyzer.DUMMY_DATABASE);
@@ -293,6 +312,8 @@ public class Entity implements Serializable {
       return t.getDbName() + "@" + t.getTableName() + "@" + p.getName();
     case DUMMYPARTITION:
       return p.getName();
+    case UDF:
+      return udf.getDisplayName();
     default:
       return d;
     }

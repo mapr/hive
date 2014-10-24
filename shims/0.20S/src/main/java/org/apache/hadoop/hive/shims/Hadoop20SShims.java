@@ -58,6 +58,7 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskID;
+import org.apache.hadoop.security.KerberosName;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.mapred.lib.TotalOrderPartitioner;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -101,6 +102,11 @@ public class Hadoop20SShims extends HadoopShimsSecure {
         progressable.progress();
       }
     };
+  }
+
+  public String getKerberosShortName(String kerberosLongName) throws IOException {
+      KerberosName kerberosName = new KerberosName(kerberosLongName);
+      return kerberosName.getShortName();
   }
 
   @Override
