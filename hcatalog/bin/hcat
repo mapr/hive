@@ -142,6 +142,12 @@ for jar in ${HIVE_LIB_DIR}/*.jar ; do
 	HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$jar
 done
 
+if [[ -n $SENTRY_HOME ]] ; then
+  for f in $SENTRY_HOME/lib/*.jar; do
+    HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${f}
+  done
+fi
+
 # Put external jars, hcat jar, and config file in the classpath
 HADOOP_CLASSPATH=${HIVE_CONF_DIR}:${HADOOP_CLASSPATH}:${HCAT_CLASSPATH}:${HCAT_JAR}
 
