@@ -429,15 +429,34 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     @Override
     public JobContext createJobContext(Configuration conf,
                                        JobID jobId) {
-      return new JobContextImpl(conf instanceof JobConf? new JobConf(conf) : conf,
-              jobId);
+      org.apache.hadoop.mapred.JobContext jobContext = null;
+      try {
+        java.lang.reflect.Constructor construct = org.apache.hadoop.mapred.JobContextImpl.class.getDeclaredConstructor(
+            org.apache.hadoop.mapred.JobConf.class, org.apache.hadoop.mapreduce.JobID.class);
+        construct.setAccessible(true);
+        jobContext = (org.apache.hadoop.mapred.JobContext) construct.newInstance(
+            conf instanceof JobConf? new JobConf(conf) : conf, jobId);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+      return jobContext;
     }
 
     @Override
     public org.apache.hadoop.mapred.JobContext createJobContext(org.apache.hadoop.mapred.JobConf conf,
                                                                 org.apache.hadoop.mapreduce.JobID jobId, Progressable progressable) {
-      return new org.apache.hadoop.mapred.JobContextImpl(
-              new JobConf(conf), jobId, (org.apache.hadoop.mapred.Reporter) progressable);
+      org.apache.hadoop.mapred.JobContext jobContext = null;
+      try {
+        java.lang.reflect.Constructor construct = org.apache.hadoop.mapred.JobContextImpl.class.getDeclaredConstructor(
+            org.apache.hadoop.mapred.JobConf.class, org.apache.hadoop.mapreduce.JobID.class,
+            org.apache.hadoop.util.Progressable.class);
+        construct.setAccessible(true);
+        jobContext = (org.apache.hadoop.mapred.JobContext) construct.newInstance(
+            new JobConf(conf), jobId,  (org.apache.hadoop.mapred.Reporter) progressable);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+      return jobContext;
     }
 
     @Override
