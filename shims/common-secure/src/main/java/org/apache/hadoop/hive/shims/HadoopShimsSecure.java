@@ -540,16 +540,18 @@ public abstract class HadoopShimsSecure implements HadoopShims {
   public Path createDelegationTokenFile(Configuration conf) throws IOException {
 
     //get delegation token for user
-    String uname = UserGroupInformation.getLoginUser().getShortUserName();
-    FileSystem fs = FileSystem.get(conf);
-    Token<?> fsToken = fs.getDelegationToken(uname);
+    // MAPR: Currently MapR FileSystem implementation of getDelegationToken returns NULL.
+    // To avoid the NPE, don't generate FileSystem delegation token and add to Credentials
+    //String uname = UserGroupInformation.getLoginUser().getShortUserName();
+    //FileSystem fs = FileSystem.get(conf);
+    //Token<?> fsToken = fs.getDelegationToken(uname);
 
     File t = File.createTempFile("hive_hadoop_delegation_token", null);
     Path tokenPath = new Path(t.toURI());
 
     //write credential with token to file
     Credentials cred = new Credentials();
-    cred.addToken(fsToken.getService(), fsToken);
+    //cred.addToken(fsToken.getService(), fsToken);
     cred.writeTokenStorageFile(tokenPath, conf);
 
     return tokenPath;
