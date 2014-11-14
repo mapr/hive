@@ -125,14 +125,14 @@ public class MapRedStats {
           "HDFS_BYTES_READ");
       long hdfsRead;
       if (hdfsReadCntr != null && (hdfsRead = hdfsReadCntr.getValue()) >= 0) {
-        sb.append(" HDFS Read: " + hdfsRead);
+        sb.append(" MAPRFS Read: " + hdfsRead);
       }
 
       Counter hdfsWrittenCntr = counters.findCounter("FileSystemCounters",
           "HDFS_BYTES_WRITTEN");
       long hdfsWritten;
       if (hdfsWrittenCntr != null && (hdfsWritten = hdfsWrittenCntr.getValue()) >= 0) {
-        sb.append(" HDFS Write: " + hdfsWritten);
+        sb.append(" MAPRFS Write: " + hdfsWritten);
       }
     }
 
