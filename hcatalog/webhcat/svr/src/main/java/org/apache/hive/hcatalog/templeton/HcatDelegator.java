@@ -321,9 +321,9 @@ public class HcatDelegator extends LauncherDelegator {
         .put("parametersSize", tableInfo.get("parametersSize"))
         .put("tableType", tableInfo.get("tableType"));
 
-      // If we can get them from HDFS, add group and permission
+      // If we can get them from MapRFS, add group and permission
       String loc = (String) jb.getMap().get("location");
-      if (loc != null && loc.startsWith("hdfs://")) {
+      if (loc != null && loc.startsWith("maprfs://")) {
         try {
           FileSystem fs = FileSystem.get(appConf);
           FileStatus status = fs.getFileStatus(new Path(new URI(loc)));
