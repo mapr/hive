@@ -95,8 +95,7 @@ public class LoadSemanticAnalyzer extends BaseSemanticAnalyzer {
         path = URIUtil.decode(
             new Path(System.getProperty("user.dir"), fromPath).toUri().toString());
       } else {
-        path = new Path(new Path("/user/" + System.getProperty("user.name")),
-          path).toString();
+        path = new Path(FileSystem.get(conf).getHomeDirectory(), path).toString();
       }
     }
 

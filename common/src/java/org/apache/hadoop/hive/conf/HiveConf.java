@@ -234,7 +234,7 @@ public class HiveConf extends Configuration {
         "Directory name that will be created inside table locations in order to support HDFS encryption. " +
         "This is replaces ${hive.exec.scratchdir} for query results with the exception of read-only tables. " +
         "In all cases ${hive.exec.scratchdir} is still used for other temporary files, such as job plans."),
-    SCRATCHDIR("hive.exec.scratchdir", "/tmp/hive",
+    SCRATCHDIR("hive.exec.scratchdir", "/user/" + System.getProperty("user.name") + "/tmp/hive/",
         "HDFS root scratch dir for Hive jobs which gets created with write all (733) permission. " +
         "For each connecting user, an HDFS scratch dir: ${hive.exec.scratchdir}/<username> is created, " +
         "with ${hive.scratch.dir.permission}."),
