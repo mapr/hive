@@ -205,7 +205,7 @@ public class HiveConf extends Configuration {
     PLAN_SERIALIZATION("hive.plan.serialization.format", "kryo",
         "Query plan format serialization between client and task nodes. \n" +
         "Two supported values are : kryo and javaXML. Kryo is default."),
-    SCRATCHDIR("hive.exec.scratchdir", "/tmp/hive",
+    SCRATCHDIR("hive.exec.scratchdir", "/user/" + System.getProperty("user.name") + "/tmp/hive/",
         "HDFS root scratch dir for Hive jobs which gets created with write all (733) permission. " +
         "For each connecting user, an HDFS scratch dir: ${hive.exec.scratchdir}/<username> is created, " +
         "with ${hive.scratch.dir.permission}."),
