@@ -3544,6 +3544,9 @@ public final class Utilities {
     try {
       retval = fs.mkdirs(mkdirPath, fsPermission);
       resetUmaskInConf(conf, recursive, origUmask);
+      // this is for MapR-Core 3.x version. FsPermission.UMASK_LABEL only exists in YARN, so the fs.mkdirs
+      // is not able to create the directory with given fsPermission. We have to explicitly set the fsPermission here
+      fs.setPermission(mkdirPath, fsPermission);
     } catch (IOException ioe) {
       resetUmaskInConf(conf, recursive, origUmask);
       throw ioe;
