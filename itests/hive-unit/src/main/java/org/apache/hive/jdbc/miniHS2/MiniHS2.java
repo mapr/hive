@@ -51,7 +51,7 @@ public class MiniHS2 extends AbstractHiveService {
   public static final String HS2_HTTP_MODE = "http";
   private static final String driverName = "org.apache.hive.jdbc.HiveDriver";
   private static final FsPermission FULL_PERM = new FsPermission((short)00777);
-  private static final FsPermission WRITE_ALL_PERM = new FsPermission((short)00733);
+  private static final FsPermission WRITE_ALL_PERM = new FsPermission((short)00777);
   private HiveServer2 hiveServer2 = null;
   private final File baseDir;
   private final Path baseDfsDir;
