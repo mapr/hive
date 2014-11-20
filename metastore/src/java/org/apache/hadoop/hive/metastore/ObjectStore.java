@@ -5508,12 +5508,15 @@ public class ObjectStore implements RawStore, Configurable {
     }
     //compare hosts
     if (onDiskHost != null) {
-      if (!inputHost.equalsIgnoreCase(onDiskHost)) {
+      if (inputHost == null || !inputHost.equalsIgnoreCase(onDiskHost)) {
         return false;
       }
     } else {
-      return false;
+      if (inputHost != null) {
+        return false;
+      }
     }
+
     return true;
   }
 
