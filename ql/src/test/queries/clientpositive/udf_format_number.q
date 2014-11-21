@@ -57,3 +57,11 @@ SELECT format_number(-9223372036854775807, 10),
     format_number(4.9E-324, 324),
     format_number(1.7976931348623157E308, 308)
 FROM src tablesample (1 rows);
+
+-- decimals
+SELECT format_number(12332.123456BD, 4),
+    format_number(12332.123456BD, 2),
+    format_number(12332.1BD, 4),
+    format_number(-12332.2BD, 0),
+    format_number(CAST(12332.567 AS DECIMAL(8, 1)), 4)
+FROM src tablesample (1 rows);
