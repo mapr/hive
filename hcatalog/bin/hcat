@@ -184,6 +184,14 @@ HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
 
 export HADOOP_OPTS=$HADOOP_OPTS
 
+# get the yarn version
+if [ -f $BASEMAPR/conf/hadoop_version ];then
+  MAPR_YARN_VERSION=`cat $BASEMAPR/conf/hadoop_version | grep yarn_version | awk -F'=' '{print $2}'`
+  HADOOP_PREFIX=$BASEMAPR/hadoop/hadoop-$MAPR_YARN_VERSION
+else
+  HADOOP_PREFIX=$HADOOP_PREFIX
+fi
+
 if [ ! -d "${HADOOP_LIBEXEC_DIR}" ]; then
   export HADOOP_LIBEXEC_DIR=$HADOOP_PREFIX/libexec;
 fi
