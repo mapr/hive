@@ -98,7 +98,7 @@ public class LoadSemanticAnalyzer extends BaseSemanticAnalyzer {
       if (isLocal) {
         path = new Path(System.getProperty("user.dir"), fromPath).toString();
       } else {
-    	  path = new Path(FileSystem.get(conf).getHomeDirectory(), path).toString();
+        path = new Path(FileSystem.get(conf).getHomeDirectory(), path).toString();
       }
     }
 
@@ -120,6 +120,14 @@ public class LoadSemanticAnalyzer extends BaseSemanticAnalyzer {
          && StringUtils.isEmpty(fromAuthority)) {
       URI defaultURI = FileSystem.get(conf).getUri();
       fromAuthority = defaultURI.getAuthority();
+    }
+
+    // The MapRFileSytem in Yarn has been changed its behavior for getHomeDirectory API.
+    // In MapR-Core 3.x, the getHomeDirectory API returns a directory without the schema "maprfs:";
+    // While in MapR-Core 4.x, the getHomeDirectory API returns a directory with the schema "maprfs:".
+    // Therefore, we need to remove the "maprfs:" from the path here to make Hive-0.13 work on both MapR-Core 3.x and 4.x clusters.
+    if (path.startsWith(fromScheme)) {
+      path = path.substring(fromScheme.length() + 1);
     }
 
     LOG.debug(fromScheme + "@" + fromAuthority + "@" + path);
