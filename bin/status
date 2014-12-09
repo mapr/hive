@@ -1,0 +1,32 @@
+bin=`dirname "$this"`
+bin=`cd "$bin"; pwd`
+
+# the root of the Hive installation
+if [[ -z $HIVE_HOME ]] ; then
+  export HIVE_HOME=`dirname "$bin"`
+fi
+
+if [ "$HIVE_IDENT_STRING" = "" ]; then
+  export HIVE_IDENT_STRING=`id -nu`
+fi
+
+if [ "$HIVE_PID_DIR" = "" ]; then
+  export HIVE_PID_DIR="$HIVE_HOME/pids"
+fi
+
+# parameter value is hiveserver2 or metastore
+status() {
+  pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-$1.pid
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid` > /dev/null 2>&1; then
+      echo $1 running as process `cat $pid`.
+      exit 0
+    fi
+    echo $pid exists with pid `cat $pid` but no $1.
+    exit 1
+  fi
+  echo $1 not running.
+  exit 1
+}
+
+$@
