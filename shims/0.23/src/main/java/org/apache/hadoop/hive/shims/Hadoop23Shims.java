@@ -440,7 +440,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
             org.apache.hadoop.mapred.JobConf.class, org.apache.hadoop.mapreduce.JobID.class);
         construct.setAccessible(true);
         jobContext = (org.apache.hadoop.mapred.JobContext) construct.newInstance(
-            conf instanceof JobConf? new JobConf(conf) : conf, jobId);
+            new JobConf(conf), jobId);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
