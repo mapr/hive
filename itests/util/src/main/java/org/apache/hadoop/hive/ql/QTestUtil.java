@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +75,7 @@ import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.lockmgr.zookeeper.CuratorFrameworkSingleton;
 import org.apache.hadoop.hive.ql.lockmgr.zookeeper.ZooKeeperHiveLockManager;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.Table;
@@ -122,7 +124,7 @@ public class QTestUtil {
   private static MiniClusterType clusterType = MiniClusterType.none;
   private ParseDriver pd;
   protected Hive db;
-  protected HiveConf conf;
+  static protected HiveConf conf;
   private Driver drv;
   private BaseSemanticAnalyzer sem;
   private FileSystem fs;
@@ -1405,7 +1407,7 @@ public class QTestUtil {
         zooKeeper.close();
       }
 
-      int sessionTimeout = conf.getIntVar(HiveConf.ConfVars.HIVE_ZOOKEEPER_SESSION_TIMEOUT);
+      int sessionTimeout =  (int) conf.getTimeVar(HiveConf.ConfVars.HIVE_ZOOKEEPER_SESSION_TIMEOUT, TimeUnit.MILLISECONDS);
       zooKeeper = new ZooKeeper("localhost:" + zkPort, sessionTimeout, new Watcher() {
         @Override
         public void process(WatchedEvent arg0) {
@@ -1430,6 +1432,8 @@ public class QTestUtil {
     }
 
     public void tearDown() throws Exception {
+      CuratorFrameworkSingleton.closeAndReleaseInstance();
+
       if (zooKeeperCluster != null) {
         zooKeeperCluster.shutdown();
         zooKeeperCluster = null;
