@@ -1520,6 +1520,8 @@ public class QTestUtil {
     }
 
     public void tearDown() throws Exception {
+      CuratorFrameworkSingleton.closeAndReleaseInstance();
+
       if (zooKeeperCluster != null) {
         zooKeeperCluster.shutdown();
         zooKeeperCluster = null;
