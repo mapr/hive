@@ -66,6 +66,9 @@
     ================================================================================
     -->
     <target name="jar" depends="init" description="build all jars">
+    	<condition property="mvn.hadoop.profile" value="${mvn.hadoop23.profile}" else="${mvn.hadoop20.profile}">
+    	    <matches pattern="^2.*" string="${hadoop.version}"/>
+    	</condition>
         <ant target="jar" dir="core" inheritAll="false">
           <property name="_mvn.hadoop.profile" value="${mvn.hadoop.profile}"/>
         </ant>
