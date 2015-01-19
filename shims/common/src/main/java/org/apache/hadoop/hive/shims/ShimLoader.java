@@ -86,6 +86,8 @@ public abstract class ShimLoader {
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge");
     HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20S",
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge20S");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20SUnified",
+        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
     HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.23",
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
   }
