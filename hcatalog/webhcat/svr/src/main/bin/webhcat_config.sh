@@ -134,7 +134,7 @@ if [ -f $BASEMAPR/conf/hadoop_version ];then
    MAPR_YARN_VERSION=`cat $BASEMAPR/conf/hadoop_version | grep yarn_version | awk -F'=' '{print $2}'`
    HADOOP_PREFIX=$BASEMAPR/hadoop/hadoop-$MAPR_YARN_VERSION
 else
-   HADOOP_PREFIX=$HADOOP_PREFIX
+   HADOOP_PREFIX=$HADOOP_HOME
 fi
 
 export HADOOP_PREFIX

@@ -201,17 +201,18 @@ public class Main {
   // is enabled.
   public FilterHolder makeAuthFilter() {
     FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
+    authFilter.setInitParameter("config.prefix", "hadoop.http.authentication");
     if (UserGroupInformation.isSecurityEnabled()) {
-      if (conf.kerberosSecret() != null)
-        authFilter.setInitParameter("signature.secret", conf.kerberosSecret());
-
-      if (conf.kerberosPrincipal() != null)
-        authFilter.setInitParameter("kerberos.principal", conf.kerberosPrincipal());
-
-      if (conf.kerberosKeytab() != null)
-        authFilter.setInitParameter("kerberos.keytab", conf.kerberosKeytab());
+        authFilter.setInitParameter("hadoop.http.authentication.type", "org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler");
+        authFilter.setInitParameter("hadoop.http.authentication.signature.secret", "com.mapr.security.maprauth.MaprSignatureSecretFactory");
+        if (conf.kerberosPrincipal() != null) {
+          authFilter.setInitParameter("hadoop.http.authentication.kerberos.principal", conf.kerberosPrincipal());
+        }
+        if (conf.kerberosKeytab() != null) {
+          authFilter.setInitParameter("hadoop.http.authentication.kerberos.keytab", conf.kerberosKeytab());
+        }
     } else {
-      authFilter.setInitParameter("type", "simple");
+      authFilter.setInitParameter("hadoop.http.authentication.type", "simple");
     }
     return authFilter;
   }
