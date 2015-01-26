@@ -50,6 +50,7 @@ public class HiveAuthFactory {
 
   public static enum AuthTypes {
     NOSASL("NOSASL"),
+    MAPRSASL("MAPRSASL"),
     NONE("NONE"),
     LDAP("LDAP"),
     KERBEROS("KERBEROS"),
@@ -90,8 +91,7 @@ public class HiveAuthFactory {
     else {
       if (authTypeStr == null) {
         authTypeStr = AuthTypes.NONE.getAuthName();
-      }
-      if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
+      } else if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
           && ShimLoader.getHadoopShims().isSecureShimImpl()) {
         saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(
             conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
@@ -103,6 +103,12 @@ public class HiveAuthFactory {
         } catch (IOException e) {
           throw new TTransportException("Failed to start token manager", e);
         }
+      } else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())
+          && ShimLoader.getHadoopShims().isSecureShimImpl())  {
+        saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(
+            conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
+            conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL)
+            );
       }
     }
   }
@@ -128,7 +134,8 @@ public class HiveAuthFactory {
 
   public TTransportFactory getAuthTransFactory() throws LoginException {
     TTransportFactory transportFactory;
-    if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
+    if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName()) ||
+        authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
       try {
         transportFactory = saslServer.createTransportFactory(getSaslProperties());
       } catch (TTransportException e) {
@@ -158,6 +165,8 @@ public class HiveAuthFactory {
     else {
       if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
         return KerberosSaslHelper.getKerberosProcessorFactory(saslServer, service);
+      } else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
+        return MapRSecSaslHelper.getProcessorFactory(saslServer, service);
       } else {
         return PlainSaslHelper.getPlainProcessorFactory(service);
       }
