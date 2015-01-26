@@ -56,7 +56,7 @@ public class HiveAuthFactory {
   private static final Logger LOG = LoggerFactory.getLogger(HiveAuthFactory.class);
 
   public enum AuthTypes {
-    NOSASL, NONE, LDAP, KERBEROS, CUSTOM, PAM
+    NOSASL, NONE, LDAP, KERBEROS, CUSTOM, PAM, MAPRSASL
   }
 
   public static enum TransTypes {
@@ -104,6 +104,13 @@ public class HiveAuthFactory {
       } catch (Exception e) {
         throw new TTransportException("Failed to start token manager", e);
       }
+    } else if (transportType == TransTypes.BINARY
+            && authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.name())
+            && ShimLoader.getHadoopShims().isSecureShimImpl()) {
+      saslServer =
+          ShimLoader.getHadoopThriftAuthBridge().createServer(
+              conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
+              conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
     } else {
       saslServer = null;
     }
@@ -118,7 +125,7 @@ public class HiveAuthFactory {
   }
 
   public TTransportFactory getAuthTransFactory() throws Exception {
-    if (authType == AuthTypes.KERBEROS) {
+    if (authType == AuthTypes.KERBEROS || authType == AuthTypes.MAPRSASL) {
       return saslServer.createTransportFactory(getSaslProperties(), saslMessageLimit);
     }
     if (authType == AuthTypes.NOSASL) {
@@ -137,6 +144,8 @@ public class HiveAuthFactory {
   public TProcessorFactory getAuthProcFactory(ThriftCLIService service) {
     if (authType == AuthTypes.KERBEROS) {
       return KerberosSaslHelper.getKerberosProcessorFactory(saslServer, service);
+    } else if (authType == AuthTypes.MAPRSASL) {
+      return MapRSecSaslHelper.getProcessorFactory(saslServer, service);
     }
     return PlainSaslHelper.getPlainProcessorFactory(service);
   }

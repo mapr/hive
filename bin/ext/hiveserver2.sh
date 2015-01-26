@@ -23,7 +23,12 @@ hiveserver2() {
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
 
-  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
+  if [ "$MAPR_HIVE_SERVER_LOGIN_OPTS" = "" ]; then
+    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
+  else
+    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
+  fi
+
   exec $HADOOP jar $JAR $CLASS $HIVE_OPTS "$@"
 }
 
@@ -51,7 +56,12 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
   fi
   JAR=${HIVE_LIB}/hive-service-*.jar
 
-  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
+  if [ "$MAPR_HIVE_SERVER_LOGIN_OPTS" = "" ]; then
+    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
+  else
+    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
+  fi
+
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
   echo "`date` hiveserver2 started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null

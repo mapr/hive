@@ -25,12 +25,15 @@ import java.util.Map;
 
 import javax.security.sasl.SaslException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge20S.Client;
 import org.apache.hadoop.hive.thrift.client.TUGIAssumingTransport;
 import org.apache.hadoop.security.SaslRpcServer;
+import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.Token;
@@ -47,6 +50,8 @@ import org.apache.thrift.transport.TTransportFactory;
  * This is a 0.25/2.x specific implementation and maprsasl enabled
  */
 public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
+
+    static final Log LOG = LogFactory.getLog(HadoopThriftAuthBridge25Sasl.class);
 
     @Override
     public Server createServer(String keytabFile, String principalConf) throws TTransportException {
@@ -87,37 +92,42 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
        * @param saslProps Map of SASL properties
        */
       @Override
-      public TTransportFactory createTransportFactory(Map<String, String> saslProps)
+      public TTransportFactory createTransportFactory(Map<String, String> saslProps,
+          int saslMessageLimit)
           throws TTransportException {
         List<RpcAuthMethod> rpcAuthMethods = realUgi.getRpcAuthMethodList();
-        TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
+        TSaslServerTransport.Factory saslTransportFactory;
+        if (saslMessageLimit > 0) {
+          saslTransportFactory = new HadoopThriftAuthBridge.HiveSaslServerTransportFactory(saslMessageLimit);
+        } else {
+          saslTransportFactory = new TSaslServerTransport.Factory();
+        }
         for (RpcAuthMethod rpcAuthMethod : rpcAuthMethods) {
           if (rpcAuthMethod.getAuthenticationMethod().equals(UserGroupInformation.AuthenticationMethod.KERBEROS)) {
             // Parse out the kerberos principal, host, realm.
             String kerberosName = realUgi.getUserName();
             final String names[] = SaslRpcServer.splitKerberosName(kerberosName);
             if (names.length == 3) {
-              transFactory.addServerDefinition(
-                rpcAuthMethod.getMechanismName(),
-                names[0], names[1],  // two parts of kerberos principal
-                saslProps,
-                rpcAuthMethod.createCallbackHandler());
-            }  
-          } else if (rpcAuthMethod.getAuthenticationMethod().equals(UserGroupInformation.AuthenticationMethod.TOKEN)) {
-            transFactory.addServerDefinition(rpcAuthMethod.getMechanismName(),
-              null,
-              SaslRpcServer.SASL_DEFAULT_REALM,
+              saslTransportFactory.addServerDefinition(
+              rpcAuthMethod.getMechanismName(),
+              names[0], names[1],  // two parts of kerberos principal
               saslProps,
-              new SaslDigestCallbackHandler(secretManager));
+              rpcAuthMethod.createCallbackHandler());
+            }
           } else {
-            transFactory.addServerDefinition(rpcAuthMethod.getMechanismName(),
+              saslTransportFactory.addServerDefinition(rpcAuthMethod.getMechanismName(),
               null,
               SaslRpcServer.SASL_DEFAULT_REALM,
               saslProps,
               rpcAuthMethod.createCallbackHandler());
           }
         }
-        return new TUGIAssumingTransportFactory(transFactory, realUgi);
+
+        saslTransportFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
+                null, SaslRpcServer.SASL_DEFAULT_REALM,
+                saslProps, new SaslDigestCallbackHandler(secretManager));
+
+        return new TUGIAssumingTransportFactory(saslTransportFactory, realUgi);
       }
     }
 
@@ -147,8 +157,28 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
 
         UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
         UserGroupInformation.AuthenticationMethod authenticationMethod = ugi.getAuthenticationMethod();
-        RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(ugi.getAuthenticationMethod());
         TTransport saslTransport = null;
+
+        LOG.info("Sasl client AuthenticationMethod: " + authenticationMethod.toString());
+        if (authenticationMethod.equals(AuthenticationMethod.PROXY)) {
+          if (methodStr != null) {
+            AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
+            if (method == AuthMethod.DIGEST) {
+                Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
+                t.decodeFromUrlString(tokenStrForm);
+                saslTransport = new TSaslClientTransport(
+                    method.getMechanismName(),
+                    null,
+                    null, SaslRpcServer.SASL_DEFAULT_REALM,
+                    saslProps, new SaslClientCallbackHandler(t),
+                    underlyingTransport);
+                return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            }
+          }
+          throw new IOException("Unsupported authentication method: PROXY-" + methodStr);
+        }
+
+        RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(ugi.getAuthenticationMethod());
 
         if (rpcAuthMethod == null) {
           throw new IOException("Unsupported authentication method: " + ugi.getAuthenticationMethod());
@@ -200,11 +230,9 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
             return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser()); 
           } catch (SaslException se) {
             throw new IOException("Could not instantiate SASL transport", se);
-          }   
+          }
         }
       }
-
     }
-
 }
 
