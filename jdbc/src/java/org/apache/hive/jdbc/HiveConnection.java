@@ -330,7 +330,17 @@ public class HiveConnection implements java.sql.Connection {
         SaslQOP saslQOP = SaslQOP.AUTH_CONF;
         // if maprsasl
         if (HIVE_AUTH_MAPR.equalsIgnoreCase(sessConfMap.get(HIVE_AUTH_TYPE))) {
-          transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout));
+          if (sessConfMap.containsKey(HIVE_AUTH_QOP)) {
+            try {
+              saslQOP = SaslQOP.fromString(sessConfMap.get(HIVE_AUTH_QOP));
+            } catch (IllegalArgumentException e) {
+              throw new SQLException("Invalid " + HIVE_AUTH_QOP +
+                  " parameter. " + e.getMessage(), "42000", e);
+            }
+          }
+          saslProps.put(Sasl.QOP, saslQOP.toString());
+          saslProps.put(Sasl.SERVER_AUTH, "true");
+          transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout), saslProps);
         }
         // if kerberos
         else if (sessConfMap.containsKey(HIVE_AUTH_PRINCIPAL)) {
