@@ -351,7 +351,17 @@ public class HiveConnection implements java.sql.Connection {
         SaslQOP saslQOP = SaslQOP.AUTH_CONF;
         // if maprsasl
         if (JdbcConnectionParams.AUTH_MAPRSASL.equalsIgnoreCase(sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
-            transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout));
+          if (sessConfMap.containsKey(JdbcConnectionParams.AUTH_QOP)) {
+                try {
+                  saslQOP = SaslQOP.fromString(sessConfMap.get(JdbcConnectionParams.AUTH_QOP));
+                } catch (IllegalArgumentException e) {
+                  throw new SQLException("Invalid " + JdbcConnectionParams.AUTH_QOP +
+                            " parameter. " + e.getMessage(), "42000", e);
+                }
+              }
+              saslProps.put(Sasl.QOP, saslQOP.toString());
+              saslProps.put(Sasl.SERVER_AUTH, "true");
+            transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout), saslProps);
         }
         // if kerberos
         else if (sessConfMap.containsKey(JdbcConnectionParams.AUTH_PRINCIPAL)) {
