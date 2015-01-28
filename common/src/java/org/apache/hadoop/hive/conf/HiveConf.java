@@ -1587,7 +1587,7 @@ public class HiveConf extends Configuration {
     HIVE_INSERT_INTO_EXTERNAL_TABLES("hive.insert.into.external.tables", true,
         "whether insert into external tables is allowed"),
 
-    HIVE_OPTIMIZE_INSERT_DEST_VOLUME("hive.optimize.insert.dest.volume", false,
+    HIVE_OPTIMIZE_INSERT_DEST_VOLUME("hive.optimize.insert.dest.volume", true,
         "For CREATE TABLE AS and INSERT queries create the scratch directory under\n" +
         "the destination directory. This avoids the data move across volumes and improves performance."),
     HIVE_SCRATCH_DIR_IN_DEST("hive.scratchdir.in.dest", "_scratchdir", ""),
