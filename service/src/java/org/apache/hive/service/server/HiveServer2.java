@@ -101,7 +101,7 @@ public class HiveServer2 extends CompositeService {
     // there should already be an instance of the session pool manager.
     // if not, ignoring is fine while stopping the hive server.
     HiveConf hiveConf = this.getHiveConf();
-    if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_TEZ_INITIALIZE_DEFAULT_SESSIONS)) {
+    if (hiveConf != null && hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_TEZ_INITIALIZE_DEFAULT_SESSIONS)) {
       try {
         TezSessionPoolManager.getInstance().stop();
       } catch (Exception e) {
