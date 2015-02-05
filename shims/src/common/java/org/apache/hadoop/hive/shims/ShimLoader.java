@@ -46,7 +46,9 @@ public abstract class ShimLoader {
     HADOOP_SHIM_CLASSES.put("0.20", "org.apache.hadoop.hive.shims.Hadoop20Shims");
     HADOOP_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.hive.shims.Hadoop20SShims");
     HADOOP_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.hive.shims.Hadoop20SUnifiedShims");
+    HADOOP_SHIM_CLASSES.put("0.20SUnifiedSasl", "org.apache.hadoop.hive.shims.Hadoop20SUnifiedShims");
     HADOOP_SHIM_CLASSES.put("0.23", "org.apache.hadoop.hive.shims.Hadoop23Shims");
+    HADOOP_SHIM_CLASSES.put("0.25Sasl", "org.apache.hadoop.hive.shims.Hadoop23Shims");
   }
 
   /**
@@ -60,7 +62,9 @@ public abstract class ShimLoader {
     JETTY_SHIM_CLASSES.put("0.20", "org.apache.hadoop.hive.shims.Jetty20Shims");
     JETTY_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.hive.shims.Jetty20SShims");
     JETTY_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.hive.shims.Jetty20SShims");
+    JETTY_SHIM_CLASSES.put("0.20SUnifiedSasl", "org.apache.hadoop.hive.shims.Jetty20SShims");
     JETTY_SHIM_CLASSES.put("0.23", "org.apache.hadoop.hive.shims.Jetty23Shims");
+    JETTY_SHIM_CLASSES.put("0.25Sasl", "org.apache.hadoop.hive.shims.Jetty23Shims");
   }
   
   /**
@@ -73,7 +77,9 @@ public abstract class ShimLoader {
     EVENT_COUNTER_SHIM_CLASSES.put("0.20", "org.apache.hadoop.metrics.jvm.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.log.metrics.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.log.metrics.EventCounter");
+    EVENT_COUNTER_SHIM_CLASSES.put("0.20SUnifiedSasl", "org.apache.hadoop.log.metrics.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.23", "org.apache.hadoop.log.metrics.EventCounter");
+    EVENT_COUNTER_SHIM_CLASSES.put("0.25Sasl", "org.apache.hadoop.log.metrics.EventCounter");
   }
   
   /**
@@ -89,8 +95,12 @@ public abstract class ShimLoader {
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge20S");
     HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20SUnified",
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.20SUnifiedSasl",
+            "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge25Sasl");
     HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.23",
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put("0.25Sasl",
+            "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge25Sasl");
   }
 
   /**
@@ -183,13 +193,29 @@ public abstract class ShimLoader {
       break;
     case 1:
       if (vers.toLowerCase().contains("-mapr")) {
-        // Unified Hadoop MR1 APIs have the version as format "1.0.3-mapr-1408"
-        return "0.20SUnified";
+          // Unified Hadoop MR1 APIs have the version as format "1.0.3-mapr-1408" in yarn 4.0.0 and 4.0.1,
+          // while in yarn 4.0.2, the version format is changed to "1.0.3-mapr-4.0.2-1501"
+          String[] versionParts = vers.toLowerCase().split("-");
+          if (versionParts.length < 3) {
+            throw new RuntimeException("Illegal Hadoop Version: " + vers +
+                " (expected xxx-mapr-xxx format)");
+          }
+          String coreVersion = versionParts[2];
+          if (coreVersion.contains(".")) {
+            return "0.20UnifiedSasl";
+          } else {
+            return "0.20SUnified";
+          }
       } else {
         return "0.20S";
       }
     case 2:
-      return "0.23";
+        int minor = Integer.parseInt(parts[1]);
+        if (minor < 5) {
+          return "0.23";
+        } else {
+          return "0.25Sasl";
+        }
     default:
       throw new IllegalArgumentException("Unrecognized Hadoop major version number: " + vers);
     }
