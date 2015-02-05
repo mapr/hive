@@ -560,6 +560,8 @@ public class BeeLine {
         getOpts().setAuthType(auth);
       } else if (args[i].equals("-p")) {
         pass = args[i++ + 1];
+      } else if (args[i].equals("-w")) {
+        pass = obtainPasswordFromFile(args[i++ + 1]);
       } else if (args[i].equals("-u")) {
         url = args[i++ + 1];
       } else if (args[i].equals("-e")) {
@@ -612,6 +614,19 @@ public class BeeLine {
     return true;
   }
 
+
+  /**
+  * Obtains a password from the passed file path.
+  */
+  private String obtainPasswordFromFile(String passwordFilePath) {
+      try {
+          InputStream passwordIs = new FileInputStream(passwordFilePath);
+          byte[] passwordFileContents = org.apache.commons.io.IOUtils.toByteArray(passwordIs);
+          return new String(passwordFileContents, "UTF-8").trim();
+      } catch (Exception e) {
+          throw new RuntimeException(e);
+      }
+  }
 
   /**
    * Start accepting input from stdin, and dispatch it
