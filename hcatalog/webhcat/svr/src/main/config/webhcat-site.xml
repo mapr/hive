@@ -50,7 +50,7 @@
   </property>
   <property>
     <name>templeton.pig.path</name>
-    <value>pig-0.11.tar.gz/pig-0.11/bin/pig</value>
+    <value>pig-0.12.tar.gz/pig-0.11/bin/pig</value>
   </property>
   <property>
     <name>templeton.hive.archive</name>
