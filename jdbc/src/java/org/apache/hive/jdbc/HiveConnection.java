@@ -48,6 +48,7 @@ import javax.security.sasl.SaslException;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.auth.KerberosSaslHelper;
+import org.apache.hive.service.auth.MapRSecSaslHelper;
 import org.apache.hive.service.auth.PlainSaslHelper;
 import org.apache.hive.service.auth.SaslQOP;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
@@ -74,6 +75,7 @@ import org.apache.thrift.transport.TTransportException;
 public class HiveConnection implements java.sql.Connection {
   private static final String HIVE_AUTH_TYPE= "auth";
   private static final String HIVE_AUTH_QOP = "sasl.qop";
+  private static final String HIVE_AUTH_MAPR = "maprsasl";
   private static final String HIVE_AUTH_SIMPLE = "noSasl";
   private static final String HIVE_AUTH_USER = "user";
   private static final String HIVE_AUTH_PRINCIPAL = "principal";
@@ -219,8 +221,12 @@ public class HiveConnection implements java.sql.Connection {
     if (!sessConfMap.containsKey(HIVE_AUTH_TYPE)
         || !sessConfMap.get(HIVE_AUTH_TYPE).equals(HIVE_AUTH_SIMPLE)) {
       try {
-        // If Kerberos
-        if (sessConfMap.containsKey(HIVE_AUTH_PRINCIPAL)) {
+        // if maprsasl
+        if (HIVE_AUTH_MAPR.equalsIgnoreCase(sessConfMap.get(HIVE_AUTH_TYPE))) {
+          transport = MapRSecSaslHelper.getTransport(transport);
+        }
+        // if kerberos
+        else if (sessConfMap.containsKey(HIVE_AUTH_PRINCIPAL)) {
           Map<String, String> saslProps = new HashMap<String, String>();
           SaslQOP saslQOP = SaslQOP.AUTH_CONF;
           if(sessConfMap.containsKey(HIVE_AUTH_QOP)) {

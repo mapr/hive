@@ -42,6 +42,7 @@ public class HiveAuthFactory {
 
   public static enum AuthTypes {
     NOSASL("NOSASL"),
+    MAPRSASL("MAPRSASL"),
     NONE("NONE"),
     LDAP("LDAP"),
     KERBEROS("KERBEROS"),
@@ -70,7 +71,8 @@ public class HiveAuthFactory {
     if (authTypeStr == null) {
       authTypeStr = AuthTypes.NONE.getAuthName();
     }
-    if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
+    if ((authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
+        || authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName()))
         && ShimLoader.getHadoopShims().isSecureShimImpl()) {
       saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(
         conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
@@ -102,7 +104,8 @@ public class HiveAuthFactory {
 
     TTransportFactory transportFactory;
 
-    if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
+    if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName()) ||
+        authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
       try {
         transportFactory = saslServer.createTransportFactory(getSaslProperties());
       } catch (TTransportException e) {
@@ -126,6 +129,8 @@ public class HiveAuthFactory {
       throws LoginException {
     if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
       return KerberosSaslHelper.getKerberosProcessorFactory(saslServer, service);
+    } else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
+        return MapRSecSaslHelper.getProcessorFactory(saslServer, service);
     } else {
       return PlainSaslHelper.getPlainProcessorFactory(service);
     }
