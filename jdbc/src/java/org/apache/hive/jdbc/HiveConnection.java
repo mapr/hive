@@ -221,23 +221,23 @@ public class HiveConnection implements java.sql.Connection {
     if (!sessConfMap.containsKey(HIVE_AUTH_TYPE)
         || !sessConfMap.get(HIVE_AUTH_TYPE).equals(HIVE_AUTH_SIMPLE)) {
       try {
+        Map<String, String> saslProps = new HashMap<String, String>();
+        SaslQOP saslQOP = SaslQOP.AUTH_CONF;
+        if(sessConfMap.containsKey(HIVE_AUTH_QOP)) {
+          try {
+            saslQOP = SaslQOP.fromString(sessConfMap.get(HIVE_AUTH_QOP));
+          } catch (IllegalArgumentException e) {
+            throw new SQLException("Invalid " + HIVE_AUTH_QOP + " parameter. " + e.getMessage(), "42000", e);
+          }
+        }
+        saslProps.put(Sasl.QOP, saslQOP.toString());
+        saslProps.put(Sasl.SERVER_AUTH, "true");
         // if maprsasl
         if (HIVE_AUTH_MAPR.equalsIgnoreCase(sessConfMap.get(HIVE_AUTH_TYPE))) {
-          transport = MapRSecSaslHelper.getTransport(transport);
+          transport = MapRSecSaslHelper.getTransport(transport, saslProps);
         }
         // if kerberos
         else if (sessConfMap.containsKey(HIVE_AUTH_PRINCIPAL)) {
-          Map<String, String> saslProps = new HashMap<String, String>();
-          SaslQOP saslQOP = SaslQOP.AUTH_CONF;
-          if(sessConfMap.containsKey(HIVE_AUTH_QOP)) {
-            try {
-              saslQOP = SaslQOP.fromString(sessConfMap.get(HIVE_AUTH_QOP));
-            } catch (IllegalArgumentException e) {
-              throw new SQLException("Invalid " + HIVE_AUTH_QOP + " parameter. " + e.getMessage(), "42000", e);
-            }
-          }
-          saslProps.put(Sasl.QOP, saslQOP.toString());
-          saslProps.put(Sasl.SERVER_AUTH, "true");
           transport = KerberosSaslHelper.getKerberosTransport(
               sessConfMap.get(HIVE_AUTH_PRINCIPAL), host, transport, saslProps);
         } else {

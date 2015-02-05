@@ -57,14 +57,14 @@ public class MapRSecSaslHelper {
     return new CLIServiceProcessorFactory (saslServer, service);
   }
 
-  public static TTransport getTransport(final TTransport underlyingTransport)
+  public static TTransport getTransport(final TTransport underlyingTransport, Map<String, String> saslProps)
       throws SaslException {
     try {
       HadoopThriftAuthBridge.Client authBridge =
         ShimLoader.getHadoopThriftAuthBridge().createClientWithConf("CUSTOM");
       return authBridge.createClientTransport(
               null, null, "CUSTOM", null,
-              underlyingTransport, null);
+              underlyingTransport, saslProps);
     } catch (IOException e) {
       throw new SaslException("Failed to open client transport", e);
     }
