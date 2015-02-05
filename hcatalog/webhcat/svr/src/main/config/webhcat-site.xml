@@ -54,11 +54,11 @@
   </property>
   <property>
     <name>templeton.hive.archive</name>
-    <value>maprfs:///user/mapr/webhcat/hive-0.14.tar.gz</value>
+    <value>maprfs:///user/mapr/webhcat/hive-1.0.tar.gz</value>
   </property>
   <property>
     <name>templeton.hive.path</name>
-    <value>hive-0.14.tar.gz/hive-0.14/bin/hive</value>
+    <value>hive-1.0.tar.gz/hive-1.0/bin/hive</value>
   </property>
   <property>
     <name>templeton.streaming.jar</name>
