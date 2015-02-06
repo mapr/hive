@@ -74,7 +74,7 @@ public abstract class ShimLoader {
 
   static {
     EVENT_COUNTER_SHIM_CLASSES.put("0.20", "org.apache.hadoop.metrics.jvm.EventCounter");
-    EVENT_COUNTER_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.log.metrics.EventCounter");
+    EVENT_COUNTER_SHIM_CLASSES.put("0.20S", "org.apache.hadoop.metrics.jvm.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.20SUnified", "org.apache.hadoop.log.metrics.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.20SUnifiedSasl", "org.apache.hadoop.log.metrics.EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put("0.23", "org.apache.hadoop.log.metrics.EventCounter");
@@ -126,25 +126,9 @@ public abstract class ShimLoader {
   }
 
   public static synchronized AppenderSkeleton getEventCounter() {
-    if (eventCounter == null) {
-      eventCounter = tryAndLoadShims(AppenderSkeleton.class,
-                             "org.apache.hadoop.metrics.jvm.EventCounter",
-                             "org.apache.hadoop.log.metrics.EventCounter");
-    }
+    eventCounter = loadShims(EVENT_COUNTER_SHIM_CLASSES, AppenderSkeleton.class);
     return eventCounter;
   }
-
-  private static <T> T tryAndLoadShims(Class<T> xface, String... classNames) {
-    for (String className : classNames) {
-      try {
-        return createShim(className, xface);
-      } catch (Exception e) {
-      // continue
-      }
-   }
-   throw new RuntimeException("Could not load shims in any of classes " +
-           Arrays.toString(classNames));
-}
 
   public static synchronized HadoopThriftAuthBridge getHadoopThriftAuthBridge() {
     if (hadoopThriftAuthBridge == null) {
@@ -201,7 +185,7 @@ public abstract class ShimLoader {
         }
         String coreVersion = versionParts[2];
         if (coreVersion.contains(".")) {
-          return "0.20UnifiedSasl";
+          return "0.20SUnifiedSasl";
         } else {
           return "0.20SUnified";
         }
