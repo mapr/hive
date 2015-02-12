@@ -150,11 +150,12 @@ if [ "$MAPR_HIVE_SERVER_LOGIN_OPTS" = "" ]; then
   export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
 else
   export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
+  if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
+  else
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false"
+  fi
 fi
 
-if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
-  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
-else
-  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false"
-fi
+
  
