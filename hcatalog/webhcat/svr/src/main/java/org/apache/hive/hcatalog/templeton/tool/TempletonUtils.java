@@ -310,6 +310,9 @@ public class TempletonUtils {
         overrideClasspath = overrideClasspath + ":" + cur;
       env.put("HADOOP_CLASSPATH", overrideClasspath);
     }
+    if (System.getProperty("mapr_sec_enabled") != null) {
+      env.put("MAPR_SEC_ENABLED", System.getProperty("mapr_sec_enabled"));
+    }
 
     return env;
   }
