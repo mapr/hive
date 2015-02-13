@@ -308,7 +308,8 @@ public class HiveConf extends Configuration {
     METASTORE_KERBEROS_KEYTAB_FILE("hive.metastore.kerberos.keytab.file", ""),
     METASTORE_KERBEROS_PRINCIPAL("hive.metastore.kerberos.principal",
         "hive-metastore/_HOST@EXAMPLE.COM"),
-    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled", false),
+    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled",
+        (System.getProperty("mapr_sec_enabled") == null ? false : System.getProperty("mapr_sec_enabled"))),
     METASTORE_USE_THRIFT_FRAMED_TRANSPORT("hive.metastore.thrift.framed.transport.enabled", false),
     METASTORE_CLUSTER_DELEGATION_TOKEN_STORE_CLS(
         "hive.cluster.delegation.token.store.class",
@@ -898,6 +899,54 @@ public class HiveConf extends Configuration {
       this.defaultFloatVal = -1;
       this.defaultBoolVal = defaultBoolVal;
       this.type = VarType.BOOLEAN;
+    }
+
+    ConfVars(String varname, Object defaultVal) {
+      this.varname = varname;
+      if (defaultVal == null || defaultVal instanceof String) {
+        this.valClass = String.class;
+        this.type = VarType.STRING;
+        this.defaultVal = (String)defaultVal;
+        this.defaultIntVal = -1;
+        this.defaultLongVal = -1;
+        this.defaultFloatVal = -1;
+        this.defaultBoolVal = false;
+      } else if (defaultVal instanceof Integer) {
+        this.valClass = Integer.class;
+        this.type = VarType.INT;
+        this.defaultVal = null;
+        this.defaultIntVal = (Integer)defaultVal;
+        this.defaultLongVal = -1;
+        this.defaultFloatVal = -1;
+        this.defaultBoolVal = false;
+      } else if (defaultVal instanceof Long) {
+        this.valClass = Long.class;
+        this.type = VarType.LONG;
+        this.defaultVal = null;
+        this.defaultIntVal = -1;
+        this.defaultLongVal = (Long)defaultVal;
+        this.defaultFloatVal = -1;
+        this.defaultBoolVal = false;
+      } else if (defaultVal instanceof Float) {
+        this.valClass = Float.class;
+        this.type = VarType.FLOAT;
+        this.defaultVal = null;
+        this.defaultIntVal = -1;
+        this.defaultLongVal = -1;
+        this.defaultFloatVal = (Float)defaultVal;
+        this.defaultBoolVal = false;
+      } else if (defaultVal instanceof Boolean) {
+        this.valClass = Boolean.class;
+        this.type = VarType.BOOLEAN;
+        this.defaultVal = null;
+        this.defaultIntVal = -1;
+        this.defaultLongVal = -1;
+        this.defaultFloatVal = -1;
+        this.defaultBoolVal = (Boolean)defaultVal;
+      } else {
+         throw new IllegalArgumentException("Not supported type value " + defaultVal.getClass() +
+            " for name " + varname);
+      }
     }
 
     public boolean isType(String value) {
