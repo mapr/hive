@@ -5154,8 +5154,10 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         // start delegation token manager
         HMSHandler hmsHandler = new HMSHandler("new db based metaserver", conf);
         saslServer.startDelegationTokenSecretManager(conf, hmsHandler);
-        transFactory = saslServer.createTransportFactory(
-                MetaStoreUtils.getMetaStoreSaslProperties(conf));
+        int saslMessageLimit = conf.getIntVar(ConfVars.HIVE_THRIFT_SASL_MESSAGE_LIMIT);
+        transFactory =
+               saslServer.createTransportFactory(MetaStoreUtils.getMetaStoreSaslProperties(conf),
+               saslMessageLimit);
         processor = saslServer.wrapProcessor(
           new ThriftHiveMetastore.Processor<HMSHandler>(hmsHandler));
         LOG.info("Starting DB backed MetaStore Server in Secure Mode");

@@ -73,6 +73,7 @@ public class HiveAuthFactory {
   private String authTypeStr;
   private String transportMode;
   private final HiveConf conf;
+  private final int saslMessageLimit;
 
   public static final String HS2_PROXY_USER = "hive.server2.proxy.user";
   public static final String HS2_CLIENT_TOKEN = "hiveserver2ClientToken";
@@ -81,6 +82,7 @@ public class HiveAuthFactory {
     conf = new HiveConf();
     transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
     authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
+    saslMessageLimit = conf.getIntVar(ConfVars.HIVE_THRIFT_SASL_MESSAGE_LIMIT);
 
     // In http mode we use NOSASL as the default auth type
     if (transportMode.equalsIgnoreCase("http")) {
@@ -132,25 +134,25 @@ public class HiveAuthFactory {
     return saslProps;
   }
 
-  public TTransportFactory getAuthTransFactory() throws LoginException {
+  public TTransportFactory getAuthTransFactory() throws Exception {
     TTransportFactory transportFactory;
     if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName()) ||
         authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
       try {
-        transportFactory = saslServer.createTransportFactory(getSaslProperties());
+        transportFactory = saslServer.createTransportFactory(getSaslProperties(), saslMessageLimit);
       } catch (TTransportException e) {
         throw new LoginException(e.getMessage());
       }
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NONE.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.LDAP.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.PAM.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName())) {
       transportFactory = new TTransportFactory();
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.CUSTOM.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
     } else {
       throw new LoginException("Unsupported authentication type " + authTypeStr);
     }

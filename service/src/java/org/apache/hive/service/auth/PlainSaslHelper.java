@@ -31,6 +31,7 @@ import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.SaslException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge;
 import org.apache.hive.service.auth.PlainSaslServer.SaslPlainProvider;
 import org.apache.hive.service.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.hive.service.cli.thrift.TCLIService;
@@ -132,18 +133,19 @@ public class PlainSaslHelper {
     java.security.Security.addProvider(new SaslPlainProvider());
   }
 
-  public static TTransportFactory getPlainTransportFactory(String authTypeStr)
-      throws LoginException {
-    TSaslServerTransport.Factory saslFactory = new TSaslServerTransport.Factory();
-    try {
-      saslFactory.addServerDefinition("PLAIN",
-          authTypeStr, null, new HashMap<String, String>(),
-          new PlainServerCallbackHandler(authTypeStr));
-    } catch (AuthenticationException e) {
-      throw new LoginException ("Error setting callback handler" + e);
+  public static TTransportFactory getPlainTransportFactory(String authTypeStr, int saslMessageLimit)
+       throws LoginException, AuthenticationException {
+    TSaslServerTransport.Factory saslTransportFactory;
+    if (saslMessageLimit > 0) {
+      saslTransportFactory =
+          new HadoopThriftAuthBridge.HiveSaslServerTransportFactory(saslMessageLimit);
+    } else {
+      saslTransportFactory = new TSaslServerTransport.Factory();
     }
-    return saslFactory;
-  }
+      saslTransportFactory.addServerDefinition("PLAIN", authTypeStr, null,
+         new HashMap<String, String>(), new PlainServerCallbackHandler(authTypeStr));
+      return saslTransportFactory;
+   }
 
   public static TTransport getPlainTransport(String userName, String passwd,
       final TTransport underlyingTransport) throws SaslException {

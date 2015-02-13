@@ -358,7 +358,7 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
      * @param saslProps Map of SASL properties
      */
     @Override
-    public TTransportFactory createTransportFactory(Map<String, String> saslProps)
+    public TTransportFactory createTransportFactory(Map<String, String> saslProps, int saslMessageLimit)
         throws TTransportException {
       // Parse out the kerberos principal, host, realm.
       String kerberosName = realUgi.getUserName();
@@ -367,7 +367,12 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
         throw new TTransportException("Kerberos principal should have 3 parts: " + kerberosName);
       }
 
-      TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
+      TSaslServerTransport.Factory transFactory;
+      if (saslMessageLimit > 0) {
+        transFactory = new HadoopThriftAuthBridge.HiveSaslServerTransportFactory(saslMessageLimit);
+      } else {
+        transFactory = new TSaslServerTransport.Factory();
+      }
       transFactory.addServerDefinition(
           AuthMethod.KERBEROS.getMechanismName(),
           names[0], names[1],  // two parts of kerberos principal

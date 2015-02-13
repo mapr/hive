@@ -91,10 +91,17 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
        * @param saslProps Map of SASL properties
        */
       @Override
-      public TTransportFactory createTransportFactory(Map<String, String> saslProps)
+      public TTransportFactory createTransportFactory(Map<String, String> saslProps,
+          int saslMessageLimit)
           throws TTransportException {
         List<RpcAuthMethod> rpcAuthMethods = realUgi.getRpcAuthMethodList();
-        TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
+        TSaslServerTransport.Factory transFactory;
+        TSaslServerTransport.Factory saslTransportFactory;
+        if (saslMessageLimit > 0) {
+          transFactory = new HadoopThriftAuthBridge.HiveSaslServerTransportFactory(saslMessageLimit);
+        } else {
+          transFactory = new TSaslServerTransport.Factory();
+        }
         for (RpcAuthMethod rpcAuthMethod : rpcAuthMethods) {
           if (rpcAuthMethod.getAuthenticationMethod().equals(UserGroupInformation.AuthenticationMethod.KERBEROS)) {
             // Parse out the kerberos principal, host, realm.

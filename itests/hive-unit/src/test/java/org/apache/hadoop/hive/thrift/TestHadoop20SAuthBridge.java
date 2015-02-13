@@ -78,7 +78,7 @@ public class TestHadoop20SAuthBridge extends TestCase {
         super();
       }
       @Override
-      public TTransportFactory createTransportFactory(Map<String, String> saslProps)
+      public TTransportFactory createTransportFactory(Map<String, String> saslProps, int saslMessageLimit)
       throws TTransportException {
         TSaslServerTransport.Factory transFactory =
           new TSaslServerTransport.Factory();

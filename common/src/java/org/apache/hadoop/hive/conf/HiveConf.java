@@ -881,6 +881,9 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_MAX_START_ATTEMPTS("hive.server2.max.start.attempts", 30L,
         new LongRangeValidator(0L, Long.MAX_VALUE)),
 
+     // General Thrift configs (Thrift configs common to Metastore and HiveServer2)
+     HIVE_THRIFT_SASL_MESSAGE_LIMIT("hive.thrift.sasl.message.limit", 104857600),
+
     // binary or http
     HIVE_SERVER2_TRANSPORT_MODE("hive.server2.transport.mode", "binary",
         new StringsValidator("binary", "http")),
