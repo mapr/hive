@@ -129,6 +129,13 @@ if 'HADOOP_OPTS' not in os.environ:
 # log under the Hive log dir but use a separate log file for HCat logs
 os.environ['HADOOP_OPTS'] += " " + "-Dhive.log.file=hcat.log" + " " + "-Dhive.log.dir=" + os.path.join(os.environ['HIVE_HOME'], "logs")
 
+if 'MAPR_SEC_ENABLED' not in os.environ:
+  os.environ['HADOOP_OPTS'] += " " + "-Dmapr_sec_enabled=false"
+elif os.environ['MAPR_SEC_ENABLED'] == "true":
+  os.environ['HADOOP_OPTS'] += " " + "-Dmapr_sec_enabled=true"
+else:
+  os.environ['HADOOP_OPTS'] += " " + "-Dmapr_sec_enabled=false"
+
 ##### Uncomment to debug log4j configuration
 #os.environ['HADOOP_OPTS'] += " -Dlog4j.debug"
 
