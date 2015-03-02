@@ -18,11 +18,7 @@ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 cli () {
   CLASS=org.apache.hadoop.hive.cli.CliDriver
-  if [ "$MAPR_HIVE_LOGIN_OPTS" = "" ]; then
-    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
-  else
-    export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_LOGIN_OPTS}"
-  fi
+  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
   execHiveCmd $CLASS "$@"
 }
 
