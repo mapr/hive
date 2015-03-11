@@ -415,6 +415,10 @@ public final class HiveFileFormatUtils {
                                         Path dir) {
     // First find the path to be searched
     String path = dir.toString();
+    // Do special handling for maprfs url 
+    if (path.startsWith("maprfs:///")) {
+      path = path.replace("maprfs:///", "maprfs:/");
+    }
     if (foundAlias(pathToAliases, path)) {
       return path;
     }
@@ -431,6 +435,10 @@ public final class HiveFileFormatUtils {
     path = dirPath;
 
     String dirStr = dir.toString();
+    // Do special handling for maprfs url
+    if (dirStr.startsWith("maprfs:///")) {
+      dirStr = dirStr.replace("maprfs:///", "maprfs:/");
+    }
     int dirPathIndex = dirPath.lastIndexOf(Path.SEPARATOR);
     int dirStrIndex = dirStr.lastIndexOf(Path.SEPARATOR);
     while (dirPathIndex >= 0 && dirStrIndex >= 0) {
