@@ -415,15 +415,14 @@ public final class HiveFileFormatUtils {
                                         Path dir) {
     // First find the path to be searched
     String path = dir.toString();
-    String dirScheme = dir.toUri().getScheme();
-    String dirPath = dir.toUri().getPath();
-    if (dirScheme != null) {
-      path = dirScheme + ":" + dirPath;
+    // Do special handling for maprfs url 
+    if (path.startsWith("maprfs:///")) {
+      path = path.replace("maprfs:///", "maprfs:/");
     }
     if (foundAlias(pathToAliases, path)) {
       return path;
     }
-
+    String dirPath = dir.toUri().getPath();
     if(Shell.WINDOWS){
       //temp hack
       //do this to get rid of "/" before the drive letter in windows
@@ -433,8 +432,11 @@ public final class HiveFileFormatUtils {
       return dirPath;
     }
 
-    String dirStr = path;
-
+    String dirStr = dir.toString();
+    // Do special handling for maprfs url
+    if (dirStr.startsWith("maprfs:///")) {
+      dirStr = dirStr.replace("maprfs:///", "maprfs:/");
+    }
     int dirPathIndex = dirPath.lastIndexOf(Path.SEPARATOR);
     int dirStrIndex = dirStr.lastIndexOf(Path.SEPARATOR);
     while (dirPathIndex >= 0 && dirStrIndex >= 0) {
