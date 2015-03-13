@@ -74,7 +74,7 @@ public class GetSchemasOperation extends MetadataOperation {
       String currentDbName = SessionState.get().getCurrentDatabase();
       List<String> filteredDbNames = filterResultSet(dbNames, hiveOperation, currentDbName);
 
-      for (String dbName : metastoreClient.getDatabases(schemaPattern)) {
+      for (String dbName : filteredDbNames) {
         rowSet.addRow(new Object[] {dbName, DEFAULT_HIVE_CATALOG});
       }
       setState(OperationState.FINISHED);
