@@ -122,27 +122,17 @@ find_hadoop_home
 #====================================
 #determine where hadoop is
 #====================================
-
-#check HADOOP_HOME and then check HADOOP_PREFIX
-if [ -f ${HADOOP_HOME}/bin/hadoop ]; then
-
-export HADOOP_CONF_DIR=${HADOOP_HOME}/conf
-else
-  echo "${this}: Hadoop not found."
-  exit 1
-fi
-
 export BASEMAPR=${MAPR_HOME:-/opt/mapr}
 
 #get the yarn version
 if [ -f $BASEMAPR/conf/hadoop_version ];then
    MAPR_YARN_VERSION=`cat $BASEMAPR/conf/hadoop_version | grep yarn_version | awk -F'=' '{print $2}'`
-   HADOOP_PREFIX=$BASEMAPR/hadoop/hadoop-$MAPR_YARN_VERSION
+   export HADOOP_PREFIX=$BASEMAPR/hadoop/hadoop-$MAPR_YARN_VERSION
+   export HADOOP_CONF_DIR=$HADOOP_PREFIX/etc/hadoop
 else
-   HADOOP_PREFIX=$HADOOP_HOME
+   export HADOOP_PREFIX=$HADOOP_HOME
+   export HADOOP_CONF_DIR=$HADOOP_PREFIX/conf
 fi
-
-export HADOOP_PREFIX
 
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env

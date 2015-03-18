@@ -126,14 +126,17 @@ public class LauncherDelegator extends TempletonDelegator {
                      JobType jobType) {
     ArrayList<String> args = new ArrayList<String>();
 
-    args.add("-libjars");
-
     if (TempletonUtils.isset(appConf.libJars())) {
       //note that in ToolRunner this is expected to be a local FS path
       //see GenericOptionsParser.getLibJars()
       args.add("-libjars");
       // Include shim and admin specified libjars
       String libJars = String.format("%s,%s", getShimLibjars(), appConf.libJars());
+      args.add(libJars);
+    } else {
+      args.add("-libjars");
+      // Include shim and admin specified libjars
+      String libJars = String.format("%s", getShimLibjars());
       args.add(libJars);
     }
 

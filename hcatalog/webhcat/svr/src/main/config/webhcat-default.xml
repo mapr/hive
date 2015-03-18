@@ -38,12 +38,6 @@
   </property>
 
   <property>
-    <name>templeton.libjars</name>
-    <value>${env.WEBHCAT_PREFIX}/share/webhcat/svr/lib/zookeeper-3.4.3.jar</value>
-    <description>Jars to add to the classpath.</description>
-  </property>
-
-  <property>
     <name>templeton.override.jars</name>
     <value>maprfs:///user/templeton/ugi.jar</value>
     <description>
