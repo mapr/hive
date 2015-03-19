@@ -78,14 +78,7 @@ public class CLIService extends CompositeService implements ICLIService {
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
-    try {
-      applyAuthorizationConfigPolicy(hiveConf);
-    } catch (HiveException e) {
-      throw new RuntimeException("Error applying authorization policy on hive configuration", e);
-    }
     this.hiveConf = hiveConf;
-    sessionManager = new SessionManager(hiveServer2);
-    addService(sessionManager);
     if (hiveConf.getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION).equalsIgnoreCase(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
       try {
         HiveAuthFactory.loginFromKeytab(hiveConf);
@@ -111,6 +104,15 @@ public class CLIService extends CompositeService implements ICLIService {
         }
       }
     }
+
+    try {
+      applyAuthorizationConfigPolicy(hiveConf);
+    } catch (HiveException e) {
+      throw new RuntimeException("Error applying authorization policy on hive configuration", e);
+    }
+    sessionManager = new SessionManager(hiveServer2);
+    addService(sessionManager);
+
     setupBlockedUdfs();
     super.init(hiveConf);
   }
