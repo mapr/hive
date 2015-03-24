@@ -18,8 +18,8 @@
 
 package org.apache.hive.service.cli.operation;
 
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient;
 import org.apache.hadoop.hive.ql.plan.HiveOperation;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.FetchOrientation;
@@ -60,8 +60,8 @@ public class GetSchemasOperation extends MetadataOperation {
     setState(OperationState.RUNNING);
     try {
       IMetaStoreClient metastoreClient = getParentSession().getMetaStoreClient();
-      if (!((HiveMetaStoreClient)metastoreClient).isMetaStoreLocal()) {
-        metastoreClient = HiveMetaStoreClient.newSynchronizedClient(metastoreClient);
+      if (!((SessionHiveMetaStoreClient)metastoreClient).isMetaStoreLocal()) {
+        metastoreClient = SessionHiveMetaStoreClient.newSynchronizedClient(metastoreClient);
       }
       String schemaPattern = convertSchemaPattern(schemaName);
       List<String > dbNames = metastoreClient.getDatabases(schemaPattern);

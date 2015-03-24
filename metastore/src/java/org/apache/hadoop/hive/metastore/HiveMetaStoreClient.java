@@ -1817,44 +1817,6 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     return client.show_compact(new ShowCompactRequest());
   }
 
-  /**
-   * Creates a synchronized wrapper for any {@link IMetaStoreClient}.
-   * This may be used by multi-threaded applications until we have
-   * fixed all reentrancy bugs.
-   *
-   * @param client unsynchronized client
-   *
-   * @return synchronized client
-   */
-  public static IMetaStoreClient newSynchronizedClient(
-      IMetaStoreClient client) {
-    return (IMetaStoreClient) Proxy.newProxyInstance(
-      HiveMetaStoreClient.class.getClassLoader(),
-      new Class [] { IMetaStoreClient.class },
-      new SynchronizedHandler(client));
-  }
-
-  private static class SynchronizedHandler implements InvocationHandler {
-    private final IMetaStoreClient client;
-    private static final Object lock = SynchronizedHandler.class;
-
-    SynchronizedHandler(IMetaStoreClient client) {
-      this.client = client;
-    }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object [] args)
-        throws Throwable {
-      try {
-        synchronized (lock) {
-          return method.invoke(client, args);
-        }
-      } catch (InvocationTargetException e) {
-        throw e.getTargetException();
-      }
-    }
-  }
-
   @Override
   public void markPartitionForEvent(String db_name, String tbl_name, Map<String,String> partKVs, PartitionEventType eventType)
       throws MetaException, TException, NoSuchObjectException, UnknownDBException,

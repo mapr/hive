@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
@@ -120,8 +120,8 @@ public class GetColumnsOperation extends MetadataOperation {
     setState(OperationState.RUNNING);
     try {
       IMetaStoreClient metastoreClient = getParentSession().getMetaStoreClient();
-      if (!((HiveMetaStoreClient)metastoreClient).isMetaStoreLocal()) {
-        metastoreClient = HiveMetaStoreClient.newSynchronizedClient(metastoreClient);
+      if (!((SessionHiveMetaStoreClient)metastoreClient).isMetaStoreLocal()) {
+        metastoreClient = SessionHiveMetaStoreClient.newSynchronizedClient(metastoreClient);
       }
       String schemaPattern = convertSchemaPattern(schemaName);
       String tablePattern = convertIdentifierPattern(tableName, true);
