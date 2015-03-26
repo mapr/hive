@@ -107,6 +107,12 @@ public interface IMetaStoreClient {
    * get current meta variable
    */
   String getMetaConf(String key) throws MetaException, TException;
+  
+  /**
+   * Returns true if the Metastore Service is running in the same JVM as the client, false otherwise.
+   * @return Return true if the MetaStoreURIs is not set, false otherwise.
+   */
+  public boolean isMetaStoreLocal();
 
   /**
    * Get the names of all databases in the MetaStore that match the given pattern.

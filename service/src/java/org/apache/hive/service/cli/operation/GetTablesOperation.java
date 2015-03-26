@@ -79,7 +79,7 @@ public class GetTablesOperation extends MetadataOperation {
     setState(OperationState.RUNNING);
     try {
       IMetaStoreClient metastoreClient = getParentSession().getMetaStoreClient();
-      if (!((SessionHiveMetaStoreClient)metastoreClient).isMetaStoreLocal()) {
+      if (metastoreClient.isMetaStoreLocal()) {
         metastoreClient = SessionHiveMetaStoreClient.newSynchronizedClient(metastoreClient);
       }
       String schemaPattern = convertSchemaPattern(schemaName);
