@@ -432,7 +432,11 @@ public final class HiveFileFormatUtils {
     // We first do exact match, and then do prefix matching. The latter is due to input dir
     // could be /dir/ds='2001-02-21'/part-03 where part-03 is not part of partition
     String dirPath = dir.toUri().getPath();
-    PartitionDesc part = pathToPartitionInfo.get(dir.toString());
+    String dirStr = dir.toString();
+    if (dirStr.startsWith("maprfs:///")) {
+      dirStr = dirStr.replace("maprfs:///", "maprfs:/");
+    }
+    PartitionDesc part = pathToPartitionInfo.get(dirStr);
     if (part == null) {
       //      LOG.warn("exact match not found, try ripping input path's theme and authority");
       part = pathToPartitionInfo.get(dirPath);
