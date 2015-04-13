@@ -500,17 +500,20 @@ public class OrcRawRecordMerger implements AcidInputFormat.RawReader<OrcStruct>{
                                          Path deltaFile) throws IOException {
     Path lengths = OrcRecordUpdater.getSideFile(deltaFile);
     long result = Long.MAX_VALUE;
-    try {
-      FSDataInputStream stream = fs.open(lengths);
-      result = -1;
-      while (stream.available() > 0) {
-        result = stream.readLong();
+    if (fs.exists(lengths)) {
+      try {
+        FSDataInputStream stream = fs.open(lengths);
+        result = -1;
+        while (stream.available() > 0) {
+          result = stream.readLong();
+        }
+        stream.close();
+        return result;
+      } catch (IOException ioe) {
+        return result;
       }
-      stream.close();
-      return result;
-    } catch (IOException ioe) {
-      return result;
     }
+    return result;
   }
 
   @VisibleForTesting
