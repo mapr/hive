@@ -19,6 +19,8 @@
 package org.apache.hadoop.hive.ql.metadata;
 
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -238,10 +240,21 @@ public class Partition implements Serializable {
   }
 
   public Path getDataLocation() {
+    final Path dbPath;
     if (table.isPartitioned()) {
-      return new Path(tPartition.getSd().getLocation());
+      dbPath = new Path(tPartition.getSd().getLocation());
     } else {
-      return new Path(table.getTTable().getSd().getLocation());
+      dbPath = new Path(table.getTTable().getSd().getLocation());
+    }
+    URI dbURI = dbPath.toUri();
+    try {
+      URI normURI = new URI(dbURI.getScheme(),
+      dbURI.getAuthority(),
+      dbURI.getPath(), dbURI.getQuery(), dbURI.getFragment());
+      return new Path(normURI);
+    } catch(URISyntaxException e) {
+       // Malformed URI from original. Not much to do here
+       return dbPath;
     }
   }
 
