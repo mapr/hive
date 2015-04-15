@@ -20,8 +20,6 @@ package org.apache.hadoop.hive.ql.io;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -433,17 +431,12 @@ public final class HiveFileFormatUtils {
       Map<String, PartitionDesc> pathToPartitionInfo, Path dir) {
     // We first do exact match, and then do prefix matching. The latter is due to input dir
     // could be /dir/ds='2001-02-21'/part-03 where part-03 is not part of partition
-
-    URI uri = dir.toUri();
-    try {
-      URI normURI = new URI(uri.getScheme(),
-      uri.getAuthority(),
-      uri.getPath(), uri.getQuery(), uri.getFragment());
-      dir = new Path(normURI);
-    } catch(URISyntaxException e) {
-    }
     String dirPath = dir.toUri().getPath();
-    PartitionDesc part = pathToPartitionInfo.get(dir.toString());
+    String dirStr = dir.toString();
+    if (dirStr.startsWith("maprfs:///")) {
+      dirStr = dirStr.replace("maprfs:///", "maprfs:/");
+    }
+    PartitionDesc part = pathToPartitionInfo.get(dirStr);
     if (part == null) {
       //      LOG.warn("exact match not found, try ripping input path's theme and authority");
       part = pathToPartitionInfo.get(dirPath);
@@ -483,15 +476,11 @@ public final class HiveFileFormatUtils {
   private static String getMatchingPath(Map<String, ArrayList<String>> pathToAliases,
                                         Path dir) {
     // First find the path to be searched
-    URI uri = dir.toUri();
-    try {
-      URI normURI = new URI(uri.getScheme(),
-      uri.getAuthority(),
-      uri.getPath(), uri.getQuery(), uri.getFragment());
-      dir = new Path(normURI);
-    } catch(URISyntaxException e) {
-    }
     String path = dir.toString();
+    // Do special handling for maprfs url 
+    if (path.startsWith("maprfs:///")) {
+      path = path.replace("maprfs:///", "maprfs:/");
+    }
 
     if (foundAlias(pathToAliases, path)) {
       return path;
@@ -508,6 +497,10 @@ public final class HiveFileFormatUtils {
     }
 
     String dirStr = dir.toString();
+    // Do special handling for maprfs url
+    if (dirStr.startsWith("maprfs:///")) {
+      dirStr = dirStr.replace("maprfs:///", "maprfs:/");
+    }
 
     int dirPathIndex = dirPath.lastIndexOf(Path.SEPARATOR);
     int dirStrIndex = dirStr.lastIndexOf(Path.SEPARATOR);
