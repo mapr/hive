@@ -33,7 +33,7 @@
 
   <property>
     <name>templeton.hadoop.conf.dir</name>
-    <value>${env.HADOOP_CONF_DIR}</value>
+    <value>${env.HADOOP_CONFIG_DIR}</value>
     <description>The path to the Hadoop configuration.</description>
   </property>
 
