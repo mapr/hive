@@ -86,8 +86,13 @@ public class Initiator extends CompactorThread {
             LOG.debug("Checking to see if we should compact " + ci.getFullPartitionName());
             try {
               Table t = resolveTable(ci);
+              // t might be some tmp table
+              if (t == null) {
+                continue;
+              }
+
               // check if no compaction set for this table
-              if (t.getParameters().get(NO_COMPACTION) != null) {
+              if (t.getParameters() != null && t.getParameters().get(NO_COMPACTION) != null) {
                 LOG.info("Table " + tableName(t) + " marked " +  NO_COMPACTION +
                     " so we will not compact it.");
                 continue;
