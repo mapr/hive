@@ -182,7 +182,7 @@ public class HiveConf extends Configuration {
     LOCALSCRATCHDIR("hive.exec.local.scratchdir", System.getProperty("java.io.tmpdir") + File.separator + System.getProperty("user.name")),
     SCRATCHDIRPERMISSION("hive.scratch.dir.permission", "700"),
     SUBMITVIACHILD("hive.exec.submitviachild", false),
-    SUBMITLOCALTASKVIACHILD("hive.exec.submit.local.task.via.child", true),
+    SUBMITLOCALTASKVIACHILD("hive.exec.submit.local.task.via.child", false),
     SCRIPTERRORLIMIT("hive.exec.script.maxerrsize", 100000),
     ALLOWPARTIALCONSUMP("hive.exec.script.allow.partial.consumption", false),
     STREAMREPORTERPERFIX("stream.stderr.reporter.prefix", "reporter:"),
