@@ -53,7 +53,7 @@ public class QB {
   private boolean isQuery;
   private boolean isAnalyzeRewrite;
   private CreateTableDesc tblDesc = null; // table descriptor of the final
-  private CreateTableDesc localDirectoryDesc = null ;
+  private CreateTableDesc directoryDesc = null ;
 
   // used by PTFs
   /*
@@ -256,12 +256,12 @@ public class QB {
     tblDesc = desc;
   }
 
-  public CreateTableDesc getLLocalDirectoryDesc() {
-    return localDirectoryDesc;
+  public CreateTableDesc getDirectoryDesc() {
+    return directoryDesc;
   }
 
-  public void setLocalDirectoryDesc(CreateTableDesc localDirectoryDesc) {
-    this.localDirectoryDesc = localDirectoryDesc;
+  public void setDirectoryDesc(CreateTableDesc directoryDesc) {
+    this.directoryDesc = directoryDesc;
   }
 
   /**
