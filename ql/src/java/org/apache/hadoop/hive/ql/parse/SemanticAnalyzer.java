@@ -1192,11 +1192,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
   private boolean hasInsertOptimizeTokens(ASTNode dest) {
     int destTokenType = dest.getToken().getType();
-
+    
+    boolean isDfsFile = true;
+    if (dest.getChildCount() >= 2 && dest.getChild(1).getText().toLowerCase().equals("local")) {
+      isDfsFile = false;
+    }
+ 
     return (destTokenType == HiveParser.TOK_DIR && // If dest is a dir make sure it is not local and tmp dir
       ((ASTNode) dest.getChild(0)).getToken().getType() != HiveParser.TOK_TMP_FILE &&
-      ((ASTNode) dest.getChild(0)).getToken().getType() != HiveParser.TOK_LOCAL_DIR
-      )
+      (isDfsFile == true))
      ||
      (destTokenType == HiveParser.TOK_TAB);
   }
@@ -1790,7 +1794,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           break;
         }
 
-        case HiveParser.TOK_LOCAL_DIR:
         case HiveParser.TOK_DIR: {
           // This is a dfs file
           String fname = stripQuotes(ast.getChild(0).getText());
@@ -1833,43 +1836,47 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               ctx.setResDir(new Path(fname));
             }
           }
-          qb.getMetaData().setDestForAlias(name, fname,
-              (ast.getToken().getType() == HiveParser.TOK_DIR));
 
-          CreateTableDesc localDirectoryDesc = new CreateTableDesc();
-          boolean localDirectoryDescIsSet = false;
+          boolean isDfsFile = true;
+          if (ast.getChildCount() >= 2 && ast.getChild(1).getText().toLowerCase().equals("local")) {
+            isDfsFile = false;
+          }
+          qb.getMetaData().setDestForAlias(name, fname, isDfsFile);
+
+          CreateTableDesc directoryDesc = new CreateTableDesc();
+          boolean directoryDescIsSet = false;
           int numCh = ast.getChildCount();
           for (int num = 1; num < numCh ; num++){
             ASTNode child = (ASTNode) ast.getChild(num);
             if (child != null) {
               if (storageFormat.fillStorageFormat(child)) {
-                localDirectoryDesc.setOutputFormat(storageFormat.getOutputFormat());
-                localDirectoryDesc.setSerName(storageFormat.getSerde());
-                localDirectoryDescIsSet = true;
+                directoryDesc.setOutputFormat(storageFormat.getOutputFormat());
+                directoryDesc.setSerName(storageFormat.getSerde());
+                directoryDescIsSet = true;
                 continue;
               }
               switch (child.getToken().getType()) {
                 case HiveParser.TOK_TABLEROWFORMAT:
                   rowFormatParams.analyzeRowFormat(child);
-                  localDirectoryDesc.setFieldDelim(rowFormatParams.fieldDelim);
-                  localDirectoryDesc.setLineDelim(rowFormatParams.lineDelim);
-                  localDirectoryDesc.setCollItemDelim(rowFormatParams.collItemDelim);
-                  localDirectoryDesc.setMapKeyDelim(rowFormatParams.mapKeyDelim);
-                  localDirectoryDesc.setFieldEscape(rowFormatParams.fieldEscape);
-                  localDirectoryDesc.setNullFormat(rowFormatParams.nullFormat);
-                  localDirectoryDescIsSet=true;
+                  directoryDesc.setFieldDelim(rowFormatParams.fieldDelim);
+                  directoryDesc.setLineDelim(rowFormatParams.lineDelim);
+                  directoryDesc.setCollItemDelim(rowFormatParams.collItemDelim);
+                  directoryDesc.setMapKeyDelim(rowFormatParams.mapKeyDelim);
+                  directoryDesc.setFieldEscape(rowFormatParams.fieldEscape);
+                  directoryDesc.setNullFormat(rowFormatParams.nullFormat);
+                  directoryDescIsSet=true;
                   break;
                 case HiveParser.TOK_TABLESERIALIZER:
                   ASTNode serdeChild = (ASTNode) child.getChild(0);
                   storageFormat.setSerde(unescapeSQLString(serdeChild.getChild(0).getText()));
-                  localDirectoryDesc.setSerName(storageFormat.getSerde());
-                  localDirectoryDescIsSet=true;
+                  directoryDesc.setSerName(storageFormat.getSerde());
+                  directoryDescIsSet=true;
                   break;
               }
             }
           }
-          if (localDirectoryDescIsSet){
-            qb.setLocalDirectoryDesc(localDirectoryDesc);
+          if (directoryDescIsSet){
+            qb.setDirectoryDesc(directoryDesc);
           }
           break;
         }
@@ -6341,7 +6348,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           String fileFormat = HiveConf.getVar(conf, HiveConf.ConfVars.HIVEQUERYRESULTFILEFORMAT);
           table_desc = PlanUtils.getDefaultQueryOutputTableDesc(cols, colTypes, fileFormat);
         } else {
-          table_desc = PlanUtils.getDefaultTableDesc(qb.getLLocalDirectoryDesc(), cols, colTypes);
+          table_desc = PlanUtils.getDefaultTableDesc(qb.getDirectoryDesc(), cols, colTypes);
         }
       } else {
         table_desc = PlanUtils.getTableDesc(tblDesc, cols, colTypes);
