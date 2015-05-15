@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.metadata;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -243,7 +244,15 @@ public class Partition implements Serializable {
     if (uri == null) {
       uri = getPartitionPath().toUri();
     }
-    return uri;
+    try {
+      URI normURI = new URI(uri.getScheme(),
+      uri.getAuthority(),
+      uri.getPath(), uri.getQuery(), uri.getFragment());
+      return normURI;
+    } catch(URISyntaxException e) {
+      // Malformed URI from original. Not much to do here
+      return uri;
+    }
   }
 
   final public Deserializer getDeserializer() {
