@@ -29,7 +29,7 @@ function die() {
 #====================================
 
 # The directory,file containing the running pid
-PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-1.0/pids/`id -u -n`/webhcat}
+PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-1.0/pids/webhcat}
 PID_FILE=${PID_DIR}/webhcat.pid
 mkdir -p $PID_DIR 2>/dev/null
 
