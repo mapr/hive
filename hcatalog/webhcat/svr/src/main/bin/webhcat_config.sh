@@ -29,7 +29,7 @@ function die() {
 #====================================
 
 # The directory,file containing the running pid
-PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-0.13/pids/`id -u -n`/webhcat}
+PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-0.13/pids/webhcat}
 PID_FILE=${PID_DIR}/webhcat.pid
 mkdir -p $PID_DIR 2>/dev/null
 
@@ -99,7 +99,7 @@ fi
 #so HIVE_HOME does not need to be always set at this point
 DEFAULT_HIVE_HOME="${WEBHCAT_PREFIX}/.."
 if [ -n "$HIVE_HOME" ]; then
-    echo "Lenght of string is non zero"
+#    echo "Lenght of string is non zero"
     if  [ ! -f ${HIVE_HOME}/bin/hive ]; then
         die "HIVE_HOME=${HIVE_HOME} is invalid";
     fi
