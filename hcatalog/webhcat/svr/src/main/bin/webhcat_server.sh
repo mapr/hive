@@ -138,6 +138,8 @@ function status_webhcat() {
       exit 1
     fi
   fi
+  echo webhcat is not running
+  exit 1
 }
 
 # Start the webhcat server in the background.  Record the PID for
