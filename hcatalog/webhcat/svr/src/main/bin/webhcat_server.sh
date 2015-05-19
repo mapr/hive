@@ -131,9 +131,11 @@ function status_webhcat() {
     # Check if there is a server running
     local pid=`cat $PID_FILE`
     if check_pid $pid; then
-      die "already running on process $pid"
-      else
-        log "no running server found"
+      echo webhcat already running on process $pid
+      exit 0
+    else
+      echo no running server found
+      exit 1
     fi
   fi
 }
