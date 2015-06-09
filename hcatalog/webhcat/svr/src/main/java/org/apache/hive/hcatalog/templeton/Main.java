@@ -211,19 +211,19 @@ public class Main {
   // is enabled.
   public FilterHolder makeAuthFilter() {
     FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
+    authFilter.setInitParameter("config.prefix", "hadoop.http.authentication");
     UserNameHandler.allowAnonymous(authFilter);
     if (UserGroupInformation.isSecurityEnabled()) {
-      if (conf.kerberosSecret() != null) {
-        authFilter.setInitParameter("signature.secret", conf.kerberosSecret());
-      }
+      authFilter.setInitParameter("hadoop.http.authentication.type", "org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler");
+      authFilter.setInitParameter("hadoop.http.authentication.signature.secret", "com.mapr.security.maprauth.MaprSignatureSecretFactory");
       if (conf.kerberosPrincipal() != null) {
-        authFilter.setInitParameter("kerberos.principal", conf.kerberosPrincipal());
+        authFilter.setInitParameter("hadoop.http.authentication.kerberos.principal", conf.kerberosPrincipal());
       }
       if (conf.kerberosKeytab() != null) {
-        authFilter.setInitParameter("kerberos.keytab", conf.kerberosKeytab());
+        authFilter.setInitParameter("hadoop.http.authentication.kerberos.keytab", conf.kerberosKeytab());
       }
     } else {
-      authFilter.setInitParameter("type", "simple");
+      authFilter.setInitParameter("hadoop.http.authentication.type", "simple");
     }
     return authFilter;
   }
@@ -282,7 +282,7 @@ public class Main {
       /*note that will throw if Anonymous mode is not allowed & user.name is not in query string of the request;
       * this ensures that in the context of WebHCat, PseudoAuthenticationHandler allows Anonymous even though
       * WebHCat itself will throw if it can't figure out user.name*/
-      authFilter.setInitParameter("dfs.web.authentication." + PseudoAuthenticationHandler.ANONYMOUS_ALLOWED, "true");
+      authFilter.setInitParameter("hadoop.http.authentication." + PseudoAuthenticationHandler.ANONYMOUS_ALLOWED, "true");
     }
     static String getUserName(HttpServletRequest request) {
       if(!UserGroupInformation.isSecurityEnabled() && "POST".equalsIgnoreCase(request.getMethod())) {
