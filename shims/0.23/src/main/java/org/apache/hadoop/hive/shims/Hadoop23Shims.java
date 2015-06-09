@@ -562,7 +562,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     }
     return hcatShimInstance;
   }
-  private static class HCatHadoopShims23 implements HCatHadoopShims {
+  protected static class HCatHadoopShims23 implements HCatHadoopShims {
     @Override
     public TaskID createTaskID() {
       return new TaskID("", 0, TaskType.MAP, 0);
