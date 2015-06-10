@@ -77,7 +77,7 @@ public abstract class ShimLoader {
       new HashMap<String, String>();
 
   static {
-    EVENT_COUNTER_SHIM_CLASSES.put(HADOOP20SVERSIONNAME, "org.apache.hadoop.log.metrics" +
+    EVENT_COUNTER_SHIM_CLASSES.put(HADOOP20SVERSIONNAME, "org.apache.hadoop.metrics.jvm" +
         ".EventCounter");
     EVENT_COUNTER_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.hadoop.log.metrics" +
         ".EventCounter");
