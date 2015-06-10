@@ -62,6 +62,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
 import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.auth.KerberosSaslHelper;
+import org.apache.hive.service.auth.MapRSecSaslHelper;
 import org.apache.hive.service.auth.PlainSaslHelper;
 import org.apache.hive.service.auth.SaslQOP;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
@@ -441,7 +442,10 @@ public class HiveConnection implements java.sql.Connection {
           saslProps.put(Sasl.QOP, "auth-conf,auth-int,auth");
         }
         saslProps.put(Sasl.SERVER_AUTH, "true");
-        if (sessConfMap.containsKey(JdbcConnectionParams.AUTH_PRINCIPAL)) {
+        if (JdbcConnectionParams.AUTH_MAPRSASL.equalsIgnoreCase(sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
+          transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout), saslProps);
+        }
+        else if (sessConfMap.containsKey(JdbcConnectionParams.AUTH_PRINCIPAL)) {
           transport = KerberosSaslHelper.getKerberosTransport(
               sessConfMap.get(JdbcConnectionParams.AUTH_PRINCIPAL), host,
               HiveAuthFactory.getSocketTransport(host, port, loginTimeout), saslProps,

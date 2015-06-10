@@ -80,6 +80,7 @@ public class Utils {
     static final String AUTH_TOKEN = "delegationToken";
     static final String AUTH_USER = "user";
     static final String AUTH_PRINCIPAL = "principal";
+    static final String AUTH_MAPRSASL = "maprsasl";
     static final String AUTH_PASSWD = "password";
     static final String AUTH_KERBEROS_AUTH_TYPE = "kerberosAuthType";
     static final String AUTH_KERBEROS_AUTH_TYPE_FROM_SUBJECT = "fromSubject";
