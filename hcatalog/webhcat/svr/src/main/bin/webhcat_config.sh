@@ -99,7 +99,7 @@ fi
 #so HIVE_HOME does not need to be always set at this point
 DEFAULT_HIVE_HOME="${WEBHCAT_PREFIX}/.."
 if [ -n "$HIVE_HOME" ]; then
-    echo "Lenght of string is non zero"
+#    echo "Lenght of string is non zero"
     if  [ ! -f ${HIVE_HOME}/bin/hive ]; then
         die "HIVE_HOME=${HIVE_HOME} is invalid";
     fi
