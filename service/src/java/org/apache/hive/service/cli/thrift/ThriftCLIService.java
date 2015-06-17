@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hive.service.AbstractService;
 import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.auth.TSetIpAddressProcessor;
@@ -238,8 +239,8 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
 
   private String getUserName(TOpenSessionReq req) throws HiveSQLException {
     String userName = null;
-    // Kerberos
-    if (isKerberosAuthMode()) {
+    // Kerberos or MapRSasl
+    if (isKerberosAuthMode() || isMapRSaslAuthMethod()) {
       userName = hiveAuthFactory.getRemoteUser();
     }
     // Except kerberos, NOSASL
@@ -289,14 +290,12 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
 
   private String getDelegationToken(String userName)
       throws HiveSQLException, LoginException, IOException {
-    if (userName == null || !cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
-        .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
-      return null;
-    }
-    try {
-      return cliService.getDelegationTokenFromMetaStore(userName);
-    } catch (UnsupportedOperationException e) {
-      // The delegation token is not applicable in the given deployment mode
+    if (userName != null && ShimLoader.getHadoopShims().isSecurityEnabled()) {  
+      try {
+        return cliService.getDelegationTokenFromMetaStore(userName);
+      } catch (UnsupportedOperationException e) {
+         // The delegation token is not applicable in the given deployment mode
+      }
     }
     return null;
   }
@@ -608,6 +607,11 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
     return cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
         .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString());
   }
+
+  private boolean isMapRSaslAuthMethod() {
+    return cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
+        .equalsIgnoreCase(HiveAuthFactory.AuthTypes.MAPRSASL.toString()); 
+    }
 
 }
 
