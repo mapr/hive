@@ -442,7 +442,13 @@ public class TestDynamicPartitionPruner {
         } finally {
           lock.unlock();
         }
-      } catch (SerDeException | IOException | InterruptedException | HiveException e) {
+      } catch (SerDeException e) {
+        inError.set(true);
+      } catch (IOException e) {
+    	inError.set(true);  
+      } catch (InterruptedException e) {
+    	inError.set(true);  
+      } catch (HiveException e) {
         inError.set(true);
       }
     }
@@ -452,9 +458,9 @@ public class TestDynamicPartitionPruner {
   private MapWork createMockMapWork(TestSource... testSources) {
     MapWork mapWork = mock(MapWork.class);
 
-    Map<String, List<TableDesc>> tableMap = new HashMap<>();
-    Map<String, List<String>> columnMap = new HashMap<>();
-    Map<String, List<ExprNodeDesc>> exprMap = new HashMap<>();
+    Map<String, List<TableDesc>> tableMap = new HashMap<String, List<TableDesc>>();
+    Map<String, List<String>> columnMap = new HashMap<String, List<String>>();
+    Map<String, List<ExprNodeDesc>> exprMap = new HashMap<String, List<ExprNodeDesc>>();
 
     int count = 0;
     for (TestSource testSource : testSources) {
@@ -462,21 +468,21 @@ public class TestDynamicPartitionPruner {
       for (int i = 0; i < testSource.numExpressions; i++) {
         List<TableDesc> tableDescList = tableMap.get(testSource.vertexName);
         if (tableDescList == null) {
-          tableDescList = new LinkedList<>();
+          tableDescList = new LinkedList<TableDesc>();
           tableMap.put(testSource.vertexName, tableDescList);
         }
         tableDescList.add(mock(TableDesc.class));
 
         List<String> columnList = columnMap.get(testSource.vertexName);
         if (columnList == null) {
-          columnList = new LinkedList<>();
+          columnList = new LinkedList<String>();
           columnMap.put(testSource.vertexName, columnList);
         }
         columnList.add(testSource.vertexName + "c_" + count + "_" + i);
 
         List<ExprNodeDesc> exprNodeDescList = exprMap.get(testSource.vertexName);
         if (exprNodeDescList == null) {
-          exprNodeDescList = new LinkedList<>();
+          exprNodeDescList = new LinkedList<ExprNodeDesc>();
           exprMap.put(testSource.vertexName, exprNodeDescList);
         }
         exprNodeDescList.add(mock(ExprNodeDesc.class));

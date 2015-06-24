@@ -92,8 +92,8 @@ public class DynamicPartitionPruner {
   private final Set<String> sourcesWaitingForEvents = new HashSet<String>();
 
   // Stores negative values to count columns. Eventually set to #tasks X #columns after the source vertex completes.
-  private final Map<String, MutableInt> numExpectedEventsPerSource = new HashMap<>();
-  private final Map<String, MutableInt> numEventsSeenPerSource = new HashMap<>();
+  private final Map<String, MutableInt> numExpectedEventsPerSource = new HashMap<String, MutableInt>();
+  private final Map<String, MutableInt> numEventsSeenPerSource = new HashMap<String, MutableInt>();
 
   private int sourceInfoCount = 0;
 
