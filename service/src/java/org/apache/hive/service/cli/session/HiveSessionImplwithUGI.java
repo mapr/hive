@@ -62,14 +62,10 @@ public class HiveSessionImplwithUGI extends HiveSessionImpl {
     if (owner == null) {
       throw new HiveSQLException("No username provided for impersonation");
     }
-    if (ShimLoader.getHadoopShims().isSecurityEnabled()) {
-      try {
-        sessionUgi = ShimLoader.getHadoopShims().createProxyUser(owner);
-      } catch (IOException e) {
-        throw new HiveSQLException("Couldn't setup proxy user", e);
-      }
-    } else {
-      sessionUgi = ShimLoader.getHadoopShims().createRemoteUser(owner, null);
+    try {
+      sessionUgi = ShimLoader.getHadoopShims().createProxyUser(owner);
+    } catch (IOException e) {
+      throw new HiveSQLException("Couldn't setup proxy user", e);
     }
   }
 
