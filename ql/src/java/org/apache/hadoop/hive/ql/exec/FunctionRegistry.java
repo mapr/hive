@@ -697,12 +697,14 @@ public final class FunctionRegistry {
       functionNames = new HashSet<String>(functionNames);
       try {
         Hive db = getHive();
-        List<String> dbNames = db.getAllDatabases();
+        if(db != null) {
+          List<String> dbNames = db.getAllDatabases();
 
-        for (String dbName : dbNames) {
-          List<String> funcNames = db.getFunctions(dbName, "*");
-          for (String funcName : funcNames) {
-            functionNames.add(FunctionUtils.qualifyFunctionName(funcName, dbName));
+          for (String dbName : dbNames) {
+            List<String> funcNames = db.getFunctions(dbName, "*");
+            for (String funcName : funcNames) {
+              functionNames.add(FunctionUtils.qualifyFunctionName(funcName, dbName));
+            }
           }
         }
       } catch (Exception e) {
@@ -714,7 +716,11 @@ public final class FunctionRegistry {
   }
 
   public static Hive getHive() throws HiveException {
-    return Hive.get(SessionState.get().getConf());
+    SessionState ss = SessionState.get();
+    if (ss != null){
+      return Hive.get(ss.getConf());
+    }
+    return null;
   }
 
   /**
