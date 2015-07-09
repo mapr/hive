@@ -97,6 +97,10 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
       // delete the output directory if it already exists
       if (fs.exists(targetPath)) {
         Hive.cleanupDest(fs, targetPath, conf);
+        Path parentPath = targetPath.getParent();
+        if (HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS)) {
+          fs.setPermission(targetPath, fs.getFileStatus(parentPath).getPermission());
+        }
       } else {
         fs.mkdirs(targetPath);
       }
