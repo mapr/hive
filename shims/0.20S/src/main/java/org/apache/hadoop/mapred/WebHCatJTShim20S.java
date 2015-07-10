@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This is in org.apache.hadoop.mapred package because it relies on
@@ -83,6 +85,15 @@ public class WebHCatJTShim20S implements WebHCatJTShim {
   public void killJob(org.apache.hadoop.mapred.JobID jobid)
           throws IOException {
     cnx.killJob(jobid);
+  }
+
+  /**
+   * Get jobs is only supported on hadoop 2.0+.
+   */
+  @Override
+  public Set<String> getJobs(String tag, long timestamp)
+  {
+    return new HashSet<String>();
   }
 
   /**
