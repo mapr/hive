@@ -51,7 +51,7 @@ import org.apache.hive.service.cli.thrift.TFetchOrientation;
  *
  */
 public class HiveStatement implements java.sql.Statement {
-  private static final int DEFAULT_FETCH_SIZE = 50;
+  private static final int DEFAULT_FETCH_SIZE = 1000;
   private final HiveConnection connection;
   private TCLIService.Iface client;
   private TOperationHandle stmtHandle = null;
