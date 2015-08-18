@@ -124,13 +124,15 @@ public final class TxnDbUtil {
 
       conn.commit();
     } catch (SQLException e) {
-      // This might be a deadlock, if so, let's retry
-      conn.rollback();
-      if (e instanceof SQLTransactionRollbackException && deadlockCnt++ < 5) {
-        LOG.warn("Caught deadlock, retrying db creation");
-        prepDb();
-      } else {
-        throw e;
+      if (!e.getMessage().contains("already exists")) {
+        // This might be a deadlock, if so, let's retry
+        conn.rollback();
+        if (e instanceof SQLTransactionRollbackException && deadlockCnt++ < 5) {
+          LOG.warn("Caught deadlock, retrying db creation");
+          prepDb();
+        } else {
+          throw e;
+        }
       }
     } finally {
       deadlockCnt = 0;
