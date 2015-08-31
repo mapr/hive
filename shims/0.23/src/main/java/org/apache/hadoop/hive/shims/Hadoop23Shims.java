@@ -38,9 +38,11 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+/** Remove HDFS Encryption related code
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProvider.Options;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
+ */
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.DefaultFileAccess;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -522,12 +524,14 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     configureImpersonation(conf);
     MiniDFSCluster miniDFSCluster = new MiniDFSCluster(conf, numDataNodes, format, racks);
 
+    /** Remove HDFS Encryption related code
     // Need to set the client's KeyProvider to the NN's for JKS,
     // else the updates do not get flushed properly
     KeyProviderCryptoExtension keyProvider =  miniDFSCluster.getNameNode().getNamesystem().getProvider();
     if (keyProvider != null) {
       miniDFSCluster.getFileSystem().getClient().setKeyProvider(keyProvider);
     }
+    */
 
     cluster = new MiniDFSShim(miniDFSCluster);
     return cluster;
@@ -1195,7 +1199,8 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     /**
      * Used to compare encryption key strengths.
      */
-    private KeyProvider keyProvider = null;
+    // Remove HDFS Encryption related code
+    // private KeyProvider keyProvider = null;
 
     private Configuration conf;
 
@@ -1203,7 +1208,8 @@ public class Hadoop23Shims extends HadoopShimsSecure {
       DistributedFileSystem dfs = (DistributedFileSystem)FileSystem.get(uri, conf);
 
       this.conf = conf;
-      this.keyProvider = dfs.getClient().getKeyProvider();
+      // Remove HDFS Encryption related code
+      // this.keyProvider = dfs.getClient().getKeyProvider();
       this.hdfsAdmin = new HdfsAdmin(uri, conf);
     }
 
@@ -1266,6 +1272,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
 
       checkKeyProvider();
 
+      /* Remove HDFS Encryption related code
       if (keyProvider.getMetadata(keyName) == null) {
         final KeyProvider.Options options = new Options(this.conf);
         options.setCipher(HDFS_SECURITY_DEFAULT_CIPHER);
@@ -1275,30 +1282,36 @@ public class Hadoop23Shims extends HadoopShimsSecure {
       } else {
         throw new IOException("key '" + keyName + "' already exists");
       }
+      */
     }
 
     @Override
     public void deleteKey(String keyName) throws IOException {
       checkKeyProvider();
 
+      /* Remove HDFS Encryption related code
       if (keyProvider.getMetadata(keyName) != null) {
         keyProvider.deleteKey(keyName);
         keyProvider.flush();
       } else {
         throw new IOException("key '" + keyName + "' does not exist.");
       }
+      */
     }
 
     @Override
     public List<String> getKeys() throws IOException {
       checkKeyProvider();
-      return keyProvider.getKeys();
+      // Remove HDFS Encryption related code
+      // return keyProvider.getKeys();
+      return null;
     }
 
     private void checkKeyProvider() throws IOException {
+      /* Remove HDFS Encryption related code
       if (keyProvider == null) {
         throw new IOException("HDFS security key provider is not configured on your server.");
-      }
+      } */
     }
 
     /**
@@ -1310,6 +1323,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
      * @throws IOException If an error occurred attempting to get key metadata
      */
     private int compareKeyStrength(String keyname1, String keyname2) throws IOException {
+      /* Remove HDFS Encryption related code
       KeyProvider.Metadata meta1, meta2;
 
       if (keyProvider == null) {
@@ -1326,6 +1340,8 @@ public class Hadoop23Shims extends HadoopShimsSecure {
       } else {
         return 1;
       }
+      */
+      return 0;
     }
   }
 
