@@ -47,7 +47,8 @@ public class WriteEntity extends Entity implements Serializable {
     INSERT,
     INSERT_OVERWRITE,
     UPDATE,
-    DELETE};
+    DELETE,
+    PATH_WRITE};
 
   private WriteType writeType;
 
@@ -120,6 +121,7 @@ public class WriteEntity extends Entity implements Serializable {
   public WriteEntity(Path d, boolean islocal, boolean isTemp) {
     super(d.toString(), islocal, true);
     this.isTempURI = isTemp;
+    this.writeType = WriteType.PATH_WRITE;
   }
 
   /**
