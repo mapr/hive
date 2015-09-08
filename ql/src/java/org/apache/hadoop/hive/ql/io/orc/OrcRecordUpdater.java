@@ -17,14 +17,7 @@
  */
 package org.apache.hadoop.hive.ql.io.orc;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -44,8 +37,14 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectIn
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A RecordUpdater where the files are stored as ORC.
@@ -204,11 +203,6 @@ public class OrcRecordUpdater implements RecordUpdater {
         CURRENT_TRANSACTION));
     fields.add(new OrcStruct.Field("row", rowInspector, ROW));
     return new OrcStruct.OrcStructInspector(fields);
-  }
-
-  public static List<String> getAcidEventFields() {
-    return Lists.newArrayList("operation", "originalTransaction", "bucket", "rowId",
-        "currentTransaction", "row");
   }
 
   OrcRecordUpdater(Path path,
