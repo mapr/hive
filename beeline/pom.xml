@@ -50,6 +50,11 @@
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-jdbc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- inter-project -->
     <dependency>
       <groupId>commons-cli</groupId>
@@ -82,12 +87,6 @@
       <version>${libthrift.version}</version>
     </dependency>
     <!-- test intra-project -->
-    <dependency>
-      <groupId>org.apache.hive</groupId>
-      <artifactId>hive-jdbc</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-exec</artifactId>
