@@ -19,6 +19,8 @@ package org.apache.hadoop.hive.ql.io.avro;
 
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.server.UID;
 import java.util.Map;
 import java.util.Properties;
@@ -95,6 +97,16 @@ public class AvroGenericRecordReader implements
    */
   private Schema getSchema(JobConf job, FileSplit split) throws AvroSerdeException, IOException {
     FileSystem fs = split.getPath().getFileSystem(job);
+    Path splitPath = split.getPath();
+    URI uri = splitPath.toUri();
+    try {
+      URI normURI = new URI(uri.getScheme(),
+      uri.getAuthority(),
+      uri.getPath(), uri.getQuery(), uri.getFragment());
+      splitPath = new Path(normURI);
+    } catch(URISyntaxException e) {
+      LOG.debug("URISyntaxException", e);
+    }
     // Inside of a MR job, we can pull out the actual properties
     if(AvroSerdeUtils.insideMRJob(job)) {
       MapWork mapWork = Utilities.getMapWork(job);
@@ -103,7 +115,7 @@ public class AvroGenericRecordReader implements
       // that matches our input split.
       for (Map.Entry<String,PartitionDesc> pathsAndParts: mapWork.getPathToPartitionInfo().entrySet()){
         String partitionPath = pathsAndParts.getKey();
-        if(pathIsInPartition(split.getPath(), partitionPath)) {
+        if(pathIsInPartition(splitPath, partitionPath)) {
           if(LOG.isInfoEnabled()) {
               LOG.info("Matching partition " + partitionPath +
                       " with input split " + split);
