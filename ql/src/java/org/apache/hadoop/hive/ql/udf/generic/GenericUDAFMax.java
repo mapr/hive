@@ -277,17 +277,19 @@ public class GenericUDAFMax extends AbstractGenericUDAFResolver {
     public Object terminate(AggregationBuffer agg) throws HiveException {
 
       State s = (State) agg;
-      Object[] r = s.maxChain.getFirst();
+      Object[] r = s.maxChain.isEmpty() ? null : s.maxChain.getFirst();
 
       for (int i = 0; i < s.numFollowing; i++) {
-        s.results.add(r[0]);
+        s.results.add(r == null ? null : r[0]);
         s.numRows++;
-        int fIdx = (Integer) r[1];
-        if (s.numPreceding != BoundarySpec.UNBOUNDED_AMOUNT
-            && s.numRows - s.numFollowing + i > fIdx + s.numPreceding
-            && !s.maxChain.isEmpty()) {
-          s.maxChain.removeFirst();
-          r = !s.maxChain.isEmpty() ? s.maxChain.getFirst() : r;
+        if(r != null) {
+          int fIdx = (Integer) r[1];
+          if (s.numPreceding != BoundarySpec.UNBOUNDED_AMOUNT
+                  && s.numRows - s.numFollowing + i > fIdx + s.numPreceding
+                  && !s.maxChain.isEmpty()) {
+            s.maxChain.removeFirst();
+            r = !s.maxChain.isEmpty() ? s.maxChain.getFirst() : r;
+          }
         }
       }
 
