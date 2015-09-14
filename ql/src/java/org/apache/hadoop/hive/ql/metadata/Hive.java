@@ -2382,7 +2382,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       throw new HiveException("Unable to move source " + srcf + " to destination " + destf, ioe);
     }
 
-    if (success && inheritPerms) {
+    if (success && destStatus != null) {
       try {
         ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, fs, destf);
       } catch (IOException e) {
