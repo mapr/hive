@@ -46,6 +46,9 @@ import org.apache.hive.service.cli.thrift.TGetOperationStatusReq;
 import org.apache.hive.service.cli.thrift.TGetOperationStatusResp;
 import org.apache.hive.service.cli.thrift.TOperationHandle;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
+import org.apache.hive.service.cli.thrift.TRowSet;
+import org.apache.hive.service.cli.thrift.TColumn;
+import org.apache.hive.service.cli.thrift.TRow;
 
 /**
  * HiveStatement.
@@ -839,13 +842,23 @@ public class HiveStatement implements java.sql.Statement {
        transportLock.unlock();
      }
 
-     RowSet rowSet = RowSetFactory.create(tFetchResultsResp.getResults(),
+     RowSet rowSet = RowSetFactory.create(prepareResults(tFetchResultsResp.getResults()),
          connection.getProtocol());
      for (Object[] row : rowSet) {
        logs.add((String)row[0]);
      }
      return logs;
    }
+
+  private static TRowSet prepareResults(TRowSet rowSet){
+    if(rowSet.getColumns() == null){
+      rowSet.setColumns(new ArrayList<TColumn>());
+    }
+    if(rowSet.getRows() == null){
+      rowSet.setRows(new ArrayList<TRow>());
+    }
+    return rowSet;
+  }
 
    private TFetchOrientation getFetchOrientation(boolean incremental) {
     if (incremental) {
