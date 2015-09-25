@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,8 +59,13 @@ public class HiveConf extends Configuration {
   protected Properties origProp;
   protected String auxJars;
   private static final Log l4j = LogFactory.getLog(HiveConf.class);
+  private static boolean loadMetastoreConfig = false;
+  private static boolean loadHiveServer2Config = false;
   private static URL hiveDefaultURL = null;
   private static URL hiveSiteURL = null;
+  private static URL hivemetastoreSiteUrl = null;
+  private static URL hiveServer2SiteUrl = null;
+
   private static byte[] confVarByteArray = null;
 
   private static final Map<String, ConfVars> vars = new HashMap<String, ConfVars>();
@@ -894,6 +900,8 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_THRIFT_HTTP_PATH("hive.server2.thrift.http.path", "cliservice"),
     HIVE_SERVER2_THRIFT_HTTP_MIN_WORKER_THREADS("hive.server2.thrift.http.min.worker.threads", 5),
     HIVE_SERVER2_THRIFT_HTTP_MAX_WORKER_THREADS("hive.server2.thrift.http.max.worker.threads", 500),
+    HIVE_SERVER2_THRIFT_HTTP_MAX_IDLE_TIME("hive.server2.thrift.http.max.idle.time", 1800000),
+    HIVE_SERVER2_THRIFT_HTTP_WORKER_KEEPALIVE_TIME("hive.server2.thrift.http.worker.keepalive.time", 60),
 
     // binary transport settings
     HIVE_SERVER2_THRIFT_PORT("hive.server2.thrift.port", 10000),
@@ -902,6 +910,7 @@ public class HiveConf extends Configuration {
         new StringsValidator("auth", "auth-int", "auth-conf")),
     HIVE_SERVER2_THRIFT_MIN_WORKER_THREADS("hive.server2.thrift.min.worker.threads", 5),
     HIVE_SERVER2_THRIFT_MAX_WORKER_THREADS("hive.server2.thrift.max.worker.threads", 500),
+    HIVE_SERVER2_THRIFT_WORKER_KEEPALIVE_TIME("hive.server2.thrift.worker.keepalive.time", 60),
 
     // Configuration for async thread pool in SessionManager
     // Number of async threads
@@ -950,6 +959,9 @@ public class HiveConf extends Configuration {
 
     HIVE_SECURITY_COMMAND_WHITELIST("hive.security.command.whitelist", "set,reset,dfs,add,delete,compile"),
 
+    HIVE_SERVER2_SESSION_CHECK_INTERVAL("hive.server2.session.check.interval", 0L),
+
+    HIVE_SERVER2_IDLE_SESSION_TIMEOUT("hive.server2.idle.session.timeout", 0L),
     HIVE_CONF_RESTRICTED_LIST("hive.conf.restricted.list", "hive.security.authenticator.manager,hive.security.authorization.manager"),
 
     // If this is set all move tasks at the end of a multi-insert query will only begin once all
@@ -1739,5 +1751,21 @@ public class HiveConf extends Configuration {
     }
     restrictList.add(ConfVars.HIVE_IN_TEST.varname);
     restrictList.add(ConfVars.HIVE_CONF_RESTRICTED_LIST.varname);
+  }
+
+  public static boolean isLoadMetastoreConfig() {
+    return loadMetastoreConfig;
+  }
+
+  public static void setLoadMetastoreConfig(boolean loadMetastoreConfig) {
+    HiveConf.loadMetastoreConfig = loadMetastoreConfig;
+  }
+
+  public static boolean isLoadHiveServer2Config() {
+    return loadHiveServer2Config;
+  }
+
+  public static void setLoadHiveServer2Config(boolean loadHiveServer2Config) {
+    HiveConf.loadHiveServer2Config = loadHiveServer2Config;
   }
 }

@@ -49,13 +49,14 @@ public class HiveServer2 extends CompositeService {
   private ThriftCLIService thriftCLIService;
 
   public HiveServer2() {
-    super("HiveServer2");
+    super(HiveServer2.class.getSimpleName());
+    HiveConf.setLoadHiveServer2Config(true);
   }
 
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
-    cliService = new CLIService();
+    cliService = new CLIService(this);
     addService(cliService);
 
     if (hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
