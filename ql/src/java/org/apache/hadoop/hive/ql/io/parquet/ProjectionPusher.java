@@ -15,6 +15,8 @@ package org.apache.hadoop.hive.ql.io.parquet;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -141,12 +143,22 @@ public class ProjectionPusher {
       throws IOException {
     updateMrWork(jobConf);  // TODO: refactor this in HIVE-6366
     final JobConf cloneJobConf = new JobConf(jobConf);
-    final PartitionDesc part = pathToPartitionInfo.get(path.toString());
+    Path splitPath = path;
+    URI uri = splitPath.toUri();
+    try {
+     URI normURI = new URI(uri.getScheme(),
+     uri.getAuthority(),
+     uri.getPath(), uri.getQuery(), uri.getFragment());
+     splitPath = new Path(normURI);
+    } catch(URISyntaxException e) {
+     LOG.debug("URISyntaxException", e);
+    }
+    final PartitionDesc part = pathToPartitionInfo.get(splitPath.toString());
 
     if ((part != null) && (part.getTableDesc() != null)) {
       Utilities.copyTableJobPropertiesToConf(part.getTableDesc(), cloneJobConf);
     }
-    pushProjectionsAndFilters(cloneJobConf, path.toString(), path.toUri().toString());
+    pushProjectionsAndFilters(cloneJobConf, splitPath.toString(), splitPath.toUri().getPath());
     return cloneJobConf;
   }
 }
