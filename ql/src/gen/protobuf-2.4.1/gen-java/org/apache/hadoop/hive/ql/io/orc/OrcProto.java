@@ -6699,6 +6699,10 @@ public final class OrcProto {
         getColumnsOrBuilderList();
     org.apache.hadoop.hive.ql.io.orc.OrcProto.ColumnEncodingOrBuilder getColumnsOrBuilder(
         int index);
+    
+    // optional string writerTimezone = 3;
+    boolean hasWriterTimezone();
+    String getWriterTimezone();
   }
   public static final class StripeFooter extends
       com.google.protobuf.GeneratedMessage
@@ -6728,6 +6732,7 @@ public final class OrcProto {
       return org.apache.hadoop.hive.ql.io.orc.OrcProto.internal_static_org_apache_hadoop_hive_ql_io_orc_StripeFooter_fieldAccessorTable;
     }
     
+    private int bitField0_;
     // repeated .org.apache.hadoop.hive.ql.io.orc.Stream streams = 1;
     public static final int STREAMS_FIELD_NUMBER = 1;
     private java.util.List<org.apache.hadoop.hive.ql.io.orc.OrcProto.Stream> streams_;
@@ -6770,9 +6775,42 @@ public final class OrcProto {
       return columns_.get(index);
     }
     
+    // optional string writerTimezone = 3;
+    public static final int WRITERTIMEZONE_FIELD_NUMBER = 3;
+    private java.lang.Object writerTimezone_;
+    public boolean hasWriterTimezone() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getWriterTimezone() {
+      java.lang.Object ref = writerTimezone_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          writerTimezone_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getWriterTimezoneBytes() {
+      java.lang.Object ref = writerTimezone_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        writerTimezone_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
     private void initFields() {
       streams_ = java.util.Collections.emptyList();
       columns_ = java.util.Collections.emptyList();
+      writerTimezone_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -6804,6 +6842,9 @@ public final class OrcProto {
       for (int i = 0; i < columns_.size(); i++) {
         output.writeMessage(2, columns_.get(i));
       }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(3, getWriterTimezoneBytes());
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -6820,6 +6861,10 @@ public final class OrcProto {
       for (int i = 0; i < columns_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, columns_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getWriterTimezoneBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -6959,6 +7004,8 @@ public final class OrcProto {
         } else {
           columnsBuilder_.clear();
         }
+        writerTimezone_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
       
@@ -6996,6 +7043,7 @@ public final class OrcProto {
       public org.apache.hadoop.hive.ql.io.orc.OrcProto.StripeFooter buildPartial() {
         org.apache.hadoop.hive.ql.io.orc.OrcProto.StripeFooter result = new org.apache.hadoop.hive.ql.io.orc.OrcProto.StripeFooter(this);
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (streamsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
             streams_ = java.util.Collections.unmodifiableList(streams_);
@@ -7014,6 +7062,11 @@ public final class OrcProto {
         } else {
           result.columns_ = columnsBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.writerTimezone_ = writerTimezone_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -7081,6 +7134,9 @@ public final class OrcProto {
             }
           }
         }
+        if (other.hasWriterTimezone()) {
+          setWriterTimezone(other.getWriterTimezone());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -7134,6 +7190,11 @@ public final class OrcProto {
               org.apache.hadoop.hive.ql.io.orc.OrcProto.ColumnEncoding.Builder subBuilder = org.apache.hadoop.hive.ql.io.orc.OrcProto.ColumnEncoding.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addColumns(subBuilder.buildPartial());
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              writerTimezone_ = input.readBytes();
               break;
             }
           }
@@ -7512,6 +7573,42 @@ public final class OrcProto {
           columns_ = null;
         }
         return columnsBuilder_;
+      }
+      
+      // optional string writerTimezone = 3;
+      private java.lang.Object writerTimezone_ = "";
+      public boolean hasWriterTimezone() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public String getWriterTimezone() {
+        java.lang.Object ref = writerTimezone_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          writerTimezone_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setWriterTimezone(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        writerTimezone_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearWriterTimezone() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        writerTimezone_ = getDefaultInstance().getWriterTimezone();
+        onChanged();
+        return this;
+      }
+      void setWriterTimezone(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000004;
+        writerTimezone_ = value;
+        onChanged();
       }
       
       // @@protoc_insertion_point(builder_scope:org.apache.hadoop.hive.ql.io.orc.StripeFooter)
@@ -13020,44 +13117,45 @@ public final class OrcProto {
       "apache.hadoop.hive.ql.io.orc.ColumnEncod" +
       "ing.Kind\022\026\n\016dictionarySize\030\002 \001(\r\"D\n\004Kind" +
       "\022\n\n\006DIRECT\020\000\022\016\n\nDICTIONARY\020\001\022\r\n\tDIRECT_V",
-      "2\020\002\022\021\n\rDICTIONARY_V2\020\003\"\214\001\n\014StripeFooter\022" +
+      "2\020\002\022\021\n\rDICTIONARY_V2\020\003\"\244\001\n\014StripeFooter\022" +
       "9\n\007streams\030\001 \003(\0132(.org.apache.hadoop.hiv" +
       "e.ql.io.orc.Stream\022A\n\007columns\030\002 \003(\01320.or" +
       "g.apache.hadoop.hive.ql.io.orc.ColumnEnc" +
-      "oding\"\370\002\n\004Type\0229\n\004kind\030\001 \002(\0162+.org.apach" +
-      "e.hadoop.hive.ql.io.orc.Type.Kind\022\024\n\010sub" +
-      "types\030\002 \003(\rB\002\020\001\022\022\n\nfieldNames\030\003 \003(\t\022\025\n\rm" +
-      "aximumLength\030\004 \001(\r\022\021\n\tprecision\030\005 \001(\r\022\r\n" +
-      "\005scale\030\006 \001(\r\"\321\001\n\004Kind\022\013\n\007BOOLEAN\020\000\022\010\n\004BY" +
-      "TE\020\001\022\t\n\005SHORT\020\002\022\007\n\003INT\020\003\022\010\n\004LONG\020\004\022\t\n\005FL",
-      "OAT\020\005\022\n\n\006DOUBLE\020\006\022\n\n\006STRING\020\007\022\n\n\006BINARY\020" +
-      "\010\022\r\n\tTIMESTAMP\020\t\022\010\n\004LIST\020\n\022\007\n\003MAP\020\013\022\n\n\006S" +
-      "TRUCT\020\014\022\t\n\005UNION\020\r\022\013\n\007DECIMAL\020\016\022\010\n\004DATE\020" +
-      "\017\022\013\n\007VARCHAR\020\020\022\010\n\004CHAR\020\021\"x\n\021StripeInform" +
-      "ation\022\016\n\006offset\030\001 \001(\004\022\023\n\013indexLength\030\002 \001" +
-      "(\004\022\022\n\ndataLength\030\003 \001(\004\022\024\n\014footerLength\030\004" +
-      " \001(\004\022\024\n\014numberOfRows\030\005 \001(\004\"/\n\020UserMetada" +
-      "taItem\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"X\n\020S" +
-      "tripeStatistics\022D\n\010colStats\030\001 \003(\01322.org." +
-      "apache.hadoop.hive.ql.io.orc.ColumnStati",
-      "stics\"S\n\010Metadata\022G\n\013stripeStats\030\001 \003(\01322" +
-      ".org.apache.hadoop.hive.ql.io.orc.Stripe" +
-      "Statistics\"\356\002\n\006Footer\022\024\n\014headerLength\030\001 " +
-      "\001(\004\022\025\n\rcontentLength\030\002 \001(\004\022D\n\007stripes\030\003 " +
-      "\003(\01323.org.apache.hadoop.hive.ql.io.orc.S" +
-      "tripeInformation\0225\n\005types\030\004 \003(\0132&.org.ap" +
-      "ache.hadoop.hive.ql.io.orc.Type\022D\n\010metad" +
-      "ata\030\005 \003(\01322.org.apache.hadoop.hive.ql.io" +
-      ".orc.UserMetadataItem\022\024\n\014numberOfRows\030\006 " +
-      "\001(\004\022F\n\nstatistics\030\007 \003(\01322.org.apache.had",
-      "oop.hive.ql.io.orc.ColumnStatistics\022\026\n\016r" +
-      "owIndexStride\030\010 \001(\r\"\305\001\n\nPostScript\022\024\n\014fo" +
-      "oterLength\030\001 \001(\004\022F\n\013compression\030\002 \001(\01621." +
-      "org.apache.hadoop.hive.ql.io.orc.Compres" +
-      "sionKind\022\034\n\024compressionBlockSize\030\003 \001(\004\022\023" +
-      "\n\007version\030\004 \003(\rB\002\020\001\022\026\n\016metadataLength\030\005 " +
-      "\001(\004\022\016\n\005magic\030\300> \001(\t*:\n\017CompressionKind\022\010" +
-      "\n\004NONE\020\000\022\010\n\004ZLIB\020\001\022\n\n\006SNAPPY\020\002\022\007\n\003LZO\020\003"
+      "oding\022\026\n\016writerTimezone\030\003 \001(\t\"\370\002\n\004Type\0229" +
+      "\n\004kind\030\001 \002(\0162+.org.apache.hadoop.hive.ql" +
+      ".io.orc.Type.Kind\022\024\n\010subtypes\030\002 \003(\rB\002\020\001\022" +
+      "\022\n\nfieldNames\030\003 \003(\t\022\025\n\rmaximumLength\030\004 \001" +
+      "(\r\022\021\n\tprecision\030\005 \001(\r\022\r\n\005scale\030\006 \001(\r\"\321\001\n" +
+      "\004Kind\022\013\n\007BOOLEAN\020\000\022\010\n\004BYTE\020\001\022\t\n\005SHORT\020\002\022",
+      "\007\n\003INT\020\003\022\010\n\004LONG\020\004\022\t\n\005FLOAT\020\005\022\n\n\006DOUBLE\020" +
+      "\006\022\n\n\006STRING\020\007\022\n\n\006BINARY\020\010\022\r\n\tTIMESTAMP\020\t" +
+      "\022\010\n\004LIST\020\n\022\007\n\003MAP\020\013\022\n\n\006STRUCT\020\014\022\t\n\005UNION" +
+      "\020\r\022\013\n\007DECIMAL\020\016\022\010\n\004DATE\020\017\022\013\n\007VARCHAR\020\020\022\010" +
+      "\n\004CHAR\020\021\"x\n\021StripeInformation\022\016\n\006offset\030" +
+      "\001 \001(\004\022\023\n\013indexLength\030\002 \001(\004\022\022\n\ndataLength" +
+      "\030\003 \001(\004\022\024\n\014footerLength\030\004 \001(\004\022\024\n\014numberOf" +
+      "Rows\030\005 \001(\004\"/\n\020UserMetadataItem\022\014\n\004name\030\001" +
+      " \002(\t\022\r\n\005value\030\002 \002(\014\"X\n\020StripeStatistics\022" +
+      "D\n\010colStats\030\001 \003(\01322.org.apache.hadoop.hi",
+      "ve.ql.io.orc.ColumnStatistics\"S\n\010Metadat" +
+      "a\022G\n\013stripeStats\030\001 \003(\01322.org.apache.hado" +
+      "op.hive.ql.io.orc.StripeStatistics\"\356\002\n\006F" +
+      "ooter\022\024\n\014headerLength\030\001 \001(\004\022\025\n\rcontentLe" +
+      "ngth\030\002 \001(\004\022D\n\007stripes\030\003 \003(\01323.org.apache" +
+      ".hadoop.hive.ql.io.orc.StripeInformation" +
+      "\0225\n\005types\030\004 \003(\0132&.org.apache.hadoop.hive" +
+      ".ql.io.orc.Type\022D\n\010metadata\030\005 \003(\01322.org." +
+      "apache.hadoop.hive.ql.io.orc.UserMetadat" +
+      "aItem\022\024\n\014numberOfRows\030\006 \001(\004\022F\n\nstatistic",
+      "s\030\007 \003(\01322.org.apache.hadoop.hive.ql.io.o" +
+      "rc.ColumnStatistics\022\026\n\016rowIndexStride\030\010 " +
+      "\001(\r\"\305\001\n\nPostScript\022\024\n\014footerLength\030\001 \001(\004" +
+      "\022F\n\013compression\030\002 \001(\01621.org.apache.hadoo" +
+      "p.hive.ql.io.orc.CompressionKind\022\034\n\024comp" +
+      "ressionBlockSize\030\003 \001(\004\022\023\n\007version\030\004 \003(\rB" +
+      "\002\020\001\022\026\n\016metadataLength\030\005 \001(\004\022\016\n\005magic\030\300> " +
+      "\001(\t*:\n\017CompressionKind\022\010\n\004NONE\020\000\022\010\n\004ZLIB" +
+      "\020\001\022\n\n\006SNAPPY\020\002\022\007\n\003LZO\020\003"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -13165,7 +13263,7 @@ public final class OrcProto {
           internal_static_org_apache_hadoop_hive_ql_io_orc_StripeFooter_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_apache_hadoop_hive_ql_io_orc_StripeFooter_descriptor,
-              new java.lang.String[] { "Streams", "Columns", },
+              new java.lang.String[] { "Streams", "Columns", "WriterTimezone", },
               org.apache.hadoop.hive.ql.io.orc.OrcProto.StripeFooter.class,
               org.apache.hadoop.hive.ql.io.orc.OrcProto.StripeFooter.Builder.class);
           internal_static_org_apache_hadoop_hive_ql_io_orc_Type_descriptor =

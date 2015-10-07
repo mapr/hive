@@ -109,6 +109,7 @@ message ColumnEncoding {
 message StripeFooter {
   repeated Stream streams = 1;
   repeated ColumnEncoding columns = 2;
+  optional string writerTimezone = 3;
 }
 
 message Type {

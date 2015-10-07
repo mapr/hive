@@ -115,6 +115,7 @@ public final class OrcFile {
     COMPRESSION("orc.compress"),
     COMPRESSION_BLOCK_SIZE("orc.compress.size"),
     STRIPE_SIZE("orc.stripe.size"),
+    BLOCK_SIZE("orc.block.size"),
     ROW_INDEX_STRIDE("orc.row.index.stride"),
     ENABLE_INDEXES("orc.create.index"),
     BLOCK_PADDING("orc.block.padding");
@@ -214,6 +215,7 @@ public final class OrcFile {
     private FileSystem fileSystemValue = null;
     private ObjectInspector inspectorValue = null;
     private long stripeSizeValue;
+    private long blockSizeValue;
     private int rowIndexStrideValue;
     private int bufferSizeValue;
     private boolean blockPaddingValue;
@@ -228,6 +230,9 @@ public final class OrcFile {
       stripeSizeValue =
           conf.getLong(HiveConf.ConfVars.HIVE_ORC_DEFAULT_STRIPE_SIZE.varname,
               HiveConf.ConfVars.HIVE_ORC_DEFAULT_STRIPE_SIZE.defaultLongVal);
+      blockSizeValue =
+              conf.getLong(HiveConf.ConfVars.HIVE_ORC_DEFAULT_BLOCK_SIZE.varname,
+                      HiveConf.ConfVars.HIVE_ORC_DEFAULT_BLOCK_SIZE.defaultLongVal);
       rowIndexStrideValue =
           conf.getInt(HiveConf.ConfVars.HIVE_ORC_DEFAULT_ROW_INDEX_STRIDE
               .varname, HiveConf.ConfVars.HIVE_ORC_DEFAULT_ROW_INDEX_STRIDE.defaultIntVal);
@@ -268,6 +273,15 @@ public final class OrcFile {
      */
     public WriterOptions stripeSize(long value) {
       stripeSizeValue = value;
+      return this;
+    }
+
+    /**
+     * Set the file system block size for the file. For optimal performance,
+     * set the block size to be multiple factors of stripe size.
+     */
+    public WriterOptions blockSize(long value) {
+      blockSizeValue = value;
       return this;
     }
 
@@ -370,7 +384,7 @@ public final class OrcFile {
                           opts.stripeSizeValue, opts.compressValue,
                           opts.bufferSizeValue, opts.rowIndexStrideValue,
                           opts.memoryManagerValue, opts.blockPaddingValue,
-                          opts.versionValue, opts.callback);
+                          opts.versionValue, opts.callback, opts.blockSizeValue);
   }
 
   /**
