@@ -242,7 +242,12 @@ else
 fi
 
 # supress the HADOOP_HOME warnings in 1.x.x
-export HADOOP_HOME_WARN_SUPPRESS=true 
+export HADOOP_HOME_WARN_SUPPRESS=true
+
+#replacing line breaks - Bug 20191
+CLASSPATH=`echo "$CLASSPATH" | tr '\n' ':'`
+#replacing repeating colons
+CLASSPATH=`echo $CLASSPATH | sed 's/:\{2,\}/:/g'`
 
 # pass classpath to hadoop
 if [ "$HADOOP_CLASSPATH" != "" ]; then
@@ -333,6 +338,11 @@ if [[ -n $HBASE_BIN ]] ; then
     export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${x}"
   done
 fi
+
+#replacing line breaks - Bug 20191
+HADOOP_CLASSPATH=`echo "$HADOOP_CLASSPATH" | tr '\n' ':'`
+#replacing repeating colons
+HADOOP_CLASSPATH=`echo $HADOOP_CLASSPATH | sed 's/:\{2,\}/:/g'`
 
 if [ "${AUX_PARAM}" != "" ]; then
   HIVE_OPTS="$HIVE_OPTS --hiveconf hive.aux.jars.path=${AUX_PARAM}"
