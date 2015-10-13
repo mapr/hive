@@ -20,6 +20,7 @@ package org.apache.hive.service.auth;
 import java.io.IOException;
 import java.security.Security;
 import java.util.HashMap;
+import java.util.Map;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
@@ -41,6 +42,7 @@ import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportFactory;
+import org.apache.thrift.transport.TTransportException;
 
 public final class PlainSaslHelper {
   public static TProcessorFactory getPlainProcessorFactory(ThriftCLIService service) {
@@ -64,6 +66,15 @@ public final class PlainSaslHelper {
     saslTransportFactory.addServerDefinition("PLAIN", authTypeStr, null,
         new HashMap<String, String>(), new PlainServerCallbackHandler(authTypeStr));
     return saslTransportFactory;
+  }
+
+  public static void addPlainDefinitionToFactory(String authTypeStr, TTransportFactory saslTransportFactory,
+                                                 HadoopThriftAuthBridge.Server saslServer) throws TTransportException {
+    try {
+      saslServer.addServerDefinition(saslTransportFactory, "PLAIN", authTypeStr, null, new HashMap<String, String>(), new PlainServerCallbackHandler(authTypeStr));
+    } catch (AuthenticationException e) {
+      throw new TTransportException("Cannot add PLAIN definition for authentication method: " + authTypeStr);
+    }
   }
 
   public static TTransport getPlainTransport(String username, String password,

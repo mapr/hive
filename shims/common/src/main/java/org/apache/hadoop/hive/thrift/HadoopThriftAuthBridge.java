@@ -128,6 +128,8 @@ public class HadoopThriftAuthBridge {
     public abstract long renewDelegationToken(String tokenStrForm) throws IOException;
     public abstract void cancelDelegationToken(String tokenStrForm) throws IOException;
     public abstract String getUserFromToken(String tokenStr) throws IOException;
+    public abstract void addServerDefinition(TTransportFactory tTransportFactory, String mechanism, String protocol, String serverName,
+                                    Map<String, String> props, CallbackHandler cbh);
   }
 
   public static class HiveSaslServerTransportFactory extends TSaslServerTransport.Factory {

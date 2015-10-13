@@ -93,26 +93,23 @@ public class HiveAuthFactory {
     authType =
         authTypeStr == null ? transportType.getDefaultAuthType() : AuthTypes.valueOf(authTypeStr
             .toUpperCase());
+    boolean isAuthTypeSecured = authType == AuthTypes.KERBEROS || authType == AuthTypes.MAPRSASL;
+
     if (transportType == TransTypes.BINARY
-        && authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.name())
-        && ShimLoader.getHadoopShims().isSecureShimImpl()) {
+        && ((ShimLoader.getHadoopShims().isSecureShimImpl() && isAuthTypeSecured)
+        || (authType == AuthTypes.PAM && ShimLoader.getHadoopShims().isSecurityEnabled()))) {
       saslServer =
-          ShimLoader.getHadoopThriftAuthBridge().createServer(
-              conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
-              conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
-      // start delegation token manager
-      try {
-        saslServer.startDelegationTokenSecretManager(conf, null, ServerMode.HIVESERVER2);
-      } catch (Exception e) {
-        throw new TTransportException("Failed to start token manager", e);
+              ShimLoader.getHadoopThriftAuthBridge().createServer(
+                      conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
+                      conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
+      if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.name())) {
+        // start delegation token manager
+        try {
+          saslServer.startDelegationTokenSecretManager(conf, null, ServerMode.HIVESERVER2);
+        } catch (Exception e) {
+          throw new TTransportException("Failed to start token manager", e);
+        }
       }
-    } else if (transportType == TransTypes.BINARY
-            && authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.name())
-            && ShimLoader.getHadoopShims().isSecureShimImpl()) {
-      saslServer =
-          ShimLoader.getHadoopThriftAuthBridge().createServer(
-              conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
-              conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
     } else {
       saslServer = null;
     }
@@ -130,9 +127,16 @@ public class HiveAuthFactory {
     if (authType == AuthTypes.KERBEROS || authType == AuthTypes.MAPRSASL) {
       return saslServer.createTransportFactory(getSaslProperties(), saslMessageLimit);
     }
+    if (authType == AuthTypes.PAM && ShimLoader.getHadoopShims().isSecurityEnabled()) {
+      TTransportFactory transportFactory = saslServer.createTransportFactory(getSaslProperties(), saslMessageLimit);
+      PlainSaslHelper.addPlainDefinitionToFactory(authType.name(), transportFactory, saslServer);
+
+      return transportFactory;
+    }
     if (authType == AuthTypes.NOSASL) {
       return new TTransportFactory();
     }
+
     return PlainSaslHelper.getPlainTransportFactory(authType.name(), saslMessageLimit);
   }
 
