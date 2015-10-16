@@ -158,8 +158,12 @@ public class RecordReaderFactory {
     StructTypeInfo structTypeInfo = new StructTypeInfo();
     // Column types from conf includes virtual and partition columns at the end. We consider only
     // the actual columns in the file.
-    structTypeInfo.setAllStructFieldNames(Lists.newArrayList(columnNames.subList(0, numCols)));
-    structTypeInfo.setAllStructFieldTypeInfos(Lists.newArrayList(fieldTypes.subList(0, numCols)));
+    structTypeInfo.setAllStructFieldNames(
+        columnNames.size() > numCols ? Lists.newArrayList(columnNames.subList(0, numCols)) : Lists.newArrayList(columnNames)
+    );
+    structTypeInfo.setAllStructFieldTypeInfos(
+        fieldTypes.size() > numCols ? Lists.newArrayList(fieldTypes.subList(0, numCols)) : Lists.newArrayList(fieldTypes)
+    );
     ObjectInspector oi = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(structTypeInfo);
     return getOrcTypes(oi);
   }
