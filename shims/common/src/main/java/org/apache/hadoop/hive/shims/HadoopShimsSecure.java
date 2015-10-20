@@ -50,6 +50,7 @@ import org.apache.hadoop.mapred.lib.CombineFileInputFormat;
 import org.apache.hadoop.mapred.lib.CombineFileSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 
 /**
@@ -332,6 +333,11 @@ public abstract class HadoopShimsSecure implements HadoopShims {
       CombineFileSplit cfSplit = split;
       return new CombineFileRecordReader(job, cfSplit, reporter, rrClass);
     }
+  }
+
+  @Override
+  public boolean isSecurityEnabled() {
+    return UserGroupInformation.isSecurityEnabled();
   }
 
   @Override
