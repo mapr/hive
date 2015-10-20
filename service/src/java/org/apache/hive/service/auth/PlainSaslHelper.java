@@ -147,6 +147,15 @@ public class PlainSaslHelper {
       return saslTransportFactory;
    }
 
+  public static void addPlainDefinitionToFactory(String authTypeStr, TTransportFactory saslTransportFactory,
+                                                 HadoopThriftAuthBridge.Server saslServer) throws LoginException {
+    try {
+      saslServer.addServerDefinition(saslTransportFactory, "PLAIN", authTypeStr, null, new HashMap<String, String>(), new PlainServerCallbackHandler(authTypeStr));
+    } catch (AuthenticationException e) {
+      throw new LoginException("Cannot add PLAIN definition for authentication method: " + authTypeStr);
+    }
+  }
+
   public static TTransport getPlainTransport(String userName, String passwd,
       final TTransport underlyingTransport) throws SaslException {
     return new TSaslClientTransport("PLAIN", null,

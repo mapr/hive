@@ -83,6 +83,7 @@ public class HiveAuthFactory {
     transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
     authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
     saslMessageLimit = conf.getIntVar(ConfVars.HIVE_THRIFT_SASL_MESSAGE_LIMIT);
+    boolean isAuthTypeSecured = "KERBEROS".equalsIgnoreCase(authTypeStr) || "MAPRSASL".equalsIgnoreCase(authTypeStr);
 
     // In http mode we use NOSASL as the default auth type
     if (transportMode.equalsIgnoreCase("http")) {
@@ -93,24 +94,21 @@ public class HiveAuthFactory {
     else {
       if (authTypeStr == null) {
         authTypeStr = AuthTypes.NONE.getAuthName();
-      } else if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
-          && ShimLoader.getHadoopShims().isSecureShimImpl()) {
-        saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(
-            conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
-            conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL)
-            );
-        // start delegation token manager
-        try {
-          saslServer.startDelegationTokenSecretManager(conf, null);
-        } catch (IOException e) {
-          throw new TTransportException("Failed to start token manager", e);
+      } else if (isAuthTypeSecured || ("PAM".equalsIgnoreCase(authTypeStr) && ShimLoader.getHadoopShims().isSecurityEnabled())) {
+        saslServer = ShimLoader.getHadoopThriftAuthBridge()
+                .createServer(conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
+                        conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
+
+        if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
+          // start delegation token manager
+          try {
+            saslServer.startDelegationTokenSecretManager(conf, null);
+          } catch (IOException e) {
+            throw new TTransportException("Failed to start token manager", e);
+          }
         }
-      } else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())
-          && ShimLoader.getHadoopShims().isSecureShimImpl())  {
-        saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(
-            conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
-            conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL)
-            );
+      } else {
+        saslServer = null;
       }
     }
   }
@@ -148,7 +146,16 @@ public class HiveAuthFactory {
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.LDAP.getAuthName())) {
       transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.PAM.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
+      if (ShimLoader.getHadoopShims().isSecurityEnabled()) {
+        try {
+          transportFactory = saslServer.createTransportFactory(getSaslProperties(), saslMessageLimit);
+        } catch (TTransportException e) {
+          throw new LoginException(e.getMessage());
+        }
+        PlainSaslHelper.addPlainDefinitionToFactory(authTypeStr, transportFactory, saslServer);
+      } else {
+        transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, saslMessageLimit);
+      }
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName())) {
       transportFactory = new TTransportFactory();
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.CUSTOM.getAuthName())) {
