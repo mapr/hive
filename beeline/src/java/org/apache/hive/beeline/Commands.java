@@ -686,6 +686,9 @@ public class Commands {
         }
 
         String extra = beeLine.getConsoleReader().readLine(prompt.toString());
+        if (extra == null) { //it happens when using -f and the line of cmds does not end with ;
+          break;
+        }
         if (!beeLine.isComment(extra)) {
           line += " " + extra;
         }
@@ -694,78 +697,84 @@ public class Commands {
       beeLine.handleException(e);
     }
 
-
-    if (line.endsWith(";")) {
-      line = line.substring(0, line.length() - 1);
-    }
-
     if (!(beeLine.assertConnection())) {
       return false;
     }
 
-    String sql = line;
+    line = line.trim();
+    String[] cmds = line.split(";");
 
-    if (sql.startsWith(BeeLine.COMMAND_PREFIX)) {
-      sql = sql.substring(1);
-    }
+    for (String cmd : cmds) {
+      String sql = cmd.trim();
 
-    String prefix = call ? "call" : "sql";
-
-    if (sql.startsWith(prefix)) {
-      sql = sql.substring(prefix.length());
-    }
-
-    // batch statements?
-    if (beeLine.getBatch() != null) {
-      beeLine.getBatch().add(sql);
-      return true;
-    }
-
-    try {
-      Statement stmnt = null;
-      boolean hasResults;
-
-      try {
-        long start = System.currentTimeMillis();
-
-        if (call) {
-          stmnt = beeLine.getDatabaseConnection().getConnection().prepareCall(sql);
-          hasResults = ((CallableStatement) stmnt).execute();
-        } else {
-          stmnt = beeLine.createStatement();
-          hasResults = stmnt.execute(sql);
+      if (sql.length() != 0) {
+        if (beeLine.isComment(sql)) {
+          // skip this and rest cmds in the line
+          break;
         }
 
-        beeLine.showWarnings();
-
-        if (hasResults) {
-          do {
-            ResultSet rs = stmnt.getResultSet();
-            try {
-              int count = beeLine.print(rs);
-              long end = System.currentTimeMillis();
-
-              beeLine.info(beeLine.loc("rows-selected", count) + " "
-                  + beeLine.locElapsedTime(end - start));
-            } finally {
-              rs.close();
-            }
-          } while (BeeLine.getMoreResults(stmnt));
-        } else {
-          int count = stmnt.getUpdateCount();
-          long end = System.currentTimeMillis();
-          beeLine.info(beeLine.loc("rows-affected", count)
-              + " " + beeLine.locElapsedTime(end - start));
+        if (sql.startsWith(BeeLine.COMMAND_PREFIX)) {
+          sql = sql.substring(1);
         }
-      } finally {
-        if (stmnt != null) {
-          stmnt.close();
+
+        String prefix = call ? "call" : "sql";
+
+        if (sql.startsWith(prefix)) {
+          sql = sql.substring(prefix.length());
         }
       }
-    } catch (Exception e) {
-      return beeLine.error(e);
+      // batch statements?
+      if (beeLine.getBatch() != null) {
+        beeLine.getBatch().add(sql);
+        continue;
+      }
+
+      try {
+        Statement stmnt = null;
+        boolean hasResults;
+
+        try {
+          long start = System.currentTimeMillis();
+
+          if (call) {
+            stmnt = beeLine.getDatabaseConnection().getConnection().prepareCall(sql);
+            hasResults = ((CallableStatement) stmnt).execute();
+          } else {
+            stmnt = beeLine.createStatement();
+            hasResults = stmnt.execute(sql);
+          }
+
+          beeLine.showWarnings();
+
+          if (hasResults) {
+            do {
+              ResultSet rs = stmnt.getResultSet();
+              try {
+                int count = beeLine.print(rs);
+                long end = System.currentTimeMillis();
+
+                beeLine.info(beeLine.loc("rows-selected", count) + " "
+                        + beeLine.locElapsedTime(end - start));
+              } finally {
+                rs.close();
+              }
+            } while (BeeLine.getMoreResults(stmnt));
+          } else {
+            int count = stmnt.getUpdateCount();
+            long end = System.currentTimeMillis();
+            beeLine.info(beeLine.loc("rows-affected", count)
+                    + " " + beeLine.locElapsedTime(end - start));
+          }
+        } finally {
+          if (stmnt != null) {
+            stmnt.close();
+          }
+        }
+      } catch (Exception e) {
+        return beeLine.error(e);
+      }
+      beeLine.showWarnings();
     }
-    beeLine.showWarnings();
     return true;
   }
 
