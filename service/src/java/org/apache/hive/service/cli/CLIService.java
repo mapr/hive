@@ -49,6 +49,7 @@ import org.apache.hive.service.cli.operation.Operation;
 import org.apache.hive.service.cli.session.HiveSession;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
+import org.apache.hive.service.server.HiveServer2;
 
 /**
  * CLIService.
@@ -70,15 +71,18 @@ public class CLIService extends CompositeService implements ICLIService {
   private IMetaStoreClient metastoreClient;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
+  // The HiveServer2 instance running this service
+  private final HiveServer2 hiveServer2;
 
-  public CLIService() {
-    super("CLIService");
+  public CLIService(HiveServer2 hiveServer2) {
+    super(CLIService.class.getSimpleName());
+    this.hiveServer2 = hiveServer2;
   }
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
     this.hiveConf = hiveConf;
-    sessionManager = new SessionManager();
+    sessionManager = new SessionManager(hiveServer2);
     addService(sessionManager);
     /**
      * If auth mode is Kerberos, do a kerberos login for the service from the keytab
@@ -133,6 +137,9 @@ public class CLIService extends CompositeService implements ICLIService {
       throw new ServiceException("Error setting stage directories", eIO);
     }
 
+    // Initialize and test a connection to the metastore
+    IMetaStoreClient metastoreClient = null;
+
     try {
       // Initialize and test a connection to the metastore
       metastoreClient = new HiveMetaStoreClient(hiveConf);
@@ -140,13 +147,15 @@ public class CLIService extends CompositeService implements ICLIService {
     } catch (Exception e) {
       throw new ServiceException("Unable to connect to MetaStore!", e);
     }
+    finally {
+      if (metastoreClient != null) {
+        metastoreClient.close();
+      }
+    }
   }
 
   @Override
   public synchronized void stop() {
-    if (metastoreClient != null) {
-      metastoreClient.close();
-    }
     super.stop();
   }
 
