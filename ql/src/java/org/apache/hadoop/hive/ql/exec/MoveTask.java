@@ -58,6 +58,8 @@ import org.apache.hadoop.hive.ql.plan.MapredWork;
 import org.apache.hadoop.hive.ql.plan.MoveWork;
 import org.apache.hadoop.hive.ql.plan.api.StageType;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.shims.HadoopShims;
+import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
@@ -246,21 +248,38 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
       LoadTableDesc tbd = work.getLoadTableWork();
       if (tbd != null) {
         StringBuilder mesg = new StringBuilder("Loading data to table ")
-            .append( tbd.getTable().getTableName());
+            .append(tbd.getTable().getTableName());
         if (tbd.getPartitionSpec().size() > 0) {
           mesg.append(" partition (");
           Map<String, String> partSpec = tbd.getPartitionSpec();
           for (String key: partSpec.keySet()) {
             mesg.append(key).append('=').append(partSpec.get(key)).append(", ");
           }
-          mesg.setLength(mesg.length()-2);
+          mesg.setLength(mesg.length() - 2);
           mesg.append(')');
         }
         String mesg_detail = " from " + tbd.getSourcePath();
         console.printInfo(mesg.toString(), mesg_detail);
         Table table = db.getTable(tbd.getTable().getTableName());
+          boolean isScratchOptimized = HiveConf.getBoolVar(conf,
+                  HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME);
+          if (isScratchOptimized) {
+              Path tablePath = table.getPath();
+              Path currentPartitionPath = tbd.getSourcePath();
+              while (currentPartitionPath != null && !currentPartitionPath.getParent().equals(tablePath)){
+                  currentPartitionPath = currentPartitionPath.getParent();
+              }
+              HadoopShims shims = ShimLoader.getHadoopShims();
+              HadoopShims.HdfsFileStatus destStatus = shims.getFullFileStatus(conf, tablePath.getFileSystem(conf), tablePath);
+              try {
+                  ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, tablePath.getFileSystem(conf), currentPartitionPath);
+              } catch (IOException e) {
+                  LOG.warn("Error setting permission of file " + tablePath + ": "+ e.getMessage(), e);
+              }
+          }
 
-        if (work.getCheckFileFormat()) {
+
+          if (work.getCheckFileFormat()) {
           // Get all files from the src directory
           FileStatus[] dirs;
           ArrayList<FileStatus> files;
