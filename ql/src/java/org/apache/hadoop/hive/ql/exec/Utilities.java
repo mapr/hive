@@ -1803,7 +1803,7 @@ public final class Utilities {
 
       for (int i = 0; i < parts.length; ++i) {
         assert parts[i].isDir() : "dynamic partition " + parts[i].getPath()
-            + " is not a direcgtory";
+            + " is not a directory";
         FileStatus[] items = fs.listStatus(parts[i].getPath());
 
         // remove empty directory since DP insert should not generate empty partitions.
@@ -3246,7 +3246,8 @@ public final class Utilities {
 
         if (tempDir != null) {
           Path tempPath = Utilities.toTempPath(tempDir);
-          createDirsWithPermission(conf, tempPath, fsPermission);
+          FileSystem fs = tempPath.getFileSystem(conf);
+          fs.mkdirs(tempPath);
         }
       }
 
@@ -3367,53 +3368,5 @@ public final class Utilities {
       throw new IOException(nfe);
     }
     return footerCount;
-  }
-
-  /**
-   * @param conf the configuration used to derive the filesystem to create the path
-   * @param mkdir the path to be created
-   * @param fsPermission ignored if it is hive server session and doAs is enabled
-   * @return true if successfully created the directory else false
-   * @throws IOException if hdfs experiences any error conditions
-   */
-  public static boolean createDirsWithPermission(Configuration conf, Path mkdir,
-      FsPermission fsPermission) throws IOException {
-
-	boolean recursive = false;
-    if (SessionState.get() != null) {
-      recursive = SessionState.get().isHiveServerQuery() &&
-          conf.getBoolean(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS.varname,
-              HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS.defaultBoolVal);
-      // we reset the permission in case of hive server and doAs enabled because
-      // currently scratch directory uses /tmp/hive-hive as the scratch directory.
-      // However, with doAs enabled, the first user to create this directory would
-      // own the directory and subsequent users cannot access the scratch directory.
-      // The right fix is to have scratch dir per user.
-      fsPermission = new FsPermission((short)00777);
-    }
-
-    // if we made it so far without exception we are good!
-    return createDirsWithPermission(conf, mkdir, fsPermission, recursive);
-  }
-
-  public static boolean createDirsWithPermission(Configuration conf, Path mkdir,
-      FsPermission fsPermission, boolean recursive) throws IOException {
-    String origUmask = null;
-    if (recursive) {
-      origUmask = conf.get("fs.permissions.umask-mode");
-      // this umask is required because by default the hdfs mask is 022 resulting in
-      // all parents getting the fsPermission & !(022) permission instead of fsPermission
-      conf.set("fs.permissions.umask-mode", "000");
-    }
-    FileSystem fs = mkdir.getFileSystem(conf);
-    boolean retval = fs.mkdirs(mkdir, fsPermission);
-    if (recursive) {
-    	if (origUmask != null) {
-    		conf.set("fs.permissions.umask-mode", origUmask);
-    	} else {
-    		conf.setInt("fs.permissions.umask-mode", 0022);
-    	}
-    }	
-    return retval;
   }
 }
