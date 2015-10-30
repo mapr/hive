@@ -263,20 +263,20 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
         Table table = db.getTable(tbd.getTable().getTableName());
           boolean isScratchOptimized = HiveConf.getBoolVar(conf,
                   HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME);
-          if (isScratchOptimized) {
-              Path tablePath = table.getPath();
-              Path currentPartitionPath = tbd.getSourcePath();
-              while (currentPartitionPath != null && !currentPartitionPath.getParent().equals(tablePath)){
-                  currentPartitionPath = currentPartitionPath.getParent();
-              }
-              HadoopShims shims = ShimLoader.getHadoopShims();
-              HadoopShims.HdfsFileStatus destStatus = shims.getFullFileStatus(conf, tablePath.getFileSystem(conf), tablePath);
-              try {
-                  ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, tablePath.getFileSystem(conf), currentPartitionPath);
-              } catch (IOException e) {
-                  LOG.warn("Error setting permission of file " + tablePath + ": "+ e.getMessage(), e);
-              }
+        if (isScratchOptimized && table.isPartitioned()) {
+          Path tablePath = table.getPath();
+          if (tablePath != null) {
+            Path lastNestedPath = tbd.getSourcePath();
+            Path firstLevelPartitionPath = findFirstLevelPartition(tablePath, lastNestedPath);
+            HadoopShims shims = ShimLoader.getHadoopShims();
+            HadoopShims.HdfsFileStatus destStatus = shims.getFullFileStatus(conf, tablePath.getFileSystem(conf), tablePath);
+            try {
+              ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, tablePath.getFileSystem(conf), firstLevelPartitionPath);
+            } catch (IOException e) {
+              LOG.warn("Error setting permission of file " + tablePath + ": " + e.getMessage(), e);
+            }
           }
+        }
 
 
           if (work.getCheckFileFormat()) {
@@ -505,6 +505,31 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
           + StringUtils.stringifyException(e));
       return (1);
     }
+  }
+
+  /**
+   * Finds path to partition of first level of a table. If table has no partitions at all, method mustn`t be used
+   * @param tablePath path to folder where table data is stored
+   * @param lastNestedPath path with maximal depth in a table that contains needed partition of a first level
+   * @return first level partition of a table
+   */
+
+
+  private static Path findFirstLevelPartition(Path tablePath, Path lastNestedPath) {
+    if (lastNestedPath == null) {
+      return tablePath;
+    }
+    Path currentPath = lastNestedPath;
+    Path parentPath = currentPath.getParent();
+    boolean hasParent = parentPath != null;
+    boolean isFirstPartition = tablePath.equals(parentPath);
+    while (hasParent && !isFirstPartition) {
+      currentPath = parentPath;
+      parentPath = currentPath.getParent();
+      hasParent = parentPath != null;
+      isFirstPartition = tablePath.equals(parentPath);
+    }
+    return currentPath;
   }
 
   private boolean isSkewedStoredAsDirs(LoadTableDesc tbd) {
