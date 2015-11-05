@@ -155,7 +155,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         String tokenStrForm, TTransport underlyingTransport,
         Map<String, String> saslProps) throws IOException {
 
-        UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+        UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
         UserGroupInformation.AuthenticationMethod authenticationMethod = ugi.getAuthenticationMethod();
         TTransport saslTransport = null;
         LOG.info("Sasl client AuthenticationMethod: " + authenticationMethod.toString());
