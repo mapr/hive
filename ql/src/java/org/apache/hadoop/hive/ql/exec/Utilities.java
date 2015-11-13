@@ -877,8 +877,8 @@ public final class Utilities {
     e.setPersistenceDelegate(java.sql.Date.class, new DatePersistenceDelegate());
     e.setPersistenceDelegate(Timestamp.class, new TimestampPersistenceDelegate());
 
-    e.setPersistenceDelegate(org.datanucleus.store.types.backed.Map.class, new MapDelegate());
-    e.setPersistenceDelegate(org.datanucleus.store.types.backed.List.class, new ListDelegate());
+    e.setPersistenceDelegate(org.datanucleus.store.types.wrappers.backed.Map.class, new MapDelegate());
+    e.setPersistenceDelegate(org.datanucleus.store.types.wrappers.backed.List.class, new ListDelegate());
     e.setPersistenceDelegate(CommonToken.class, new CommonTokenDelegate());
     e.setPersistenceDelegate(Path.class, new PathDelegate());
 

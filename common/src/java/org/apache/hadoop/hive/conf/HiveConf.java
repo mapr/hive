@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,7 +120,7 @@ public class HiveConf extends Configuration {
       HiveConf.ConfVars.METASTORE_VALIDATE_COLUMNS,
       HiveConf.ConfVars.METASTORE_VALIDATE_CONSTRAINTS,
       HiveConf.ConfVars.METASTORE_STORE_MANAGER_TYPE,
-      HiveConf.ConfVars.METASTORE_AUTO_CREATE_SCHEMA,
+      HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL,
       HiveConf.ConfVars.METASTORE_AUTO_START_MECHANISM_MODE,
       HiveConf.ConfVars.METASTORE_TRANSACTION_ISOLATION,
       HiveConf.ConfVars.METASTORE_CACHE_LEVEL2,
@@ -335,12 +334,11 @@ public class HiveConf extends Configuration {
         "hive.cluster.delegation.token.store.zookeeper.acl", ""),
     METASTORE_CACHE_PINOBJTYPES("hive.metastore.cache.pinobjtypes", "Table,StorageDescriptor,SerDeInfo,Partition,Database,Type,FieldSchema,Order"),
     METASTORE_CONNECTION_POOLING_TYPE("datanucleus.connectionPoolingType", "BONECP"),
-    METASTORE_VALIDATE_TABLES("datanucleus.validateTables", false),
-    METASTORE_VALIDATE_COLUMNS("datanucleus.validateColumns", false),
-    METASTORE_VALIDATE_CONSTRAINTS("datanucleus.validateConstraints", false),
+    METASTORE_VALIDATE_TABLES("datanucleus.schema.validateTables", false),
+    METASTORE_VALIDATE_COLUMNS("datanucleus.schema.validateColumns", false),
+    METASTORE_VALIDATE_CONSTRAINTS("datanucleus.schema.validateConstraints", false),
     METASTORE_STORE_MANAGER_TYPE("datanucleus.storeManagerType", "rdbms"),
-    METASTORE_AUTO_CREATE_SCHEMA("datanucleus.autoCreateSchema", true),
-    METASTORE_FIXED_DATASTORE("datanucleus.fixedDatastore", false),
+    METASTORE_AUTO_CREATE_ALL("datanucleus.schema.autoCreateAll", true),
     METASTORE_SCHEMA_VERIFICATION("hive.metastore.schema.verification", false),
     METASTORE_SCHEMA_VERIFICATION_RECORD_VERSION("hive.metastore.schema.verification.record.version", true),
     METASTORE_AUTO_START_MECHANISM_MODE("datanucleus.autoStartMechanismMode", "checked"),
@@ -1489,8 +1487,7 @@ public class HiveConf extends Configuration {
     }
 
     if (getBoolVar(ConfVars.METASTORE_SCHEMA_VERIFICATION)) {
-      setBoolVar(ConfVars.METASTORE_AUTO_CREATE_SCHEMA, false);
-      setBoolVar(ConfVars.METASTORE_FIXED_DATASTORE, true);
+      setBoolVar(ConfVars.METASTORE_AUTO_CREATE_ALL, false);
     }
 
     // setup list of conf vars that are not allowed to change runtime
