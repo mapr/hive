@@ -2664,19 +2664,24 @@ private void constructOneLBLocationMap(FileStatus fSta,
   }
 
   public static void cleanupDest(FileSystem fs, Path destf, HiveConf conf)
-    throws IOException {
-    // delete all files under the destination except the scratch dir, because
-    // scratchdir contains the intermediate results which are moved under
+          throws IOException {
+    // delete all files under the destination except the scratch and staging dir, because
+    // scratchdir and staging dirs contain the intermediate results which are moved under
     // the destination directory
     FileStatus[] fileStatuses = fs.listStatus(destf);
     for(FileStatus fileStatus : fileStatuses) {
       Path file = fileStatus.getPath();
-      if (!file.getName().toLowerCase().startsWith(
-        conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST).toLowerCase())) {
-          fs.delete(file, true);
-        }
+      if (!skipDeleting(file, conf)) {
+        fs.delete(file, true);
       }
     }
+  }
+
+  private static boolean skipDeleting(Path file, HiveConf conf){
+    return file.getName().toLowerCase().startsWith(
+            conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST).toLowerCase()) || file.getName().toLowerCase().startsWith(
+            conf.getVar(HiveConf.ConfVars.STAGINGDIR).toLowerCase());
+  }
 
   public static boolean moveResultFilesToDest(FileSystem fs, Path srcd, Path destd)
     throws IOException, HiveException {
