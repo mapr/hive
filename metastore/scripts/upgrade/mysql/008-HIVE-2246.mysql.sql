@@ -42,20 +42,26 @@ CREATE PROCEDURE REVERT()
  */
 CREATE PROCEDURE ALTER_SDS()
   BEGIN
-    ALTER TABLE SDS
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure ALTER_SDS()');
+    IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND
+          COLUMN_NAME  = 'CD_ID'    AND
+          TABLE_NAME   = 'SDS') )   THEN
+      ALTER TABLE SDS
       ADD COLUMN CD_ID bigint(20) NULL
       AFTER SD_ID
-    ;
-    SELECT 'Added the column CD_ID to SD_ID';
-    ALTER TABLE SDS
+      ;
+      SELECT 'Added the column CD_ID to SD_ID';
+      ALTER TABLE SDS
       ADD CONSTRAINT `SDS_FK2`
       FOREIGN KEY (`CD_ID`) REFERENCES `CDS` (`CD_ID`)
-    ;
-    SELECT 'Created a FK Constraint on CD_ID in SDS';
-    CREATE INDEX `SDS_N50` ON SDS
+      ;
+      SELECT 'Created a FK Constraint on CD_ID in SDS';
+      CREATE INDEX `SDS_N50` ON SDS
       (CD_ID)
-    ;
-    SELECT 'Added an index on CD_ID in SDS';
+      ;
+      SELECT 'Added an index on CD_ID in SDS';
+    END IF;
   END $$
 
 /*
@@ -68,6 +74,7 @@ CREATE PROCEDURE ALTER_SDS()
  */
 CREATE PROCEDURE CREATE_TABLES()
   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure CREATE_TABLES()');
     CREATE TABLE IF NOT EXISTS `CDS` (
       `CD_ID` bigint(20) NOT NULL,
       PRIMARY KEY (`CD_ID`)
@@ -92,6 +99,7 @@ CREATE PROCEDURE CREATE_TABLES()
  */
 CREATE PROCEDURE PRE_MIGRATE()
   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN END;
     call CREATE_TABLES();
     SELECT 'Created tables';
     call CREATE_TABLE_SDS();
@@ -111,28 +119,34 @@ CREATE PROCEDURE MIGRATE_TABLES()
     /* In the migration, there is a 1:1 mapping between CD_ID and SD_ID
      * for tables. For speed, just let CD_ID = SD_ID for tables
      */
-    INSERT INTO CDS (CD_ID)
-    SELECT SD_ID FROM TABLE_SDS;
-    SELECT 'Inserted into CDS';
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure MIGRATE_TABLES()');
 
-    UPDATE SDS
+    IF EXISTS( (SELECT * FROM information_schema.tables
+    WHERE TABLE_SCHEMA = DATABASE() AND
+          TABLE_NAME   = 'TABLE_SDS') ) THEN
+      INSERT INTO CDS (CD_ID)
+        SELECT SD_ID FROM TABLE_SDS;
+      SELECT 'Inserted into CDS';
+
+      UPDATE SDS
       SET CD_ID = SD_ID
-    WHERE SD_ID in
-    (select SD_ID from TABLE_SDS);
-    SELECT 'Updated CD_ID in SDS';
+      WHERE SD_ID in
+            (select SD_ID from TABLE_SDS);
+      SELECT 'Updated CD_ID in SDS';
 
-    INSERT INTO COLUMNS_V2
+      INSERT INTO COLUMNS_V2
       (CD_ID, COMMENT, COLUMN_NAME, TYPE_NAME, INTEGER_IDX)
-    SELECT
-      c.SD_ID, c.COMMENT, c.COLUMN_NAME, c.TYPE_NAME, c.INTEGER_IDX
-    FROM
-      COLUMNS c
-    JOIN
-      TBLS t
-    ON
-      t.SD_ID = c.SD_ID
-    ;
-    SELECT 'Inserted table columns into COLUMNS_V2';
+        SELECT
+          c.SD_ID, c.COMMENT, c.COLUMN_NAME, c.TYPE_NAME, c.INTEGER_IDX
+        FROM
+          COLUMNS c
+          JOIN
+          TBLS t
+            ON
+              t.SD_ID = c.SD_ID
+      ;
+      SELECT 'Inserted table columns into COLUMNS_V2';
+    END IF;
   END $$
 
 /*
@@ -141,6 +155,7 @@ CREATE PROCEDURE MIGRATE_TABLES()
  */
 CREATE PROCEDURE MIGRATE_PARTITIONS()
   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure MIGRATE_PARTITIONS()');
     UPDATE SDS sd
     JOIN PARTITIONS p on p.SD_ID = sd.SD_ID
     JOIN TBLS t on t.TBL_ID = p.TBL_ID
@@ -159,29 +174,34 @@ CREATE PROCEDURE MIGRATE_IDXS()
     /* In the migration, there is a 1:1 mapping between CD_ID and SD_ID
      * for indexes. For speed, just let CD_ID = SD_ID for indexes
      */
-    INSERT INTO CDS (CD_ID)
-    SELECT SD_ID FROM IDXS
-    WHERE SD_ID IS NOT NULL;
-    SELECT 'Inserted into CDS for IDXS';
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure MIGRATE_IDXS()');
+    IF EXISTS( (SELECT * FROM information_schema.tables
+    WHERE TABLE_SCHEMA = DATABASE() AND
+          TABLE_NAME   = 'COLUMNS') ) THEN
+      INSERT INTO CDS (CD_ID)
+        SELECT SD_ID FROM IDXS
+        WHERE SD_ID IS NOT NULL;
+      SELECT 'Inserted into CDS for IDXS';
 
-    UPDATE SDS
+      UPDATE SDS
       SET CD_ID = SD_ID
-    WHERE SD_ID in
-    (SELECT i.SD_ID FROM IDXS i WHERE i.SD_ID IS NOT NULL);
-    SELECT 'Updated CD_ID in SDS for IDXS';
+      WHERE SD_ID in
+            (SELECT i.SD_ID FROM IDXS i WHERE i.SD_ID IS NOT NULL);
+      SELECT 'Updated CD_ID in SDS for IDXS';
 
-    INSERT INTO COLUMNS_V2
+      INSERT INTO COLUMNS_V2
       (CD_ID, COMMENT, COLUMN_NAME, TYPE_NAME, INTEGER_IDX)
-    SELECT
-      c.SD_ID, c.COMMENT, c.COLUMN_NAME, c.TYPE_NAME, c.INTEGER_IDX
-    FROM
-      COLUMNS c
-    JOIN
-      IDXS i
-    ON
-      i.SD_ID = c.SD_ID
-    ;
-    SELECT 'Inserted table columns into COLUMNS_V2';
+        SELECT
+          c.SD_ID, c.COMMENT, c.COLUMN_NAME, c.TYPE_NAME, c.INTEGER_IDX
+        FROM
+          COLUMNS c
+          JOIN
+          IDXS i
+            ON
+              i.SD_ID = c.SD_ID
+      ;
+      SELECT 'Inserted table columns into COLUMNS_V2';
+    END IF;
   END $$
 
 /*
@@ -189,6 +209,7 @@ CREATE PROCEDURE MIGRATE_IDXS()
  */
 CREATE PROCEDURE CREATE_TABLE_SDS()
   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure CREATE_TABLE_SDS()');
     CREATE TEMPORARY TABLE `TABLE_SDS` (
       `SD_ID` bigint(20) NOT NULL,
       PRIMARY KEY (`SD_ID`)
@@ -215,11 +236,16 @@ CREATE PROCEDURE CREATE_TABLE_SDS()
  */
 CREATE PROCEDURE RENAME_OLD_COLUMNS()
   BEGIN
-    RENAME TABLE `COLUMNS` TO `COLUMNS_OLD`;
-    SET FOREIGN_KEY_CHECKS = 0;	
-    ALTER TABLE COLUMNS_OLD 
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @LOG_MESSAGE := CONCAT(@LOG_MESSAGE, ' Error executing procedure RENAME_OLD_COLUMNS()');
+    IF EXISTS( (SELECT * FROM information_schema.tables
+    WHERE TABLE_SCHEMA = DATABASE() AND
+          TABLE_NAME   = 'COLUMNS') ) THEN
+      RENAME TABLE `COLUMNS` TO `COLUMNS_OLD`;
+      SET FOREIGN_KEY_CHECKS = 0;
+      ALTER TABLE COLUMNS_OLD
       DROP FOREIGN KEY `COLUMNS_FK1`;
-    SET FOREIGN_KEY_CHECKS = 1;
+      SET FOREIGN_KEY_CHECKS = 1;
+    END IF;
   END $$
 
 /*
