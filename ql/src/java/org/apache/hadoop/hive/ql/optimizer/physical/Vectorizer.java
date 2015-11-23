@@ -641,6 +641,14 @@ public class Vectorizer implements PhysicalPlanResolver {
   }
 
   private boolean validateExprNodeDescRecursive(ExprNodeDesc desc) {
+    if (desc instanceof ExprNodeColumnDesc) {
+      ExprNodeColumnDesc c = (ExprNodeColumnDesc) desc;
+      // Currently, we do not support vectorized virtual columns (see HIVE-5570).
+      if (VirtualColumn.VIRTUAL_COLUMN_NAMES.contains(c.getColumn())) {
+        LOG.info("Cannot vectorize virtual column " + c.getColumn());
+        return false;
+      }
+    }
     String typeName = desc.getTypeInfo().getTypeName();
     boolean ret = validateDataType(typeName);
     if (!ret) {
@@ -774,10 +782,8 @@ public class Vectorizer implements PhysicalPlanResolver {
 
     // Not using method column.getIsVirtualCol() because partitioning columns are also
     // treated as virtual columns in ColumnInfo.
-    for (VirtualColumn vc : VirtualColumn.VIRTUAL_COLUMNS) {
-      if (column.getInternalName().equals(vc.getName())) {
+    if (VirtualColumn.VIRTUAL_COLUMN_NAMES.contains(column.getInternalName())) {
         return true;
-      }
     }
     return false;
   }
