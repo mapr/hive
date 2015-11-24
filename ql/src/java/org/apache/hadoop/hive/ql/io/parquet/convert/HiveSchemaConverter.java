@@ -60,7 +60,7 @@ public class HiveSchemaConverter {
   private static Type convertType(final String name, final TypeInfo typeInfo, final Repetition repetition) {
     if (typeInfo.getCategory().equals(Category.PRIMITIVE)) {
       if (typeInfo.equals(TypeInfoFactory.stringTypeInfo)) {
-        return new PrimitiveType(repetition, PrimitiveTypeName.BINARY, name);
+        return new PrimitiveType(repetition, PrimitiveTypeName.BINARY, name, OriginalType.UTF8);
       } else if (typeInfo.equals(TypeInfoFactory.intTypeInfo) ||
           typeInfo.equals(TypeInfoFactory.shortTypeInfo) ||
           typeInfo.equals(TypeInfoFactory.byteTypeInfo)) {

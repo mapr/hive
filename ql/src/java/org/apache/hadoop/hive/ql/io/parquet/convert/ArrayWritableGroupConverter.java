@@ -34,7 +34,7 @@ public class ArrayWritableGroupConverter extends HiveGroupConverter {
   private Writable[] mapPairContainer;
 
   public ArrayWritableGroupConverter(final GroupType groupType, final HiveGroupConverter parent,
-      final int index, List<TypeInfo> hiveSchemaTypeInfos) {
+      final int index) {
     this.parent = parent;
     this.index = index;
     int count = groupType.getFieldCount();
@@ -44,8 +44,7 @@ public class ArrayWritableGroupConverter extends HiveGroupConverter {
     isMap = count == 2;
     converters = new Converter[count];
     for (int i = 0; i < count; i++) {
-      converters[i] = getConverterFromDescription(groupType.getType(i), i, this,
-                        hiveSchemaTypeInfos);
+      converters[i] = getConverterFromDescription(groupType.getType(i), i, this);
     }
   }
 
