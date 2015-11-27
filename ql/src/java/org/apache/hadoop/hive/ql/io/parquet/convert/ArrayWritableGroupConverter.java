@@ -13,6 +13,10 @@
  */
 package org.apache.hadoop.hive.ql.io.parquet.convert;
 
+import java.util.List;
+
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.Writable;
 

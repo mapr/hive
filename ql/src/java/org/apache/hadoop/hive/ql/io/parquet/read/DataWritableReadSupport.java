@@ -104,6 +104,7 @@ public class DataWritableReadSupport extends ReadSupport<ArrayWritable> {
     }
   }
 
+
   /**
    *
    * It creates the hive read support to interpret data from parquet to hive
@@ -125,6 +126,8 @@ public class DataWritableReadSupport extends ReadSupport<ArrayWritable> {
     }
     final MessageType tableSchema = MessageTypeParser.
         parseMessageType(metadata.get(HIVE_SCHEMA_KEY));
-    return new DataWritableRecordConverter(readContext.getRequestedSchema(), tableSchema);
+    return  new
+            DataWritableRecordConverter(readContext.getRequestedSchema(), tableSchema);
   }
 }
+

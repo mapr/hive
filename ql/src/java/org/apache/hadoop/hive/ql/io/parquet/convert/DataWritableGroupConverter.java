@@ -48,7 +48,7 @@ public class DataWritableGroupConverter extends HiveGroupConverter {
   }
 
   public DataWritableGroupConverter(final GroupType selectedGroupType,
-      final HiveGroupConverter parent, final int index, final GroupType containingGroupType) {
+                                    final HiveGroupConverter parent, final int index, final GroupType containingGroupType) {
     this.parent = parent;
     this.index = index;
     final int totalFieldCount = containingGroupType.getFieldCount();
@@ -62,7 +62,7 @@ public class DataWritableGroupConverter extends HiveGroupConverter {
       Type subtype = selectedFields.get(i);
       if (containingGroupType.getFields().contains(subtype)) {
         converters[i] = getConverterFromDescription(subtype,
-            containingGroupType.getFieldIndex(subtype.getName()), this);
+                containingGroupType.getFieldIndex(subtype.getName()), this);
       } else {
         throw new IllegalStateException("Group type [" + containingGroupType +
             "] does not contain requested field: " + subtype);
