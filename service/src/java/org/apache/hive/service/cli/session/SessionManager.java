@@ -156,10 +156,10 @@ public class SessionManager extends CompositeService {
           throws HiveSQLException {
     HiveSession session;
     if (withImpersonation) {
-      HiveSessionImplwithUGI hiveSessionUgi = new HiveSessionImplwithUGI(protocol, username, password,
+      HiveSessionImplwithUGI sessionWithUGI = new HiveSessionImplwithUGI(protocol, username, password,
         hiveConf, sessionConf, TSetIpAddressProcessor.getUserIpAddress(), delegationToken);
-      session = HiveSessionProxy.getProxy(hiveSessionUgi, hiveSessionUgi.getSessionUgi());
-      hiveSessionUgi.setProxySession(session);
+      session = HiveSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
+      sessionWithUGI.setProxySession(session);
     } else {
       session = new HiveSessionImpl(protocol, username, password, hiveConf, sessionConf,
           TSetIpAddressProcessor.getUserIpAddress());
