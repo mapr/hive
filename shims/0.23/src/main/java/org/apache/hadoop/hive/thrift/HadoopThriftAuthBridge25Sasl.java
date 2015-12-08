@@ -22,6 +22,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import javax.security.sasl.SaslException;
 
@@ -155,70 +156,59 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         String tokenStrForm, TTransport underlyingTransport,
         Map<String, String> saslProps) throws IOException {
 
-        UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-        UserGroupInformation.AuthenticationMethod authenticationMethod = ugi.getAuthenticationMethod();
         TTransport saslTransport = null;
-        LOG.info("Sasl client AuthenticationMethod: " + authenticationMethod.toString());
-        if (authenticationMethod.equals(AuthenticationMethod.PROXY)) {
-          if (methodStr != null) {
-            AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
-            if (method == AuthMethod.DIGEST) {
-                Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
-                t.decodeFromUrlString(tokenStrForm);
-                saslTransport = new TSaslClientTransport(
-                    method.getMechanismName(),
-                    null,
-                    null, SaslRpcServer.SASL_DEFAULT_REALM,
-                    saslProps, new SaslClientCallbackHandler(t),
-                    underlyingTransport);
-                return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-            }
-          }
-          throw new IOException("Unsupported authentication method: PROXY-" + methodStr);
-        }
-
-        RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(ugi.getAuthenticationMethod());
-
-        if (rpcAuthMethod == null) {
-          throw new IOException("Unsupported authentication method: " + ugi.getAuthenticationMethod());
-        }
-
-        if (authenticationMethod.equals(UserGroupInformation.AuthenticationMethod.TOKEN)) {
-          Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
-          t.decodeFromUrlString(tokenStrForm);
-          saslTransport = new TSaslClientTransport(
-              rpcAuthMethod.getMechanismName(),
-              null,
-              null,
-              SaslRpcServer.SASL_DEFAULT_REALM,
-              saslProps,
-              new SaslClientCallbackHandler(t),
-              underlyingTransport);
-          return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-        }
-        else if (authenticationMethod.equals(UserGroupInformation.AuthenticationMethod.KERBEROS)) {
-          String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
-          String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
-          if (names.length != 3) {
-            throw new IOException(
-                "Kerberos principal name does NOT have the expected hostname part: "
-                    + serverPrincipal);
-          }
-          try {
+        if (methodStr.equals("DIGEST")) {
+          LOG.info("User authentication with method DIGEST: " + methodStr);
+          AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
+          if (method == AuthMethod.DIGEST) {
+            Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
+            t.decodeFromUrlString(tokenStrForm);
             saslTransport = new TSaslClientTransport(
+              method.getMechanismName(),
+              null,
+              null, SaslRpcServer.SASL_DEFAULT_REALM,
+              saslProps, new SaslClientCallbackHandler(t),
+              underlyingTransport);
+            return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+          }
+        } else {
+          Configuration conf = new Configuration();
+          conf.addDefaultResource("hive-site.xml");
+          // if uses SASL, authType must be only KERBEROS or MapRSasl
+          // by default uses MapRSasl
+          String authTypeStr = conf.get("hive.server2.authentication");
+          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL")) {
+            authTypeStr = "CUSTOM";
+          }
+          LOG.info("User authentication with method: " + authTypeStr);
+          RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(
+            AuthenticationMethod.valueOf(AuthenticationMethod.class, authTypeStr.toUpperCase(Locale.ENGLISH)));
+          if (rpcAuthMethod == null) {
+            throw new IOException("Unsupported authentication method: " + authTypeStr);
+          }
+          if ("KERBEROS".equalsIgnoreCase(authTypeStr)) {
+            String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
+            String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
+            if (names.length != 3) {
+              throw new IOException(
+                "Kerberos principal name does NOT have the expected hostname part: "
+                  + serverPrincipal);
+            }
+            try {
+              saslTransport = new TSaslClientTransport(
                 rpcAuthMethod.getMechanismName(),
                 null,
                 names[0], names[1],
                 saslProps,
                 null,
                 underlyingTransport);
-            return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-          } catch (SaslException se) {
-            throw new IOException("Could not instantiate SASL transport", se);
-          }
-        } else {
-          try {
-            saslTransport = new TSaslClientTransport(
+              return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            } catch (SaslException se) {
+              throw new IOException("Could not instantiate SASL transport", se);
+            }
+          } else {  //If it's not KERBEROS, it can be only MapRSasl
+            try {
+              saslTransport = new TSaslClientTransport(
                 rpcAuthMethod.getMechanismName(),
                 null,
                 null,
@@ -226,11 +216,13 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
                 saslProps,
                 null,
                 underlyingTransport);
-            return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser()); 
-          } catch (SaslException se) {
-            throw new IOException("Could not instantiate SASL transport", se);
+              return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            } catch (SaslException se) {
+              throw new IOException("Could not instantiate SASL transport", se);
+            }
           }
         }
+        throw new IOException("Unsupported authentication method: " + methodStr);
       }
     }
 }
