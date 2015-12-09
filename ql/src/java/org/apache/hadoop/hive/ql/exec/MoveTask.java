@@ -268,12 +268,14 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
           if (tablePath != null) {
             Path lastNestedPath = tbd.getSourcePath();
             Path firstLevelPartitionPath = findFirstLevelPartition(tablePath, lastNestedPath);
-            HadoopShims shims = ShimLoader.getHadoopShims();
-            HadoopShims.HdfsFileStatus destStatus = shims.getFullFileStatus(conf, tablePath.getFileSystem(conf), tablePath);
-            try {
-              ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, tablePath.getFileSystem(conf), firstLevelPartitionPath);
-            } catch (IOException e) {
-              LOG.warn("Error setting permission of file " + tablePath + ": " + e.getMessage(), e);
+            if (!isRootFolder(firstLevelPartitionPath)) {
+              HadoopShims shims = ShimLoader.getHadoopShims();
+              HadoopShims.HdfsFileStatus destStatus = shims.getFullFileStatus(conf, tablePath.getFileSystem(conf), tablePath);
+              try {
+                ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, tablePath.getFileSystem(conf), firstLevelPartitionPath);
+              } catch (IOException e) {
+                LOG.warn("Error setting permission of file " + tablePath + ": " + e.getMessage(), e);
+              }
             }
           }
         }
@@ -530,6 +532,10 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
       isFirstPartition = tablePath.equals(parentPath);
     }
     return currentPath;
+  }
+
+  private static boolean isRootFolder(Path path){
+    return path.depth() == 0;
   }
 
   private boolean isSkewedStoredAsDirs(LoadTableDesc tbd) {
