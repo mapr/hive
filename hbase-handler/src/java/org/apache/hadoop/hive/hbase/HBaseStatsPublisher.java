@@ -141,7 +141,7 @@ public class HBaseStatsPublisher implements StatsPublisher {
       if (!hbase.tableExists(HBaseStatsSetupConstants.PART_STAT_TABLE_NAME)) {
         HTableDescriptor table = new HTableDescriptor(HBaseStatsSetupConstants.PART_STAT_TABLE_NAME);
         HColumnDescriptor family = new HColumnDescriptor(HBaseStatsUtils.getFamilyName());
-        table.addFamily(family);
+        HTableDescriptorProxy.addFamily(table, family);
         hbase.createTable(table);
       }
     } catch (IOException e) {
