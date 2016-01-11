@@ -56,7 +56,7 @@ public class HiveServer2 extends CompositeService {
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
-    cliService = new CLIService(this);
+    cliService = new CLIService();
     addService(cliService);
 
     if (hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
