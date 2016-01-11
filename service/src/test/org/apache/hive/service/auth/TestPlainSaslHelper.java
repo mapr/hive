@@ -39,7 +39,7 @@ public class TestPlainSaslHelper extends TestCase {
         hconf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS));
 
 
-    CLIService cliService = new CLIService(null);
+    CLIService cliService = new CLIService();
     cliService.init(hconf);
     ThriftCLIService tcliService = new ThriftBinaryCLIService(cliService);
     tcliService.init(hconf);

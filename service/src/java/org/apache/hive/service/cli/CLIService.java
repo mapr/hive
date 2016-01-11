@@ -46,7 +46,6 @@ import org.apache.hive.service.cli.operation.Operation;
 import org.apache.hive.service.cli.session.HiveSession;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
-import org.apache.hive.service.server.HiveServer2;
 
 /**
  * CLIService.
@@ -65,21 +64,17 @@ public class CLIService extends CompositeService implements ICLIService {
 
   private HiveConf hiveConf;
   private SessionManager sessionManager;
-  private IMetaStoreClient metastoreClient;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
-  // The HiveServer2 instance running this service
-  private final HiveServer2 hiveServer2;
 
-  public CLIService(HiveServer2 hiveServer2) {
+  public CLIService() {
     super(CLIService.class.getSimpleName());
-    this.hiveServer2 = hiveServer2;
   }
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
     this.hiveConf = hiveConf;
-    sessionManager = new SessionManager(hiveServer2);
+    sessionManager = new SessionManager();
     addService(sessionManager);
     /**
      * If auth mode is Kerberos, do a kerberos login for the service from the keytab

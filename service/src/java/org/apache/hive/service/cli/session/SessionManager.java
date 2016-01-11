@@ -69,12 +69,9 @@ public class SessionManager extends CompositeService {
   private long sessionTimeout;
 
   private volatile boolean shutdown;
-  // The HiveServer2 instance running this service
-  private final HiveServer2 hiveServer2;
 
-  public SessionManager(HiveServer2 hiveServer2) {
+  public SessionManager() {
     super(SessionManager.class.getSimpleName());
-    this.hiveServer2 = hiveServer2;
   }
 
   @Override
