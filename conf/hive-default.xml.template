@@ -182,19 +182,19 @@
 </property>
 
 <property>
-  <name>datanucleus.validateTables</name>
+  <name>datanucleus.schema.validateTables</name>
   <value>false</value>
   <description>validates existing schema against code. turn this on if you want to verify existing schema </description>
 </property>
 
 <property>
-  <name>datanucleus.validateColumns</name>
+  <name>datanucleus.schema.validateColumns</name>
   <value>false</value>
   <description>validates existing schema against code. turn this on if you want to verify existing schema </description>
 </property>
 
 <property>
-  <name>datanucleus.validateConstraints</name>
+  <name>datanucleus.schema.validateConstraints</name>
   <value>false</value>
   <description>validates existing schema against code. turn this on if you want to verify existing schema </description>
 </property>
@@ -206,7 +206,7 @@
 </property>
 
 <property>
-  <name>datanucleus.autoCreateSchema</name>
+  <name>datanucleus.schema.autoCreateAll</name>
   <value>true</value>
   <description>creates necessary schema on a startup if one doesn't exist. set this to false, after creating it once</description>
 </property>
