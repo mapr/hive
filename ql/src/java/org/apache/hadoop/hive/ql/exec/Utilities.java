@@ -413,6 +413,9 @@ public final class Utilities {
           in = new ByteArrayInputStream(planBytes);
           in = new InflaterInputStream(in);
         } else {
+          if (!localPath.getFileSystem(conf).exists(localPath)) {
+            throw new FileNotFoundException(localPath.toString());
+          }
           LOG.info("Open file to read in plan: " + localPath);
           in = localPath.getFileSystem(conf).open(localPath);
         }
