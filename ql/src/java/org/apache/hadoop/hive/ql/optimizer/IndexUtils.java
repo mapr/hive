@@ -48,6 +48,7 @@ import org.apache.hadoop.hive.ql.optimizer.physical.index.IndexWhereProcessor;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.PrunedPartitionList;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 /**
  * Utility class for index support.
@@ -202,13 +203,17 @@ public final class IndexUtils {
   }
 
 
-  public static Task<?> createRootTask(HiveConf builderConf, Set<ReadEntity> inputs,
-      Set<WriteEntity> outputs, StringBuilder command,
-      LinkedHashMap<String, String> partSpec,
-      String indexTableName, String dbName){
+  public static Task<?> createRootTask(
+          HiveConf builderConf,
+          Set<ReadEntity> inputs,
+          Set<WriteEntity> outputs,
+          StringBuilder command,
+          LinkedHashMap<String, String> partSpec,
+          String indexTableName,
+          String dbName){
     // Don't try to index optimize the query to build the index
     HiveConf.setBoolVar(builderConf, HiveConf.ConfVars.HIVEOPTINDEXFILTER, false);
-    Driver driver = new Driver(builderConf);
+    Driver driver = new Driver(builderConf, SessionState.get().getUserName());
     driver.compile(command.toString(), false);
 
     Task<?> rootTask = driver.getPlan().getRootTasks().get(0);
@@ -216,9 +221,9 @@ public final class IndexUtils {
     outputs.addAll(driver.getPlan().getOutputs());
 
     IndexMetadataChangeWork indexMetaChange = new IndexMetadataChangeWork(partSpec,
-        indexTableName, dbName);
+            indexTableName, dbName);
     IndexMetadataChangeTask indexMetaChangeTsk =
-        (IndexMetadataChangeTask) TaskFactory.get(indexMetaChange, builderConf);
+            (IndexMetadataChangeTask) TaskFactory.get(indexMetaChange, builderConf);
     indexMetaChangeTsk.setWork(indexMetaChange);
     rootTask.addDependentTask(indexMetaChangeTsk);
 
