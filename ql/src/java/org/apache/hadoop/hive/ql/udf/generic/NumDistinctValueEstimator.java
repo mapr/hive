@@ -22,7 +22,9 @@ import javolution.util.FastBitSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.common.classification.InterfaceAudience;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.io.Text;
 
 public class NumDistinctValueEstimator {
@@ -355,5 +357,29 @@ public class NumDistinctValueEstimator {
         (double)(sumLeastSigZero/(numBitVectors * 1.0)) - (Math.log(PHI)/Math.log(2.0));
     numDistinctValues = Math.pow(2.0, avgLeastSigZero);
     return ((long)(numDistinctValues));
+  }
+
+  @InterfaceAudience.LimitedPrivate(value = { "Hive" })
+  static int lengthFor(JavaDataModel model, Integer numVector) {
+    int length = model.object();
+    length += model.primitive1() * 2;       // two int
+    length += model.primitive2();           // one double
+    length += model.lengthForRandom() * 2;  // two Random
+
+    if (numVector == null) {
+      numVector = 16; // HiveConf hive.stats.ndv.error default produces 16 vectors
+    }
+
+    if (numVector > 0) {
+      length += model.array() * 3;                    // three array
+      length += model.primitive1() * numVector * 2;   // two int array
+      length += (model.object() + model.array() + model.primitive1() +
+          model.primitive2()) * numVector;   // bitset array
+    }
+    return length;
+  }
+
+  public int lengthFor(JavaDataModel model) {
+    return lengthFor(model, getnumBitVectors());
   }
 }
