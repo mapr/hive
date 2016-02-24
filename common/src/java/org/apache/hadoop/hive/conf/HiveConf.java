@@ -1870,9 +1870,9 @@ public class HiveConf extends Configuration {
         "  NOSASL:  Raw transport"),
     HIVE_SERVER2_ALLOW_USER_SUBSTITUTION("hive.server2.allow.user.substitution", true,
         "Allow alternate user to be specified as part of HiveServer2 open connection request."),
-    HIVE_SERVER2_KERBEROS_KEYTAB("hive.server2.authentication.kerberos.keytab", "",
+    HIVE_SERVER2_KERBEROS_KEYTAB("hive.server2.authentication.kerberos.keytab", "/etc/hive/conf/hive.keytab",
         "Kerberos keytab file for server principal"),
-    HIVE_SERVER2_KERBEROS_PRINCIPAL("hive.server2.authentication.kerberos.principal", "",
+    HIVE_SERVER2_KERBEROS_PRINCIPAL("hive.server2.authentication.kerberos.principal", "hive-server2/_HOST@EXAMPLE.COM",
         "Kerberos server principal"),
     HIVE_SERVER2_SPNEGO_KEYTAB("hive.server2.authentication.spnego.keytab", "",
         "keytab file for SPNego principal, optional,\n" +
