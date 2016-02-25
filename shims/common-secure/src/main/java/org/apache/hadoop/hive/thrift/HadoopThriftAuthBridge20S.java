@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -187,43 +188,66 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
         String principalConfig, String host,
         String methodStr, String tokenStrForm, TTransport underlyingTransport,
         Map<String, String> saslProps) throws IOException {
-      AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
+
 
       TTransport saslTransport = null;
-      switch (method) {
-      case DIGEST:
-        Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
-        t.decodeFromUrlString(tokenStrForm);
-        saslTransport = new TSaslClientTransport(
-            method.getMechanismName(),
-            null,
-            null, SaslRpcServer.SASL_DEFAULT_REALM,
-            saslProps, new SaslClientCallbackHandler(t),
-            underlyingTransport);
-        return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-
-      case KERBEROS:
-        String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
-        String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
-        if (names.length != 3) {
-          throw new IOException(
-              "Kerberos principal name does NOT have the expected hostname part: "
-                  + serverPrincipal);
-        }
-        try {
+      if ("DIGEST".equals(methodStr)) {
+        AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
+        Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
+          t.decodeFromUrlString(tokenStrForm);
           saslTransport = new TSaslClientTransport(
-              method.getMechanismName(),
-              null,
-              names[0], names[1],
-              saslProps, null,
-              underlyingTransport);
+                  method.getMechanismName(),
+                  null,
+                  null, SaslRpcServer.SASL_DEFAULT_REALM,
+                  saslProps, new SaslClientCallbackHandler(t),
+                  underlyingTransport);
           return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-        } catch (SaslException se) {
-          throw new IOException("Could not instantiate SASL transport", se);
-        }
+      } else {
+          Configuration conf = new Configuration();
+          conf.addDefaultResource("hive-site.xml");
+          // if uses SASL, authType must be only KERBEROS or MapRSasl
+          // by default uses MapRSasl
+          String authTypeStr = conf.get("hive.server2.authentication");
+          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL")) {
+            authTypeStr = "CUSTOM";
+          }
+          LOG.info("User authentication with method: " + authTypeStr);
 
-      default:
-        throw new IOException("Unsupported authentication method: " + method);
+          if ("KERBEROS".equalsIgnoreCase(authTypeStr)) {
+            AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
+            String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
+            String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
+            if (names.length != 3) {
+              throw new IOException(
+                      "Kerberos principal name does NOT have the expected hostname part: "
+                              + serverPrincipal);
+            }
+            try {
+              saslTransport = new TSaslClientTransport(
+                      method.getMechanismName(),
+                      null,
+                      names[0], names[1],
+                      saslProps, null,
+                      underlyingTransport);
+              return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            } catch (SaslException se) {
+              throw new IOException("Could not instantiate SASL transport", se);
+            }
+          } else {  //If it's not KERBEROS, it can be only MapRSasl
+            try {
+              saslTransport = new TSaslClientTransport(
+                      RpcAuthMethodHelper.AuthMethod.MAPRSASL.getMechanismName(),
+                      null,
+                      null,
+                      SaslRpcServer.SASL_DEFAULT_REALM,
+                      saslProps,
+                      null,
+                      underlyingTransport);
+              return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            } catch (SaslException se) {
+              throw new IOException("Could not instantiate SASL transport", se);
+            }
+          }
       }
     }
     protected static class SaslClientCallbackHandler implements CallbackHandler {
@@ -360,12 +384,6 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
     @Override
     public TTransportFactory createTransportFactory(Map<String, String> saslProps, int saslMessageLimit)
         throws TTransportException {
-      // Parse out the kerberos principal, host, realm.
-      String kerberosName = realUgi.getUserName();
-      final String names[] = SaslRpcServer.splitKerberosName(kerberosName);
-      if (names.length != 3) {
-        throw new TTransportException("Kerberos principal should have 3 parts: " + kerberosName);
-      }
 
       TSaslServerTransport.Factory transFactory;
       if (saslMessageLimit > 0) {
@@ -373,11 +391,28 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
       } else {
         transFactory = new TSaslServerTransport.Factory();
       }
-      transFactory.addServerDefinition(
-          AuthMethod.KERBEROS.getMechanismName(),
-          names[0], names[1],  // two parts of kerberos principal
-          saslProps,
-          new SaslRpcServer.SaslGssCallbackHandler());
+      List<String> rpcAuthMethodList = RpcAuthMethodHelper.getRpcAuthMethodList(realUgi);
+      for(String rpcAuthMethod : rpcAuthMethodList) {
+        if(AuthMethod.KERBEROS.getMechanismName().equalsIgnoreCase(rpcAuthMethod)){
+          // Parse out the kerberos principal, host, realm.
+          String kerberosName = realUgi.getUserName();
+          final String names[] = SaslRpcServer.splitKerberosName(kerberosName);
+          if (names.length == 3) {
+            transFactory.addServerDefinition(
+                    AuthMethod.KERBEROS.getMechanismName(),
+                    names[0], names[1],  // two parts of kerberos principal
+                    saslProps,
+                    new SaslRpcServer.SaslGssCallbackHandler());
+          }
+        } else {
+          transFactory.addServerDefinition(RpcAuthMethodHelper.AuthMethod.MAPRSASL.getMechanismName(),
+                  null,
+                  SaslRpcServer.SASL_DEFAULT_REALM,
+                  saslProps,
+                  RpcAuthMethodHelper.createCallbackHandler());
+
+        }
+      }
       transFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
           null, SaslRpcServer.SASL_DEFAULT_REALM,
           saslProps, new SaslDigestCallbackHandler(secretManager));

@@ -157,7 +157,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         Map<String, String> saslProps) throws IOException {
 
         TTransport saslTransport = null;
-        if (methodStr.equals("DIGEST")) {
+        if ("DIGEST".equals(methodStr)) {
           LOG.info("User authentication with method DIGEST: " + methodStr);
           AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
           if (method == AuthMethod.DIGEST) {
