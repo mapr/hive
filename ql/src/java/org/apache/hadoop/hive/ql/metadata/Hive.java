@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jdo.JDODataStoreException;
 import org.apache.commons.logging.Log;
@@ -165,9 +166,57 @@ public class Hive {
   // register all permanent functions. need improvement
   static {
     try {
-      reloadFunctions();
+      registerAllFunctionsOnce();
     } catch (Exception e) {
       LOG.warn("Failed to access metastore. This class should not accessed in runtime.",e);
+    }
+  }
+
+  // Note that while this is an improvement over static initialization, it is still not,
+  // technically, valid, cause nothing prevents us from connecting to several metastores in
+  // the same process. This will still only get the functions from the first metastore.
+  private final static AtomicInteger didRegisterAllFuncs = new AtomicInteger(0);
+  private final static int REG_FUNCS_NO = 0, REG_FUNCS_DONE = 2, REG_FUNCS_PENDING = 1;
+
+  // register all permanent functions. need improvement
+  private static void registerAllFunctionsOnce() throws HiveException {
+    boolean breakLoop = false;
+    while (!breakLoop) {
+      int val = didRegisterAllFuncs.get();
+      switch (val) {
+        case REG_FUNCS_NO: {
+          if (didRegisterAllFuncs.compareAndSet(val, REG_FUNCS_PENDING)) {
+            breakLoop = true;
+            break;
+          }
+          continue;
+        }
+        case REG_FUNCS_PENDING: {
+          synchronized (didRegisterAllFuncs) {
+            try {
+              didRegisterAllFuncs.wait(100);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              return;
+            }
+          }
+          continue;
+        }
+        case REG_FUNCS_DONE: return;
+        default: throw new AssertionError(val);
+      }
+    }
+    try {
+      reloadFunctions();
+      didRegisterAllFuncs.compareAndSet(REG_FUNCS_PENDING, REG_FUNCS_DONE);
+    } catch (Exception e) {
+      LOG.warn("Failed to register all functions.", e);
+      didRegisterAllFuncs.compareAndSet(REG_FUNCS_PENDING, REG_FUNCS_NO);
+      throw new HiveException(e);
+    } finally {
+      synchronized (didRegisterAllFuncs) {
+        didRegisterAllFuncs.notifyAll();
+      }
     }
   }
 
