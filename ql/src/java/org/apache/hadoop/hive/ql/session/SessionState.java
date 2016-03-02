@@ -417,10 +417,10 @@ public class SessionState {
     if (hdfsEncryptionShim == null) {
       try {
         FileSystem fs = FileSystem.get(conf);
-        if ("hdfs".equals(fs.getUri().getScheme())) {
+        if ("hdfs".equals(fs.getUri().getScheme()) || "maprfs".equals(fs.getUri().getScheme())) {
           hdfsEncryptionShim = ShimLoader.getHadoopShims().createHdfsEncryptionShim(fs, conf);
         } else {
-          LOG.info("Could not get hdfsEncryptionShim, it is only applicable to hdfs filesystem.");
+          LOG.info("Could not get hdfsEncryptionShim, it is only applicable to hdfs / maprfs filesystem.");
         }
       } catch (Exception e) {
         throw new HiveException(e);
@@ -1227,10 +1227,10 @@ public class SessionState {
     String scheme = uri.getScheme() == null ? null : uri.getScheme().toLowerCase();
     if (scheme == null || scheme.equals("file")) {
       return "file";
-    } else if (scheme.equals("hdfs") || scheme.equals("ivy")) {
+    } else if (scheme.equals("hdfs") || scheme.equals("ivy") || scheme.equals("maprfs")) {
       return scheme;
     } else {
-      throw new RuntimeException("invalid url: " + uri + ", expecting ( file | hdfs | ivy)  as url scheme. ");
+      throw new RuntimeException("invalid url: " + uri + ", expecting ( file | hdfs | ivy | maprfs)  as url scheme. ");
     }
   }
 
@@ -1241,7 +1241,7 @@ public class SessionState {
       return Arrays.asList(uri);
     } else if (getURLType(value).equals("ivy")) {
       return dependencyResolver.downloadDependencies(uri);
-    } else if (getURLType(value).equals("hdfs")) {
+    } else if (getURLType(value).equals("hdfs") || getURLType(value).equals("maprfs")) {
       return Arrays.asList(createURI(downloadResource(value, convertToUnix)));
     } else {
       throw new RuntimeException("Invalid url " + uri);
