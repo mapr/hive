@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -505,11 +506,28 @@ public class Driver implements CommandProcessor {
 
   private void doAuthorization(BaseSemanticAnalyzer sem)
     throws HiveException, AuthorizationException {
-    HashSet<ReadEntity> inputs = sem.getInputs();
-    HashSet<WriteEntity> outputs = sem.getOutputs();
     SessionState ss = SessionState.get();
     HiveOperation op = ss.getHiveOperation();
     Hive db = sem.getDb();
+
+    Set<ReadEntity> additionalInputs = new HashSet<ReadEntity>();
+    for (Entity e : sem.getInputs()) {
+      if (e.getType() == Entity.Type.PARTITION) {
+        additionalInputs.add(new ReadEntity(e.getTable()));
+      }
+    }
+
+    Set<WriteEntity> additionalOutputs = new HashSet<WriteEntity>();
+    for (Entity e : sem.getOutputs()) {
+      if (e.getType() == Entity.Type.PARTITION) {
+        additionalOutputs.add(new WriteEntity(e.getTable(), WriteEntity.WriteType.DDL_NO_LOCK));
+      }
+    }
+
+    Set<ReadEntity> inputs = Sets.union(sem.getInputs(), additionalInputs);
+    Set<WriteEntity> outputs = Sets.union(sem.getOutputs(), additionalOutputs);
+
+
     if (ss.isAuthorizationModeV2()) {
       doAuthorizationV2(ss, op, inputs, outputs);
       return;
@@ -691,8 +709,8 @@ public class Driver implements CommandProcessor {
     }
   }
 
-  private void doAuthorizationV2(SessionState ss, HiveOperation op, HashSet<ReadEntity> inputs,
-      HashSet<WriteEntity> outputs) throws HiveException {
+  private void doAuthorizationV2(SessionState ss, HiveOperation op, Set<ReadEntity> inputs,
+      Set<WriteEntity> outputs) throws HiveException {
     HiveOperationType hiveOpType = getHiveOperationType(op);
     List<HivePrivilegeObject> inputsHObjs = getHivePrivObjects(inputs);
     List<HivePrivilegeObject> outputHObjs = getHivePrivObjects(outputs);
@@ -700,7 +718,7 @@ public class Driver implements CommandProcessor {
     return;
   }
 
-  private List<HivePrivilegeObject> getHivePrivObjects(HashSet<? extends Entity> privObjects) {
+  private List<HivePrivilegeObject> getHivePrivObjects(Set<? extends Entity> privObjects) {
     List<HivePrivilegeObject> hivePrivobjs = new ArrayList<HivePrivilegeObject>();
     if(privObjects == null){
       return hivePrivobjs;
