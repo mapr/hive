@@ -140,6 +140,12 @@ public final class ConstantPropagateProcFactory {
       .add(PrimitiveCategory.VARCHAR)
       .add(PrimitiveCategory.CHAR).build();
 
+  private static final Set<PrimitiveCategory> unsafeConversionTypes = ImmutableSet
+      .<PrimitiveCategory>builder()
+      .add(PrimitiveCategory.STRING)
+      .add(PrimitiveCategory.VARCHAR)
+      .add(PrimitiveCategory.CHAR).build();
+
   /**
    * Cast type from expression type to expected type ti.
    *
@@ -148,6 +154,19 @@ public final class ConstantPropagateProcFactory {
    * @return cast constant, or null if the type cast failed.
    */
   private static ExprNodeConstantDesc typeCast(ExprNodeDesc desc, TypeInfo ti) {
+    return typeCast(desc, ti, false);
+  }
+
+  /**
+   * Cast type from expression type to expected type ti.
+   *
+   * @param desc constant expression
+   * @param ti expected type info
+   * @param performSafeTypeCast when true then don't perform typecast because it could be unsafe (loosing leading zeroes etc.)
+   * @return cast constant, or null if the type cast failed.
+   */
+
+  private static ExprNodeConstantDesc typeCast(ExprNodeDesc desc, TypeInfo ti, boolean performSafeTypeCast) {
     if (desc instanceof ExprNodeNullDesc) {
       return null;
     }
@@ -162,6 +181,16 @@ public final class ConstantPropagateProcFactory {
         || unSupportedTypes.contains(descti.getPrimitiveCategory())) {
       // FIXME: support template types. It currently has conflict with
       // ExprNodeConstantDesc
+      return null;
+    }
+
+    // We shouldn't cast strings to other types because that can broke original data in cases of
+    // leading zeros or zeros trailing after decimal point.
+    // Example: "000126" => 126 => "126"
+
+    boolean brokingDataTypesCombination = (unsafeConversionTypes.contains(priti.getPrimitiveCategory()) &&
+            !unsafeConversionTypes.contains(descti.getPrimitiveCategory()));
+    if (performSafeTypeCast && brokingDataTypesCombination) {
       return null;
     }
     LOG.debug("Casting " + desc + " to type " + ti);
@@ -345,7 +374,7 @@ public final class ConstantPropagateProcFactory {
       if (ci != null) {
         LOG.debug("Filter " + udf + " is identified as a value assignment, propagate it.");
         if (!v.getTypeInfo().equals(ci.getType())) {
-          v = typeCast(v, ci.getType());
+          v = typeCast(v, ci.getType(), true);
         }
         if (v != null) {
           constants.put(ci, v);
