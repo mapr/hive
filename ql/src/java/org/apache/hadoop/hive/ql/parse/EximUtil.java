@@ -86,8 +86,7 @@ public class EximUtil {
           path = (new Path(System.getProperty("test.tmp.dir"),
               path)).toUri().getPath();
         } else {
-          path = (new Path(new Path("/user/" + System.getProperty("user.name")),
-              path)).toUri().getPath();
+          path = new Path(FileSystem.get(conf).getHomeDirectory(), path).toString();
         }
       }
       // set correct scheme and authority
@@ -95,7 +94,7 @@ public class EximUtil {
         if (testMode) {
           scheme = "pfile";
         } else {
-          scheme = "hdfs";
+          scheme = "maprfs";
         }
       }
 

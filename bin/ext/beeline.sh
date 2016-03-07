@@ -19,6 +19,7 @@ export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 beeline () {
   CLASS=org.apache.hive.beeline.BeeLine;
+  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_LOGIN_OPTS}"
 
   # include only the beeline client jar and its dependencies
   beelineJarPath=`ls ${HIVE_LIB}/hive-beeline-*.jar`
