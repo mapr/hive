@@ -74,7 +74,8 @@ public class HiveAuthFactory {
     LDAP("LDAP"),
     KERBEROS("KERBEROS"),
     CUSTOM("CUSTOM"),
-    PAM("PAM");
+    PAM("PAM"),
+    MAPRSASL("MAPRSASL");
 
     private final String authType;
 
@@ -135,6 +136,13 @@ public class HiveAuthFactory {
         throw new TTransportException("Failed to start token manager", e);
       }
     }
+    else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.name())){
+      saslServer = ShimLoader.getHadoopThriftAuthBridge()
+              .createServer(conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
+                      conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
+    } else {
+      saslServer = null;
+    }
   }
 
   public Map<String, String> getSaslProperties() {
@@ -149,8 +157,9 @@ public class HiveAuthFactory {
     TTransportFactory transportFactory;
     TSaslServerTransport.Factory serverTransportFactory;
 
-    if (hadoopAuth.equalsIgnoreCase("kerberos") && !authTypeStr.equalsIgnoreCase(
-          AuthTypes.NOSASL.getAuthName())) {
+    if ((hadoopAuth.equalsIgnoreCase("kerberos") ||
+            authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) && !authTypeStr.equalsIgnoreCase(
+            AuthTypes.NOSASL.getAuthName())) {
       try {
         serverTransportFactory = saslServer.createSaslServerTransportFactory(
             getSaslProperties());
@@ -196,7 +205,10 @@ public class HiveAuthFactory {
   public TProcessorFactory getAuthProcFactory(ThriftCLIService service) throws LoginException {
     if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
       return KerberosSaslHelper.getKerberosProcessorFactory(saslServer, service);
-    } else {
+    } else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
+      return MapRSecSaslHelper.getProcessorFactory(saslServer, service);
+    }
+    else {
       return PlainSaslHelper.getPlainProcessorFactory(service);
     }
   }

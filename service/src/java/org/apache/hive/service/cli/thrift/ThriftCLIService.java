@@ -368,7 +368,7 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
   private String getUserName(TOpenSessionReq req) throws HiveSQLException {
     String userName = null;
     // Kerberos
-    if (isKerberosAuthMode()) {
+    if (isKerberosAuthMode() || isMapRSaslAuthMethod()) {
       userName = hiveAuthFactory.getRemoteUser();
     }
     // Except kerberos, NOSASL
@@ -759,5 +759,9 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
   private boolean isKerberosAuthMode() {
     return cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
         .equalsIgnoreCase(HiveAuthFactory.AuthTypes.KERBEROS.toString());
+  }
+  private boolean isMapRSaslAuthMethod() {
+    return cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
+            .equalsIgnoreCase(HiveAuthFactory.AuthTypes.MAPRSASL.toString());
   }
 }
