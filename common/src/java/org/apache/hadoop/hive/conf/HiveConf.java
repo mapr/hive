@@ -1836,7 +1836,7 @@ public class HiveConf extends Configuration {
         "hive.exec.temporary.table.storage", "default", new StringSet("memory",
          "ssd", "default"), "Define the storage policy for temporary tables." +
          "Choices between memory, ssd and default"),
-    HIVE_OPTIMIZE_INSERT_DEST_VOLUME("hive.optimize.insert.dest.volume", false,
+    HIVE_OPTIMIZE_INSERT_DEST_VOLUME("hive.optimize.insert.dest.volume", true,
             "For CREATE TABLE AS and INSERT queries create the scratch directory under\n" +
                     "the destination directory. This avoids the data move across volumes and improves performance."),
     HIVE_SCRATCH_DIR_IN_DEST("hive.scratchdir.in.dest", "_scratchdir", ""),
