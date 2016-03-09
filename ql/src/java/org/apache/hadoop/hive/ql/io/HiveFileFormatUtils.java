@@ -19,6 +19,8 @@
 package org.apache.hadoop.hive.ql.io;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -418,6 +420,14 @@ public final class HiveFileFormatUtils {
       Map<String, PartitionDesc> pathToPartitionInfo, Path dir) {
     // We first do exact match, and then do prefix matching. The latter is due to input dir
     // could be /dir/ds='2001-02-21'/part-03 where part-03 is not part of partition
+    URI uri = dir.toUri();
+    try {
+      URI normURI = new URI(uri.getScheme(),
+              uri.getAuthority(),
+              uri.getPath(), uri.getQuery(), uri.getFragment());
+      dir = new Path(normURI);
+    } catch(URISyntaxException e) {
+    }
     String dirPath = dir.toUri().getPath();
     PartitionDesc part = pathToPartitionInfo.get(dir.toString());
     if (part == null) {
@@ -459,7 +469,16 @@ public final class HiveFileFormatUtils {
   private static String getMatchingPath(Map<String, ArrayList<String>> pathToAliases,
                                         Path dir) {
     // First find the path to be searched
+    URI uri = dir.toUri();
+    try {
+      URI normURI = new URI(uri.getScheme(),
+              uri.getAuthority(),
+              uri.getPath(), uri.getQuery(), uri.getFragment());
+      dir = new Path(normURI);
+    } catch(URISyntaxException e) {
+    }
     String path = dir.toString();
+
     if (foundAlias(pathToAliases, path)) {
       return path;
     }
