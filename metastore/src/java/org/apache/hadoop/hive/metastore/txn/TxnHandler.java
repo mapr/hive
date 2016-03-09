@@ -1388,9 +1388,6 @@ public class TxnHandler {
   private static Map<LockType, Map<LockType, Map<LockState, LockAction>>> jumpTable;
 
   private void checkQFileTestHack() {
-    boolean hackOn = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_IN_TEST) ||
-      HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_IN_TEZ_TEST);
-    if (hackOn) {
       LOG.info("Hacking in canned values for transaction manager");
       // Set up the transaction/locking db in the derby metastore
       TxnDbUtil.setConfValues(conf);
@@ -1403,7 +1400,6 @@ public class TxnHandler {
             " testing: " + e.getMessage());
         }
       }
-    }
   }
 
   private int abortTxns(Connection dbConn, List<Long> txnids) throws SQLException {
