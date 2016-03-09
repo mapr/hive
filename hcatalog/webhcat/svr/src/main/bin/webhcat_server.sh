@@ -38,12 +38,24 @@ function real_script_name() {
 }
 
 function usage() {
-        echo "usage: $0 [start|startDebug|stop|foreground]"
+        echo "usage: $0 [start|startDebug|stop|foreground|status]"
         echo "  start           Start the Webhcat Server"
         echo "  startDebug      Start the Webhcat Server listening for debugger on port 5005"
         echo "  stop            Stop the Webhcat Server"
         echo "  foreground      Run the Webhcat Server in the foreground"
         exit 1
+}
+
+function status_webhcat() {
+  if [[ -f $PID_FILE ]]; then
+    # Check if there is a server running
+    local pid=`cat $PID_FILE`
+    if check_pid $pid; then
+      die "already running on process $pid"
+      else
+        log "no running server found"
+    fi
+  fi
 }
 
 # Print an error message and exit
@@ -248,6 +260,9 @@ case $cmd in
                 ;;
         foreground)
                 foreground_webhcat
+                ;;
+        status)
+                status_webhcat
                 ;;
         *)
                 usage
