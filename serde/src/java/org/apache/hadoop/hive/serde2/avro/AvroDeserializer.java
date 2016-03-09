@@ -168,7 +168,7 @@ class AvroDeserializer {
       }
       if(reEncoder != null) {
         if (!warnedOnce) {
-          LOG.warn("Received different schemas.  Have to re-encode: " +
+          LOG.debug("Received different schemas.  Have to re-encode: " +
               r.getSchema().toString(false) + "\nSIZE" + reEncoderCache + " ID " + recordReaderId);
           warnedOnce = true;
         }
