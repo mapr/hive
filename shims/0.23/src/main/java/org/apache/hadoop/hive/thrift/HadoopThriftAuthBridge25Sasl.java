@@ -22,6 +22,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHE
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import javax.security.sasl.SaslException;
 
@@ -51,181 +52,171 @@ import org.apache.thrift.transport.TTransportFactory;
  */
 public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
 
-  static final Log LOG = LogFactory.getLog(HadoopThriftAuthBridge25Sasl.class);
+    static final Log LOG = LogFactory.getLog(HadoopThriftAuthBridge25Sasl.class);
 
-  @Override
-  public Server createServer(String keytabFile, String principalConf) throws TTransportException {
-    if (keytabFile.isEmpty() || principalConf.isEmpty()) {
-      return new Server();
-    } else {
-      return new Server(keytabFile, principalConf);
-    }
-  }
-
-  @Override
-  public Client createClientWithConf(String authType) {
-    Configuration conf = new Configuration();
-    conf.set(HADOOP_SECURITY_AUTHENTICATION, authType);
-    UserGroupInformation.setConfiguration(conf);
-    return new Client();
-  }
-
-  public static class Server extends HadoopThriftAuthBridge.Server {
-    public Server() throws TTransportException {
-      super();
-    }
-
-    /**
-     * Create a server with a kerberos keytab/principal.
-     */
-    protected Server(String keytabFile, String principalConf)
-            throws TTransportException {
-      super(keytabFile, principalConf);
-    }
-
-    /**
-     * Create a TTransportFactory that, upon connection of a client socket,
-     * negotiates a SASL transport (The current supported SASL authentication methods are KERBEROS or MaprSasl).
-     * The resulting TTransportFactory can be passed as both the input and output transport factory when
-     * instantiating a TThreadPoolServer, for example.
-     *
-     * @param saslProps Map of SASL properties
-     */
     @Override
-    public TTransportFactory createTransportFactory(Map<String, String> saslProps)
-            throws TTransportException {
-      List<RpcAuthMethod> rpcAuthMethods = realUgi.getRpcAuthMethodList();
-      TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
-      for (RpcAuthMethod rpcAuthMethod : rpcAuthMethods) {
-        if (rpcAuthMethod.getAuthenticationMethod().equals(UserGroupInformation.AuthenticationMethod.KERBEROS)) {
-          // Parse out the kerberos principal, host, realm.
-          String kerberosName = realUgi.getUserName();
-          final String names[] = SaslRpcServer.splitKerberosName(kerberosName);
-          if (names.length == 3) {
-            transFactory.addServerDefinition(
-                    rpcAuthMethod.getMechanismName(),
-                    names[0], names[1],  // two parts of kerberos principal
-                    saslProps,
-                    rpcAuthMethod.createCallbackHandler());
-          }
-        } else {
-          transFactory.addServerDefinition(rpcAuthMethod.getMechanismName(),
-                  null,
-                  SaslRpcServer.SASL_DEFAULT_REALM,
-                  saslProps,
-                  rpcAuthMethod.createCallbackHandler());
-        }
+    public Server createServer(String keytabFile, String principalConf) throws TTransportException {
+      if (keytabFile.isEmpty() || principalConf.isEmpty()) {
+        return new Server();
+      } else {
+        return new Server(keytabFile, principalConf);
       }
-      transFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
-              null, SaslRpcServer.SASL_DEFAULT_REALM,
-              saslProps, new SaslDigestCallbackHandler(secretManager));
-      return new TUGIAssumingTransportFactory(transFactory, realUgi);
     }
-  }
-
-  @Override
-  public Client createClient() {
-    return new Client();
-  }
-
-  public static class Client extends HadoopThriftAuthBridge.Client {
-
-    /**
-     * Create a client-side SASL transport that wraps an underlying transport.
-     *
-     * @param method The authentication method to use. Currently KERBEROS and MAPRSasl are
-     * supported.
-     * @param principalConfig The Kerberos principal of the target server.
-     * @param underlyingTransport The underlying transport mechanism, usually a TSocket.
-     * @param saslProps the sasl properties to create the client with
-     */
 
     @Override
-    public TTransport createClientTransport(
-            String principalConfig, String host,
-            String methodStr,
-            String tokenStrForm, TTransport underlyingTransport,
-            Map<String, String> saslProps) throws IOException {
+    public Client createClientWithConf(String authType) {
+      Configuration conf = new Configuration();
+      conf.set(HADOOP_SECURITY_AUTHENTICATION, authType);
+      UserGroupInformation.setConfiguration(conf);
+      return new Client();
+    }
 
-      UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-      UserGroupInformation.AuthenticationMethod authenticationMethod = ugi.getAuthenticationMethod();
-      TTransport saslTransport = null;
+    public static class Server extends HadoopThriftAuthBridge.Server {
+      public Server() throws TTransportException {
+        super();
+      }
 
-      LOG.info("Sasl client AuthenticationMethod: " + authenticationMethod.toString());
-      if (authenticationMethod.equals(AuthenticationMethod.PROXY)) {
-        if (methodStr != null) {
+      /**
+      * Create a server with a kerberos keytab/principal.
+      */
+      protected Server(String keytabFile, String principalConf)
+        throws TTransportException {
+        super(keytabFile, principalConf);
+      }
+
+      /**
+       * Create a TTransportFactory that, upon connection of a client socket,
+       * negotiates a SASL transport (The current supported SASL authentication methods are KERBEROS or MaprSasl).
+       * The resulting TTransportFactory can be passed as both the input and output transport factory when
+       * instantiating a TThreadPoolServer, for example.
+       *
+       * @param saslProps Map of SASL properties
+       */
+      @Override
+      public TTransportFactory createTransportFactory(Map<String, String> saslProps)
+          throws TTransportException {
+        List<RpcAuthMethod> rpcAuthMethods = realUgi.getRpcAuthMethodList();
+        TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
+        for (RpcAuthMethod rpcAuthMethod : rpcAuthMethods) {
+          if (rpcAuthMethod.getAuthenticationMethod().equals(UserGroupInformation.AuthenticationMethod.KERBEROS)) {
+            // Parse out the kerberos principal, host, realm.
+            String kerberosName = realUgi.getUserName();
+            final String names[] = SaslRpcServer.splitKerberosName(kerberosName);
+            if (names.length == 3) {
+              transFactory.addServerDefinition(
+                rpcAuthMethod.getMechanismName(),
+                names[0], names[1],  // two parts of kerberos principal
+                saslProps,
+                rpcAuthMethod.createCallbackHandler());
+            }
+          } else {
+            transFactory.addServerDefinition(rpcAuthMethod.getMechanismName(),
+              null,
+              SaslRpcServer.SASL_DEFAULT_REALM,
+              saslProps,
+              rpcAuthMethod.createCallbackHandler());
+          }
+        }
+        transFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
+                null, SaslRpcServer.SASL_DEFAULT_REALM,
+                saslProps, new SaslDigestCallbackHandler(secretManager));
+        return new TUGIAssumingTransportFactory(transFactory, realUgi);
+      }
+    }
+
+    @Override
+    public Client createClient() {
+      return new Client();
+    }
+
+    public static class Client extends HadoopThriftAuthBridge.Client {
+
+      /**
+       * Create a client-side SASL transport that wraps an underlying transport.
+       *
+       * @param method The authentication method to use. Currently KERBEROS and MAPRSasl are
+       * supported.
+       * @param principalConfig The Kerberos principal of the target server.
+       * @param underlyingTransport The underlying transport mechanism, usually a TSocket.
+       * @param saslProps the sasl properties to create the client with
+       */
+
+      @Override
+      public TTransport createClientTransport(
+        String principalConfig, String host,
+        String methodStr,
+        String tokenStrForm, TTransport underlyingTransport,
+        Map<String, String> saslProps) throws IOException {
+
+        TTransport saslTransport = null;
+        if (methodStr.equals("DIGEST")) {
+          LOG.info("User authentication with method DIGEST: " + methodStr);
           AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
           if (method == AuthMethod.DIGEST) {
-            Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
+            Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
             t.decodeFromUrlString(tokenStrForm);
             saslTransport = new TSaslClientTransport(
-                    method.getMechanismName(),
-                    null,
-                    null, SaslRpcServer.SASL_DEFAULT_REALM,
-                    saslProps, new SaslClientCallbackHandler(t),
-                    underlyingTransport);
+              method.getMechanismName(),
+              null,
+              null, SaslRpcServer.SASL_DEFAULT_REALM,
+              saslProps, new SaslClientCallbackHandler(t),
+              underlyingTransport);
             return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
           }
-        }
-        throw new IOException("Unsupported authentication method: PROXY-" + methodStr);
-      }
-
-      RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(ugi.getAuthenticationMethod());
-
-      if (rpcAuthMethod == null) {
-        throw new IOException("Unsupported authentication method: " + ugi.getAuthenticationMethod());
-      }
-
-      if (authenticationMethod.equals(UserGroupInformation.AuthenticationMethod.TOKEN)) {
-        Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
-        t.decodeFromUrlString(tokenStrForm);
-        saslTransport = new TSaslClientTransport(
+        } else {
+          Configuration conf = new Configuration();
+          conf.addDefaultResource("hive-site.xml");
+          // if uses SASL, authType must be only KERBEROS or MapRSasl
+          // by default uses MapRSasl
+          String authTypeStr = conf.get("hive.server2.authentication");
+          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL")) {
+            authTypeStr = "CUSTOM";
+          }
+          LOG.info("User authentication with method: " + authTypeStr);
+          RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(
+            AuthenticationMethod.valueOf(AuthenticationMethod.class, authTypeStr.toUpperCase(Locale.ENGLISH)));
+          if (rpcAuthMethod == null) {
+            throw new IOException("Unsupported authentication method: " + authTypeStr);
+          }
+          if ("KERBEROS".equalsIgnoreCase(authTypeStr)) {
+            String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
+            String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
+            if (names.length != 3) {
+              throw new IOException(
+                "Kerberos principal name does NOT have the expected hostname part: "
+                  + serverPrincipal);
+            }
+            try {
+              saslTransport = new TSaslClientTransport(
+                rpcAuthMethod.getMechanismName(),
+                null,
+                names[0], names[1],
+                saslProps,
+                null,
+                underlyingTransport);
+              return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            } catch (SaslException se) {
+              throw new IOException("Could not instantiate SASL transport", se);
+            }
+          } else {  //If it's not KERBEROS, it can be only MapRSasl
+            try {
+              saslTransport = new TSaslClientTransport(
                 rpcAuthMethod.getMechanismName(),
                 null,
                 null,
                 SaslRpcServer.SASL_DEFAULT_REALM,
                 saslProps,
-                new SaslClientCallbackHandler(t),
+                null,
                 underlyingTransport);
-        return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+              return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+            } catch (SaslException se) {
+              throw new IOException("Could not instantiate SASL transport", se);
+            }
+          }
+        }
+        throw new IOException("Unsupported authentication method: " + methodStr);
       }
-      else if (authenticationMethod.equals(UserGroupInformation.AuthenticationMethod.KERBEROS)) {
-        String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
-        String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
-        if (names.length != 3) {
-          throw new IOException(
-                  "Kerberos principal name does NOT have the expected hostname part: "
-                          + serverPrincipal);
-        }
-        try {
-          saslTransport = new TSaslClientTransport(
-                  rpcAuthMethod.getMechanismName(),
-                  null,
-                  names[0], names[1],
-                  saslProps,
-                  null,
-                  underlyingTransport);
-          return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-        } catch (SaslException se) {
-          throw new IOException("Could not instantiate SASL transport", se);
-        }
-      } else {
-        try {
-          saslTransport = new TSaslClientTransport(
-                  rpcAuthMethod.getMechanismName(),
-                  null,
-                  null,
-                  SaslRpcServer.SASL_DEFAULT_REALM,
-                  saslProps,
-                  null,
-                  underlyingTransport);
-          return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-        } catch (SaslException se) {
-          throw new IOException("Could not instantiate SASL transport", se);
-        }
-      }
-    }
 
-  }
+    }
 
 }
