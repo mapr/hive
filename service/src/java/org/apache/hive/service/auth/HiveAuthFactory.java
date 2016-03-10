@@ -102,6 +102,7 @@ public class HiveAuthFactory {
     this.conf = conf;
     transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
     authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
+    boolean isAuthTypeSecured = "KERBEROS".equalsIgnoreCase(authTypeStr) || "MAPRSASL".equalsIgnoreCase(authTypeStr);
 
     // ShimLoader.getHadoopShims().isSecurityEnabled() will only check that·
     // hadoopAuth is not simple, it does not guarantee it is kerberos
@@ -115,31 +116,28 @@ public class HiveAuthFactory {
         authTypeStr = AuthTypes.NONE.getAuthName();
       }
     }
-    if (hadoopAuth.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
-          && !authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName())) {
+    if (isAuthTypeSecured || ("PAM".equalsIgnoreCase(authTypeStr) && ShimLoader.getHadoopShims().isSecurityEnabled())) {
       saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(
           conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
           conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
-      // start delegation token manager
-      try {
-        // rawStore is only necessary for DBTokenStore
-        HMSHandler baseHandler = null;
-        String tokenStoreClass = conf.getVar(HiveConf.ConfVars.METASTORE_CLUSTER_DELEGATION_TOKEN_STORE_CLS);
+      if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
+        // start delegation token manager
+        try {
+          // rawStore is only necessary for DBTokenStore
+          Object rawStore = null;
+          String tokenStoreClass = conf.getVar(HiveConf.ConfVars.METASTORE_CLUSTER_DELEGATION_TOKEN_STORE_CLS);
 
-        if (tokenStoreClass.equals(DBTokenStore.class.getName())) {
-          baseHandler = new HiveMetaStore.HMSHandler("new db based metaserver", conf, true);
+          if (tokenStoreClass.equals(DBTokenStore.class.getName())) {
+            HMSHandler baseHandler = new HiveMetaStore.HMSHandler(
+                    "new db based metaserver", conf, true);
+            rawStore = baseHandler.getMS();
+          }
+
+          saslServer.startDelegationTokenSecretManager(conf, rawStore, ServerMode.HIVESERVER2);
+        } catch (MetaException | IOException e) {
+          throw new TTransportException("Failed to start token manager", e);
         }
-
-        saslServer.startDelegationTokenSecretManager(conf, baseHandler, ServerMode.HIVESERVER2);
       }
-      catch (MetaException|IOException e) {
-        throw new TTransportException("Failed to start token manager", e);
-      }
-    }
-    else if (authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.name())){
-      saslServer = ShimLoader.getHadoopThriftAuthBridge()
-              .createServer(conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
-                      conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL));
     } else {
       saslServer = null;
     }
@@ -187,7 +185,16 @@ public class HiveAuthFactory {
           authTypeStr.equalsIgnoreCase(AuthTypes.LDAP.getAuthName()) ||
           authTypeStr.equalsIgnoreCase(AuthTypes.PAM.getAuthName()) ||
           authTypeStr.equalsIgnoreCase(AuthTypes.CUSTOM.getAuthName())) {
-       transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      if (ShimLoader.getHadoopShims().isSecurityEnabled()) {
+        try {
+          transportFactory = saslServer.createTransportFactory(getSaslProperties());
+        } catch (TTransportException e) {
+          throw new LoginException(e.getMessage());
+        }
+        PlainSaslHelper.addPlainDefinitionToFactory(authTypeStr, transportFactory, saslServer);
+      } else {
+        transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      }
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName())) {
       transportFactory = new TTransportFactory();
     } else {
