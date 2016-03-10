@@ -3019,8 +3019,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       }
       List<List<Path[]>> result = checkPaths(conf, destFs, srcs, srcFs, destf, true);
 
-      // if old path is not the parent of the source path, remove the old path
-      if (oldPath != null && !srcf.toUri().getPath().startsWith(oldPath.toUri().getPath())) {
+      if (oldPath != null) {
         boolean oldPathDeleted = false;
         boolean isOldPathUnderDestf = false;
         try {
