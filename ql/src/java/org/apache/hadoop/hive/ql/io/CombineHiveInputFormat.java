@@ -21,6 +21,8 @@ package org.apache.hadoop.hive.ql.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -673,9 +675,20 @@ public class CombineHiveInputFormat<K extends WritableComparable, V extends Writ
       throw new IOException("cannot find class " + inputFormatClassName);
     }
 
+    Path splitPath = hsplit.getPath(0);
+    URI uri = splitPath.toUri();
+    try {
+      URI normURI = new URI(uri.getScheme(),
+              uri.getAuthority(),
+              uri.getPath(), uri.getQuery(), uri.getFragment());
+      splitPath = new Path(normURI);
+    } catch(URISyntaxException e) {
+      LOG.debug("URISyntaxException", e);
+    }
+
     pushProjectionsAndFilters(job, inputFormatClass,
-        hsplit.getPath(0).toString(),
-        hsplit.getPath(0).toUri().getPath());
+            splitPath.toString(),
+            splitPath.toUri().getPath());
 
     return ShimLoader.getHadoopShims().getCombineFileInputFormat()
         .getRecordReader(job,

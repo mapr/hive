@@ -19,6 +19,8 @@
 package org.apache.hadoop.hive.ql.io;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,8 +70,19 @@ public class BucketizedHiveInputFormat<K extends WritableComparable, V extends W
       throw new IOException("cannot find class " + inputFormatClassName);
     }
 
-    pushProjectionsAndFilters(job, inputFormatClass, hsplit.getPath()
-        .toString(), hsplit.getPath().toUri().getPath());
+    Path splitPath = hsplit.getPath();
+    URI uri = splitPath.toUri();
+    try {
+      URI normURI = new URI(uri.getScheme(),
+              uri.getAuthority(),
+              uri.getPath(), uri.getQuery(), uri.getFragment());
+      splitPath = new Path(normURI);
+    } catch(URISyntaxException e) {
+      LOG.debug("URISyntaxException", e);
+    }
+
+    pushProjectionsAndFilters(job, inputFormatClass, splitPath
+            .toString(), splitPath.toUri().getPath());
 
     InputFormat inputFormat = getInputFormatFromCache(inputFormatClass, job);
 
