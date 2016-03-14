@@ -25,6 +25,10 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SaslRpcServer;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.thrift.transport.TTransportException;
+
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
 
 /**
  * Functions that bridge Thrift's SASL transports to Hadoop's SASL callback
@@ -105,4 +109,20 @@ public class HadoopThriftAuthBridge23 extends HadoopThriftAuthBridge20S {
     }
   }
 
+  @Override
+  public Server createServer(String keytabFile, String principalConf) throws TTransportException {
+    if (keytabFile.isEmpty() || principalConf.isEmpty()) {
+      return new Server();
+    } else {
+      return new Server(keytabFile, principalConf);
+    }
+  }
+
+  @Override
+  public Client createClientWithConf(String authType) {
+    Configuration conf = new Configuration();
+    conf.set(HADOOP_SECURITY_AUTHENTICATION, authType);
+    UserGroupInformation.setConfiguration(conf);
+    return new Client();
+  }
 }
