@@ -34,6 +34,8 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.exec.FetchFormatter;
 import org.apache.hadoop.hive.ql.exec.ListSinkOperator;
 import org.apache.hadoop.hive.ql.history.HiveHistory;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.common.util.HiveVersionInfo;
 import org.apache.hive.service.auth.HiveAuthFactory;
@@ -203,14 +205,13 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public IMetaStoreClient getMetaStoreClient() throws HiveSQLException {
-    if (metastoreClient == null) {
-      try {
-        metastoreClient = new HiveMetaStoreClient(getHiveConf());
-      } catch (MetaException e) {
-        throw new HiveSQLException(e);
-      }
+    try {
+      return Hive.get(getHiveConf()).getMSC();
+    } catch (HiveException e) {
+      throw new HiveSQLException("Failed to get metastore connection", e);
+    } catch (MetaException e) {
+      throw new HiveSQLException("Failed to get metastore connection", e);
     }
-    return metastoreClient;
   }
 
   @Override

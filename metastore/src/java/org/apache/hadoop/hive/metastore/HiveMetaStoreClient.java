@@ -1538,9 +1538,9 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   @Override
   public String getDelegationToken(String owner, String renewerKerberosPrincipalName) throws
   MetaException, TException {
+    // This is expected to be a no-op, so we will return null when we use local metastore.
     if(localMetaStore) {
-      throw new UnsupportedOperationException("getDelegationToken() can be " +
-          "called only in thrift (non local) mode");
+      return null;
     }
     return client.get_delegation_token(owner, renewerKerberosPrincipalName);
   }
@@ -1548,8 +1548,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   @Override
   public long renewDelegationToken(String tokenStrForm) throws MetaException, TException {
     if(localMetaStore) {
-      throw new UnsupportedOperationException("renewDelegationToken() can be " +
-          "called only in thrift (non local) mode");
+      return 0;
     }
     return client.renew_delegation_token(tokenStrForm);
 
@@ -1558,8 +1557,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   @Override
   public void cancelDelegationToken(String tokenStrForm) throws MetaException, TException {
     if(localMetaStore) {
-      throw new UnsupportedOperationException("renewDelegationToken() can be " +
-          "called only in thrift (non local) mode");
+      return;
     }
     client.cancel_delegation_token(tokenStrForm);
   }
