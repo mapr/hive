@@ -376,8 +376,10 @@ public class Context {
       try {
         Path p = entry.getValue();
         FileSystem fs = p.getFileSystem(conf);
-        fs.delete(p, true);
-        fs.cancelDeleteOnExit(p);
+        if(fs.exists(p)) {
+          fs.delete(p, true);
+          fs.cancelDeleteOnExit(p);
+        }
       } catch (Exception e) {
         LOG.warn("Error Removing Scratch: "
             + StringUtils.stringifyException(e));
