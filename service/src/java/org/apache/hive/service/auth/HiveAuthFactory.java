@@ -164,7 +164,8 @@ public class HiveAuthFactory {
       } catch (TTransportException e) {
         throw new LoginException(e.getMessage());
       }
-      if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
+      if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName()) ||
+              authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
         // no-op
       } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NONE.getAuthName()) || 
           authTypeStr.equalsIgnoreCase(AuthTypes.LDAP.getAuthName()) ||

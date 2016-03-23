@@ -93,7 +93,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
        * @param saslProps Map of SASL properties
        */
       @Override
-      public TTransportFactory createTransportFactory(Map<String, String> saslProps)
+      public TSaslServerTransport.Factory createSaslServerTransportFactory(Map<String, String> saslProps)
           throws TTransportException {
         List<RpcAuthMethod> rpcAuthMethods = realUgi.getRpcAuthMethodList();
         TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
@@ -120,7 +120,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         transFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
                 null, SaslRpcServer.SASL_DEFAULT_REALM,
                 saslProps, new SaslDigestCallbackHandler(secretManager));
-        return new TUGIAssumingTransportFactory(transFactory, realUgi);
+        return transFactory;
       }
     }
 
