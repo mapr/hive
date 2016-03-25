@@ -93,7 +93,6 @@ public class HiveAuthFactory {
   private String authTypeStr;
   private final String transportMode;
   private final HiveConf conf;
-  private String hadoopAuth;
 
   public static final String HS2_PROXY_USER = "hive.server2.proxy.user";
   public static final String HS2_CLIENT_TOKEN = "hiveserver2ClientToken";
@@ -103,10 +102,6 @@ public class HiveAuthFactory {
     transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
     authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
     boolean isAuthTypeSecured = "KERBEROS".equalsIgnoreCase(authTypeStr) || "MAPRSASL".equalsIgnoreCase(authTypeStr);
-
-    // ShimLoader.getHadoopShims().isSecurityEnabled() will only check that·
-    // hadoopAuth is not simple, it does not guarantee it is kerberos
-    hadoopAuth = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
 
     // In http mode we use NOSASL as the default auth type
     if (authTypeStr == null) {
@@ -155,7 +150,7 @@ public class HiveAuthFactory {
     TTransportFactory transportFactory;
     TSaslServerTransport.Factory serverTransportFactory;
 
-    if ((hadoopAuth.equalsIgnoreCase("kerberos") ||
+    if ((authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName()) ||
             authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) && !authTypeStr.equalsIgnoreCase(
             AuthTypes.NOSASL.getAuthName())) {
       try {
