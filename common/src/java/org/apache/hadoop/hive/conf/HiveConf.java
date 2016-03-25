@@ -338,7 +338,7 @@ public class HiveConf extends Configuration {
     METASTORE_VALIDATE_COLUMNS("datanucleus.schema.validateColumns", false),
     METASTORE_VALIDATE_CONSTRAINTS("datanucleus.schema.validateConstraints", false),
     METASTORE_STORE_MANAGER_TYPE("datanucleus.storeManagerType", "rdbms"),
-    METASTORE_AUTO_CREATE_ALL("datanucleus.schema.autoCreateAll", true),
+    METASTORE_AUTO_CREATE_ALL("datanucleus.schema.autoCreateAll", false),
     METASTORE_SCHEMA_VERIFICATION("hive.metastore.schema.verification", false),
     METASTORE_SCHEMA_VERIFICATION_RECORD_VERSION("hive.metastore.schema.verification.record.version", true),
     METASTORE_AUTO_START_MECHANISM_MODE("datanucleus.autoStartMechanismMode", "checked"),
