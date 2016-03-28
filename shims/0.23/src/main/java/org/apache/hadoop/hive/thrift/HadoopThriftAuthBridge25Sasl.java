@@ -177,7 +177,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
           // if uses SASL, authType must be only KERBEROS or MapRSasl
           // by default uses MapRSasl
           String authTypeStr = conf.get("hive.server2.authentication");
-          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL")) {
+          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL") || authTypeStr.equalsIgnoreCase("PAM")) {
             authTypeStr = "CUSTOM";
           }
           LOG.info("User authentication with method: " + authTypeStr);
