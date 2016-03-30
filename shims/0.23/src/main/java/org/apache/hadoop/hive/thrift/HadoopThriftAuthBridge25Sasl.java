@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.thrift;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Locale;
 
 import javax.security.sasl.SaslException;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -157,10 +159,9 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         Map<String, String> saslProps) throws IOException {
 
         TTransport saslTransport = null;
-        if ("DIGEST".equals(methodStr)) {
-          LOG.info("User authentication with method DIGEST: " + methodStr);
+        if (DIGEST.equals(methodStr)) {
+          LOG.info("User authentication with method : " + methodStr);
           AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
-          if (method == AuthMethod.DIGEST) {
             Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
             t.decodeFromUrlString(tokenStrForm);
             saslTransport = new TSaslClientTransport(
@@ -170,23 +171,12 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
               saslProps, new SaslClientCallbackHandler(t),
               underlyingTransport);
             return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-          }
         } else {
           Configuration conf = new Configuration();
           conf.addDefaultResource("hive-site.xml");
-          // if uses SASL, authType must be only KERBEROS or MapRSasl
-          // by default uses MapRSasl
-          String authTypeStr = conf.get("hive.server2.authentication");
-          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL") || authTypeStr.equalsIgnoreCase("PAM")) {
-            authTypeStr = "CUSTOM";
-          }
-          LOG.info("User authentication with method: " + authTypeStr);
-          RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(
-            AuthenticationMethod.valueOf(AuthenticationMethod.class, authTypeStr.toUpperCase(Locale.ENGLISH)));
-          if (rpcAuthMethod == null) {
-            throw new IOException("Unsupported authentication method: " + authTypeStr);
-          }
-          if ("KERBEROS".equalsIgnoreCase(authTypeStr)) {
+          AuthenticationMethod authenticationMethod = findAuthenticationMethod(conf);
+          RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethod(authenticationMethod);
+          if (KERBEROS.equals(authenticationMethod)) {
             String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
             String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
             if (names.length != 3) {
@@ -222,7 +212,6 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
             }
           }
         }
-        throw new IOException("Unsupported authentication method: " + methodStr);
       }
     }
 }
