@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.thrift;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,6 +41,7 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -183,6 +185,12 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
      * @param saslProps the sasl properties to create the client with
      */
 
+    public static final String DIGEST = "DIGEST";
+    public static final String MAPRSASL = "MAPRSASL";
+    public static final String PAM = "PAM";
+    public static final String LDAP = "LDAP";
+    public static final String CUSTOM = "CUSTOM";
+
     @Override
     public TTransport createClientTransport(
         String principalConfig, String host,
@@ -191,7 +199,7 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
 
 
       TTransport saslTransport = null;
-      if ("DIGEST".equals(methodStr)) {
+      if (DIGEST.equals(methodStr)) {
         AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
         Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
           t.decodeFromUrlString(tokenStrForm);
@@ -205,15 +213,8 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
       } else {
           Configuration conf = new Configuration();
           conf.addDefaultResource("hive-site.xml");
-          // if uses SASL, authType must be only KERBEROS or MapRSasl
-          // by default uses MapRSasl
-          String authTypeStr = conf.get("hive.server2.authentication");
-          if (authTypeStr == null || authTypeStr.equalsIgnoreCase("MAPRSASL") || authTypeStr.equalsIgnoreCase("PAM")) {
-            authTypeStr = "CUSTOM";
-          }
-          LOG.info("User authentication with method: " + authTypeStr);
-
-          if ("KERBEROS".equalsIgnoreCase(authTypeStr)) {
+        AuthenticationMethod authenticationMethod = findAuthenticationMethod(conf);
+        if (KERBEROS.equals(authenticationMethod)) {
             AuthMethod method = AuthMethod.valueOf(AuthMethod.class, methodStr);
             String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
             String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
@@ -250,6 +251,31 @@ public class HadoopThriftAuthBridge20S extends HadoopThriftAuthBridge {
           }
       }
     }
+
+    protected static AuthenticationMethod findAuthenticationMethod(Configuration conf) throws IOException {
+      String authTypeStr = conf.get("hive.server2.authentication").toUpperCase(Locale.ENGLISH);
+      LOG.info("Hive is configured for user authentication: " + authTypeStr);
+      String[] authTypesAsCustom = {MAPRSASL, PAM, LDAP};
+      // PAM and LDAP can be enabled only when cluster uses MapRSasl security
+      // if cluster is Kerberos, and hive.metastore.sasl.enabled = true, then hive.server2.authentication can be only KERBEROS
+      // therefore we always replace MAPRSASL, PAM and LDAP with CUSTOM
+
+      if (ArrayUtils.contains(authTypesAsCustom, authTypeStr)) {
+        authTypeStr = CUSTOM;
+      }
+
+      AuthenticationMethod authenticationMethod;
+      try {
+        authenticationMethod = AuthenticationMethod.valueOf(AuthenticationMethod.class, authTypeStr);
+      } catch (IllegalArgumentException e){
+        throw new IOException("Unsupported authentication method: " + authTypeStr);
+
+      }
+      LOG.info("User authentication with method: " + authTypeStr);
+      return authenticationMethod;
+    }
+
+
     protected static class SaslClientCallbackHandler implements CallbackHandler {
       private final String userName;
       private final char[] userPassword;
