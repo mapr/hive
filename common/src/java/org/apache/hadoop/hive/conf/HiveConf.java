@@ -442,7 +442,7 @@ public class HiveConf extends Configuration {
     METASTORE_VALIDATE_CONSTRAINTS("datanucleus.schema.validateConstraints", false,
         "validates existing schema against code. turn this on if you want to verify existing schema"),
     METASTORE_STORE_MANAGER_TYPE("datanucleus.storeManagerType", "rdbms", "metadata store type"),
-    METASTORE_AUTO_CREATE_ALL("datanucleus.schema.autoCreateAll", true,
+    METASTORE_AUTO_CREATE_ALL("datanucleus.schema.autoCreateAll", false,
         "creates necessary schema on a startup if one doesn't exist. set this to false, after creating it once"),
     METASTORE_SCHEMA_VERIFICATION("hive.metastore.schema.verification", false,
         "Enforce metastore schema version consistency.\n" +
