@@ -146,6 +146,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
       public static final String PAM = "PAM";
       public static final String LDAP = "LDAP";
       public static final String CUSTOM = "CUSTOM";
+      public static final String EMPTY_STRING = "";
 
       /**
        * Create a client-side SASL transport that wraps an underlying transport.
@@ -221,9 +222,14 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
       }
 
       private static AuthenticationMethod findAuthenticationMethod(Configuration conf) throws IOException {
-        String authTypeStr = conf.get("hive.server2.authentication").toUpperCase(Locale.ENGLISH);
+        String authTypeStr = conf.get("hive.server2.authentication");
+        if(authTypeStr == null){
+          authTypeStr = EMPTY_STRING;
+        } else {
+          authTypeStr = authTypeStr.toUpperCase(Locale.ENGLISH);
+        }
         LOG.info("Hive is configured for user authentication: " + authTypeStr);
-        String[] authTypesAsCustom = {MAPRSASL, PAM, LDAP};
+        String[] authTypesAsCustom = {MAPRSASL, PAM, LDAP, EMPTY_STRING};
         // PAM and LDAP can be enabled only when cluster uses MapRSasl security
         // if cluster is Kerberos, and hive.metastore.sasl.enabled = true, then hive.server2.authentication can be only KERBEROS
         // therefore we always replace MAPRSASL, PAM and LDAP with CUSTOM
