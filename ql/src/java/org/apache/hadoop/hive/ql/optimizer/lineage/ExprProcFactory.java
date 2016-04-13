@@ -26,10 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.hadoop.hive.ql.exec.ColumnInfo;
-import org.apache.hadoop.hive.ql.exec.Operator;
-import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
-import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo.BaseColumnInfo;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo.Dependency;
@@ -73,23 +70,24 @@ public class ExprProcFactory {
 
       // assert that the input operator is not null as there are no
       // exprs associated with table scans.
-      Operator<? extends OperatorDesc> operator = epc.getInputOperator();
-      assert (operator != null);
+      assert (epc.getInputOperator() != null);
 
-      RowResolver resolver = epc.getResolver();
-      String[] nm = resolver.reverseLookup(cd.getColumn());
-      if (nm == null && operator instanceof ReduceSinkOperator) {
-        nm = resolver.reverseLookup(Utilities.removeValueTag(cd.getColumn()));
-      }
-      ColumnInfo ci = nm != null ? resolver.get(nm[0], nm[1]): null;
+      ColumnInfo ci = null;
+        for (ColumnInfo tmp_ci : epc.getInputOperator().getSchema()
+                .getSignature()) {
+            if (tmp_ci.getInternalName().equals(cd.getColumn())) {
+                ci = tmp_ci;
+                break;
+            }
+        }
+
 
       // Insert the dependencies of inp_ci to that of the current operator, ci
       LineageCtx lc = epc.getLineageCtx();
-      Dependency dep = lc.getIndex().getDependency(operator, ci);
+      Dependency dep = lc.getIndex().getDependency(epc.getInputOperator(), ci);
 
       return dep;
     }
-
   }
 
   /**

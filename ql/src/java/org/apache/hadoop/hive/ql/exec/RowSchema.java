@@ -94,6 +94,38 @@ public class RowSchema implements Serializable {
     return true;
   }
 
+  public ColumnInfo getColumnInfo(String internalName) {
+    for (ColumnInfo columnInfo: this.signature) {
+      if (columnInfo.getInternalName().equals(internalName)) {
+        return columnInfo;
+      }
+    }
+    return null;
+  }
+
+  public ColumnInfo getColumnInfo(String tabAlias, String alias) {
+    for (ColumnInfo columnInfo: this.signature) {
+      if (columnInfo.getTabAlias() == null) {
+        if (tabAlias == null) {
+          if(columnInfo.getAlias() != null && alias != null &&
+                  columnInfo.getAlias().equals(alias)) {
+            return columnInfo;
+          }
+        }
+      }
+      else {
+        if (tabAlias != null) {
+          if (columnInfo.getTabAlias().equals(tabAlias) &&
+                  columnInfo.getAlias() != null && alias != null &&
+                  columnInfo.getAlias().equals(alias)) {
+            return columnInfo;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
