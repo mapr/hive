@@ -222,10 +222,8 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
       }
 
       private static AuthenticationMethod findAuthenticationMethod(Configuration conf) throws IOException {
-        String authTypeStr = conf.get("hive.server2.authentication");
-        if(authTypeStr == null){
-          authTypeStr = EMPTY_STRING;
-        } else {
+        String authTypeStr = conf.get("hive.server2.authentication", EMPTY_STRING);
+        if(!EMPTY_STRING.equals(authTypeStr)){
           authTypeStr = authTypeStr.toUpperCase(Locale.ENGLISH);
         }
         LOG.info("Hive is configured for user authentication: " + authTypeStr);
