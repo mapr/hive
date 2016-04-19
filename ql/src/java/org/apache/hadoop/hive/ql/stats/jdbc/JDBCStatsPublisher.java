@@ -53,6 +53,20 @@ public class JDBCStatsPublisher implements StatsPublisher {
   private int maxRetries;
   private long waitWindow;
   private final Random r;
+  public static enum SupportedDBType{
+    DERBY("derby"),
+    MYSQL("mysql"),
+    POSTGRES("postgresql");
+
+    String type;
+
+    SupportedDBType(String driver) {
+      this.type = driver;
+    }
+    String getType() {
+      return type;
+    }
+  }
 
   public JDBCStatsPublisher() {
     r = new Random();
@@ -273,6 +287,7 @@ public class JDBCStatsPublisher implements StatsPublisher {
       this.hiveconf = hconf;
       connectionString = HiveConf.getVar(hconf, HiveConf.ConfVars.HIVESTATSDBCONNECTIONSTRING);
       String driver = HiveConf.getVar(hconf, HiveConf.ConfVars.HIVESTATSJDBCDRIVER);
+      SupportedDBType dbType = getDBType(driver);
       JavaUtils.loadClass(driver).newInstance();
       synchronized(DriverManager.class) {
         DriverManager.setLoginTimeout(timeout);
@@ -288,7 +303,7 @@ public class JDBCStatsPublisher implements StatsPublisher {
         rs = dbm.getTables(null, null, tableName, null);
         boolean tblExists = rs.next();
         if (!tblExists) { // Table does not exist, create it
-          String createTable = JDBCStatsUtils.getCreate("");
+          String createTable = JDBCStatsUtils.getCreate("", dbType);
           stmt.executeUpdate(createTable);
         } else {
           // Upgrade column name to allow for longer paths.
@@ -300,7 +315,7 @@ public class JDBCStatsPublisher implements StatsPublisher {
             if (rs.next()) {
               colSize = rs.getInt("COLUMN_SIZE");
               if (colSize < JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE) {
-                String alterTable = JDBCStatsUtils.getAlterIdColumn();
+                String alterTable = JDBCStatsUtils.getAlterIdColumn(dbType);
                   stmt.executeUpdate(alterTable);
               }
             } else {
@@ -335,4 +350,12 @@ public class JDBCStatsPublisher implements StatsPublisher {
     return true;
   }
 
+  private SupportedDBType getDBType(String driver) {
+    for(SupportedDBType db : SupportedDBType.values()) {
+      if(driver.toLowerCase().contains(db.getType())) {
+        return db;
+      }
+    }
+    return null;
+  }
 }

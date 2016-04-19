@@ -123,7 +123,7 @@ public class JDBCStatsUtils {
   /**
    * Prepares CREATE TABLE query
    */
-  public static String getCreate(String comment) {
+  public static String getCreate(String comment, JDBCStatsPublisher.SupportedDBType dbType) {
     String create = "CREATE TABLE /* " + comment + " */ " + JDBCStatsUtils.getStatTableName()
         + " (" + getTimestampColumnName() + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
         + JDBCStatsUtils.getIdColumnName() + " VARCHAR("
@@ -131,17 +131,38 @@ public class JDBCStatsUtils {
     for (int i = 0; i < supportedStats.size(); i++) {
       create += ", " + getStatColumnName(supportedStats.get(i)) + " BIGINT ";
     }
-    create += ")";
+    switch (dbType) {
+      case MYSQL:
+        create += ")" + " ROW_FORMAT=DYNAMIC";
+        break;
+      default:
+        create += ")";
+        break;
+    }
     return create;
   }
 
   /**
    * Prepares ALTER TABLE query
    */
-  public static String getAlterIdColumn() {
-    return "ALTER TABLE " + JDBCStatsUtils.getStatTableName() + " ALTER COLUMN "
-        + JDBCStatsUtils.getIdColumnName() + " VARCHAR("
-        + JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE + ")";
+  public static String getAlterIdColumn(JDBCStatsPublisher.SupportedDBType dbType) {
+    String alter = "ALTER TABLE " + JDBCStatsUtils.getStatTableName();
+    switch (dbType) {
+      case MYSQL:
+        alter += " MODIFY " + JDBCStatsUtils.getIdColumnName();
+        break;
+      case DERBY:
+        alter += " ALTER COLUMN " + JDBCStatsUtils.getIdColumnName() + " SET DATA TYPE ";
+        break;
+      case POSTGRES:
+        alter += " ALTER COLUMN " + JDBCStatsUtils.getIdColumnName() + " TYPE ";
+        break;
+      default:
+        alter += " ALTER COLUMN " + JDBCStatsUtils.getIdColumnName();
+        break;
+    }
+    alter += " VARCHAR(" + JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE + ")";
+    return alter;
   }
 
   /**
