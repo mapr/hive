@@ -18,5 +18,11 @@
 -->
 
 <configuration>
-
+  <property>
+     <name>datanucleus.schema.autoCreateAll</name>
+     <value>true</value>
+     <description>creates necessary schema on a startup if one doesn't exist. set
+         this to false, after creating it once
+     </description>
+  </property>
 </configuration>
