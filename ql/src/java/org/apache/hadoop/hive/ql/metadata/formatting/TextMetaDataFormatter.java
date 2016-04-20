@@ -230,7 +230,7 @@ class TextMetaDataFormatter implements MetaDataFormatter {
         outStream.writeBytes("partitionColumns:" + partitionCols);
         outStream.write(terminator);
         // output file system information
-        Path tblPath = tbl.getPath();
+        Path tblPath = new Path(tblLoc);
         List<Path> locations = new ArrayList<Path>();
         if (isPartitioned) {
           if (par == null) {
