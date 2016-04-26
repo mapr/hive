@@ -120,6 +120,12 @@
           <artifactId>hadoop-common</artifactId>
           <version>${hadoop-23.version}</version>
           <optional>true</optional>
+          <exclusions>
+            <exclusion>
+              <groupId>commons-collections</groupId>
+              <artifactId>commons-collections</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
