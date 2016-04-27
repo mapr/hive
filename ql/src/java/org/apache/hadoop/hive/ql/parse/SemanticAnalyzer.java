@@ -9101,11 +9101,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       unionoutRR.put(unionalias, field, unionColInfo);
     }
 
-    if (!(leftOp instanceof UnionOperator)) {
+    boolean isTez = HiveConf.getVar(conf,
+        HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez");
+
+    if (isTez || !(leftOp instanceof UnionOperator)) {
       leftOp = genInputSelectForUnion(leftOp, leftmap, leftalias, unionoutRR, unionalias);
     }
 
-    if (!(rightOp instanceof UnionOperator)) {
+    if (isTez || !(rightOp instanceof UnionOperator)) {
       rightOp = genInputSelectForUnion(rightOp, rightmap, rightalias, unionoutRR, unionalias);
     }
 
