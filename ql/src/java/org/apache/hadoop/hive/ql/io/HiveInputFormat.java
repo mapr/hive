@@ -22,6 +22,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -282,14 +284,25 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
     }
 
     boolean nonNative = false;
-    PartitionDesc part = pathToPartitionInfo.get(hsplit.getPath().toString());
+    Path splitPath = hsplit.getPath();
+    URI uri = splitPath.toUri();
+    try {
+      URI normURI = new URI(uri.getScheme(),
+              uri.getAuthority(),
+              uri.getPath(), uri.getQuery(), uri.getFragment());
+      splitPath = new Path(normURI);
+    } catch(URISyntaxException e) {
+      LOG.debug("URISyntaxException", e);
+    }
+
+    PartitionDesc part = pathToPartitionInfo.get(splitPath.toString());
     if ((part != null) && (part.getTableDesc() != null)) {
       Utilities.copyTableJobPropertiesToConf(part.getTableDesc(), job);
       nonNative = part.getTableDesc().isNonNative();
     }
 
-    pushProjectionsAndFilters(job, inputFormatClass, hsplit.getPath()
-      .toString(), hsplit.getPath().toUri().getPath(), nonNative);
+    pushProjectionsAndFilters(job, inputFormatClass, splitPath.toString(),
+            splitPath.toUri().getPath(), nonNative);
 
     InputFormat inputFormat = getInputFormatFromCache(inputFormatClass, job);
     RecordReader innerReader = null;
