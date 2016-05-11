@@ -819,6 +819,8 @@ public class HiveConf extends Configuration {
         "cardinality (4 in the example above), is more than this value, a new MR job is added under the\n" +
         "assumption that the original group by will reduce the data size."),
 
+    HIVE_GROUPBY_LIMIT_EXTRASTEP("hive.groupby.limit.extrastep", true, "This parameter decides if Hive should \n" +
+        "create new MR job for sorting final output"),
     // Max filesize used to do a single copy (after that, distcp is used)
     HIVE_EXEC_COPYFILE_MAXSIZE("hive.exec.copyfile.maxsize", 32L * 1024 * 1024 /*32M*/,
         "Maximum file size (in Mb) that Hive uses to do single HDFS copies between directories." +
