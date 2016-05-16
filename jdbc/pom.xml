@@ -173,6 +173,7 @@
               </filters>
               <artifactSet>
                 <excludes>
+                  <exclude>com.mapr.hadoop:maprfs</exclude>
                   <exclude>org.apache.commons:commons-compress</exclude>
                   <exclude>commons-configuration:commons-configuration</exclude>
                   <exclude>org.apache.hadoop:*</exclude>
