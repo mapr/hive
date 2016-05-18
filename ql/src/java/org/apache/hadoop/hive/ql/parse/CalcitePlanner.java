@@ -143,6 +143,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterProjectTransp
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterSetOpTransposeRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveInsertExchange4JoinRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinAddNotNullRule;
+import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinPushTransitivePredicatesRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinToMultiJoinRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePartitionPruneRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePreFilteringRule;
@@ -968,7 +969,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               HiveFilter.DEFAULT_FILTER_FACTORY, Aggregate.class));
 
       // 4. Transitive inference & Partition Pruning
-      basePlan = hepPlan(basePlan, false, mdProvider, new JoinPushTransitivePredicatesRule(
+      basePlan = hepPlan(basePlan, false, mdProvider, new HiveJoinPushTransitivePredicatesRule(
           Join.class, HiveFilter.DEFAULT_FILTER_FACTORY),
           new HivePartitionPruneRule(conf));
 
