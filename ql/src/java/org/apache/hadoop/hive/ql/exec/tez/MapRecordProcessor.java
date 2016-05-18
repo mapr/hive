@@ -27,22 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.exec.DummyStoreOperator;
-import org.apache.hadoop.hive.ql.exec.HashTableDummyOperator;
-import org.apache.hadoop.hive.ql.exec.MapOperator;
-import org.apache.hadoop.hive.ql.exec.MapredContext;
+import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.exec.ObjectCache;
-import org.apache.hadoop.hive.ql.exec.ObjectCacheFactory;
-import org.apache.hadoop.hive.ql.exec.Operator;
-import org.apache.hadoop.hive.ql.exec.OperatorUtils;
-import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.mr.ExecMapper.ReportStats;
 import org.apache.hadoop.hive.ql.exec.mr.ExecMapperContext;
 import org.apache.hadoop.hive.ql.exec.tez.TezProcessor.TezKVOutputCollector;
@@ -87,8 +79,6 @@ public class MapRecordProcessor extends RecordProcessor {
   List<String> cacheKeys;
   ObjectCache cache;
 
-  private static Map<Integer, DummyStoreOperator> connectOps =
-    new TreeMap<Integer, DummyStoreOperator>();
 
   public MapRecordProcessor(final JobConf jconf, final ProcessorContext context) throws Exception {
     super(jconf, context);
@@ -152,7 +142,7 @@ public class MapRecordProcessor extends RecordProcessor {
 
       mapOp.setExecContext(execContext);
 
-      connectOps.clear();
+      boolean fromCache = false;
       if (mergeWorkList != null) {
         MapOperator mergeMapOp = null;
         for (BaseWork mergeWork : mergeWorkList) {
@@ -170,10 +160,42 @@ public class MapRecordProcessor extends RecordProcessor {
             l4j.info("Input name is " + mergeMapWork.getName());
             jconf.set(Utilities.INPUT_NAME, mergeMapWork.getName());
             mergeMapOp.initialize(jconf, null);
-            mergeMapOp.setChildren(jconf);
+            // if there are no files/partitions to read, we need to skip trying to read
+            MultiMRInput multiMRInput = multiMRInputMap.get(mergeMapWork.getName());
+            boolean skipRead = false;
+            if (multiMRInput == null) {
+              l4j.info("Multi MR Input for work " + mergeMapWork.getName() + " is null. Skipping read.");
+              skipRead = true;
+            } else {
+              Collection<KeyValueReader> keyValueReaders = multiMRInput.getKeyValueReaders();
+              if ((keyValueReaders == null) || (keyValueReaders.isEmpty())) {
+                l4j.info("Key value readers are null or empty and hence skipping read. "
+                    + "KeyValueReaders = " + keyValueReaders);
+                skipRead = true;
+              }
+            }
+            if (skipRead) {
+              List<Operator<?>> children = new ArrayList<Operator<?>>();
+              children.addAll(mergeMapOp.getConf().getAliasToWork().values());
+              // do the same thing as setChildren when there is nothing to read.
+              // the setChildren method initializes the object inspector needed by the operators
+              // based on path and partition information which we don't have in this case.
+              mergeMapOp.initEmptyInputChildren(children, jconf);
+            } else {
+              // the setChildren method initializes the object inspector needed by the operators
+              // based on path and partition information.
+              mergeMapOp.setChildren(jconf);
+            }
 
-            DummyStoreOperator dummyOp = getJoinParentOp(mergeMapOp);
-            connectOps.put(mergeMapWork.getTag(), dummyOp);
+            Operator<? extends OperatorDesc> finalOp = getFinalOp(mergeMapOp);
+            if (finalOp instanceof TezDummyStoreOperator) {
+              // we ensure that we don't try to read any data in case of skip read.
+              ((TezDummyStoreOperator) finalOp).setFetchDone(skipRead);
+              mapOp.setConnectedOperators(mergeMapWork.getTag(), (DummyStoreOperator) finalOp);
+            } else {
+              // found the plan is already connected which means this is derived from the cache.
+              fromCache = true;
+            }
 
             mergeMapOp.passExecContext(new ExecMapperContext(jconf));
             mergeMapOp.initializeLocalWork(jconf);
@@ -181,7 +203,10 @@ public class MapRecordProcessor extends RecordProcessor {
         }
       }
 
-      ((TezContext) (MapredContext.get())).setDummyOpsMap(connectOps);
+      if (!fromCache) {
+        // if not from cache, we still need to hook up the plans.
+        ((TezContext) (MapredContext.get())).setDummyOpsMap(mapOp.getConnectedOperators());
+      }
 
       // initialize map operator
       mapOp.setConf(mapWork);
@@ -274,12 +299,12 @@ public class MapRecordProcessor extends RecordProcessor {
     return reader;
   }
 
-  private DummyStoreOperator getJoinParentOp(Operator<? extends OperatorDesc> mergeMapOp) {
+  private Operator<? extends OperatorDesc> getFinalOp(Operator<? extends OperatorDesc> mergeMapOp) {
     for (Operator<? extends OperatorDesc> childOp : mergeMapOp.getChildOperators()) {
       if ((childOp.getChildOperators() == null) || (childOp.getChildOperators().isEmpty())) {
         return (DummyStoreOperator) childOp;
       } else {
-        return getJoinParentOp(childOp);
+        return getFinalOp(childOp);
       }
     }
     return null;

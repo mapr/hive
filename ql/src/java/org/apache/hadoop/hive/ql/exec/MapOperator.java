@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Future;
 
 import org.apache.hadoop.conf.Configuration;
@@ -89,6 +90,8 @@ public class MapOperator extends Operator<MapWork> implements Serializable, Clon
   private final transient LongWritable recordCounter = new LongWritable();
   protected transient long numRows = 0;
   protected transient long cntr = 1;
+  private final Map<Integer, DummyStoreOperator> connectedOperators
+    = new TreeMap<Integer, DummyStoreOperator>();
   protected transient long logEveryNRows = 0;
 
   // input path --> {operator --> context}
@@ -328,6 +331,31 @@ public class MapOperator extends Operator<MapWork> implements Serializable, Clon
       throw new HiveException(e);
     }
     return tableDescOI;
+  }
+
+  /*
+   * This is the same as the setChildren method below but for empty tables.
+   * It takes care of the following:
+   * 1. Create the right object inspector.
+   * 2. Set up the childrenOpToOI with the object inspector.
+   * So as to ensure that the initialization happens correctly.
+   */
+  public void initEmptyInputChildren(List<Operator<?>> children, Configuration hconf)
+    throws SerDeException, Exception {
+    setChildOperators(children);
+    for (Operator<?> child : children) {
+      TableScanOperator tsOp = (TableScanOperator) child;
+      StructObjectInspector soi = null;
+      PartitionDesc partDesc = conf.getAliasToPartnInfo().get(tsOp.getConf().getAlias());
+      Deserializer serde = partDesc.getTableDesc().getDeserializer();
+      partDesc.setProperties(partDesc.getProperties());
+      MapOpCtx opCtx = new MapOpCtx(tsOp.getConf().getAlias(), child, partDesc);
+      StructObjectInspector tableRowOI = (StructObjectInspector) serde.getObjectInspector();
+      initObjectInspector(hconf, opCtx, tableRowOI);
+      soi = opCtx.rowObjectInspector;
+      child.getParentOperators().add(this);
+      childrenOpToOI.put(child, soi);
+    }
   }
 
   public void setChildren(Configuration hconf) throws Exception {
@@ -647,5 +675,17 @@ public class MapOperator extends Operator<MapWork> implements Serializable, Clon
   public Deserializer getCurrentDeserializer() {
 
     return currentCtxs[0].deserializer;
+  }
+
+  public void clearConnectedOperators() {
+    connectedOperators.clear();
+  }
+
+  public void setConnectedOperators(int tag, DummyStoreOperator dummyOp) {
+    connectedOperators.put(tag, dummyOp);
+  }
+
+  public Map<Integer, DummyStoreOperator> getConnectedOperators() {
+    return connectedOperators;
   }
 }
