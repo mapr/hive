@@ -32,8 +32,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.common.StatsSetupConst;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.stats.StatsAggregator;
 import org.apache.hadoop.hive.ql.stats.StatsCollectionTaskIndependent;
 
@@ -44,7 +46,16 @@ public class FSStatsAggregator implements StatsAggregator, StatsCollectionTaskIn
   private List<Map<String,Map<String,String>>> statsList;
   private Map<String, Map<String,String>> statsMap;
   private FileSystem fs;
-  private Configuration conf;
+  private static Configuration conf;
+
+  private static int bufferSize;
+
+  static {
+    SessionState ss = SessionState.get();
+    conf = (ss != null) ? ss.getConf() : new Configuration();
+    bufferSize = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVE_KRYO_BUFFER_SIZE);
+  }
+
 
   @Override
   public boolean connect(Configuration hconf, Task sourceTask) {
@@ -63,7 +74,7 @@ public class FSStatsAggregator implements StatsAggregator, StatsCollectionTaskIn
         }
       });
       for (FileStatus file : status) {
-        Input in = new Input(fs.open(file.getPath()));
+        Input in = new Input(fs.open(file.getPath()), bufferSize);
         statsMap = Utilities.runtimeSerializationKryo.get().readObject(in, statsMap.getClass());
         LOG.info("Read stats : " +statsMap);
         statsList.add(statsMap);
