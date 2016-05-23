@@ -23,10 +23,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hive.common.ObjectPair;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.io.HiveKey;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.io.BytesWritable;
 
 import java.io.File;
@@ -57,6 +60,16 @@ public class KeyValueContainer {
 
   private Input input;
   private Output output;
+
+  private static Configuration conf;
+  private static int bufferSize;
+
+  static {
+    SessionState ss = SessionState.get();
+    conf = (ss != null) ? ss.getConf() : new Configuration();
+    bufferSize = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVE_KRYO_BUFFER_SIZE);
+  }
+
 
   public KeyValueContainer() {
     readBuffer = new ObjectPair[IN_MEMORY_NUM_ROWS];
@@ -171,7 +184,7 @@ public class KeyValueContainer {
           FileInputStream fis = null;
           try {
             fis = new FileInputStream(tmpFile);
-            input = new Input(fis);
+            input = new Input(fis, bufferSize);
           } finally {
             if (input == null && fis != null) {
               fis.close();

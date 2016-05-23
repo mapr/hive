@@ -26,14 +26,25 @@ import java.io.IOException;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.JobConf;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import org.apache.hadoop.conf.Configuration;
 
 public class KryoSerializer {
   private static final Log LOG = LogFactory.getLog(KryoSerializer.class);
+  private static Configuration conf;
+  private static int bufferSize;
+
+  static {
+    SessionState ss = SessionState.get();
+    conf = (ss != null) ? ss.getConf() : new Configuration();
+    bufferSize = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVE_KRYO_BUFFER_SIZE);
+  }
 
   public static byte[] serialize(Object object) {
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -47,7 +58,7 @@ public class KryoSerializer {
 
   public static <T> T deserialize(byte[] buffer, Class<T> clazz) {
     return Utilities.sparkSerializationKryo.get().readObject(
-        new Input(new ByteArrayInputStream(buffer)), clazz);
+        new Input(new ByteArrayInputStream(buffer), bufferSize), clazz);
   }
 
   public static byte[] serializeJobConf(JobConf jobConf) {

@@ -216,6 +216,15 @@ public final class Utilities {
   public static String MAPNAME = "Map ";
   public static String REDUCENAME = "Reducer ";
 
+  private static Configuration conf;
+  private static int bufferSize;
+
+  static {
+    SessionState ss = SessionState.get();
+    conf = (ss != null) ? ss.getConf() : new Configuration();
+    bufferSize = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVE_KRYO_BUFFER_SIZE);
+  }
+
   /**
    * ReduceField:
    * KEY: record key
@@ -824,7 +833,7 @@ public final class Utilities {
   }
 
   private static <T extends Serializable> T deserializeObjectFromKryo(byte[] bytes, Class<T> clazz) {
-    Input inp = new Input(new ByteArrayInputStream(bytes));
+    Input inp = new Input(new ByteArrayInputStream(bytes), bufferSize);
     T func = runtimeSerializationKryo.get().readObject(inp, clazz);
     inp.close();
     return func;
@@ -1080,7 +1089,7 @@ public final class Utilities {
   }
 
   private static <T> T deserializeObjectByKryo(Kryo kryo, InputStream in, Class<T> clazz ) {
-    Input inp = new Input(in);
+    Input inp = new Input(in, bufferSize);
     T t = kryo.readObject(inp,clazz);
     inp.close();
     return t;

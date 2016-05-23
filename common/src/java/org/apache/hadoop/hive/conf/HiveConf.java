@@ -230,6 +230,7 @@ public class HiveConf extends Configuration {
     PLAN_SERIALIZATION("hive.plan.serialization.format", "kryo",
         "Query plan format serialization between client and task nodes. \n" +
         "Two supported values are : kryo and javaXML. Kryo is default."),
+    HIVE_KRYO_BUFFER_SIZE("hive.kryo.buffer.size", 10 * 4096, "Size of buffer used in kryo serialization."),
     STAGINGDIR("hive.exec.stagingdir", ".hive-staging",
         "Directory name that will be created inside table locations in order to support HDFS encryption. " +
         "This is replaces ${hive.exec.scratchdir} for query results with the exception of read-only tables. " +
