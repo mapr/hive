@@ -2335,15 +2335,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
     try {
       if (inheritPerms || replace) {
         try{
-          // If the hive.optimize.insert.dest.volume set to be true, the scratch directory is 
-          // created under the destination parent folder with the default scratch directory permission.
-          // Destination directory should use the parent permission instead of the scratch directory permission.
-          if(conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) == true) {
-             destStatus = shims.getFullFileStatus(conf, fs, destf.getParent());
-          } else {
-            destStatus = shims.getFullFileStatus(conf, fs, destf);
-          }
-
+          destStatus = shims.getFullFileStatus(conf, fs, destf);
           //if destf is an existing directory:
           //if replace is true, delete followed by rename(mv) is equivalent to replace
           //if replace is false, rename (mv) actually move the src under dest dir
