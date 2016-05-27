@@ -43,7 +43,7 @@ import org.apache.hadoop.hive.ql.udf.generic.SimpleGenericUDAFParameterInfo;
 import org.apache.hadoop.hive.ql.udf.ptf.TableFunctionResolver;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
-import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hive.common.util.ReflectionUtil;
 
 import java.io.IOException;
 import java.net.URLClassLoader;
@@ -113,7 +113,7 @@ public class Registry {
       case GENERIC_UDAF_RESOLVER:
         return registerGenericUDAF(
             functionName, (GenericUDAFResolver)
-            ReflectionUtils.newInstance(udfClass, null), resources);
+            ReflectionUtil.newInstance(udfClass, null), resources);
       case TABLE_FUNCTION_RESOLVER:
         // native or not would be decided by annotation. need to evaluate that first
         return registerTableFunction(functionName,
@@ -142,7 +142,7 @@ public class Registry {
       Class<? extends GenericUDF> genericUDFClass, FunctionResource... resources) {
     validateClass(genericUDFClass, GenericUDF.class);
     FunctionInfo fI = new FunctionInfo(isNative, functionName,
-        ReflectionUtils.newInstance(genericUDFClass, null), resources);
+        ReflectionUtil.newInstance(genericUDFClass, null), resources);
     addFunction(functionName, fI);
     return fI;
   }
@@ -151,7 +151,7 @@ public class Registry {
       Class<? extends GenericUDTF> genericUDTFClass, FunctionResource... resources) {
     validateClass(genericUDTFClass, GenericUDTF.class);
     FunctionInfo fI = new FunctionInfo(isNative, functionName,
-        ReflectionUtils.newInstance(genericUDTFClass, null), resources);
+        ReflectionUtil.newInstance(genericUDTFClass, null), resources);
     addFunction(functionName, fI);
     return fI;
   }
@@ -169,7 +169,7 @@ public class Registry {
       Class<? extends UDAF> udafClass, FunctionResource... resources) {
     validateClass(udafClass, UDAF.class);
     FunctionInfo function = new WindowFunctionInfo(isNative, functionName,
-        new GenericUDAFBridge(ReflectionUtils.newInstance(udafClass, null)), resources);
+        new GenericUDAFBridge(ReflectionUtil.newInstance(udafClass, null)), resources);
     addFunction(functionName, function);
     addFunction(WINDOW_FUNC_PREFIX + functionName, function);
     return function;
