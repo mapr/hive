@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.apache.hadoop.hive.common.StatsSetupConst;
 
@@ -123,11 +125,11 @@ public class JDBCStatsUtils {
   /**
    * Prepares CREATE TABLE query
    */
-  public static String getCreate(String comment, JDBCStatsPublisher.SupportedDBType dbType) {
+  public static String getCreate(String comment, JDBCStatsPublisher.SupportedDBType dbType, Configuration hconf) {
     String create = "CREATE TABLE /* " + comment + " */ " + JDBCStatsUtils.getStatTableName()
         + " (" + getTimestampColumnName() + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
         + JDBCStatsUtils.getIdColumnName() + " VARCHAR("
-        + JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE + ") PRIMARY KEY ";
+        + getIdColSize(hconf) + ") PRIMARY KEY ";
     for (int i = 0; i < supportedStats.size(); i++) {
       create += ", " + getStatColumnName(supportedStats.get(i)) + " BIGINT ";
     }
@@ -146,7 +148,7 @@ public class JDBCStatsUtils {
   /**
    * Prepares ALTER TABLE query
    */
-  public static String getAlterIdColumn(JDBCStatsPublisher.SupportedDBType dbType) {
+  public static String getAlterIdColumn(JDBCStatsPublisher.SupportedDBType dbType, Configuration hconf) {
     String alter = "ALTER TABLE " + JDBCStatsUtils.getStatTableName();
     switch (dbType) {
       case MYSQL:
@@ -162,7 +164,7 @@ public class JDBCStatsUtils {
         alter += " ALTER COLUMN " + JDBCStatsUtils.getIdColumnName();
         break;
     }
-    alter += " VARCHAR(" + JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE + ")";
+    alter += " VARCHAR(" + getIdColSize(hconf) + ")";
     return alter;
   }
 
@@ -226,9 +228,14 @@ public class JDBCStatsUtils {
   /**
    * Make sure the row ID fits into the row ID column in the table.
    */
-  public static void validateRowId(String rowId) {
-    if (rowId.length() > JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE) {
+  public static void validateRowId(String rowId, Configuration hconf) {
+    if (rowId.length() > getIdColSize(hconf)) {
       throw new RuntimeException("ID is too big, client should have truncated it: " + rowId);
     }
+  }
+
+  public static int getIdColSize(Configuration hconf) {
+    return HiveConf.getIntVar(hconf, HiveConf.ConfVars.PART_STAT_TABLE_ID_COLUMN_VARCHAR_SIZE);
+
   }
 }
