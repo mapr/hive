@@ -45,6 +45,16 @@ function get_canonical_dir() {
   echo $ret
 }
 
+function find_spark_home() {
+target="$1"
+
+# file exists and is a symbolic link
+while [ -h "$target" ]; do
+target=$(readlink "$target")
+done
+echo $target
+}
+
 bin=$(get_canonical_dir "$0")
 
 bin=`cd "$bin"; pwd`
@@ -147,15 +157,8 @@ fi
 
 if [[ -z "$SPARK_HOME" ]]
 then
-  bin=$(get_canonical_dir "$0")
-  # many hadoop installs are in dir/{spark,hive,hadoop,..}
-  if test -e $bin/../../spark; then 
-    sparkHome=$(readlink -f $bin/../../spark)
-    if [[ -d $sparkHome ]]
-    then
-      export SPARK_HOME=$sparkHome
-    fi
-  fi
+  export SPARK_HOME=$(find_spark_home "/usr/local/spark")
+  export SPARK_CONF="$SPARK_HOME/conf/*"
 fi
 
 CLASSPATH="${HIVE_CONF_DIR}"
@@ -207,6 +210,7 @@ if [[ -n "$SPARK_HOME" && !("$HIVE_SKIP_SPARK_ASSEMBLY" = "true") ]]
 then
   sparkAssemblyPath=`ls ${SPARK_HOME}/lib/spark-assembly-*.jar`
   CLASSPATH="${CLASSPATH}:${sparkAssemblyPath}"
+  CLASSPATH="${CLASSPATH}:$SPARK_CONF"
 fi
 
 # add the auxillary jars such as serdes
