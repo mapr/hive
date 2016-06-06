@@ -62,6 +62,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
     export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
   fi
 
+  ln -sf $pid ${BASEMAPR}/pid
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
   echo "`date` hiveserver2 started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
@@ -74,7 +75,9 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
     if kill -0 `cat $pid` > /dev/null 2>&1; then
       echo stopping hiveserver2
       kill `cat $pid`
-      echo "`date` hiveserver2 stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
+      echo "`date` hiveserver2 stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null.
+      rm ${BASEMAPR}/pid/hive-$HIVE_IDENT_STRING-hiveserver2.pid
+      rm $pid
     else
       echo no hiveserver2 to stop
     fi
