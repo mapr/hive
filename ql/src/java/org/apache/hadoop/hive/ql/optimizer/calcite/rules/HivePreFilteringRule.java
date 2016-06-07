@@ -18,9 +18,8 @@
 package org.apache.hadoop.hive.ql.optimizer.calcite.rules;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.calcite.plan.RelOptPredicateList;
@@ -41,17 +40,7 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBetween;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFIn;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqual;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqualNS;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqualOrGreaterThan;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqualOrLessThan;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPGreaterThan;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPLessThan;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPNotEqual;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
@@ -70,20 +59,11 @@ public class HivePreFilteringRule extends RelOptRule {
 
   private final FilterFactory filterFactory;
 
-
-  private static final Set<String> COMPARISON_UDFS = Sets.newHashSet(
-          GenericUDFOPEqual.class.getAnnotation(Description.class).name(),
-          GenericUDFOPEqualNS.class.getAnnotation(Description.class).name(),
-          GenericUDFOPEqualOrGreaterThan.class.getAnnotation(Description.class).name(),
-          GenericUDFOPEqualOrLessThan.class.getAnnotation(Description.class).name(),
-          GenericUDFOPGreaterThan.class.getAnnotation(Description.class).name(),
-          GenericUDFOPLessThan.class.getAnnotation(Description.class).name(),
-          GenericUDFOPNotEqual.class.getAnnotation(Description.class).name());
-  private static final String IN_UDF =
-          GenericUDFIn.class.getAnnotation(Description.class).name();
-  private static final String BETWEEN_UDF =
-          GenericUDFBetween.class.getAnnotation(Description.class).name();
-
+  private static final Set<SqlKind>        COMPARISON = EnumSet.of(SqlKind.EQUALS,
+                                                          SqlKind.GREATER_THAN_OR_EQUAL,
+                                                          SqlKind.LESS_THAN_OR_EQUAL,
+                                                          SqlKind.GREATER_THAN, SqlKind.LESS_THAN,
+                                                          SqlKind.NOT_EQUALS);
 
   private HivePreFilteringRule() {
     super(operand(Filter.class,
@@ -161,56 +141,73 @@ public class HivePreFilteringRule extends RelOptRule {
 
   private static List<RexNode> extractCommonOperands(RexBuilder rexBuilder, RexNode condition) {
     assert condition.getKind() == SqlKind.OR;
-    Multimap<String,RexNode> reductionCondition = LinkedHashMultimap.create();
+    Multimap<String, RexNode> reductionCondition = LinkedHashMultimap.create();
 
-    // 1. We extract the information necessary to create the predicate for the new
-    //    filter; currently we support comparison functions, in and between
+    // Data structure to control whether a certain reference is present in every
+    // operand
+    Set<String> refsInAllOperands = null;
+
+    // 1. We extract the information necessary to create the predicate for the
+    // new
+    // filter; currently we support comparison functions, in and between
     ImmutableList<RexNode> operands = RexUtil.flattenOr(((RexCall) condition).getOperands());
-    for (RexNode operand: operands) {
+    for (int i = 0; i < operands.size(); i++) {
+      final RexNode operand = operands.get(i);
+
       final RexNode operandCNF = RexUtil.toCnf(rexBuilder, operand);
       final List<RexNode> conjunctions = RelOptUtil.conjunctions(operandCNF);
-      boolean addedToReductionCondition = false; // Flag to control whether we have added a new factor
-                                                 // to the reduction predicate
-      for (RexNode conjunction: conjunctions) {
+
+      Set<String> refsInCurrentOperand = Sets.newHashSet();
+      for (RexNode conjunction : conjunctions) {
+        // We do not know what it is, we bail out for safety
         if (!(conjunction instanceof RexCall)) {
-          continue;
+          return new ArrayList<>();
         }
         RexCall conjCall = (RexCall) conjunction;
-        if(COMPARISON_UDFS.contains(conjCall.getOperator().getName())) {
-          if (conjCall.operands.get(0) instanceof RexInputRef &&
-                  conjCall.operands.get(1) instanceof RexLiteral) {
-            reductionCondition.put(conjCall.operands.get(0).toString(),
-                    conjCall);
-            addedToReductionCondition = true;
-          } else if (conjCall.operands.get(1) instanceof RexInputRef &&
-                  conjCall.operands.get(0) instanceof RexLiteral) {
-            reductionCondition.put(conjCall.operands.get(1).toString(),
-                    conjCall);
-            addedToReductionCondition = true;
+        RexNode ref = null;
+        if (COMPARISON.contains(conjCall.getOperator().getKind())) {
+          if (conjCall.operands.get(0) instanceof RexInputRef
+              && conjCall.operands.get(1) instanceof RexLiteral) {
+            ref = conjCall.operands.get(0);
+          } else if (conjCall.operands.get(1) instanceof RexInputRef
+              && conjCall.operands.get(0) instanceof RexLiteral) {
+            ref = conjCall.operands.get(1);
+          } else {
+            // We do not know what it is, we bail out for safety
+            return new ArrayList<>();
           }
-        } else if(conjCall.getOperator().getName().equals(IN_UDF)) {
-          reductionCondition.put(conjCall.operands.get(0).toString(),
-                  conjCall);
-          addedToReductionCondition = true;
-        } else if(conjCall.getOperator().getName().equals(BETWEEN_UDF)) {
-          reductionCondition.put(conjCall.operands.get(1).toString(),
-                  conjCall);
-          addedToReductionCondition = true;
+        } else if (conjCall.getOperator().getKind().equals(SqlKind.IN)) {
+          ref = conjCall.operands.get(0);
+        } else if (conjCall.getOperator().getKind().equals(SqlKind.BETWEEN)) {
+          ref = conjCall.operands.get(1);
+        } else {
+          // We do not know what it is, we bail out for safety
+          return new ArrayList<>();
         }
+
+        String stringRef = ref.toString();
+        reductionCondition.put(stringRef, conjCall);
+        refsInCurrentOperand.add(stringRef);
       }
 
-      // If we did not add any factor, we can bail out
-      if (!addedToReductionCondition) {
+      // Updates the references that are present in every operand up till now
+      if (i == 0) {
+        refsInAllOperands = refsInCurrentOperand;
+      } else {
+        refsInAllOperands = Sets.intersection(refsInAllOperands, refsInCurrentOperand);
+      }
+      // If we did not add any factor or there are no common factors, we can
+      // bail out
+      if (refsInAllOperands.isEmpty()) {
         return new ArrayList<>();
       }
     }
 
     // 2. We gather the common factors and return them
     List<RexNode> commonOperands = new ArrayList<>();
-    for (Entry<String,Collection<RexNode>> pair : reductionCondition.asMap().entrySet()) {
-      if (pair.getValue().size() == operands.size()) {
-        commonOperands.add(RexUtil.composeDisjunction(rexBuilder, pair.getValue(), false));
-      }
+    for (String ref : refsInAllOperands) {
+      commonOperands
+          .add(RexUtil.composeDisjunction(rexBuilder, reductionCondition.get(ref), false));
     }
     return commonOperands;
   }

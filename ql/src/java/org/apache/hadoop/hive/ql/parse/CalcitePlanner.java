@@ -133,6 +133,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveGroupingID;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveRelNode;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSort;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveTableScan;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
@@ -142,6 +143,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterProjectTransp
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterSetOpTransposeRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveInsertExchange4JoinRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinAddNotNullRule;
+import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinPushTransitivePredicatesRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinToMultiJoinRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePartitionPruneRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePreFilteringRule;
@@ -857,7 +859,17 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       calciteOptimizedPlan = hepPlanner.findBestExp();
 
-      // run rule to fix windowing issue when it is done over
+
+      // 4. Run rule to try to remove projects on top of join operators
+      hepPgmBldr = new HepProgramBuilder().addMatchOrder(HepMatchOrder.BOTTOM_UP);
+      hepPgmBldr.addRuleInstance(HiveWindowingFixRule.INSTANCE);
+      hepPlanner = new HepPlanner(hepPgmBldr.build());
+      hepPlanner.registerMetadataProviders(list);
+      cluster.setMetadataProvider(new CachingRelMetadataProvider(chainedProvider, hepPlanner));
+      hepPlanner.setRoot(calciteOptimizedPlan);
+      calciteOptimizedPlan = hepPlanner.findBestExp();
+
+      // 5. Run rule to fix windowing issue when it is done ove
       // aggregation columns (HIVE-10627)
       hepPgmBldr = new HepProgramBuilder().addMatchOrder(HepMatchOrder.BOTTOM_UP);
       hepPgmBldr.addRuleInstance(HiveWindowingFixRule.INSTANCE);
@@ -867,8 +879,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
       hepPlanner.setRoot(calciteOptimizedPlan);
       calciteOptimizedPlan = hepPlanner.findBestExp();
 
+      // 6. Run rules to aid in translation from Calcite tree to Hive tree
       if (HiveConf.getBoolVar(conf, ConfVars.HIVE_CBO_RETPATH_HIVEOP)) {
-        // run rules to aid in translation from Optiq tree -> Hive tree
+        // 6.1. Merge join into multijoin operators (if possible)
         hepPgmBldr = new HepProgramBuilder().addMatchOrder(HepMatchOrder.BOTTOM_UP);
         hepPgmBldr.addRuleInstance(HiveJoinToMultiJoinRule.INSTANCE);
         hepPlanner = new HepPlanner(hepPgmBldr.build());
@@ -876,7 +889,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
         cluster.setMetadataProvider(new CachingRelMetadataProvider(chainedProvider, hepPlanner));
         hepPlanner.setRoot(calciteOptimizedPlan);
         calciteOptimizedPlan = hepPlanner.findBestExp();
+        // The previous rules can pull up projections through join operators,
+        // thus we run the field trimmer again to push them back down
+        HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null, HiveProject.DEFAULT_PROJECT_FACTORY,
+                HiveFilter.DEFAULT_FILTER_FACTORY, HiveJoin.HIVE_JOIN_FACTORY,
+                HiveSemiJoin.HIVE_SEMIJOIN_FACTORY, HiveSort.HIVE_SORT_REL_FACTORY,
+                HiveAggregate.HIVE_AGGR_REL_FACTORY, HiveUnion.UNION_REL_FACTORY);
+        calciteOptimizedPlan = fieldTrimmer.trim(calciteOptimizedPlan);
 
+        // 6.2.  Introduce exchange operators below join/multijoin operators
         hepPgmBldr = new HepProgramBuilder().addMatchOrder(HepMatchOrder.BOTTOM_UP);
         hepPgmBldr.addRuleInstance(HiveInsertExchange4JoinRule.EXCHANGE_BELOW_JOIN);
         hepPgmBldr.addRuleInstance(HiveInsertExchange4JoinRule.EXCHANGE_BELOW_MULTIJOIN);
@@ -948,7 +969,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               HiveFilter.DEFAULT_FILTER_FACTORY, Aggregate.class));
 
       // 4. Transitive inference & Partition Pruning
-      basePlan = hepPlan(basePlan, false, mdProvider, new JoinPushTransitivePredicatesRule(
+      basePlan = hepPlan(basePlan, false, mdProvider, new HiveJoinPushTransitivePredicatesRule(
           Join.class, HiveFilter.DEFAULT_FILTER_FACTORY),
           new HivePartitionPruneRule(conf));
 

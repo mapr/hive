@@ -1213,10 +1213,16 @@ public final class VectorExpressionWriterFactory {
     int i = 0;
     for(StructField field : fields) {
       ObjectInspector fieldObjInsp = field.getFieldObjectInspector();
-      writers[i] = VectorExpressionWriterFactory.
+      try {
+        writers[i] = VectorExpressionWriterFactory.
                 genVectorExpressionWritable(fieldObjInsp);
+        oids.add(writers[i].getObjectInspector());
+      } catch(IllegalArgumentException e) {
+        // skip, data type validation has been done in compile time.
+        writers[i] = null;
+        oids.add(null);
+      }
       columnNames.add(field.getFieldName());
-      oids.add(writers[i].getObjectInspector());
       i++;
     }
     ObjectInspector objectInspector = ObjectInspectorFactory.

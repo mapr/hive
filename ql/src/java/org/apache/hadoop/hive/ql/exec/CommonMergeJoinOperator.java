@@ -20,7 +20,6 @@ package org.apache.hadoop.hive.ql.exec;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -633,13 +632,15 @@ public class CommonMergeJoinOperator extends AbstractMapJoinOperator<CommonMerge
     if (parent == null) {
       throw new HiveException("No valid parents.");
     }
-    Map<Integer, DummyStoreOperator> dummyOps =
-        ((TezContext) (MapredContext.get())).getDummyOpsMap();
-    for (Entry<Integer, DummyStoreOperator> connectOp : dummyOps.entrySet()) {
-      if (connectOp.getValue().getChildOperators() == null
-          || connectOp.getValue().getChildOperators().isEmpty()) {
-        parentOperators.add(connectOp.getKey(), connectOp.getValue());
-        connectOp.getValue().getChildOperators().add(this);
+    if (parentOperators.size() == 1) {
+      Map<Integer, DummyStoreOperator> dummyOps =
+              ((TezContext) (MapredContext.get())).getDummyOpsMap();
+      for (Entry<Integer, DummyStoreOperator> connectOp : dummyOps.entrySet()) {
+        if (connectOp.getValue().getChildOperators() == null
+                || connectOp.getValue().getChildOperators().isEmpty()) {
+          parentOperators.add(connectOp.getKey(), connectOp.getValue());
+          connectOp.getValue().getChildOperators().add(this);
+        }
       }
     }
     super.initializeLocalWork(hconf);
