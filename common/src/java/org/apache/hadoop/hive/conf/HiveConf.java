@@ -2194,7 +2194,9 @@ public class HiveConf extends Configuration {
             "Comma separated list of configuration options which should not be read by normal user like passwords"),
     HIVE_CONF_INTERNAL_VARIABLE_LIST("hive.conf.internal.variable.list",
         "hive.added.files.path,hive.added.jars.path,hive.added.archives.path",
-        "Comma separated list of variables which are used internally and should not be configurable.");
+        "Comma separated list of variables which are used internally and should not be configurable."),
+    PART_STAT_TABLE_ID_COLUMN_VARCHAR_SIZE("hive.part.stat.table.id.varchar.size", 1024,
+        "Size of ID column in PARTITION_STATS_V2 table. By default this value is 1024.");
 
     public final String varname;
     private final String defaultExpr;

@@ -135,7 +135,7 @@ public class JDBCStatsAggregator implements StatsAggregator {
       }
     };
 
-    JDBCStatsUtils.validateRowId(fileID);
+    JDBCStatsUtils.validateRowId(fileID, hiveconf);
     String keyPrefix = Utilities.escapeSqlLike(fileID) + "%";
     for (int failures = 0;; failures++) {
       try {
@@ -219,7 +219,7 @@ public class JDBCStatsAggregator implements StatsAggregator {
     };
     try {
 
-      JDBCStatsUtils.validateRowId(rowID);
+      JDBCStatsUtils.validateRowId(rowID, hiveconf);
       String keyPrefix = Utilities.escapeSqlLike(rowID) + "%";
 
       PreparedStatement delStmt = Utilities.prepareWithRetry(conn,

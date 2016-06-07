@@ -154,7 +154,7 @@ public class JDBCStatsPublisher implements StatsPublisher {
           + " stats: " + JDBCStatsUtils.getSupportedStatistics());
       return false;
     }
-    JDBCStatsUtils.validateRowId(fileID);
+    JDBCStatsUtils.validateRowId(fileID, hiveconf);
     if (LOG.isInfoEnabled()) {
       LOG.info("Stats publishing for key " + fileID);
     }
@@ -303,7 +303,7 @@ public class JDBCStatsPublisher implements StatsPublisher {
         rs = dbm.getTables(null, null, tableName, null);
         boolean tblExists = rs.next();
         if (!tblExists) { // Table does not exist, create it
-          String createTable = JDBCStatsUtils.getCreate("", dbType);
+          String createTable = JDBCStatsUtils.getCreate("", dbType, hconf);
           stmt.executeUpdate(createTable);
         } else {
           // Upgrade column name to allow for longer paths.
@@ -314,8 +314,8 @@ public class JDBCStatsPublisher implements StatsPublisher {
             rs = dbm.getColumns(null, null, tableName, idColName);
             if (rs.next()) {
               colSize = rs.getInt("COLUMN_SIZE");
-              if (colSize < JDBCStatsSetupConstants.ID_COLUMN_VARCHAR_SIZE) {
-                String alterTable = JDBCStatsUtils.getAlterIdColumn(dbType);
+              if (colSize < JDBCStatsUtils.getIdColSize(hconf)) {
+                String alterTable = JDBCStatsUtils.getAlterIdColumn(dbType, hconf);
                   stmt.executeUpdate(alterTable);
               }
             } else {
