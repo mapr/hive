@@ -53,6 +53,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
 
   export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
 
+  ln -sf $pid ${BASEMAPR}/pid
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
   echo "`date` hiveserver2 started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
@@ -88,4 +89,3 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
   echo hiveserver2 not running.
   exit 1
 }
-
