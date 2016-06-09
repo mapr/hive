@@ -1967,7 +1967,9 @@ public class HiveConf extends Configuration {
     TEZ_EXEC_INPLACE_PROGRESS(
         "hive.tez.exec.inplace.progress",
         true,
-        "Updates tez job execution progress in-place in the terminal.")
+        "Updates tez job execution progress in-place in the terminal."),
+      PART_STAT_TABLE_ID_COLUMN_VARCHAR_SIZE("hive.part.stat.table.id.varchar.size", 1024,
+              "Size of ID column in PARTITION_STATS_V2 table. By default this value is 1024.")
     ;
 
     public final String varname;
