@@ -18,6 +18,8 @@
 
 package org.apache.hadoop.hive.ql.exec.tez;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -27,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -50,8 +54,10 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.tez.client.TezClient;
 import org.apache.tez.common.counters.CounterGroup;
 import org.apache.tez.common.counters.TezCounter;
 import org.apache.tez.common.counters.TezCounters;
@@ -59,11 +65,14 @@ import org.apache.tez.dag.api.DAG;
 import org.apache.tez.dag.api.Edge;
 import org.apache.tez.dag.api.GroupInputEdge;
 import org.apache.tez.dag.api.SessionNotRunning;
-import org.apache.tez.dag.api.TezUncheckedException;
+import org.apache.tez.dag.api.TezException;
 import org.apache.tez.dag.api.Vertex;
 import org.apache.tez.dag.api.VertexGroup;
 import org.apache.tez.dag.api.client.DAGClient;
+import org.apache.tez.dag.api.client.DAGStatus;
 import org.apache.tez.dag.api.client.StatusGetOpts;
+import org.apache.tez.dag.api.client.VertexStatus;
+import org.json.JSONObject;
 
 /**
  *
@@ -80,6 +89,11 @@ public class TezTask extends Task<TezWork> {
   private TezCounters counters;
 
   private final DagUtils utils;
+
+  private DAGClient dagClient = null;
+
+  Map<BaseWork, Vertex> workToVertex = new HashMap<BaseWork, Vertex>();
+  Map<BaseWork, JobConf> workToConf = new HashMap<BaseWork, JobConf>();
 
   public TezTask() {
     this(DagUtils.getInstance());
@@ -99,7 +113,6 @@ public class TezTask extends Task<TezWork> {
     int rc = 1;
     boolean cleanContext = false;
     Context ctx = null;
-    DAGClient client = null;
     TezSessionState session = null;
 
     try {
@@ -159,16 +172,16 @@ public class TezTask extends Task<TezWork> {
       addExtraResourcesToDag(session, dag, inputOutputJars, inputOutputLocalResources);
 
       // submit will send the job to the cluster and start executing
-      client = submit(jobConf, dag, scratchDir, appJarLr, session,
+      dagClient = submit(jobConf, dag, scratchDir, appJarLr, session,
           additionalLr, inputOutputJars, inputOutputLocalResources);
 
       // finally monitor will print progress until the job is done
       TezJobMonitor monitor = new TezJobMonitor();
-      rc = monitor.monitorExecution(client, ctx.getHiveTxnManager(), conf, dag);
+      rc = monitor.monitorExecution(dagClient, ctx.getHiveTxnManager(), conf, dag);
 
       // fetch the counters
       Set<StatusGetOpts> statusGetOpts = EnumSet.of(StatusGetOpts.GET_COUNTERS);
-      counters = client.getDAGStatus(statusGetOpts).getDAGCounters();
+      counters = dagClient.getDAGStatus(statusGetOpts).getDAGCounters();
       TezSessionPoolManager.getInstance().returnSession(session);
 
       if (LOG.isInfoEnabled() && counters != null
@@ -185,16 +198,25 @@ public class TezTask extends Task<TezWork> {
       // rc will be 1 at this point indicating failure.
     } finally {
       Utilities.clearWork(conf);
+
+      // Clear gWorkMap
+      for (BaseWork w : work.getAllWork()) {
+        JobConf workCfg = workToConf.get(w);
+        if (workCfg != null) {
+          Utilities.clearWorkMapForConf(workCfg);
+        }
+      }
+
       if (cleanContext) {
         try {
           ctx.clear();
         } catch (Exception e) {
           /*best effort*/
-          LOG.warn("Failed to clean up after tez job");
+          LOG.warn("Failed to clean up after tez job", e);
         }
       }
       // need to either move tmp files or remove them
-      if (client != null) {
+      if (dagClient != null) {
         // rc will only be overwritten if close errors out
         rc = close(work, rc);
       }
@@ -227,7 +249,8 @@ public class TezTask extends Task<TezWork> {
     final boolean missingLocalResources = !session
         .hasResources(inputOutputJars);
 
-    if (!session.isOpen()) {
+    TezClient client = session.getSession();
+    if (client == null) {
       // can happen if the user sets the tez flag after the session was
       // established
       LOG.info("Tez session hasn't been created yet. Opening session");
@@ -239,7 +262,7 @@ public class TezTask extends Task<TezWork> {
       if (missingLocalResources) {
         LOG.info("Tez session missing resources," +
             " adding additional necessary resources");
-        session.getSession().addAppMasterLocalFiles(extraResources);
+        client.addAppMasterLocalFiles(extraResources);
       }
 
       session.refreshLocalResourcesFromConf(conf);
@@ -264,8 +287,6 @@ public class TezTask extends Task<TezWork> {
       throws Exception {
 
     perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.TEZ_BUILD_DAG);
-    Map<BaseWork, Vertex> workToVertex = new HashMap<BaseWork, Vertex>();
-    Map<BaseWork, JobConf> workToConf = new HashMap<BaseWork, JobConf>();
 
     // getAllWork returns a topologically sorted list, which we use to make
     // sure that vertices are created before they are used in edges.
@@ -347,6 +368,8 @@ public class TezTask extends Task<TezWork> {
         }
       }
     }
+    // Clear the work map after build. TODO: remove caching instead?
+    Utilities.clearWorkMap();
     perfLogger.PerfLogEnd(CLASS_NAME, PerfLogger.TEZ_BUILD_DAG);
     return dag;
   }
@@ -371,21 +394,37 @@ public class TezTask extends Task<TezWork> {
     }
 
     try {
-      // ready to start execution on the cluster
-      sessionState.getSession().addAppMasterLocalFiles(resourceMap);
-      dagClient = sessionState.getSession().submitDAG(dag);
-    } catch (SessionNotRunning nr) {
-      console.printInfo("Tez session was closed. Reopening...");
+      try {
+        // ready to start execution on the cluster
+        sessionState.getSession().addAppMasterLocalFiles(resourceMap);
+        dagClient = sessionState.getSession().submitDAG(dag);
+      } catch (SessionNotRunning nr) {
+        console.printInfo("Tez session was closed. Reopening...");
 
-      // close the old one, but keep the tmp files around
-      TezSessionPoolManager.getInstance().closeAndOpen(sessionState, this.conf, inputOutputJars, true);
-      console.printInfo("Session re-established.");
+        // close the old one, but keep the tmp files around
+        TezSessionPoolManager.getInstance().closeAndOpen(sessionState, this.conf, inputOutputJars,
+            true);
+        console.printInfo("Session re-established.");
 
-      dagClient = sessionState.getSession().submitDAG(dag);
+        dagClient = sessionState.getSession().submitDAG(dag);
+      }
+    } catch (Exception e) {
+      // In case of any other exception, retry. If this also fails, report original error and exit.
+      try {
+        TezSessionPoolManager.getInstance().closeAndOpen(sessionState, this.conf, inputOutputJars,
+            true);
+        console.printInfo("Dag submit failed due to " + e.getMessage() + " stack trace: "
+            + Arrays.toString(e.getStackTrace()) + " retrying...");
+        dagClient = sessionState.getSession().submitDAG(dag);
+      } catch (Exception retryException) {
+        // we failed to submit after retrying. Destroy session and bail.
+        // TezSessionPoolManager.getInstance().destroySession(sessionState);
+        throw retryException;
+      }
     }
 
     perfLogger.PerfLogEnd(CLASS_NAME, PerfLogger.TEZ_SUBMIT_DAG);
-    return dagClient;
+    return new SyncDagClient(dagClient);
   }
 
   /*
@@ -412,7 +451,21 @@ public class TezTask extends Task<TezWork> {
         console.printError(mesg, "\n" + StringUtils.stringifyException(e));
       }
     }
+    closeDagClientWithoutEx();
     return rc;
+  }
+
+  /**
+   * Close DagClient, log warning if it throws any exception.
+   * We don't want to fail query if that function fails.
+   */
+  private void closeDagClientWithoutEx(){
+    try {
+      dagClient.close();
+      dagClient = null;
+    } catch (Exception e) {
+      LOG.warn("Failed to close DagClient", e);
+    }
   }
 
   @Override
@@ -466,5 +519,86 @@ public class TezTask extends Task<TezWork> {
     }
 
     return ((ReduceWork)children.get(0)).getReducer();
+  }
+
+  @Override
+  public void shutdown() {
+    super.shutdown();
+    if (dagClient != null) {
+      LOG.info("Shutting down Tez task " + this);
+      try {
+        dagClient.tryKillDAG();
+        LOG.info("Waiting for Tez task to shut down: " + this);
+        dagClient.waitForCompletion();
+      } catch (Exception ex) {
+        LOG.warn("Failed to shut down TezTask" + this, ex);
+      }
+      closeDagClientWithoutEx();
+    }
+  }
+
+  /** DAG client that does dumb global sync on all the method calls;
+   * Tez DAG client is not thread safe and getting the 2nd one is not recommended. */
+  public class SyncDagClient extends DAGClient {
+    private final DAGClient dagClient;
+
+    public SyncDagClient(DAGClient dagClient) {
+      super();
+      this.dagClient = dagClient;
+    }
+
+    @Override
+    public void close() throws IOException {
+      dagClient.close(); // Don't sync.
+    }
+
+    @Override
+    public String getExecutionContext() {
+      return dagClient.getExecutionContext(); // Don't sync.
+    }
+
+    @Override
+    @Private
+    protected ApplicationReport getApplicationReportInternal() {
+      throw new UnsupportedOperationException(); // The method is not exposed, and we don't use it.
+    }
+
+    @Override
+    public DAGStatus getDAGStatus(@Nullable Set<StatusGetOpts> statusOptions)
+        throws IOException, TezException {
+      synchronized (dagClient) {
+        return dagClient.getDAGStatus(statusOptions);
+      }
+    }
+
+    @Override
+    public VertexStatus getVertexStatus(String vertexName,
+        Set<StatusGetOpts> statusOptions) throws IOException, TezException {
+      synchronized (dagClient) {
+        return dagClient.getVertexStatus(vertexName, statusOptions);
+      }
+    }
+
+    @Override
+    public void tryKillDAG() throws IOException, TezException {
+      synchronized (dagClient) {
+        dagClient.tryKillDAG();
+      }
+    }
+
+    @Override
+    public DAGStatus waitForCompletion() throws IOException, TezException, InterruptedException {
+      synchronized (dagClient) {
+        return dagClient.waitForCompletion();
+      }
+    }
+
+    @Override
+    public DAGStatus waitForCompletionWithStatusUpdates(@Nullable Set<StatusGetOpts> statusGetOpts)
+        throws IOException, TezException, InterruptedException {
+      synchronized (dagClient) {
+        return dagClient.waitForCompletionWithStatusUpdates(statusGetOpts);
+      }
+    }
   }
 }
