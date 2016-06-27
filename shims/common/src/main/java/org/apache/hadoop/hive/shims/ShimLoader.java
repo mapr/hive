@@ -30,6 +30,7 @@ import java.util.Map;
  */
 public abstract class ShimLoader {
   public static String HADOOP23VERSIONNAME = "0.23";
+  public static String HADOOP20SUNIFIEDVERSIONNAME = "0.20SUnified";
 
   private static volatile HadoopShims hadoopShims;
   private static JettyShims jettyShims;
@@ -45,6 +46,7 @@ public abstract class ShimLoader {
 
   static {
     HADOOP_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.hadoop.hive.shims.Hadoop23Shims");
+    HADOOP_SHIM_CLASSES.put(HADOOP20SUNIFIEDVERSIONNAME, "org.apache.hadoop.hive.shims.Hadoop20SUnifiedShims");
   }
 
   /**
@@ -56,6 +58,7 @@ public abstract class ShimLoader {
 
   static {
     JETTY_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.hadoop.hive.shims.Jetty23Shims");
+    JETTY_SHIM_CLASSES.put(HADOOP20SUNIFIEDVERSIONNAME, "org.apache.hadoop.hive.shims.Jetty20SShims");
   }
 
   /**
@@ -67,6 +70,8 @@ public abstract class ShimLoader {
   static {
     EVENT_COUNTER_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.hadoop.log.metrics" +
         ".EventCounter");
+    EVENT_COUNTER_SHIM_CLASSES.put(HADOOP20SUNIFIEDVERSIONNAME, "org.apache.hadoop.log.metrics" +
+        ".EventCounter");
   }
 
   /**
@@ -77,6 +82,8 @@ public abstract class ShimLoader {
 
   static {
     HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put(HADOOP23VERSIONNAME,
+        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put(HADOOP20SUNIFIEDVERSIONNAME,
         "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
   }
 
@@ -163,6 +170,11 @@ public abstract class ShimLoader {
     }
 
     switch (Integer.parseInt(parts[0])) {
+    case 1:
+      if (vers.toLowerCase().contains("-mapr")) {
+        // Unified Hadoop MR1 APIs have the version as format "1.0.3-mapr-1408"
+        return HADOOP20SUNIFIEDVERSIONNAME;
+      }
     case 2:
       return HADOOP23VERSIONNAME;
     default:
