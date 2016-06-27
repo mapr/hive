@@ -220,7 +220,7 @@ public abstract class HadoopThriftAuthBridge {
         throw new IOException("Unsupported authentication method: " + method);
       }
     }
-    private static class SaslClientCallbackHandler implements CallbackHandler {
+    protected static class SaslClientCallbackHandler implements CallbackHandler {
       private final String userName;
       private final char[] userPassword;
 
