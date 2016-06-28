@@ -207,8 +207,9 @@ public class Registry {
         addFunction(functionName, function);
         return function;
       }
+    } else {
+        addFunction(functionName, function);
     }
-    addFunction(functionName, function);
     return null;
   }
 
