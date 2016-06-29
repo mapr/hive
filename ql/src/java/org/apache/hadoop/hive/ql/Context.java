@@ -76,6 +76,9 @@ public class Context {
   // scratch path to use for all non-local (ie. hdfs) file system tmp folders
   private Path nonLocalScratchPath;
   private boolean fNonLocalScratchDirUsed = false;
+  private String CTASTableLocation;
+  private boolean isCTASQuery = false;
+  private boolean isInheritPerms = false;
 
   // scratch directory to use for local file system tmp folders
   private final String localScratchDir;
@@ -147,6 +150,7 @@ public class Context {
     scratchDirPermission = HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIRPERMISSION);
     stagingDir = HiveConf.getVar(conf, HiveConf.ConfVars.STAGINGDIR);
     opContext = new CompilationOpContext();
+    isInheritPerms = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
   }
 
   public void changeDFSScratchDir(String newScratchDir) {
@@ -156,6 +160,14 @@ public class Context {
     nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
 
     LOG.info("INSERT/CTAS query optimization: scratchdir changed to '" + nonLocalScratchPath + "'");
+  }
+
+  public void setCTASTableLocation(String CATSTableLocation){
+    this.CTASTableLocation = CATSTableLocation;
+  }
+
+  public void setCTASQuery(boolean isCTASQuery){
+    this.isCTASQuery = isCTASQuery;
   }
 
   private Path getNonLocalScratchDir() {
@@ -300,7 +312,22 @@ public class Context {
           FileSystem fs = dirPath.getFileSystem(conf);
           dirPath = new Path(fs.makeQualified(dirPath).toString());
           FsPermission fsPermission = new FsPermission(scratchDirPermission);
-
+          // MAPR-23153
+          if (isCTASQuery) {
+            // stage 1. Create table root dir with correct permissions from fs.permissions.umask-mode
+            Path CTASTablePath = new Path(CTASTableLocation);
+            if (!fs.mkdirs(CTASTablePath)) {
+              throw new RuntimeException("Cannot make directory: "
+                      + CTASTablePath.toString());
+            }
+            // MAPR-19453
+            // copy permissions from parent dir, if hive.warehouse.subdir.inherit.perms = true
+            if(isInheritPerms){
+              Path parentCTASTablePath = CTASTablePath.getParent();
+              fs.setPermission(CTASTablePath, fs.getFileStatus(parentCTASTablePath).getPermission());
+            }
+          }
+          // stage 2. Create scratch dir with  permissions from hive.scratch.dir.permission
           if (!fs.mkdirs(dirPath, fsPermission)) {
             throw new RuntimeException("Cannot make directory: "
                 + dirPath.toString());

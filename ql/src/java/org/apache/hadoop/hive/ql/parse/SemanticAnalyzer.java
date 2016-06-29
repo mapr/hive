@@ -10741,6 +10741,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         // query is CREATE TABLE AS .. SELECT ... type
         String dest_path = getCTASTableLocation();
         ctx.changeDFSScratchDir(dest_path + Path.SEPARATOR + conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST));
+        ctx.setCTASQuery(qb.isCTAS());
+        ctx.setCTASTableLocation(dest_path);
       }
     } else {
       queryState.setCommandType(HiveOperation.QUERY);
