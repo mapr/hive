@@ -75,6 +75,8 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
       echo stopping hiveserver2
       kill `cat $pid`
       echo "`date` hiveserver2 stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
+       rm ${BASEMAPR}/pid/hive-$HIVE_IDENT_STRING-hiveserver2.pid
+       rm $pid
     else
       echo no hiveserver2 to stop
     fi
