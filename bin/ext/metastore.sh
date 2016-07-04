@@ -83,6 +83,8 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
       echo stopping metastore
       kill `cat $pid`
       echo "`date` metastore stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
+      rm  ${BASEMAPR}/pid/hive-$HIVE_IDENT_STRING-metastore.pid
+      rm $pid
     else
       echo no metastore to stop
     fi
