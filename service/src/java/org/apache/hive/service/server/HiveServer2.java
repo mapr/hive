@@ -69,6 +69,7 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooDefs.Perms;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.client.ZooKeeperSaslClient;
 
 /**
  * HiveServer2.
@@ -253,8 +254,8 @@ public class HiveServer2 extends CompositeService {
       if (keyTabFile.isEmpty()) {
         throw new IOException("HiveServer2 Kerberos keytab is empty");
       }
-      // Install the JAAS Configuration for the runtime
-      Utils.setZookeeperClientKerberosJaasConfig(principal, keyTabFile);
+
+      System.setProperty(ZooKeeperSaslClient.LOGIN_CONTEXT_NAME_KEY, "Client");
     }
   }
 
