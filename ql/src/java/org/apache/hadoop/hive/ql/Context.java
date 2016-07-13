@@ -75,10 +75,11 @@ public class Context {
 
   // scratch path to use for all non-local (ie. hdfs) file system tmp folders
   private Path nonLocalScratchPath;
-  private boolean fNonLocalScratchDirUsed = false;
+  private boolean isNonLocalScratchDirUsed = false;
   private String CTASTableLocation;
   private boolean isCTASQuery = false;
   private boolean isInheritPerms = false;
+  private boolean isHiveOptimizeInsertDestVolume = false;
 
   // scratch directory to use for local file system tmp folders
   private final String localScratchDir;
@@ -151,10 +152,11 @@ public class Context {
     stagingDir = HiveConf.getVar(conf, HiveConf.ConfVars.STAGINGDIR);
     opContext = new CompilationOpContext();
     isInheritPerms = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
+    isHiveOptimizeInsertDestVolume = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME);
   }
 
   public void changeDFSScratchDir(String newScratchDir) {
-    if (fNonLocalScratchDirUsed)
+    if (isNonLocalScratchDirUsed)
       throw new RuntimeException("Configured scratchdir already in use");
 
     nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
@@ -171,8 +173,8 @@ public class Context {
   }
 
   private Path getNonLocalScratchDir() {
-    if (!fNonLocalScratchDirUsed)
-      fNonLocalScratchDirUsed = true;
+    if (!isNonLocalScratchDirUsed)
+      isNonLocalScratchDirUsed = true;
     return nonLocalScratchPath;
   }
 
@@ -312,8 +314,8 @@ public class Context {
           FileSystem fs = dirPath.getFileSystem(conf);
           dirPath = new Path(fs.makeQualified(dirPath).toString());
           FsPermission fsPermission = new FsPermission(scratchDirPermission);
-          // MAPR-23153
-          if (isCTASQuery) {
+          // MAPR-23153 & MAPR-23970
+          if (isCTASQuery && isNonLocalScratchDirUsed && isHiveOptimizeInsertDestVolume) {
             // stage 1. Create table root dir with correct permissions from fs.permissions.umask-mode
             Path CTASTablePath = new Path(CTASTableLocation);
             if (!fs.mkdirs(CTASTablePath)) {
