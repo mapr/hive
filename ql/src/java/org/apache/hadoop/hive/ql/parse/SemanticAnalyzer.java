@@ -10031,12 +10031,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       if ((child = analyzeCreateTable(ast, qb, cboCtx)) == null) {
         return;
       }
-
+      ctx.setCTASQuery(qb.isCTAS());
       if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) && qb.isCTAS()) {
         // query is CREATE TABLE AS .. SELECT ... type
         String dest_path = getCTASTableLocation();
         ctx.changeDFSScratchDir(dest_path + Path.SEPARATOR + conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST));
-        ctx.setCTASQuery(qb.isCTAS());
         ctx.setCTASTableLocation(dest_path);
       }
     } else {
