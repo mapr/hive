@@ -22,11 +22,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.ShowCompactRequest;
+import org.apache.hadoop.hive.metastore.api.ShowCompactResponse;
+import org.apache.hadoop.hive.metastore.txn.CompactionTxnHandler;
 import org.apache.hadoop.hive.metastore.txn.TxnDbUtil;
+import org.apache.hadoop.hive.metastore.txn.TxnHandler;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.orc.FileDump;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.ql.txn.compactor.Worker;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * TODO: this should be merged with TestTxnCommands once that is checked in
@@ -259,5 +265,29 @@ public class TestTxnCommands2 {
     List<String> rs = new ArrayList<String>();
     d.getResults(rs);
     return rs;
+  }
+
+  @Test
+  public void testCompactWithDelete() throws Exception {
+    int[][] tableData = {{1,2},{3,4}};
+    runStatementOnDriver("insert into " + Table.ACIDTBL + "(a,b) " + makeValuesClause(tableData));
+    runStatementOnDriver("alter table "+ Table.ACIDTBL + " compact 'MAJOR'");
+    Worker t = new Worker();
+    t.setThreadId((int) t.getId());
+    t.setHiveConf(hiveConf);
+    AtomicBoolean stop = new AtomicBoolean();
+    AtomicBoolean looped = new AtomicBoolean();
+    stop.set(true);
+    t.init(stop, looped);
+    t.run();
+    runStatementOnDriver("delete from " + Table.ACIDTBL + " where b = 4");
+    runStatementOnDriver("update " + Table.ACIDTBL + " set b = -2 where b = 2");
+    runStatementOnDriver("alter table "+ Table.ACIDTBL + " compact 'MINOR'");
+    t.run();
+    CompactionTxnHandler txnHandler = new CompactionTxnHandler(hiveConf);
+    ShowCompactResponse resp = txnHandler.showCompact(new ShowCompactRequest());
+    Assert.assertEquals("Unexpected number of compactions in history", 2, resp.getCompactsSize());
+    Assert.assertEquals("Unexpected 0 compaction state", TxnHandler.CLEANING_RESPONSE, resp.getCompacts().get(0).getState());
+    Assert.assertEquals("Unexpected 1 compaction state", TxnHandler.CLEANING_RESPONSE, resp.getCompacts().get(1).getState());
   }
 }
