@@ -29,6 +29,7 @@ import java.util.Stack;
 import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
+import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo.BaseColumnInfo;
@@ -42,14 +43,12 @@ import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
 import org.apache.hadoop.hive.ql.lib.Rule;
 import org.apache.hadoop.hive.ql.lib.RuleRegExp;
-import org.apache.hadoop.hive.ql.parse.RowResolver;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeFieldDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeNullDesc;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 
 /**
@@ -76,12 +75,11 @@ public class ExprProcFactory {
       Operator<? extends OperatorDesc> operator = epc.getInputOperator();
       assert (operator != null);
 
-      RowResolver resolver = epc.getResolver();
-      String[] nm = resolver.reverseLookup(cd.getColumn());
-      if (nm == null && operator instanceof ReduceSinkOperator) {
-        nm = resolver.reverseLookup(Utilities.removeValueTag(cd.getColumn()));
+      RowSchema schema = epc.getSchema();
+      ColumnInfo ci = schema.getColumnInfo(cd.getColumn());
+      if (ci == null && operator instanceof ReduceSinkOperator) {
+        ci = schema.getColumnInfo(Utilities.removeValueTag(cd.getColumn()));
       }
-      ColumnInfo ci = nm != null ? resolver.get(nm[0], nm[1]): null;
 
       // Insert the dependencies of inp_ci to that of the current operator, ci
       LineageCtx lc = epc.getLineageCtx();
@@ -137,12 +135,13 @@ public class ExprProcFactory {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
-      assert (nd instanceof ExprNodeConstantDesc || nd instanceof ExprNodeNullDesc);
+      assert (nd instanceof ExprNodeConstantDesc);
 
       // Create a dependency that has no basecols
       Dependency dep = new Dependency();
       dep.setType(LineageInfo.DependencyType.SIMPLE);
       dep.setBaseCols(new ArrayList<BaseColumnInfo>());
+
       return dep;
     }
   }
