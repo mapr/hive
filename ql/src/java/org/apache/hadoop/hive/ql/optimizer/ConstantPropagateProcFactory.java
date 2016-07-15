@@ -47,7 +47,6 @@ import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.optimizer.lineage.ExprProcCtx;
 import org.apache.hadoop.hive.ql.parse.RowResolver;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
@@ -465,37 +464,44 @@ public final class ConstantPropagateProcFactory {
    */
   private static ExprNodeDesc evaluateColumn(ExprNodeColumnDesc desc,
       ConstantPropagateProcCtx cppCtx, Operator<? extends Serializable> parent) {
-    RowSchema rs = parent.getSchema();
-    ColumnInfo ci = rs.getColumnInfo(desc.getColumn());
-    if (ci == null) {
-      LOG.error("Reverse look up of column " + desc + " error!");
-      ci = rs.getColumnInfo(desc.getTabAlias(), desc.getColumn());
-    }
-    if (ci == null) {
-      LOG.error("Can't resolve " + desc.getTabAlias() + "." + desc.getColumn());
-      return null;
-    }
-    ExprNodeDesc constant = null;
-    // Additional work for union operator, see union27.q
-    if (ci.getAlias() == null) {
-      for (Entry<ColumnInfo, ExprNodeDesc> e : cppCtx.getOpToConstantExprs().get(parent).entrySet()) {
-        if (e.getKey().getInternalName().equals(ci.getInternalName())) {
-          constant = e.getValue();
-          break;
+    try {
+      ColumnInfo ci = null;
+      RowResolver rr = cppCtx.getOpToParseCtxMap().get(parent).getRowResolver();
+      String[] tmp = rr.reverseLookup(desc.getColumn());
+      if (tmp == null) {
+        LOG.error("Reverse look up of column " + desc + " error!");
+        return null;
+      }
+      ci = rr.get(tmp[0], tmp[1]);
+      if (ci != null) {
+        ExprNodeDesc constant = null;
+        // Additional work for union operator, see union27.q
+        if (ci.getAlias() == null) {
+          for (Entry<ColumnInfo, ExprNodeDesc> e : cppCtx.getOpToConstantExprs().get(parent).entrySet()) {
+            if (e.getKey().getInternalName().equals(ci.getInternalName())) {
+              constant = e.getValue();
+              break;
+            }
+          }
+        } else {
+          constant = cppCtx.getOpToConstantExprs().get(parent).get(ci);
+        }
+        if (constant != null) {
+          if (constant instanceof ExprNodeConstantDesc
+              && !constant.getTypeInfo().equals(desc.getTypeInfo())) {
+            return typeCast(constant, desc.getTypeInfo());
+          }
+          return constant;
+        } else {
+          return null;
         }
       }
-    } else {
-      constant = cppCtx.getOpToConstantExprs().get(parent).get(ci);
+      LOG.error("Can't resolve " + desc.getTabAlias() + "." + desc.getColumn());
+      throw new RuntimeException("Can't resolve " + desc.getTabAlias() + "." + desc.getColumn());
+    } catch (SemanticException e) {
+      throw new RuntimeException(e);
     }
-    if (constant != null) {
-      if (constant instanceof ExprNodeConstantDesc
-              && !constant.getTypeInfo().equals(desc.getTypeInfo())) {
-        return typeCast(constant, desc.getTypeInfo());
-      }
-      return constant;
-    } else {
-      return null;
-    }
+
   }
 
   /**
