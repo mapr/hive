@@ -331,14 +331,13 @@ public class TestFunctionRegistry extends TestCase {
   }
 
   public void testCommonClassUnionAll() {
+    unionAll(TypeInfoFactory.doubleTypeInfo, TypeInfoFactory.intTypeInfo,
+        TypeInfoFactory.doubleTypeInfo);
     unionAll(TypeInfoFactory.intTypeInfo, TypeInfoFactory.decimalTypeInfo,
         TypeInfoFactory.decimalTypeInfo);
-    unionAll(TypeInfoFactory.stringTypeInfo, TypeInfoFactory.decimalTypeInfo,
-        TypeInfoFactory.decimalTypeInfo);
     unionAll(TypeInfoFactory.doubleTypeInfo, TypeInfoFactory.decimalTypeInfo,
-        TypeInfoFactory.decimalTypeInfo);
-    unionAll(TypeInfoFactory.doubleTypeInfo, TypeInfoFactory.stringTypeInfo,
-        TypeInfoFactory.stringTypeInfo);
+        TypeInfoFactory.doubleTypeInfo);
+
 
     unionAll(varchar5, varchar10, varchar10);
     unionAll(varchar10, varchar5, varchar10);
@@ -350,8 +349,13 @@ public class TestFunctionRegistry extends TestCase {
     unionAll(char10, TypeInfoFactory.stringTypeInfo, TypeInfoFactory.stringTypeInfo);
     unionAll(TypeInfoFactory.stringTypeInfo, char10, TypeInfoFactory.stringTypeInfo);
 
-    // common class for char/varchar is string?
-    comparison(char10, varchar5, TypeInfoFactory.stringTypeInfo);
+    unionAll(TypeInfoFactory.timestampTypeInfo, TypeInfoFactory.dateTypeInfo,
+        TypeInfoFactory.timestampTypeInfo);
+
+    // Invalid cases
+    unionAll(TypeInfoFactory.stringTypeInfo, TypeInfoFactory.decimalTypeInfo, null);
+    unionAll(TypeInfoFactory.doubleTypeInfo, varchar10, null);
+
   }
 
   public void testGetTypeInfoForPrimitiveCategory() {
