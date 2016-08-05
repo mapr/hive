@@ -123,7 +123,7 @@ public class GenTezProcContext implements NodeProcessorCtx{
 
   // used to hook up unions
   public final Map<Operator<?>, BaseWork> unionWorkMap;
-  public final List<UnionOperator> currentUnionOperators;
+  public List<UnionOperator> currentUnionOperators;
   public final Set<BaseWork> workWithUnionOperators;
   public final Set<ReduceSinkOperator> clonedReduceSinks;
 

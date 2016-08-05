@@ -144,7 +144,7 @@ public class ColumnPruner implements Transform {
      * Walk the given operator.
      */
     @Override
-    public void walk(Node nd) throws SemanticException {
+    protected void walk(Node nd) throws SemanticException {
       boolean walkChildren = true;
       opStack.push(nd);
 
@@ -168,10 +168,10 @@ public class ColumnPruner implements Transform {
         return;
       }
       // move all the children to the front of queue
-      getToWalk().removeAll(nd.getChildren());
-      getToWalk().addAll(0, nd.getChildren());
+      toWalk.removeAll(nd.getChildren());
+      toWalk.addAll(0, nd.getChildren());
       // add self to the end of the queue
-      getToWalk().add(nd);
+      toWalk.add(nd);
       opStack.pop();
     }
   }
