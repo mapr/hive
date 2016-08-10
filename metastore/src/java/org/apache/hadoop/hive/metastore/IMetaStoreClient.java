@@ -51,6 +51,7 @@ import java.util.Map;
 import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience.Public;
 import org.apache.hadoop.hive.common.classification.InterfaceStability.Evolving;
+import org.apache.hadoop.hive.metastore.annotation.NoReconnect;
 import org.apache.hadoop.hive.metastore.api.AggrStats;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.ColumnStatistics;
@@ -111,6 +112,7 @@ public interface IMetaStoreClient {
   /**
    * close connection to meta store
    */
+  @NoReconnect
   void close();
 
   /**
