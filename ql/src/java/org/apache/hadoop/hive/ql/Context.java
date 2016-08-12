@@ -354,6 +354,7 @@ public class Context {
    * Create a local scratch directory on demand and return it.
    */
   public Path getLocalScratchDir(boolean mkdir) {
+    isNonLocalScratchDirUsed = false;
     try {
       FileSystem fs = FileSystem.getLocal(conf);
       URI uri = fs.getUri();
