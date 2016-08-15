@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -72,8 +73,10 @@ import org.apache.hadoop.hive.ql.plan.PlanUtils;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
@@ -1309,6 +1312,7 @@ public abstract class BaseSemanticAnalyzer {
             + " has been changed to " + astKeyName + "=" + convertedValue.toString());
       }
       partSpec.put(astKeyName, convertedValue.toString());
+      normalizeColSpec(partSpec, astKeyName, outputOI.getTypeName(), convertedValue.toString(), convertedValue);
     }
   }
 
@@ -1319,6 +1323,9 @@ public abstract class BaseSemanticAnalyzer {
     String normalizedColSpec = originalColSpec;
     if (colType.equals(serdeConstants.DATE_TYPE_NAME)) {
       normalizedColSpec = normalizeDateCol(colValue, originalColSpec);
+    }
+    if(colType.equals(serdeConstants.TIMESTAMP_TYPE_NAME)){
+      normalizedColSpec = normalizeTimestampCol(colValue, originalColSpec);
     }
     if (!normalizedColSpec.equals(originalColSpec)) {
       STATIC_LOG.warn("Normalizing partition spec - " + colName + " from "
@@ -1339,6 +1346,21 @@ public abstract class BaseSemanticAnalyzer {
     }
     return HiveMetaStore.PARTITION_DATE_FORMAT.get().format(value);
   }
+
+  private static String normalizeTimestampCol(
+          Object colValue, String originalColSpec) throws SemanticException {
+    Timestamp value;
+    if (colValue instanceof TimestampWritable) {
+      value = ((TimestampWritable) colValue).getTimestamp();
+    } else if (colValue instanceof Timestamp) {
+      value = (Timestamp) colValue;
+    } else {
+      throw new SemanticException("Unexpected date type " + colValue.getClass());
+    }
+    return HiveMetaStore.PARTITION_TIMESTAMP_FORMAT.get().format(value);
+  }
+
+
 
   protected WriteEntity toWriteEntity(String location) throws SemanticException {
     return toWriteEntity(new Path(location));
