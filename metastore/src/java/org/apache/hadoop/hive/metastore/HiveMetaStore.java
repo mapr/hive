@@ -258,6 +258,17 @@ public class HiveMetaStore extends ThriftHiveMetastore {
     };
   };
 
+  /** A fixed timestamp format to be used for hive partition column values. */
+  public static final ThreadLocal<DateFormat> PARTITION_TIMESTAMP_FORMAT =
+      new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+      DateFormat val = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      val.setLenient(false);
+      return val;
+    };
+          };
+
   /**
    * default port on which to start the Hive server
    */
