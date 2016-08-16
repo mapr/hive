@@ -405,7 +405,7 @@ public class TestInputOutputFormat {
         new MockFile("mock:/a/b/part-04", 1000, new byte[0]));
     OrcInputFormat.FileGenerator gen =
       new OrcInputFormat.FileGenerator(context, fs,
-          new MockPath(fs, "mock:/a/b"));
+          new MockPath(fs, "mock:/a/b"), null);
     SplitStrategy splitStrategy = gen.call();
     assertEquals(true, splitStrategy instanceof OrcInputFormat.BISplitStrategy);
 
@@ -418,7 +418,7 @@ public class TestInputOutputFormat {
         new MockFile("mock:/a/b/.part-03", 1000, new byte[1000]),
         new MockFile("mock:/a/b/part-04", 1000, new byte[1000]));
     gen = new OrcInputFormat.FileGenerator(context, fs,
-            new MockPath(fs, "mock:/a/b"));
+            new MockPath(fs, "mock:/a/b"), null);
     splitStrategy = gen.call();
     assertEquals(true, splitStrategy instanceof OrcInputFormat.ETLSplitStrategy);
 
@@ -838,7 +838,7 @@ public class TestInputOutputFormat {
     OrcInputFormat.SplitGenerator splitter =
         new OrcInputFormat.SplitGenerator(new OrcInputFormat.SplitInfo(context, fs,
             fs.getFileStatus(new Path("/a/file")), null, true,
-            new ArrayList<Long>(), true, null, null));
+            new ArrayList<Long>(), true, null, null), null);
     OrcSplit result = splitter.createSplit(0, 200, null);
     assertEquals(0, result.getStart());
     assertEquals(200, result.getLength());
@@ -879,7 +879,7 @@ public class TestInputOutputFormat {
     OrcInputFormat.SplitGenerator splitter =
         new OrcInputFormat.SplitGenerator(new OrcInputFormat.SplitInfo(context, fs,
             fs.getFileStatus(new Path("/a/file")), null, true,
-            new ArrayList<Long>(), true, null, null));
+            new ArrayList<Long>(), true, null, null), null);
     List<OrcSplit> results = splitter.call();
     OrcSplit result = results.get(0);
     assertEquals(3, result.getStart());
@@ -902,7 +902,7 @@ public class TestInputOutputFormat {
     context = new OrcInputFormat.Context(conf);
     splitter = new OrcInputFormat.SplitGenerator(new OrcInputFormat.SplitInfo(context, fs,
       fs.getFileStatus(new Path("/a/file")), null, true, new ArrayList<Long>(),
-        true, null, null));
+        true, null, null), null);
     results = splitter.call();
     for(int i=0; i < stripeSizes.length; ++i) {
       assertEquals("checking stripe " + i + " size",
