@@ -31,9 +31,9 @@ import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.GraphWalker;
+import org.apache.hadoop.hive.ql.lib.LevelOrderWalker;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.PreOrderWalker;
 import org.apache.hadoop.hive.ql.lib.Rule;
 import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
@@ -66,7 +66,7 @@ public class UnionProcessor implements Transform {
    *          the current parse context
    */
   public ParseContext transform(ParseContext pCtx) throws SemanticException {
-    // create a walker which walks the tree in a DFS manner while maintaining
+    // create a walker which walks the tree in a BFS manner while maintaining
     // the operator stack.
     Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
     opRules.put(new RuleRegExp("R1",
@@ -85,7 +85,8 @@ public class UnionProcessor implements Transform {
     uCtx.setParseContext(pCtx);
     Dispatcher disp = new DefaultRuleDispatcher(UnionProcFactory.getNoUnion(),
         opRules, uCtx);
-    GraphWalker ogw = new PreOrderWalker(disp);
+    LevelOrderWalker ogw = new LevelOrderWalker(disp);
+    ogw.setNodeTypes(UnionOperator.class);
 
     // Create a list of topop nodes
     ArrayList<Node> topNodes = new ArrayList<Node>();
@@ -96,19 +97,16 @@ public class UnionProcessor implements Transform {
     // Walk the tree again to see if the union can be removed completely
     HiveConf conf = pCtx.getConf();
     opRules.clear();
-    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_UNION_REMOVE)) {
-
-      if (!conf.getBoolVar(HiveConf.ConfVars.HIVE_HADOOP_SUPPORTS_SUBDIRECTORIES)) {
-        throw new
-        SemanticException(ErrorMsg.HIVE_UNION_REMOVE_OPTIMIZATION_NEEDS_SUBDIRECTORIES.getMsg());
-      }
+    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_UNION_REMOVE)
+      && !conf.getVar(HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
 
       opRules.put(new RuleRegExp("R5", UnionOperator.getOperatorName() + "%" +
                                  ".*" + FileSinkOperator.getOperatorName() + "%"),
         UnionProcFactory.getUnionNoProcessFile());
 
       disp = new DefaultRuleDispatcher(UnionProcFactory.getNoUnion(), opRules, uCtx);
-      ogw = new PreOrderWalker(disp);
+      ogw = new LevelOrderWalker(disp);
+      ogw.setNodeTypes(FileSinkOperator.class);
 
       // Create a list of topop nodes
       topNodes.clear();
