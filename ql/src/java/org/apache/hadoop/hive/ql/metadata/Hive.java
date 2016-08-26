@@ -2633,11 +2633,23 @@ private void constructOneLBLocationMap(FileStatus fSta,
           }
         }
 
-        boolean b = renameFile(conf, srcs[0].getPath(), destf, destFs, true,
-            isSrcLocal);
-        if (!b) {
-          throw new HiveException("Unable to move results from " + srcs[0].getPath()
-              + " to destination directory: " + destf);
+        // Copy/move each file under the source directory to avoid to delete the destination
+        // directory if it is the root of an HDFS encryption zone.
+        for (List<Path[]> sdpairs : result) {
+          for (Path[] sdpair : sdpairs) {
+            Path destParent = sdpair[1].getParent();
+            FileSystem destParentFs = destParent.getFileSystem(conf);
+            if (!destParentFs.isDirectory(destParent)) {
+              boolean success = destFs.mkdirs(destParent);
+              if (!success) {
+                LOG.warn("Error creating directory " + destParent);
+              }
+            }
+            if (!renameFile(conf, sdpair[0], sdpair[1], destFs, true, isSrcLocal)) {
+              throw new IOException("Unable to move file/directory from " + sdpair[0] +
+                      " to " + sdpair[1]);
+            }
+          }
         }
       } else { // srcf is a file or pattern containing wildcards
         if (!destFs.exists(destf)) {
