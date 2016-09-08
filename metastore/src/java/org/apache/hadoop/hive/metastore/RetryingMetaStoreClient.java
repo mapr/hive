@@ -34,6 +34,7 @@ import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocolException;
 import org.apache.thrift.transport.TTransportException;
+import org.datanucleus.exceptions.NucleusException;
 
 /**
  * RetryingMetaStoreClient. Creates a proxy for a IMetaStoreClient
@@ -93,6 +94,7 @@ public class RetryingMetaStoreClient implements InvocationHandler {
       } catch (InvocationTargetException e) {
         if ((e.getCause() instanceof TApplicationException) ||
             (e.getCause() instanceof TProtocolException) ||
+            (e.getCause() instanceof NucleusException) ||
             (e.getCause() instanceof TTransportException)) {
           caughtException = (TException) e.getCause();
         } else if ((e.getCause() instanceof MetaException) &&
