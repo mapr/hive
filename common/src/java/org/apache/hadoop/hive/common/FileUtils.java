@@ -51,6 +51,14 @@ import org.apache.hadoop.util.Shell;
 public final class FileUtils {
   private static final Log LOG = LogFactory.getLog(FileUtils.class.getName());
 
+  public static final PathFilter HIDDEN_FILES_PATH_FILTER = new PathFilter() {
+    public boolean accept(Path p) {
+      String name = p.getName();
+      return !name.startsWith("_") && !name.startsWith(".");
+    }
+  };
+
+
   /**
    * Accept all paths.
    */
@@ -317,14 +325,7 @@ public final class FileUtils {
       List<FileStatus> results) throws IOException {
 
     if (fileStatus.isDir()) {
-      for (FileStatus stat : fs.listStatus(fileStatus.getPath(), new PathFilter() {
-
-        @Override
-        public boolean accept(Path p) {
-          String name = p.getName();
-          return !name.startsWith("_") && !name.startsWith(".");
-        }
-      })) {
+      for (FileStatus stat : fs.listStatus(fileStatus.getPath(), HIDDEN_FILES_PATH_FILTER)) {
         listStatusRecursively(fs, stat, results);
       }
     } else {
@@ -568,7 +569,7 @@ public final class FileUtils {
    * @throws IOException
    */
   public static boolean trashFilesUnderDir(FileSystem fs, Path f, Configuration conf) throws FileNotFoundException, IOException {
-    FileStatus[] statuses = fs.listStatus(f, allPathFilter);
+    FileStatus[] statuses = fs.listStatus(f, HIDDEN_FILES_PATH_FILTER);
     boolean result = true;
     for (FileStatus status : statuses) {
       result = result & moveToTrash(fs, status.getPath(), conf);
