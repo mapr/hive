@@ -20,6 +20,8 @@ package org.apache.hadoop.hive.ql.metadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -288,13 +290,14 @@ public class HiveMetaStoreChecker {
    *           Thrown if we fail at fetching listings from the fs.
    */
   void findUnknownPartitions(Table table, Set<Path> partPaths,
-      CheckResult result) throws IOException {
+                             CheckResult result) throws IOException, HiveException {
 
     Path tablePath = table.getPath();
     // now check the table folder and see if we find anything
     // that isn't in the metastore
     Set<Path> allPartDirs = new HashSet<Path>();
-    getAllLeafDirs(tablePath, allPartDirs);
+    checkPartitionDirs(tablePath, allPartDirs, table.getPartCols().size());
+
     // don't want the table dir
     allPartDirs.remove(tablePath);
 
@@ -341,41 +344,51 @@ public class HiveMetaStoreChecker {
     return result;
   }
 
-  /**
-   * Recursive method to get the leaf directories of a base path. Example:
-   * base/dir1/dir2 base/dir3
-   *
-   * This will return dir2 and dir3 but not dir1.
+   /**
+   * Assume that depth is 2, i.e., partition columns are a and b
+   * tblPath/a=1  => throw exception
+   * tblPath/a=1/file => throw exception
+   * tblPath/a=1/b=2/file => return a=1/b=2
+   * tblPath/a=1/b=2/c=3 => return a=1/b=2
+   * tblPath/a=1/b=2/c=3/file => return a=1/b=2
    *
    * @param basePath
    *          Start directory
    * @param allDirs
    *          This set will contain the leaf paths at the end.
+   * @param maxDepth
+   *          Specify how deep the search goes.
    * @throws IOException
    *           Thrown if we can't get lists from the fs.
+   * @throws HiveException
    */
-
-  private void getAllLeafDirs(Path basePath, Set<Path> allDirs)
-      throws IOException {
-    getAllLeafDirs(basePath, allDirs, basePath.getFileSystem(conf));
+  private void checkPartitionDirs(Path basePath, Set<Path> allDirs, int maxDepth) throws IOException, HiveException {
+    ConcurrentLinkedQueue<Path> basePaths = new ConcurrentLinkedQueue<>();
+    basePaths.add(basePath);
+    Set<Path> dirSet = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
+    checkPartitionDirs(basePaths, dirSet, basePath.getFileSystem(conf), maxDepth, maxDepth);
+    allDirs.addAll(dirSet);
   }
 
-  private void getAllLeafDirs(Path basePath, Set<Path> allDirs, FileSystem fs)
-      throws IOException {
-
-    FileStatus[] statuses = fs.listStatus(basePath, FileUtils.HIDDEN_FILES_PATH_FILTER);
-    boolean directoryFound=false;
-
-    for (FileStatus status : statuses) {
-      if (status.isDir()) {
-        directoryFound = true;
-        getAllLeafDirs(status.getPath(), allDirs, fs);
+  // process the basePaths in parallel and then the next level of basePaths
+  private void checkPartitionDirs(final ConcurrentLinkedQueue<Path> basePaths,
+                                  final Set<Path> allDirs, final FileSystem fs, final int depth, final int maxDepth) throws IOException, HiveException {
+    final ConcurrentLinkedQueue<Path> nextLevel = new ConcurrentLinkedQueue<>();
+    for (final Path path : basePaths) {
+      FileStatus[] statuses = fs.listStatus(path, FileUtils.HIDDEN_FILES_PATH_FILTER);
+      for (FileStatus status : statuses) {
+        if (status.isDirectory()) {
+          nextLevel.add(status.getPath());
+        }
+      }
+      if (depth != 0) {
+        if (!nextLevel.isEmpty()) {
+          checkPartitionDirs(nextLevel, allDirs, fs, depth - 1, maxDepth);
+        } else if (depth != maxDepth) {
+        }
+      } else {
+        allDirs.add(path);
       }
     }
-
-    if(!directoryFound){
-      allDirs.add(basePath);
-    }
   }
-
 }
