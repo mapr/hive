@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.plan;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -291,7 +292,7 @@ public class ConditionalResolverMergeFiles implements ConditionalResolver,
         List<Path> targetDirs = new ArrayList<Path>(toMove.size());
 
         for (int i = 0; i < toMove.size(); i++) {
-          String[] moveStrSplits = toMove.get(i).toUri().toString().split(Path.SEPARATOR);
+          String[] moveStrSplits = URLDecoder.decode(toMove.get(i).toUri().toString(), "UTF-8").split(Path.SEPARATOR);
           int dpIndex = moveStrSplits.length - dpLbLevel;
           Path target = targetDir;
           while (dpIndex < moveStrSplits.length) {
