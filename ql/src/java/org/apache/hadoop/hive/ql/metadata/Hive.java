@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.jdo.JDODataStoreException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -59,6 +60,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.HiveMetaException;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.HiveMetaHookLoader;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.PartitionDropOptions;
@@ -3079,13 +3081,20 @@ private void constructOneLBLocationMap(FileStatus fSta,
         SessionHiveMetaStoreClient.class.getName());
   }
 
+  public static class SchemaException extends MetaException {
+    private static final long serialVersionUID = 1L;
+    public SchemaException(String message) {
+      super(message);
+    }
+  }
+
   /**
    * @return the metastore client for the current thread
    * @throws MetaException
    */
   @LimitedPrivate(value = {"Hive"})
   @Unstable
-  public IMetaStoreClient getMSC() throws MetaException {
+  public synchronized IMetaStoreClient getMSC() throws MetaException {
     if (metaStoreClient == null) {
       try {
         owner = UserGroupInformation.getCurrentUser();
@@ -3094,7 +3103,29 @@ private void constructOneLBLocationMap(FileStatus fSta,
         LOG.error(msg, e);
         throw new MetaException(msg + "\n" + StringUtils.stringifyException(e));
       }
-      metaStoreClient = createMetaStoreClient();
+      try {
+        metaStoreClient = createMetaStoreClient();
+      } catch (RuntimeException ex) {
+        Throwable t = ex.getCause();
+        while (t != null) {
+          if (t instanceof JDODataStoreException && t.getMessage() != null
+              && t.getMessage().contains("autoCreate")) {
+            LOG.error("Cannot initialize metastore due to autoCreate error", t);
+            // DataNucleus wants us to auto-create, but we shall do no such thing.
+            throw new SchemaException("Hive metastore database is not initialized. Please use "
+              + "schematool (e.g. ./schematool -initSchema -dbType ...) to create the schema. If "
+              + "needed, don't forget to include the option to auto-create the underlying database"
+              + " in your JDBC connection string (e.g. ?createDatabaseIfNotExist=true for mysql)");
+          }
+          t = t.getCause();
+        }
+        throw ex;
+      }
+      String metaStoreUris = conf.getVar(HiveConf.ConfVars.METASTOREURIS);
+      if (!org.apache.commons.lang3.StringUtils.isEmpty(metaStoreUris)) {
+        // get a synchronized wrapper if the meta store is remote.
+        metaStoreClient = HiveMetaStoreClient.newSynchronizedClient(metaStoreClient);
+      }
     }
     return metaStoreClient;
   }
