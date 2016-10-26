@@ -385,15 +385,15 @@ public class SQLAuthorizationUtils {
     FileSystem fs;
     try {
       fs = FileSystem.get(filePath.toUri(), conf);
-      FileStatus fileStatus = FileUtils.getPathOrParentThatExists(fs, filePath);
-      if (FileUtils.isOwnerOfFileHierarchy(fs, fileStatus, userName)) {
+      FileStatus[] fileStatuses = FileUtils.getPathOrParentThatExists(fs, filePath);
+      if (FileUtils.isOwnerOfFileHierarchy(fs, fileStatuses, userName)) {
         availPrivs.addPrivilege(SQLPrivTypeGrant.OWNER_PRIV);
       }
-      if (FileUtils.isActionPermittedForFileHierarchy(fs, fileStatus, userName, FsAction.WRITE)) {
+      if (FileUtils.isActionPermittedForFileHierarchy(fs, fileStatuses, userName, FsAction.WRITE)) {
         availPrivs.addPrivilege(SQLPrivTypeGrant.INSERT_NOGRANT);
         availPrivs.addPrivilege(SQLPrivTypeGrant.DELETE_NOGRANT);
       }
-      if (FileUtils.isActionPermittedForFileHierarchy(fs, fileStatus, userName, FsAction.READ)) {
+      if (FileUtils.isActionPermittedForFileHierarchy(fs, fileStatuses, userName, FsAction.READ)) {
         availPrivs.addPrivilege(SQLPrivTypeGrant.SELECT_NOGRANT);
       }
     } catch (Exception e) {
