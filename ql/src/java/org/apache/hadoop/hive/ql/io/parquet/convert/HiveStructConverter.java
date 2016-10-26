@@ -31,18 +31,21 @@ import parquet.schema.Type;
 public class HiveStructConverter extends HiveGroupConverter {
 
   private final int totalFieldCount;
-  private final Converter[] converters;
+  private Converter[] converters;
   private final ConverterParent parent;
   private final int index;
   private Writable[] writables;
-  private final List<Repeated> repeatedConverters;
+  private List<Repeated> repeatedConverters;
   private boolean reuseWritableArray = false;
 
   public HiveStructConverter(final GroupType requestedSchema, final GroupType tableSchema, Map<String, String> metadata) {
-    this(requestedSchema, null, 0, tableSchema);
     setMetadata(metadata);
     this.reuseWritableArray = true;
     this.writables = new Writable[tableSchema.getFieldCount()];
+    this.parent = null;
+    this.index = 0;
+    this.totalFieldCount = tableSchema.getFieldCount();
+    init(requestedSchema, null, 0, tableSchema);
   }
 
   public HiveStructConverter(final GroupType groupType, final ConverterParent parent,
@@ -52,12 +55,17 @@ public class HiveStructConverter extends HiveGroupConverter {
 
   public HiveStructConverter(final GroupType selectedGroupType,
                              final ConverterParent parent, final int index, final GroupType containingGroupType) {
-    if (parent != null) {
-      setMetadata(parent.getMetadata());
-    }
     this.parent = parent;
     this.index = index;
     this.totalFieldCount = containingGroupType.getFieldCount();
+    init(selectedGroupType, parent, index, containingGroupType);
+  }
+
+  private void init(final GroupType selectedGroupType,
+                    final ConverterParent parent, final int index, final GroupType containingGroupType) {
+    if (parent != null) {
+      setMetadata(parent.getMetadata());
+    }
     final int selectedFieldCount = selectedGroupType.getFieldCount();
 
     converters = new Converter[selectedFieldCount];
