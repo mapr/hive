@@ -338,10 +338,15 @@ public final class FileUtils {
    * @return FileStatus for argument path if it exists or the first ancestor in the path that exists
    * @throws IOException
    */
-  public static FileStatus getPathOrParentThatExists(FileSystem fs, Path path) throws IOException {
+  public static FileStatus[] getPathOrParentThatExists(FileSystem fs, Path path) throws IOException {
+    FileStatus[] stats = fs.globStatus(path);
+    if (stats != null) {
+      return stats;
+    }
+    
     FileStatus stat = FileUtils.getFileStatusOrNull(fs, path);
     if (stat != null) {
-      return stat;
+      return  new FileStatus[]{ stat };
     }
     Path parentPath = path.getParent();
     return getPathOrParentThatExists(fs, parentPath);
@@ -390,7 +395,28 @@ public final class FileUtils {
       }
     });
   }
-
+    /**
+     * Check if user userName has permissions to perform the given FsAction action
+     * on all files under the file whose FileStatus[] fileStatuses is provided
+     *
+     * @param fs
+     * @param fileStatuses
+     * @param userName
+     * @param action
+     * @return
+     * @throws IOException
+     */
+  public static boolean isActionPermittedForFileHierarchy(FileSystem fs, FileStatus[] fileStatuses,
+      String userName, FsAction action) throws Exception {
+      
+    for (FileStatus fileStatus : fileStatuses) {
+      // check children recursively
+      if (!isActionPermittedForFileHierarchy(fs, fileStatus, userName, action)) {
+        return false;
+      }
+    }
+    return true;
+  }
   /**
    * Check if user userName has permissions to perform the given FsAction action
    * on all files under the file whose FileStatus fileStatus is provided
@@ -467,6 +493,17 @@ public final class FileUtils {
     return false;
   }
 
+  public static boolean isOwnerOfFileHierarchy(FileSystem fs, FileStatus[] fileStatuses, String userName)
+      throws IOException {
+    for (FileStatus fileStatus : fileStatuses) {
+      // check file statuses recursively
+      if (!isOwnerOfFileHierarchy(fs, fileStatus, userName)) {
+        return false;
+      }
+    }
+    return true;
+  }
+    
   public static boolean isOwnerOfFileHierarchy(FileSystem fs, FileStatus fileStatus, String userName)
       throws IOException {
     if (!fileStatus.getOwner().equals(userName)) {
