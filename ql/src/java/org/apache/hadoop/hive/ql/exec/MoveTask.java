@@ -87,8 +87,17 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
 
   private void moveFile(Path sourcePath, Path targetPath, boolean isDfsDir)
       throws Exception {
+    //needed for perm inheritance.
+    boolean inheritPerms = HiveConf.getBoolVar(conf,
+        HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
+    HadoopShims shims = ShimLoader.getHadoopShims();
+    HadoopShims.HdfsFileStatus destStatus = null;
+    HadoopShims.HdfsEncryptionShim hdfsEncryptionShim = SessionState.get().getHdfsEncryptionShim();
+
     FileSystem fs = sourcePath.getFileSystem(conf);
     if (isDfsDir) {
+      destStatus = shims.getFullFileStatus(conf, fs, targetPath.getParent());
+
       // Just do a rename on the URIs, they belong to the same FS
       String mesg = "Moving data to: " + targetPath.toString();
       String mesg_detail = " from " + sourcePath.toString();
@@ -128,6 +137,13 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
       } else if (!fs.mkdirs(targetPath)) {
         throw new HiveException("Unable to make directory: " + targetPath);
       }
+      if (inheritPerms) {
+        try {
+          ShimLoader.getHadoopShims().setFullFileStatus(conf, destStatus, fs, targetPath);
+        } catch (IOException e) {
+          LOG.warn("Error setting permission of file " + targetPath + ": "+ e.getMessage(), e);
+        }
+       }  
     } else {
       // This is a local file
       String mesg = "Copying data to local directory " + targetPath.toString();
