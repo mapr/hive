@@ -483,6 +483,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     }
   }
 
+  @Override
   public String getTokenStrForm() throws IOException {
     return tokenStrForm;
    }
@@ -972,7 +973,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     try {
       drop_table_with_environment_context(dbname, name, deleteData, envContext);
       if (hook != null) {
-        hook.commitDropTable(tbl, deleteData);
+        hook.commitDropTable(tbl, deleteData || (envContext != null && "TRUE".equals(envContext.getProperties().get("ifPurge"))));
       }
       success=true;
     } catch (NoSuchObjectException e) {
