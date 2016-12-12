@@ -74,7 +74,8 @@ public class Context {
   private final Map<String, ContentSummary> pathToCS = new ConcurrentHashMap<String, ContentSummary>();
 
   // scratch path to use for all non-local (ie. hdfs) file system tmp folders
-  private final Path nonLocalScratchPath;
+  private Path nonLocalScratchPath;
+  private boolean fNonLocalScratchDirUsed = false;
 
   // scratch directory to use for local file system tmp folders
   private final String localScratchDir;
@@ -148,6 +149,20 @@ public class Context {
     opContext = new CompilationOpContext();
   }
 
+  public void changeDFSScratchDir(String newScratchDir) {
+    if (fNonLocalScratchDirUsed)
+      throw new RuntimeException("Configured scratchdir already in use");
+
+    nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
+
+    LOG.info("INSERT/CTAS query optimization: scratchdir changed to '" + nonLocalScratchPath + "'");
+  }
+
+  private Path getNonLocalScratchDir() {
+    if (!fNonLocalScratchDirUsed)
+      fNonLocalScratchDirUsed = true;
+    return nonLocalScratchPath;
+  }
 
   public Map<LoadTableDesc, WriteEntity> getLoadTableOutputMap() {
     return loadTableOutputMap;
@@ -334,7 +349,7 @@ public class Context {
     }
 
     try {
-      Path dir = FileUtils.makeQualified(nonLocalScratchPath, conf);
+      Path dir = FileUtils.makeQualified(getNonLocalScratchDir(), conf);
       URI uri = dir.toUri();
 
       Path newScratchDir = getScratchDir(uri.getScheme(), uri.getAuthority(),

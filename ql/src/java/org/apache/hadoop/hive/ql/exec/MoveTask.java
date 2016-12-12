@@ -91,8 +91,16 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
       String mesg_detail = " from " + sourcePath.toString();
       console.printInfo(mesg, mesg_detail);
 
+
+
       FileSystem fs = sourcePath.getFileSystem(conf);
       if (isDfsDir) {
+        // delete the output directory if it already exists
+        if (fs.exists(targetPath)) {
+          Hive.cleanupDest(fs, targetPath, conf);
+        } else {
+          fs.mkdirs(targetPath);
+        }
         moveFileInDfs (sourcePath, targetPath, fs);
       } else {
         // This is a local file
@@ -116,7 +124,7 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
         deletePath = createTargetPath(targetPath, fs);
       }
       Hive.clearDestForSubDirSrc(conf, targetPath, sourcePath, false);
-      if (!Hive.moveFile(conf, sourcePath, targetPath, true, false)) {
+      if (!Hive.moveResultFilesToDest(fs, sourcePath, targetPath)) {
         try {
           if (deletePath != null) {
             fs.delete(deletePath, true);
