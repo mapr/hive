@@ -68,3 +68,7 @@ export HIVE_AUX_JARS_PATH=$HIVE_AUX_JARS_PATH
 
 # Default to use 256MB 
 export HADOOP_HEAPSIZE=${HADOOP_HEAPSIZE:-256}
+export BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+export LD_LIBRARY_PATH=${BASEMAPR}/lib

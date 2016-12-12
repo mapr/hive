@@ -38,12 +38,28 @@ function real_script_name() {
 }
 
 function usage() {
-        echo "usage: $0 [start|startDebug|stop|foreground]"
+        echo "usage: $0 [start|startDebug|stop|foreground|status]"
         echo "  start           Start the Webhcat Server"
         echo "  startDebug      Start the Webhcat Server listening for debugger on port 5005"
         echo "  stop            Stop the Webhcat Server"
         echo "  foreground      Run the Webhcat Server in the foreground"
         exit 1
+}
+
+function status_webhcat() {
+  if [[ -f $PID_FILE ]]; then
+    # Check if there is a server running
+    local pid=`cat $PID_FILE`
+    if check_pid $pid; then
+      echo webhcat already running on process $pid
+      exit 0
+     else
+       echo no running server found
+       exit 1
+    fi
+  fi
+  echo webhcat is not running
+  exit 1
 }
 
 # Print an error message and exit
@@ -139,7 +155,7 @@ function start_webhcat() {
         log "starting ..."
         log "$start_cmd"
         if [ ! -d ${WEBHCAT_LOG_DIR} ]; then
-                mkdir ${WEBHCAT_LOG_DIR}
+                mkdir -p ${WEBHCAT_LOG_DIR}
         fi
         nohup $start_cmd >>$CONSOLE_LOG 2>>$ERROR_LOG &
         local pid=$!
@@ -191,6 +207,12 @@ this=`real_script_name "${BASH_SOURCE-$0}"`
 this_bin=`dirname $this`
 base_dir="$this_bin/.."
 
+# find hadoop home
+HADOOP_DIR=`real_script_name "/usr/bin/hadoop"`
+HADOOP_DIR=`dirname $HADOOP_DIR`
+HADOOP_DIR="$HADOOP_DIR/.."
+HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
+
 if [[ -f "$base_dir/libexec/webhcat_config.sh" ]]; then
         . "$base_dir/libexec/webhcat_config.sh"
 else
@@ -208,6 +230,9 @@ if [[ -z "$CLASSPATH" ]]; then
 fi
 CLASSPATH="$JAR:$CLASSPATH"
 
+#include conf dir
+CLASSPATH="$CLASSPATH:${WEBHCAT_CONF_DIR}:${HIVE_CONF_DIR}":${HADOOP_CONFIG_DIR}
+
 if [[ -z "$HADOOP_CLASSPATH" ]]; then
         export HADOOP_CLASSPATH="$CLASSPATH"
 else
@@ -218,6 +243,7 @@ if [[ -z "$WEBHCAT_LOG4J" ]]; then
   WEBHCAT_LOG4J="file://$base_dir/etc/webhcat/webhcat-log4j2.properties";
 fi
 
+HADOOP_CLASSPATH="$HADOOP_CLASSPATH:$WEBHCAT_LOG4J"
 export HADOOP_USER_CLASSPATH_FIRST=true
 export HADOOP_OPTS="${HADOOP_OPTS} -Dwebhcat.log.dir=$WEBHCAT_LOG_DIR -Dlog4j.configurationFile=$WEBHCAT_LOG4J"
 
@@ -238,6 +264,9 @@ case $cmd in
                 ;;
         foreground)
                 foreground_webhcat
+                ;;
+        status)
+                status_webhcat
                 ;;
         *)
                 usage
