@@ -159,6 +159,7 @@ public class TestRecordReaderImpl {
   @Test
   public void testMaxLengthToReader() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     OrcProto.Type rowType = OrcProto.Type.newBuilder()
         .setKind(OrcProto.Type.Kind.STRUCT).build();
     OrcProto.Footer footer = OrcProto.Footer.newBuilder()
@@ -1676,6 +1677,7 @@ public class TestRecordReaderImpl {
 
   private void closeMockedRecordReader(DataReader mockedDataReader) throws IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Path path = new Path(workDir, "empty.orc");
     FileSystem.get(conf).delete(path, true);
     Writer writer = OrcFile.createWriter(path, OrcFile.writerOptions(conf)

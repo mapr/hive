@@ -53,6 +53,7 @@ public class TestSchemaEvolution {
   @Before
   public void setup() throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
         testCaseName.getMethodName() + ".orc");

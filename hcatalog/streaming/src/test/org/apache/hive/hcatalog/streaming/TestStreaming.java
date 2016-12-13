@@ -1280,7 +1280,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(new String[]{dbLocation}, true);
     System.err.flush();
     System.setErr(origErr);
 
@@ -1309,7 +1309,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(new String[]{dbLocation}, true);
     System.out.flush();
     System.err.flush();
     System.setErr(origErr);
@@ -1375,7 +1375,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(new String[]{dbLocation}, true);
     System.err.flush();
     System.setErr(origErr);
 
@@ -1389,7 +1389,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation, "--recover", "--skip-dump"});
+    FileDump.main(new String[]{dbLocation, "--recover", "--skip-dump"}, true);
     System.err.flush();
     System.setErr(origErr);
 
@@ -1410,7 +1410,7 @@ public class TestStreaming {
 
     // replace stdout and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(new String[]{dbLocation}, true);
     System.err.flush();
     System.setErr(origErr);
 
@@ -1517,7 +1517,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(new String[]{dbLocation}, true);
     System.err.flush();
     System.setErr(origErr);
 
@@ -1535,7 +1535,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation, "--recover", "--skip-dump"});
+    FileDump.main(new String[]{dbLocation, "--recover", "--skip-dump"}, true);
     System.err.flush();
     System.setErr(origErr);
 
@@ -1561,7 +1561,7 @@ public class TestStreaming {
 
     // replace stdout and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(new String[]{dbLocation}, true);
     System.err.flush();
     System.setErr(origErr);
 

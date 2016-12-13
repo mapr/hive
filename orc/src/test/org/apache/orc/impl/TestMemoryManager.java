@@ -48,6 +48,7 @@ public class TestMemoryManager {
   @Test
   public void testBasics() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     MemoryManager mgr = new MemoryManager(conf);
     NullCallback callback = new NullCallback();
     long poolSize = mgr.getTotalMemoryPool();
@@ -76,6 +77,7 @@ public class TestMemoryManager {
   @Test
   public void testConfig() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set("hive.exec.orc.memory.pool", "0.9");
     MemoryManager mgr = new MemoryManager(conf);
     long mem =
@@ -114,6 +116,7 @@ public class TestMemoryManager {
   @Test
   public void testCallback() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     MemoryManager mgr = new MemoryManager(conf);
     long pool = mgr.getTotalMemoryPool();
     MemoryManager.Callback[] calls = new MemoryManager.Callback[20];

@@ -60,6 +60,7 @@ public class TestJsonFileDump {
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     testFilePath = new Path("TestFileDump.testDump.orc");
@@ -140,7 +141,7 @@ public class TestJsonFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "-j", "-p", "--rowindex=3"});
+    FileDump.main(new String[]{testFilePath.toString(), "-j", "-p", "--rowindex=3"}, true);
     System.out.flush();
     System.setOut(origOut);
 

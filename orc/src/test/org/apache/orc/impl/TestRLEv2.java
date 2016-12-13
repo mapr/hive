@@ -52,6 +52,7 @@ public class TestRLEv2 {
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRLEv2." +
         testCaseName.getMethodName() + ".orc");
@@ -83,7 +84,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // 10 runs of 512 elements. Each run has 2 bytes header, 2 bytes base (base = 123,
@@ -113,7 +114,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // 10 runs of 512 elements. Each run has 2 bytes header, 1 byte base (base = 0)
@@ -143,7 +144,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // 10 runs of 512 elements. Each run has 2 bytes header, 2 byte base (base = 512, zigzag + varint)
@@ -173,7 +174,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // 10 runs of 512 elements. Each run has 2 bytes header, 1 byte base (base = 0)
@@ -203,7 +204,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // 10 runs of 512 elements. Each run has 2 bytes header, 2 byte base (base = 512, zigzag + varint)
@@ -233,7 +234,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // 1 byte header + 1 byte value
@@ -263,7 +264,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // monotonicity will be undetermined for this sequence 0,0,1,2,3,...510. Hence DIRECT encoding
@@ -297,7 +298,7 @@ public class TestRLEv2 {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toUri().toString()});
+    FileDump.main(new String[]{testFilePath.toUri().toString()}, true);
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     // use PATCHED_BASE encoding

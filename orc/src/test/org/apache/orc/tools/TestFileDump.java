@@ -69,6 +69,7 @@ public class TestFileDump {
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     testFilePath = new Path("TestFileDump.testDump.orc");
@@ -185,11 +186,16 @@ public class TestFileDump {
     BufferedReader aStream =
         new BufferedReader(new FileReader(actual));
     String expectedLine = eStream.readLine().trim();
+    boolean isFirstLine = true;
     while (expectedLine != null) {
       String actualLine = aStream.readLine().trim();
       System.out.println("actual:   " + actualLine);
       System.out.println("expected: " + expectedLine);
-      Assert.assertEquals(expectedLine, actualLine);
+      // Skip first line because it contains path to file which is different for files to compare
+      if(!isFirstLine) {
+        Assert.assertEquals(expectedLine, actualLine);
+      }
+      isFirstLine = false;
       expectedLine = eStream.readLine();
       expectedLine = expectedLine == null ? null : expectedLine.trim();
     }
@@ -241,7 +247,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"}, true);
     System.out.flush();
     System.setOut(origOut);
 
@@ -308,7 +314,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "-d"});
+    FileDump.main(new String[]{testFilePath.toString(), "-d"}, true);
     System.out.flush();
     System.setOut(origOut);
     String[] lines = myOut.toString().split("\n");
@@ -323,6 +329,7 @@ public class TestFileDump {
   public void testDictionaryThreshold() throws Exception {
     TypeDescription schema = getMyRecordType();
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
     conf.setFloat(OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute(), 0.49f);
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -372,7 +379,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"}, true);
     System.out.flush();
     System.setOut(origOut);
 
@@ -423,7 +430,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=3"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=3"}, true);
     System.out.flush();
     System.setOut(origOut);
 
@@ -476,7 +483,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"}, true);
     System.out.flush();
     System.setOut(origOut);
 

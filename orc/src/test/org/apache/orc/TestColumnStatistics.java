@@ -200,6 +200,7 @@ public class TestColumnStatistics {
   @Before
   public void openFileSystem() throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     testFilePath = new Path("TestOrcFile." + testCaseName.getMethodName() + ".orc");
@@ -353,7 +354,7 @@ public class TestColumnStatistics {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"}, true);
     System.out.flush();
     System.setOut(origOut);
     // If called with an expression evaluating to false, the test will halt

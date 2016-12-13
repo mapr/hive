@@ -49,6 +49,7 @@ public class TestStringDictionary {
   @Before
   public void openFileSystem() throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);

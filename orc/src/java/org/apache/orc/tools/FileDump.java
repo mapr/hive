@@ -94,7 +94,14 @@ public final class FileDump {
   }
 
   public static void main(String[] args) throws Exception {
+    main(args, false);
+  }
+
+  public static void main(String[] args, boolean useLocalFs) throws Exception {
     Configuration conf = new Configuration();
+    if(useLocalFs) {
+      conf.set("fs.default.name", "file:///");
+    }
 
     List<Integer> rowIndexCols = new ArrayList<Integer>(0);
     Options opts = createOptions();
