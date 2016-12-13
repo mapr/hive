@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
@@ -58,11 +59,7 @@ import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.plan.AggregationDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
-import org.apache.hadoop.hive.ql.plan.FetchWork;
+import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFCount;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFMax;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFMin;
@@ -157,6 +154,10 @@ public class StatsOptimizer implements Transform {
       abstract Object cast(double doubleValue);
     }
 
+    enum GbyKeyType {
+      NULL, CONSTANT, OTHER
+    }
+
     private StatType getType(String origType) {
       if (serdeConstants.IntegralTypes.contains(origType)) {
         return StatType.Integeral;
@@ -191,6 +192,25 @@ public class StatsOptimizer implements Transform {
       }
     }
 
+    private GbyKeyType getGbyKeyType(GroupByOperator gbyOp) {
+        GroupByDesc gbyDesc = gbyOp.getConf();
+        int numCols = gbyDesc.getOutputColumnNames().size();
+        int aggCols = gbyDesc.getAggregators().size();
+        // If the Group by operator has null key
+        if (numCols == aggCols) {
+            return GbyKeyType.NULL;
+        }
+        // If the Gby key is a constant
+        List<String> dpCols = gbyOp.getSchema().getColumnNames().subList(0, numCols - aggCols);
+        for(String dpCol : dpCols) {
+            ExprNodeDesc end = ExprNodeDescUtils.findConstantExprOrigin(dpCol, gbyOp);
+            if (!(end instanceof ExprNodeConstantDesc)) {
+                return GbyKeyType.OTHER;
+            }
+        }
+      return GbyKeyType.CONSTANT;
+    }
+
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
@@ -208,6 +228,16 @@ public class StatsOptimizer implements Transform {
           // looks like a subq plan.
           return null;
         }
+        Table tbl = tsOp.getConf().getTableMetadata();
+        if (AcidUtils.isAcidTable(tbl)) {
+          Log.info("Table " + tbl.getTableName() + " is ACID table. Skip StatsOptimizer.");
+          return null;
+        }
+        Long rowCnt = getRowCnt(pctx, tsOp, tbl);
+        // if we can not have correct table stats, then both the table stats and column stats are not useful.
+        if (rowCnt == null) {
+          return null;
+        }
         SelectOperator pselOp = (SelectOperator)stack.get(1);
         for(ExprNodeDesc desc : pselOp.getConf().getColList()) {
           if (!((desc instanceof ExprNodeColumnDesc) || (desc instanceof ExprNodeConstantDesc))) {
@@ -219,8 +249,12 @@ public class StatsOptimizer implements Transform {
         // Since we have done an exact match on TS-SEL-GBY-RS-GBY-(SEL)-FS
         // we need not to do any instanceof checks for following.
         GroupByOperator pgbyOp = (GroupByOperator)stack.get(2);
-        if (pgbyOp.getConf().getOutputColumnNames().size() != 
-            pgbyOp.getConf().getAggregators().size()) {
+        if (getGbyKeyType(pgbyOp) == GbyKeyType.OTHER) {
+          return null;
+        }
+        // we already check if rowCnt is null and rowCnt==0 means table is
+        // empty.
+        else if (getGbyKeyType(pgbyOp) == GbyKeyType.CONSTANT && rowCnt == 0) {
           return null;
         }
         ReduceSinkOperator rsOp = (ReduceSinkOperator)stack.get(3);
@@ -230,8 +264,12 @@ public class StatsOptimizer implements Transform {
         }
 
         GroupByOperator cgbyOp = (GroupByOperator)stack.get(4);
-        if (cgbyOp.getConf().getOutputColumnNames().size() !=
-            cgbyOp.getConf().getAggregators().size()) {
+        if (getGbyKeyType(cgbyOp) == GbyKeyType.OTHER) {
+          return null;
+        }
+        // we already check if rowCnt is null and rowCnt==0 means table is
+        // empty.
+        else if (getGbyKeyType(cgbyOp) == GbyKeyType.CONSTANT && rowCnt == 0) {
           return null;
         }
         Operator<?> last = (Operator<?>) stack.get(5);
@@ -245,10 +283,9 @@ public class StatsOptimizer implements Transform {
         FileSinkOperator fsOp = (FileSinkOperator)last;
         if (fsOp.getNumChild() > 0) {
           // looks like a subq plan.
-          return null;  // todo we can collapse this part of tree into single TS 
+          return null;  // todo we can collapse this part of tree into single TS
         }
 
-        Table tbl = tsOp.getConf().getTableMetadata();
         List<Object> oneRow = new ArrayList<Object>();
 
         Hive hive = Hive.get(pctx.getConf());
@@ -276,12 +313,8 @@ public class StatsOptimizer implements Transform {
             } else {
               return null;
             }
-            Long rowCnt = getRowCnt(pctx, tsOp, tbl);
-            if(rowCnt == null) {
-              return null;
-            }
             switch (category) {
-              case LONG: 
+              case LONG:
                 oneRow.add(Long.valueOf(constant) * rowCnt);
                 break;
               case DOUBLE:
@@ -296,7 +329,7 @@ public class StatsOptimizer implements Transform {
           }
           else if (udaf instanceof GenericUDAFCount) {
             // always long
-            Long rowCnt = 0L;
+            rowCnt = 0L;
             if (aggr.getParameters().isEmpty() || aggr.getParameters().get(0) instanceof
                 ExprNodeConstantDesc || ((aggr.getParameters().get(0) instanceof ExprNodeColumnDesc) &&
                     exprMap.get(((ExprNodeColumnDesc)aggr.getParameters().get(0)).getColumn()) instanceof ExprNodeConstantDesc)) {
@@ -421,7 +454,7 @@ public class StatsOptimizer implements Transform {
               switch (type) {
                 case Integeral: {
                   LongSubType subType = LongSubType.valueOf(name);
-                  
+
                   Long maxVal = null;
                   Collection<List<ColumnStatisticsObj>> result =
                       verifyAndGetPartStats(hive, tbl, colName, parts);
@@ -447,7 +480,7 @@ public class StatsOptimizer implements Transform {
                 }
                 case Double: {
                   DoubleSubType subType = DoubleSubType.valueOf(name);
-                  
+
                   Double maxVal = null;
                   Collection<List<ColumnStatisticsObj>> result =
                       verifyAndGetPartStats(hive, tbl, colName, parts);
@@ -522,7 +555,7 @@ public class StatsOptimizer implements Transform {
               switch(type) {
                 case Integeral: {
                   LongSubType subType = LongSubType.valueOf(name);
-                  
+
                   Long minVal = null;
                   Collection<List<ColumnStatisticsObj>> result =
                       verifyAndGetPartStats(hive, tbl, colName, parts);
@@ -548,7 +581,7 @@ public class StatsOptimizer implements Transform {
                 }
                 case Double: {
                   DoubleSubType subType = DoubleSubType.valueOf(name);
-                  
+
                   Double minVal = null;
                   Collection<List<ColumnStatisticsObj>> result =
                       verifyAndGetPartStats(hive, tbl, colName, parts);

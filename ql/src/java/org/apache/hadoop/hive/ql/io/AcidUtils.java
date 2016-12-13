@@ -26,6 +26,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.common.ValidTxnList;
+import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.shims.HadoopShims;
 import org.apache.hadoop.hive.shims.ShimLoader;
 
@@ -62,7 +64,7 @@ public class AcidUtils {
     @Override
     public boolean accept(Path path) {
       return path.getName().startsWith(BUCKET_PREFIX) &&
-          !path.getName().endsWith(DELTA_SIDE_FILE_SUFFIX);
+              !path.getName().endsWith(DELTA_SIDE_FILE_SUFFIX);
     }
   };
   public static final String BUCKET_DIGITS = "%05d";
@@ -79,13 +81,14 @@ public class AcidUtils {
   private AcidUtils() {
     // NOT USED
   }
+
   private static final Log LOG = LogFactory.getLog(AcidUtils.class.getName());
 
   private static final Pattern ORIGINAL_PATTERN =
-      Pattern.compile("[0-9]+_[0-9]+");
+          Pattern.compile("[0-9]+_[0-9]+");
 
-  public static final PathFilter hiddenFileFilter = new PathFilter(){
-    public boolean accept(Path p){
+  public static final PathFilter hiddenFileFilter = new PathFilter() {
+    public boolean accept(Path p) {
       String name = p.getName();
       return !name.startsWith("_") && !name.startsWith(".");
     }
@@ -95,24 +98,26 @@ public class AcidUtils {
 
   /**
    * Create the bucket filename.
+   *
    * @param subdir the subdirectory for the bucket.
    * @param bucket the bucket number
    * @return the filename
    */
   public static Path createBucketFile(Path subdir, int bucket) {
     return new Path(subdir,
-        BUCKET_PREFIX + String.format(BUCKET_DIGITS, bucket));
+            BUCKET_PREFIX + String.format(BUCKET_DIGITS, bucket));
   }
 
   private static String deltaSubdir(long min, long max) {
     return DELTA_PREFIX + String.format(DELTA_DIGITS, min) + "_" +
-        String.format(DELTA_DIGITS, max);
+            String.format(DELTA_DIGITS, max);
   }
 
   /**
    * Create a filename for a bucket file.
+   *
    * @param directory the partition directory
-   * @param options the options for writing the bucket
+   * @param options   the options for writing the bucket
    * @return the filename that should store the bucket
    */
   public static Path createFilename(Path directory,
@@ -120,19 +125,20 @@ public class AcidUtils {
     String subdir;
     if (options.getOldStyle()) {
       return new Path(directory, String.format(BUCKET_DIGITS,
-          options.getBucket()) + "_0");
+              options.getBucket()) + "_0");
     } else if (options.isWritingBase()) {
       subdir = BASE_PREFIX + String.format(DELTA_DIGITS,
-          options.getMaximumTransactionId());
+              options.getMaximumTransactionId());
     } else {
       subdir = deltaSubdir(options.getMinimumTransactionId(),
-          options.getMaximumTransactionId());
+              options.getMaximumTransactionId());
     }
     return createBucketFile(new Path(directory, subdir), options.getBucket());
   }
 
   /**
    * Get the transaction id from a base directory name.
+   *
    * @param path the base directory name
    * @return the maximum transaction id that is included
    */
@@ -142,57 +148,60 @@ public class AcidUtils {
       return Long.parseLong(filename.substring(BASE_PREFIX.length()));
     }
     throw new IllegalArgumentException(filename + " does not start with " +
-        BASE_PREFIX);
+            BASE_PREFIX);
   }
 
   /**
    * Parse a bucket filename back into the options that would have created
    * the file.
+   *
    * @param bucketFile the path to a bucket file
-   * @param conf the configuration
+   * @param conf       the configuration
    * @return the options used to create that filename
    */
   public static AcidOutputFormat.Options
-                    parseBaseBucketFilename(Path bucketFile,
-                                            Configuration conf) {
+  parseBaseBucketFilename(Path bucketFile,
+                          Configuration conf) {
     AcidOutputFormat.Options result = new AcidOutputFormat.Options(conf);
     String filename = bucketFile.getName();
     result.writingBase(true);
     if (ORIGINAL_PATTERN.matcher(filename).matches()) {
       int bucket =
-          Integer.parseInt(filename.substring(0, filename.indexOf('_')));
+              Integer.parseInt(filename.substring(0, filename.indexOf('_')));
       result
-          .setOldStyle(true)
-          .minimumTransactionId(0)
-          .maximumTransactionId(0)
-          .bucket(bucket);
+              .setOldStyle(true)
+              .minimumTransactionId(0)
+              .maximumTransactionId(0)
+              .bucket(bucket);
     } else if (filename.startsWith(BUCKET_PREFIX)) {
       int bucket =
-          Integer.parseInt(filename.substring(filename.indexOf('_') + 1));
+              Integer.parseInt(filename.substring(filename.indexOf('_') + 1));
       result
-          .setOldStyle(false)
-          .minimumTransactionId(0)
-          .maximumTransactionId(parseBase(bucketFile.getParent()))
-          .bucket(bucket);
+              .setOldStyle(false)
+              .minimumTransactionId(0)
+              .maximumTransactionId(parseBase(bucketFile.getParent()))
+              .bucket(bucket);
     } else {
       result.setOldStyle(true).bucket(-1).minimumTransactionId(0)
-          .maximumTransactionId(0);
+              .maximumTransactionId(0);
     }
     return result;
   }
 
-  public enum Operation { NOT_ACID, INSERT, UPDATE, DELETE }
+  public enum Operation {NOT_ACID, INSERT, UPDATE, DELETE}
 
   public static interface Directory {
 
     /**
      * Get the base directory.
+     *
      * @return the base directory to read
      */
     Path getBaseDirectory();
 
     /**
      * Get the list of original files.
+     *
      * @return the list of original files (eg. 000000_0)
      */
     List<FileStatus> getOriginalFiles();
@@ -200,6 +209,7 @@ public class AcidUtils {
     /**
      * Get the list of base and delta directories that are valid and not
      * obsolete.
+     *
      * @return the minimal list of current directories
      */
     List<ParsedDelta> getCurrentDirectories();
@@ -258,12 +268,13 @@ public class AcidUtils {
 
   /**
    * Convert a list of deltas to a list of delta directories.
+   *
    * @param deltas the list of deltas out of a Directory object.
    * @return a list of delta directory paths that need to be read
    */
   public static Path[] getPaths(List<ParsedDelta> deltas) {
     Path[] result = new Path[deltas.size()];
-    for(int i=0; i < result.length; ++i) {
+    for (int i = 0; i < result.length; ++i) {
       result[i] = deltas.get(i).getPath();
     }
     return result;
@@ -272,12 +283,13 @@ public class AcidUtils {
   /**
    * Convert the list of deltas into an equivalent list of begin/end
    * transaction id pairs.
+   *
    * @param deltas
    * @return the list of transaction ids to serialize
    */
   public static List<Long> serializeDeltas(List<ParsedDelta> deltas) {
     List<Long> result = new ArrayList<Long>(deltas.size() * 2);
-    for(ParsedDelta delta: deltas) {
+    for (ParsedDelta delta : deltas) {
       result.add(delta.minTransaction);
       result.add(delta.maxTransaction);
     }
@@ -287,16 +299,17 @@ public class AcidUtils {
   /**
    * Convert the list of begin/end transaction id pairs to a list of delta
    * directories.
-   * @param root the root directory
+   *
+   * @param root   the root directory
    * @param deltas list of begin/end transaction id pairs
    * @return the list of delta paths
    */
   public static Path[] deserializeDeltas(Path root, List<Long> deltas) {
     int deltaSize = deltas.size() / 2;
     Path[] result = new Path[deltaSize];
-    for(int i = 0; i < deltaSize; ++i) {
+    for (int i = 0; i < deltaSize; ++i) {
       result[i] = new Path(root, deltaSubdir(deltas.get(i * 2),
-          deltas.get(i * 2 + 1)));
+              deltas.get(i * 2 + 1)));
     }
     return result;
   }
@@ -311,23 +324,24 @@ public class AcidUtils {
       return new ParsedDelta(min, max, path);
     }
     throw new IllegalArgumentException(path + " does not start with " +
-                                       DELTA_PREFIX);
+            DELTA_PREFIX);
   }
 
   /**
    * Is the given directory in ACID format?
+   *
    * @param directory the partition directory to check
-   * @param conf the query configuration
+   * @param conf      the query configuration
    * @return true, if it is an ACID directory
    * @throws IOException
    */
   public static boolean isAcid(Path directory,
                                Configuration conf) throws IOException {
     FileSystem fs = directory.getFileSystem(conf);
-    for(FileStatus file: fs.listStatus(directory)) {
+    for (FileStatus file : fs.listStatus(directory)) {
       String filename = file.getPath().getName();
       if (filename.startsWith(BASE_PREFIX) ||
-          filename.startsWith(DELTA_PREFIX)) {
+              filename.startsWith(DELTA_PREFIX)) {
         if (file.isDir()) {
           return true;
         }
@@ -341,16 +355,17 @@ public class AcidUtils {
    * base and diff directories. Note that because major compactions don't
    * preserve the history, we can't use a base directory that includes a
    * transaction id that we must exclude.
+   *
    * @param directory the partition directory to analyze
-   * @param conf the configuration
-   * @param txnList the list of transactions that we are reading
+   * @param conf      the configuration
+   * @param txnList   the list of transactions that we are reading
    * @return the state of the directory
    * @throws IOException
    */
   public static Directory getAcidState(Path directory,
                                        Configuration conf,
                                        ValidTxnList txnList
-                                       ) throws IOException {
+  ) throws IOException {
     FileSystem fs = directory.getFileSystem(conf);
     FileStatus bestBase = null;
     long bestBaseTxn = 0;
@@ -359,8 +374,8 @@ public class AcidUtils {
     List<FileStatus> originalDirectories = new ArrayList<FileStatus>();
     final List<FileStatus> obsolete = new ArrayList<FileStatus>();
     List<FileStatus> children = SHIMS.listLocatedStatus(fs, directory,
-        hiddenFileFilter);
-    for(FileStatus child: children) {
+            hiddenFileFilter);
+    for (FileStatus child : children) {
       Path p = child.getPath();
       String fn = p.getName();
       if (fn.startsWith(BASE_PREFIX) && child.isDir()) {
@@ -378,8 +393,8 @@ public class AcidUtils {
       } else if (fn.startsWith(DELTA_PREFIX) && child.isDir()) {
         ParsedDelta delta = parseDelta(child);
         if (txnList.isTxnRangeValid(delta.minTransaction,
-            delta.maxTransaction) !=
-            ValidTxnList.RangeResponse.NONE) {
+                delta.maxTransaction) !=
+                ValidTxnList.RangeResponse.NONE) {
           working.add(delta);
         }
       } else {
@@ -407,11 +422,11 @@ public class AcidUtils {
 
     Collections.sort(working);
     long current = bestBaseTxn;
-    for(ParsedDelta next: working) {
+    for (ParsedDelta next : working) {
       if (next.maxTransaction > current) {
         // are any of the new transactions ones that we care about?
-        if (txnList.isTxnRangeValid(current+1, next.maxTransaction) !=
-            ValidTxnList.RangeResponse.NONE) {
+        if (txnList.isTxnRangeValid(current + 1, next.maxTransaction) !=
+                ValidTxnList.RangeResponse.NONE) {
           deltas.add(next);
           current = next.maxTransaction;
         }
@@ -422,9 +437,9 @@ public class AcidUtils {
 
     final Path base = bestBase == null ? null : bestBase.getPath();
     LOG.debug("in directory " + directory.toUri().toString() + " base = " + base + " deltas = " +
-        deltas.size());
+            deltas.size());
 
-    return new Directory(){
+    return new Directory() {
 
       @Override
       public Path getBaseDirectory() {
@@ -466,5 +481,25 @@ public class AcidUtils {
     } else {
       original.add(stat);
     }
+  }
+
+  /**
+   * Checks if a table is a valid ACID table.
+   * Note, users are responsible for using the correct TxnManager. We do not look at
+   * SessionState.get().getTxnMgr().supportsAcid() here
+   *
+   * @param table table
+   * @return true if table is a legit ACID table, false otherwise
+   */
+  public static boolean isAcidTable(Table table) {
+    if (table == null) {
+      return false;
+    }
+    String tableIsTransactional = table.getProperty(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL);
+    if (tableIsTransactional == null) {
+      tableIsTransactional = table.getProperty(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL.toUpperCase());
+    }
+    return tableIsTransactional != null && tableIsTransactional.equalsIgnoreCase("true");
+
   }
 }
