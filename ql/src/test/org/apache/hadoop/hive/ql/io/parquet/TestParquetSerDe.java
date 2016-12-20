@@ -41,6 +41,7 @@ public class TestParquetSerDe extends TestCase {
 
       final ParquetHiveSerDe serDe = new ParquetHiveSerDe();
       final Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
       final Properties tbl = createProperties();
       SerDeUtils.initializeSerDe(serDe, conf, tbl, null);
 

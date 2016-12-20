@@ -83,6 +83,7 @@ public class TestUtilities {
   @Test
   public void testGetFileExtension() {
     JobConf jc = new JobConf();
+    jc.set("fs.default.name", "file:///");
     assertEquals("No extension for uncompressed unknown format", "",
         getFileExtension(jc, false, null));
     assertEquals("No extension for compressed unknown format", "",
@@ -125,7 +126,9 @@ public class TestUtilities {
   public void testgetDbTableName() throws HiveException{
     String tablename;
     String [] dbtab;
-    SessionState.start(new HiveConf(this.getClass()));
+    HiveConf conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
+    SessionState.start(conf);
     String curDefaultdb = SessionState.get().getCurrentDatabase();
 
     //test table without db portion
@@ -274,6 +277,7 @@ public class TestUtilities {
     MapWork mapWork1 = new MapWork();
     MapWork mapWork2 = new MapWork();
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
 
     String nonExistentPath1 = UUID.randomUUID().toString();
     String nonExistentPath2 = UUID.randomUUID().toString();

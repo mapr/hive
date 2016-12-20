@@ -55,6 +55,7 @@ public class TestTezSessionPool {
   @Before
   public void setUp() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
   }
 
   @Test

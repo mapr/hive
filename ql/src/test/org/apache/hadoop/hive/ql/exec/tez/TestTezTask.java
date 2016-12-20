@@ -160,9 +160,11 @@ public class TestTezTask {
     task.setConsole(mock(LogHelper.class));
 
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     appLr = mock(LocalResource.class);
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf
         .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
             "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

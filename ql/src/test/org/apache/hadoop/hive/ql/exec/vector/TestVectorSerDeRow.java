@@ -532,6 +532,7 @@ public class TestVectorSerDeRow extends TestCase {
     String fieldNames = ObjectInspectorUtils.getFieldNames(rowObjectInspector);
     String fieldTypes = ObjectInspectorUtils.getFieldTypes(rowObjectInspector);
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Properties tbl = createProperties(fieldNames, fieldTypes);
     return new LazySerDeParameters(conf, tbl, LazySimpleSerDe.class.getName());
   }

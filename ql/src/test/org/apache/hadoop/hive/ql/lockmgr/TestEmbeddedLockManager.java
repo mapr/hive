@@ -30,6 +30,7 @@ public class TestEmbeddedLockManager extends TestCase {
 
   public void testLocking() throws LockException {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("hive.lock.numretries", "0");
     conf.set("hive.unlock.numretries", "0");
     EmbeddedLockManager manager = new EmbeddedLockManager();

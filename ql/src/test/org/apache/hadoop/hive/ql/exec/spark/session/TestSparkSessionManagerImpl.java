@@ -42,6 +42,7 @@ public class TestSparkSessionManagerImpl {
   @Test
   public void testSingleSessionMultipleUse() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("spark.master", "local");
 
     SparkSessionManager sessionManager = SparkSessionManagerImpl.getInstance();
@@ -69,6 +70,7 @@ public class TestSparkSessionManagerImpl {
     sessionManagerHS2.shutdown();
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set("spark.master", "local");
 
     sessionManagerHS2.setup(hiveConf);
@@ -108,6 +110,7 @@ public class TestSparkSessionManagerImpl {
         String threadName = Thread.currentThread().getName();
         System.out.println(threadName + " started.");
         HiveConf conf = new HiveConf();
+        conf.set("fs.default.name", "file:///");
         conf.set("spark.master", "local");
 
         SparkSession prevSession = null;

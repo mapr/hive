@@ -48,8 +48,9 @@ public class TestQBSubQuery {
 
   @BeforeClass
   public static void initialize() {
-    queryState = new QueryState(new HiveConf(SemanticAnalyzer.class));
-    conf = queryState.getConf();
+    conf = new HiveConf(SemanticAnalyzer.class);
+    conf.set("fs.default.name", "file:///");
+    queryState = new QueryState(conf);
     SessionState.start(conf);
   }
 

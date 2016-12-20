@@ -98,6 +98,7 @@ public class TestTaskLogProcessor {
   @Test
   public void testGetStackTraces() throws Exception {
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
     HiveConf.setQueryString(jobConf, "select * from foo group by moo;");
 
     final TaskLogProcessor taskLogProcessor = new TaskLogProcessor(jobConf);
@@ -150,6 +151,7 @@ public class TestTaskLogProcessor {
   @Test
   public void testScriptErrorHeuristic() throws Exception {
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
     HiveConf.setQueryString(jobConf, "select * from foo group by moo;");
 
     final TaskLogProcessor taskLogProcessor = new TaskLogProcessor(jobConf);
@@ -177,6 +179,7 @@ public class TestTaskLogProcessor {
   @Test
   public void testDataCorruptErrorHeuristic() throws Exception {
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
     HiveConf.setQueryString(jobConf, "select * from foo group by moo;");
 
     final TaskLogProcessor taskLogProcessor = new TaskLogProcessor(jobConf);
@@ -210,6 +213,7 @@ public class TestTaskLogProcessor {
   @Test
   public void testMapAggrMemErrorHeuristic() throws Exception {
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
     HiveConf.setQueryString(jobConf, "select * from foo group by moo;");
 
     final TaskLogProcessor taskLogProcessor = new TaskLogProcessor(jobConf);

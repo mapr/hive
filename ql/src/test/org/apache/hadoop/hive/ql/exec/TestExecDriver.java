@@ -84,8 +84,9 @@ public class TestExecDriver extends TestCase {
 
   static {
     try {
-      queryState = new QueryState(new HiveConf(ExecDriver.class));
-      conf = queryState.getConf();
+      conf = new HiveConf(ExecDriver.class);
+      conf.set("fs.default.name", "file:///");
+      queryState = new QueryState(conf);
       conf.setBoolVar(HiveConf.ConfVars.SUBMITVIACHILD, true);
       conf.setBoolVar(HiveConf.ConfVars.SUBMITLOCALTASKVIACHILD, true);
       conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,

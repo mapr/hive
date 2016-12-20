@@ -44,6 +44,7 @@ public class $className {
   @BeforeClass
   public static void beforeClass() throws Exception {
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.logVars(System.err);
     System.err.flush();
 

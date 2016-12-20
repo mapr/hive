@@ -42,6 +42,7 @@ import org.apache.hadoop.io.compress.DefaultCodec;
 public class PerformTestRCFileAndSeqFile {
 
   private final Configuration conf = new Configuration();
+  {conf.set("fs.default.name", "file:///");}
 
   private Path testRCFile;
   private Path testSeqFile;
