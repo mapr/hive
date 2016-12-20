@@ -18,9 +18,6 @@
 
 package org.apache.hadoop.hive.ql.lockmgr.zookeeper;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import org.apache.hadoop.hive.common.metrics.MetricsTestUtils;
 import org.apache.hadoop.hive.common.metrics.common.MetricsConstant;
@@ -33,6 +30,7 @@ import org.apache.hadoop.hive.ql.lockmgr.HiveLockMode;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockObject;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockObject.HiveLockObjectData;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
+import org.apache.hive.common.util.HiveTestUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -43,8 +41,8 @@ import org.junit.Before;
 import org.junit.After;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+
 
 public class TestZookeeperLockManager {
 
@@ -60,9 +58,13 @@ public class TestZookeeperLockManager {
   private static final String TABLE_LOCK_PATH = "/hive/t1/00001";
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
+
+
+
     conf = new HiveConf();
     lockObjData = new HiveLockObjectData("1", "10", "SHARED", "show tables");
+    System.setProperty("java.security.auth.login.config", HiveTestUtils.getFileFromClasspath("mapr.login.conf"));
     hiveLock = new HiveLockObject(TABLE, lockObjData);
     zLock = new ZooKeeperHiveLock(TABLE_LOCK_PATH, hiveLock, HiveLockMode.SHARED);
 
