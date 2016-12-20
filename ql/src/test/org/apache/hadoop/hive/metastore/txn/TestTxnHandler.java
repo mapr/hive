@@ -1467,6 +1467,7 @@ public class TestTxnHandler {
 
   @Before
   public void setUp() throws Exception {
+    conf.set("fs.default.name", "file:///");
     TxnDbUtil.prepDb();
     txnHandler = TxnUtils.getTxnStore(conf);
   }
