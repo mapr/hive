@@ -66,6 +66,7 @@ public class TestLlapOutputFormat {
   public static void setUp() throws Exception {
     LOG.debug("Setting up output service");
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     // Pick random avail port
     HiveConf.setIntVar(conf, HiveConf.ConfVars.LLAP_DAEMON_OUTPUT_SERVICE_PORT, 0);
     LlapOutputFormatService.initializeAndStart(conf);
@@ -91,6 +92,7 @@ public class TestLlapOutputFormat {
       LlapOutputFormat format = new LlapOutputFormat();
 
       HiveConf conf = new HiveConf();
+      conf.set("fs.default.name", "file:///");
       Socket socket = new Socket("localhost", service.getPort());
 
       LOG.debug("Socket connected");
