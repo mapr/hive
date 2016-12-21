@@ -16,7 +16,7 @@
 
 set CLASS=org.apache.hive.service.server.HiveServer2
 pushd %HIVE_LIB%
-for /f %%a IN ('dir /b hive-service-*.jar') do (
+for /f %%a IN ('dir /b hive-service-[0-9].*.jar') do (
   set JAR=%HIVE_LIB%\%%a
 )
 popd
