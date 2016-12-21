@@ -49,6 +49,7 @@ public class TestLdapSearch {
   @Before
   public void setup() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
   }
 
   @Test

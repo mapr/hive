@@ -61,6 +61,7 @@ public class TestChainFilter {
   @Before
   public void setup() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     factory = new ChainFilterFactory(factory1, factory2, factory3);
   }
 

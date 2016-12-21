@@ -31,6 +31,7 @@ public class TestQueryFactory {
   @Before
   public void setup() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_SERVER2_PLAIN_LDAP_GUIDKEY, "guid");
     conf.setVar(HiveConf.ConfVars.HIVE_SERVER2_PLAIN_LDAP_GROUPCLASS_KEY, "superGroups");
     conf.setVar(HiveConf.ConfVars.HIVE_SERVER2_PLAIN_LDAP_GROUPMEMBERSHIP_KEY, "member");

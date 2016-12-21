@@ -41,6 +41,7 @@ public class TestPluggableHiveSessionImpl extends TestCase {
   @Before
   public void setUp() {
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, TestHiveSessionImpl.class.getName());
     cliService = new CLIService(null);
     service = new ThriftBinaryCLIService(cliService, null);

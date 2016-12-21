@@ -42,6 +42,7 @@ public class TestUserSearchFilter {
   @Before
   public void setup() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     factory = new UserSearchFilterFactory();
   }
 

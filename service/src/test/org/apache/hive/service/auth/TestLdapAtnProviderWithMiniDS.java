@@ -223,6 +223,7 @@ public class TestLdapAtnProviderWithMiniDS extends AbstractLdapTestUnit {
   @BeforeClass
   public static void init() throws Exception {
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
 
     ldapProvider = new LdapAuthenticationProviderImpl(hiveConf);
   }
@@ -237,6 +238,7 @@ public class TestLdapAtnProviderWithMiniDS extends AbstractLdapTestUnit {
   private static void initLdapAtn(Map<String, String> hiveProperties)
         throws Exception {
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
 
     int port;
     if (ldapUrl == null) {
