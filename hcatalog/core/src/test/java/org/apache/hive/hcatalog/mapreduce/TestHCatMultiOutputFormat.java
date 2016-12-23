@@ -54,7 +54,6 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -67,6 +66,7 @@ import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.hive.hcatalog.mapreduce.MultiOutputFormat.JobConfigurer;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -84,7 +84,7 @@ public class TestHCatMultiOutputFormat {
   private static Path warehousedir = null;
   private static HashMap<String, HCatSchema> schemaMap = new HashMap<String, HCatSchema>();
   private static HiveMetaStoreClient hmsc;
-  private static MiniMRCluster mrCluster;
+  private static MapRMiniDFSCluster mrCluster;
   private static Configuration mrConf;
   private static HiveConf hiveConf;
   private static File workDir;
@@ -158,6 +158,7 @@ public class TestHCatMultiOutputFormat {
     warehousedir = new Path(System.getProperty("test.warehouse.dir"));
 
     HiveConf metastoreConf = new HiveConf();
+    metastoreConf.set("fs.default.name", "file:///");
     metastoreConf.setVar(HiveConf.ConfVars.METASTOREWAREHOUSE, warehousedir.toString());
 
     // Run hive metastore server
@@ -165,13 +166,13 @@ public class TestHCatMultiOutputFormat {
     // LocalJobRunner does not work with mapreduce OutputCommitter. So need
     // to use MiniMRCluster. MAPREDUCE-2350
     Configuration conf = new Configuration(true);
+    conf.set("fs.default.name", "file:///");
     conf.set("yarn.scheduler.capacity.root.queues", "default");
     conf.set("yarn.scheduler.capacity.root.default.capacity", "100");
 
     FileSystem fs = FileSystem.get(conf);
     System.setProperty("hadoop.log.dir", new File(workDir, "/logs").getAbsolutePath());
-    mrCluster = new MiniMRCluster(1, fs.getUri().toString(), 1, null, null,
-      new JobConf(conf));
+    mrCluster = new MapRMiniDFSCluster(new JobConf(conf));
     mrConf = mrCluster.createJobConf();
 
     initializeSetup();
@@ -182,6 +183,7 @@ public class TestHCatMultiOutputFormat {
   private static void initializeSetup() throws Exception {
 
     hiveConf = new HiveConf(mrConf, TestHCatMultiOutputFormat.class);
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + msPort);
     hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 3);
@@ -358,6 +360,7 @@ public class TestHCatMultiOutputFormat {
   private List<String> getTableData(String table, String database) throws Exception {
     QueryState queryState = new QueryState(null);
     HiveConf conf = queryState.getConf();
+    conf.set("fs.default.name", "file:///");
     conf.addResource("hive-site.xml");
     ArrayList<String> results = new ArrayList<String>();
     ArrayList<String> temp = new ArrayList<String>();

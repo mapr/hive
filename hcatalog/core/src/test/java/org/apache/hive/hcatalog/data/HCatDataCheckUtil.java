@@ -42,6 +42,7 @@ public class HCatDataCheckUtil {
 
   public static Driver instantiateDriver(MiniCluster cluster) {
     HiveConf hiveConf = new HiveConf(HCatDataCheckUtil.class);
+    hiveConf.set("fs.default.name", "file:///");
     for (Entry e : cluster.getProperties().entrySet()) {
       hiveConf.set(e.getKey().toString(), e.getValue().toString());
     }

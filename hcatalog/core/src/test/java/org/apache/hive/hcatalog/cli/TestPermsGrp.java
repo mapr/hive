@@ -89,6 +89,7 @@ public class TestPermsGrp extends TestCase {
     System.setSecurityManager(new NoExitSecurityManager());
 
     hcatConf = new HiveConf(this.getClass());
+    hcatConf.set("fs.default.name", "file:///");
     hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://127.0.0.1:" + msPort);
     hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 3);
@@ -198,7 +199,7 @@ public class TestPermsGrp extends TestCase {
     argsList
         .add("-Dhive.security.authorization.manager=org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
     argsList.addAll(Arrays.asList(args));
-    HCatCli.main(argsList.toArray(new String[]{}));
+    HCatCli.main(argsList.toArray(new String[]{}), true);
   }
 
   private void silentDropDatabase(String dbName) throws MetaException, TException {
