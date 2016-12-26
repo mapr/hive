@@ -32,6 +32,8 @@ import java.util.Random;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -103,6 +105,7 @@ public class TestHCatClient {
   public static void startMetaStoreServer() throws Exception {
 
     hcatConf = new HiveConf(TestHCatClient.class);
+    hcatConf.set("fs.default.name", "file:///");
     String metastoreUri = System.getProperty("test."+HiveConf.ConfVars.METASTOREURIS.varname);
     if (metastoreUri != null) {
       hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreUri);
@@ -381,8 +384,11 @@ public class TestHCatClient {
     String dbName = "locationDB";
     client.dropDatabase(dbName, true, HCatClient.DropDBMode.CASCADE);
 
+    FileSystem fs = new LocalFileSystem();
+    fs.initialize(fs.getWorkingDirectory().toUri(), hcatConf);
+
     HCatCreateDBDesc dbDesc = HCatCreateDBDesc.create(dbName)
-      .ifNotExists(true).location("/tmp/" + dbName).build();
+      .ifNotExists(true).location(fs.getWorkingDirectory().toString() + "/tmp/" + dbName).build();
     client.createDatabase(dbDesc);
     HCatDatabase newDB = client.getDatabase(dbName);
     assertTrue(newDB.getLocation().matches(".*/tmp/" + dbName));
@@ -803,6 +809,7 @@ public class TestHCatClient {
   private void startReplicationTargetMetaStoreIfRequired() throws Exception {
     if (!isReplicationTargetHCatRunning) {
       HiveConf conf = new HiveConf();
+      conf.set("fs.default.name", "file:///");
       conf.set("javax.jdo.option.ConnectionURL", hcatConf.get("javax.jdo.option.ConnectionURL")
         .replace("metastore", "target_metastore"));
       replicationTargetHCatPort = MetaStoreUtils.startMetaStore(conf);

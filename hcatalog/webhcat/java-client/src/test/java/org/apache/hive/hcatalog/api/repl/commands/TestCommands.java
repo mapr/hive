@@ -76,6 +76,7 @@ public class TestCommands {
 
     TestHCatClient.startMetaStoreServer();
     hconf = TestHCatClient.getConf();
+    hconf.set("fs.default.name", "file:///");
     hconf.set(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK.varname,"");
     hconf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
