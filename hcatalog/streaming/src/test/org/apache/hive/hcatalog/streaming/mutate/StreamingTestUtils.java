@@ -55,6 +55,7 @@ public class StreamingTestUtils {
 
   public HiveConf newHiveConf(String metaStoreUri) {
     HiveConf conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
     conf.set("fs.raw.impl", RawFileSystem.class.getName());
     if (metaStoreUri != null) {
       conf.setVar(HiveConf.ConfVars.METASTOREURIS, metaStoreUri);

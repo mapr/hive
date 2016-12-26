@@ -188,6 +188,7 @@ public class TestStreaming {
 
 
     conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
     conf.set("fs.raw.impl", RawFileSystem.class.getName());
     conf.set("hive.enforce.bucketing", "true");
     conf
