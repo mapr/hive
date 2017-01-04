@@ -44,4 +44,12 @@ public class MapRMiniDFSCluster {
   public void shutdown() {
 
   }
+
+  /**
+   * wait for the cluster to get out of safemode.
+   */
+  public void waitClusterUp() throws IOException {
+
+  }
+
 }
