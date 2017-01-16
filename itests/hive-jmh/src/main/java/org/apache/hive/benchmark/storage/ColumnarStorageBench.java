@@ -142,7 +142,9 @@ public class ColumnarStorageBench {
 
     try {
       lazySimpleSerDe = new LazySimpleSerDe();
-      SerDeUtils.initializeSerDe(lazySimpleSerDe, new Configuration(), recordProperties, null);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      SerDeUtils.initializeSerDe(lazySimpleSerDe, conf, recordProperties, null);
       oi = lazySimpleSerDe.getObjectInspector();
 
       for (int i = 0; i < NUMBER_OF_ROWS_TO_TEST; i++) {
@@ -260,6 +262,7 @@ public class ColumnarStorageBench {
       inputFormat = inputFormatImpl;
 
       Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
       SerDeUtils.initializeSerDe(serDe, conf, recordProperties, null);
     }
 
@@ -356,8 +359,9 @@ public class ColumnarStorageBench {
     for (int i=0; i < rows.length; i++) {
       recordWritable[i] = storageFormatTest.serialize(rows[i], oi);
     }
-
-    fs = FileSystem.getLocal(new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    fs = FileSystem.getLocal(conf);
 
     writeFile = createTempFile();
     writePath = new Path(writeFile.getPath());

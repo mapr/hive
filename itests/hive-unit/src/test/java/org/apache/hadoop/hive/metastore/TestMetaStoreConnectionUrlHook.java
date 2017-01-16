@@ -45,6 +45,7 @@ public class TestMetaStoreConnectionUrlHook extends TestCase {
 
   public void testUrlHook() throws Exception {
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.METASTORECONNECTURLHOOK,
         DummyJdoConnectionUrlHook.class.getName());
     hiveConf.setVar(HiveConf.ConfVars.METASTORECONNECTURLKEY,

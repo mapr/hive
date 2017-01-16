@@ -150,6 +150,7 @@ public class TestHadoopAuthBridge23 extends TestCase {
     System.setProperty(HiveConf.ConfVars.METASTORE_CLUSTER_DELEGATION_TOKEN_STORE_CLS.varname,
         MyTokenStore.class.getName());
     conf = new HiveConf(TestHadoopAuthBridge23.class);
+    conf.set("fs.default.name", "file:///");
     MetaStoreUtils.startMetaStore(port, new MyHadoopThriftAuthBridge23());
   }
 
@@ -360,6 +361,7 @@ public class TestHadoopAuthBridge23 extends TestCase {
     //Create the metastore client as the clientUgi. Doing so this
     //way will give the client access to the token that was added earlier
     //in the clientUgi
+    conf.set("fs.default.name", "file:///");
     HiveMetaStoreClient hiveClient =
       clientUgi.doAs(new PrivilegedExceptionAction<HiveMetaStoreClient>() {
         public HiveMetaStoreClient run() throws Exception {

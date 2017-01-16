@@ -177,7 +177,7 @@
     <tez.version>0.8.4</tez.version>
     <slider.version>0.90.2-incubating</slider.version>
     <super-csv.version>2.2.0</super-csv.version>
-    <spark.version>1.6.1-mapr-1604</spark.version>
+    <spark.version>1.6.1-mapr-1611</spark.version>
     <scala.binary.version>2.10</scala.binary.version>
     <scala.version>2.10.4</scala.version>
     <tempus-fugit.version>1.1</tempus-fugit.version>

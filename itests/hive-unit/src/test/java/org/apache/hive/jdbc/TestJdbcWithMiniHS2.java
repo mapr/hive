@@ -83,6 +83,7 @@ public class TestJdbcWithMiniHS2 {
   public static void beforeTest() throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     miniHS2 = new MiniHS2(conf);
     dataFileDir = conf.get("test.data.files").replace('\\', '/').replace("c:", "");
@@ -454,6 +455,7 @@ public class TestJdbcWithMiniHS2 {
     }
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
     setSerializeInTasksInConf(conf);
     miniHS2 = new MiniHS2(conf);
@@ -480,6 +482,7 @@ public class TestJdbcWithMiniHS2 {
     }
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
     setSerializeInTasksInConf(conf);
     conf.setBoolVar(HiveConf.ConfVars.HIVEOPTIMIZEMETADATAQUERIES, false);
@@ -517,6 +520,7 @@ public class TestJdbcWithMiniHS2 {
       miniHS2.stop();
     }
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
 
     setSerializeInTasksInConf(conf);
@@ -556,6 +560,7 @@ public class TestJdbcWithMiniHS2 {
     }
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
     setSerializeInTasksInConf(conf);
     miniHS2 = new MiniHS2(conf);
@@ -586,6 +591,7 @@ public class TestJdbcWithMiniHS2 {
     }
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
     setSerializeInTasksInConf(conf);
     miniHS2 = new MiniHS2(conf);
@@ -616,6 +622,7 @@ public class TestJdbcWithMiniHS2 {
      }
 
      HiveConf conf = new HiveConf();
+     conf.set("fs.default.name", "file:///");
      String userName;
      setSerializeInTasksInConf(conf);
      miniHS2 = new MiniHS2(conf);
@@ -660,6 +667,7 @@ public class TestJdbcWithMiniHS2 {
       miniHS2.stop();
     }
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
     Path scratchDirPath;
     // 1. Test with doAs=false
@@ -747,6 +755,7 @@ public class TestJdbcWithMiniHS2 {
   @Test
   public void testUdfWhiteList() throws Exception {
     HiveConf testConf = new HiveConf();
+    testConf.set("fs.default.name", "file:///");
     assertTrue(testConf.getVar(ConfVars.HIVE_SERVER2_BUILTIN_UDF_WHITELIST).isEmpty());
     // verify that udf in default whitelist can be executed
     Statement stmt = hs2Conn.createStatement();
@@ -789,6 +798,7 @@ public class TestJdbcWithMiniHS2 {
   @Test
   public void testUdfBlackList() throws Exception {
     HiveConf testConf = new HiveConf();
+    testConf.set("fs.default.name", "file:///");
     assertTrue(testConf.getVar(ConfVars.HIVE_SERVER2_BUILTIN_UDF_BLACKLIST).isEmpty());
 
     Statement stmt = hs2Conn.createStatement();
@@ -817,6 +827,7 @@ public class TestJdbcWithMiniHS2 {
   public void testUdfBlackListOverride() throws Exception {
     // setup whitelist
     HiveConf testConf = new HiveConf();
+    testConf.set("fs.default.name", "file:///");
 
     Set<String> funcNames = FunctionRegistry.getFunctionNames();
     String funcNameStr = "";
@@ -853,6 +864,7 @@ public class TestJdbcWithMiniHS2 {
       miniHS2.stop();
     }
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String userName;
     Path scratchDirPath;
     conf.set("hive.exec.scratchdir", tmpDir + "/hs2");
@@ -904,6 +916,7 @@ public class TestJdbcWithMiniHS2 {
       miniHS2.stop();
     }
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("hive.server2.transport.mode", "http");
     conf.setInt("hive.server2.thrift.http.request.header.size", 1024);
     conf.setInt("hive.server2.thrift.http.response.header.size", 1024);

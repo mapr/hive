@@ -73,6 +73,7 @@ public class TestHiveMetaTool extends TestCase {
 
     try {
       HiveConf hiveConf = new HiveConf(HiveMetaTool.class);
+      hiveConf.set("fs.default.name", "file:///");
       client = new HiveMetaStoreClient(hiveConf);
 
       // Setup output stream to redirect output to

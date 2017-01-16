@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.shims.ShimLoader;
 
 public class TestMetaStoreAuthorization extends TestCase {
   protected HiveConf conf = new HiveConf();
+  {conf.set("fs.default.name", "file:///");}
 
   private int port;
 
@@ -52,6 +53,7 @@ public class TestMetaStoreAuthorization extends TestCase {
   public void testIsWritable() throws Exception {
     setup();
     conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
     String testDir = System.getProperty("test.warehouse.dir", "/tmp");
     Path testDirPath = new Path(testDir);
     FileSystem fs = testDirPath.getFileSystem(conf);

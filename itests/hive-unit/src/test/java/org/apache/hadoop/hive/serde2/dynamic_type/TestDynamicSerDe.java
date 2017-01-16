@@ -129,7 +129,9 @@ public class TestDynamicSerDe extends TestCase {
         }
 
         DynamicSerDe serde = new DynamicSerDe();
-        serde.initialize(new Configuration(), schema);
+        Configuration conf = new Configuration();
+        conf.set("fs.default.name", "file:///");
+        serde.initialize(conf, schema);
 
         // Try getObjectInspector
         ObjectInspector oi = serde.getObjectInspector();
@@ -194,7 +196,10 @@ public class TestDynamicSerDe extends TestCase {
     schema.setProperty(serdeConstants.SERIALIZATION_SORT_ORDER, order);
 
     DynamicSerDe serde = new DynamicSerDe();
-    serde.initialize(new Configuration(), schema);
+
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    serde.initialize(conf, schema);
 
     ObjectInspector oi = serde.getObjectInspector();
 
@@ -436,7 +441,9 @@ public class TestDynamicSerDe extends TestCase {
       schema.setProperty(serdeConstants.MAPKEY_DELIM, "4");
 
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       TCTLSeparatedProtocol prot = (TCTLSeparatedProtocol) serde.oprot_;
       assertTrue(prot.getPrimarySeparator().equals("\u0009"));
@@ -509,7 +516,9 @@ public class TestDynamicSerDe extends TestCase {
       schema.setProperty(TCTLSeparatedProtocol.ReturnNullsKey, "true");
 
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       ObjectInspector oi = serde.getObjectInspector();
 
@@ -559,7 +568,9 @@ public class TestDynamicSerDe extends TestCase {
       schema.setProperty(TCTLSeparatedProtocol.ReturnNullsKey, "true");
 
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       ObjectInspector oi = serde.getObjectInspector();
 
@@ -617,7 +628,9 @@ public class TestDynamicSerDe extends TestCase {
 
       schema.setProperty(TCTLSeparatedProtocol.ReturnNullsKey, "true");
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       ObjectInspector oi = serde.getObjectInspector();
 
@@ -675,7 +688,9 @@ public class TestDynamicSerDe extends TestCase {
 
       schema.setProperty(TCTLSeparatedProtocol.ReturnNullsKey, "false");
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       ObjectInspector oi = serde.getObjectInspector();
 
@@ -751,7 +766,10 @@ public class TestDynamicSerDe extends TestCase {
       struct.add(another);
 
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       ObjectInspector oi = serde.getObjectInspector();
 
@@ -809,7 +827,9 @@ public class TestDynamicSerDe extends TestCase {
       schema.setProperty(serdeConstants.MAPKEY_DELIM, "4");
 
       DynamicSerDe serde = new DynamicSerDe();
-      serde.initialize(new Configuration(), schema);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       TCTLSeparatedProtocol prot = (TCTLSeparatedProtocol) serde.oprot_;
       assertTrue(prot.getPrimarySeparator().equals("\u0009"));
@@ -835,7 +855,9 @@ public class TestDynamicSerDe extends TestCase {
           .setProperty(serdeConstants.SERIALIZATION_DDL,
           "struct test { i32 hello, skip list<string> bye, map<string,i32> another}");
 
-      serde.initialize(new Configuration(), schema);
+      conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      serde.initialize(conf, schema);
 
       // Try to deserialize
       Object o = serde.deserialize(bytes);

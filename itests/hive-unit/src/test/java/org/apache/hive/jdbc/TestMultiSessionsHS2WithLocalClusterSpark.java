@@ -74,6 +74,7 @@ public class TestMultiSessionsHS2WithLocalClusterSpark {
 
   private static HiveConf createHiveConf() {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("hive.exec.parallel", "true");
     conf.set("hive.execution.engine", "spark");
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");

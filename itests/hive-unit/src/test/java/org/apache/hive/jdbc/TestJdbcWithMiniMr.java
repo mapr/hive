@@ -31,6 +31,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.File;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -68,6 +69,7 @@ public class TestJdbcWithMiniMr {
   public static void beforeTest() throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     String dataFileDir = conf.get("test.data.files").replace('\\', '/')
         .replace("c:", "");
@@ -174,11 +176,12 @@ public class TestJdbcWithMiniMr {
     FileSystem localFs = FileSystem.getLocal(conf);
     assertTrue("Hive contrib JAR exists at " + contribJarPath, localFs.exists(contribJarPath));
 
-    String hdfsJarPathStr = "hdfs:///" + jarFileName;
-    Path hdfsJarPath = new Path(hdfsJarPathStr);
-
     // Copy JAR to DFS
     FileSystem dfs = miniHS2.getDFS().getFileSystem();
+
+    String hdfsJarPathStr = "file:///" + dfs.getWorkingDirectory() + File.separator + jarFileName;
+    Path hdfsJarPath = new Path(hdfsJarPathStr);
+
     dfs.copyFromLocalFile(contribJarPath, hdfsJarPath);
     assertTrue("Verify contrib JAR copied to HDFS at " + hdfsJarPath, dfs.exists(hdfsJarPath));
 

@@ -43,7 +43,9 @@ public class TestHiveServer2SessionTimeout {
 
   @BeforeClass
   public static void beforeTest() throws Exception {
-    miniHS2 = new MiniHS2(new HiveConf());
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    miniHS2 = new MiniHS2(conf);
   }
 
   @Before

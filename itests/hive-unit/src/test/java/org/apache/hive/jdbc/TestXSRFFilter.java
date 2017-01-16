@@ -54,6 +54,7 @@ public class TestXSRFFilter {
   private void initHS2(boolean enableXSRFFilter) throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     miniHS2 = new MiniHS2(conf);
     dataFileDir = conf.get("test.data.files").replace('\\', '/').replace("c:", "");

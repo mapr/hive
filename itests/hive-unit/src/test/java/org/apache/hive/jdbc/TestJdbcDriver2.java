@@ -119,6 +119,7 @@ public class TestJdbcDriver2 {
 
   public TestJdbcDriver2() {
     conf = new HiveConf(TestJdbcDriver2.class);
+    conf.set("fs.default.name", "file:///");
     dataFileDir = conf.get("test.data.files").replace('\\', '/')
         .replace("c:", "");
     dataFilePath = new Path(dataFileDir, "kv1.txt");

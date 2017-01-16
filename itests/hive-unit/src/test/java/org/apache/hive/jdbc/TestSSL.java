@@ -68,6 +68,8 @@ public class TestSSL {
       + URLEncoder.encode(dataFileDir + File.separator + TRUST_STORE_NAME) + ";trustStorePassword="
       + KEY_STORE_TRUST_STORE_PASSWORD;
 
+  static {conf.set("fs.default.name", "file:///");}
+
   @BeforeClass
   public static void beforeTest() throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());

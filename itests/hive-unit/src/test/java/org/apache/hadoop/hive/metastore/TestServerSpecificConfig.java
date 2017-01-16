@@ -53,6 +53,7 @@ public class TestServerSpecificConfig {
     HiveConf.setHiveSiteLocation(oldDefaultHiveSite);
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
 
     // check config properties expected with embedded metastore client
     assertTrue(HiveConf.isLoadMetastoreConfig());
@@ -72,6 +73,7 @@ public class TestServerSpecificConfig {
     // check if hiveserver2 config gets loaded when HS2 is started
     new HiveServer2();
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     verifyHS2ConfParams(conf);
 
     assertEquals("from.hivemetastore-site.xml",
@@ -104,12 +106,14 @@ public class TestServerSpecificConfig {
       HiveConf.setHiveSiteLocation(oldDefaultHiveSite);
       System.setProperty(OVERRIDE_KEY, "from.sysprop");
       HiveConf conf = new HiveConf();
+      conf.set("fs.default.name", "file:///");
       // ensure metatore site.xml does not get to override this
       assertEquals("from.sysprop", conf.get(OVERRIDE_KEY));
 
       // get HS2 site.xml loaded
       new HiveServer2();
       conf = new HiveConf();
+      conf.set("fs.default.name", "file:///");
       assertTrue(HiveConf.isLoadHiveServer2Config());
       // ensure hiveserver2 site.xml does not get to override this
       assertEquals("from.sysprop", conf.get(OVERRIDE_KEY));
@@ -147,6 +151,7 @@ public class TestServerSpecificConfig {
 
     // create hiveconf again to run initialization code, to see if value changes
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
 
     // check the properties expected in hive client without metastore
     verifyMetastoreConfNotLoaded(conf);
@@ -156,6 +161,7 @@ public class TestServerSpecificConfig {
     // get HS2 site.xml loaded
     new HiveServer2();
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     verifyHS2ConfParams(conf);
     verifyMetastoreConfNotLoaded(conf);
   }
@@ -181,6 +187,7 @@ public class TestServerSpecificConfig {
     FileOutputStream out = new FileOutputStream(hiveSite);
     HiveConf.setHiveSiteLocation(oldDefaultHiveSite);
     HiveConf defaultHiveConf = new HiveConf();
+    defaultHiveConf.set("fs.default.name", "file:///");
     defaultHiveConf.setVar(ConfVars.METASTOREURIS, "dummyvalue");
     // reset to the hive-site.xml values for following param
     defaultHiveConf.set("hive.dummyparam.test.server.specific.config.override",

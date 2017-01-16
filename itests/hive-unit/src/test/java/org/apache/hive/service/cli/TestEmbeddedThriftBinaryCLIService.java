@@ -37,6 +37,7 @@ public class TestEmbeddedThriftBinaryCLIService extends CLIServiceTest {
   public static void setUpBeforeClass() throws Exception {
     service = new EmbeddedThriftBinaryCLIService();
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolean("datanucleus.schema.autoCreateTables", true);
     conf.setVar(HiveConf.ConfVars.HIVEMAPREDMODE, "nonstrict");
     service.init(conf);

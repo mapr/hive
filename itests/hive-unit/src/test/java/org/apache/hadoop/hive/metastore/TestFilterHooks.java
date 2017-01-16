@@ -167,6 +167,7 @@ public class TestFilterHooks {
     DummyMetaStoreFilterHookImpl.blockResults = false;
 
     hiveConf = new HiveConf(TestFilterHooks.class);
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");

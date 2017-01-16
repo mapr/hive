@@ -64,6 +64,7 @@ public class TestHiveHistory extends TestCase {
   protected void setUp() {
     try {
       conf = new HiveConf(HiveHistory.class);
+      conf.set("fs.default.name", "file:///");
       SessionState.start(conf);
 
       fs = FileSystem.get(conf);
@@ -127,6 +128,7 @@ public class TestHiveHistory extends TestCase {
       } catch (LogInitializationException e) {
       }
       HiveConf hconf = new HiveConf(SessionState.class);
+      hconf.set("fs.default.name", "file:///");
       hconf.setBoolVar(ConfVars.HIVE_SESSION_HISTORY_ENABLED, true);
       CliSessionState ss = new CliSessionState(hconf);
       ss.in = System.in;
@@ -180,6 +182,7 @@ public class TestHiveHistory extends TestCase {
     try {
       String actualDir = parentTmpDir + "/test";
       HiveConf conf = new HiveConf(SessionState.class);
+      conf.set("fs.default.name", "file:///");
       conf.set(HiveConf.ConfVars.HIVEHISTORYFILELOC.toString(), actualDir);
       SessionState ss = new CliSessionState(conf);
       HiveHistory hiveHistory = new HiveHistoryImpl(ss);
@@ -201,6 +204,7 @@ public class TestHiveHistory extends TestCase {
    */
   public void testHiveHistoryConfigEnabled() throws Exception {
       HiveConf conf = new HiveConf(SessionState.class);
+      conf.set("fs.default.name", "file:///");
       conf.setBoolVar(ConfVars.HIVE_SESSION_HISTORY_ENABLED, true);
       SessionState ss = new CliSessionState(conf);
       SessionState.start(ss);
@@ -214,6 +218,7 @@ public class TestHiveHistory extends TestCase {
    */
   public void testHiveHistoryConfigDisabled() throws Exception {
     HiveConf conf = new HiveConf(SessionState.class);
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_SESSION_HISTORY_ENABLED, false);
     SessionState ss = new CliSessionState(conf);
     SessionState.start(ss);

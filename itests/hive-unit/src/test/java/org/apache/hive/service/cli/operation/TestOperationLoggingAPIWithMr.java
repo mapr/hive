@@ -63,6 +63,7 @@ public class TestOperationLoggingAPIWithMr extends OperationLoggingAPITestBase {
       "<PERFLOG method=runTasks from=org.apache.hadoop.hive.ql.Driver>"
     };
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LEVEL.varname, "verbose");
     miniHS2 = new MiniHS2(hiveConf);
     confOverlay = new HashMap<String, String>();

@@ -85,7 +85,7 @@ public class TestHiveAuthorizerCheckInvocation {
   @BeforeClass
   public static void beforeTest() throws Exception {
     conf = new HiveConf();
-
+    conf.set("fs.default.name", "file:///");
     // Turn on mocked authorization
     conf.setVar(ConfVars.HIVE_AUTHORIZATION_MANAGER, MockedHiveAuthorizerFactory.class.getName());
     conf.setVar(ConfVars.HIVE_AUTHENTICATOR_MANAGER, SessionStateUserAuthenticator.class.getName());

@@ -43,6 +43,7 @@ public class TestExtendedAcls extends FolderPermissionBase {
   @BeforeClass
   public static void setup() throws Exception {
     conf = new HiveConf(TestExtendedAcls.class);
+    conf.set("fs.default.name", "file:///");
     //setup the mini DFS with acl's enabled.
     conf.set("dfs.namenode.acls.enabled", "true");
     conf.setVar(HiveConf.ConfVars.HIVEMAPREDMODE, "nonstrict");

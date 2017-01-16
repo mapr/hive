@@ -57,6 +57,7 @@ public class TestOperationLoggingAPIWithTez extends OperationLoggingAPITestBase 
       "CPU_MILLISECONDS"
     };
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LEVEL.varname, "verbose");
     // Change the engine to tez
     hiveConf.setVar(ConfVars.HIVE_EXECUTION_ENGINE, "tez");

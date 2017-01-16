@@ -46,6 +46,7 @@ public class TestQueryDisplay {
   @Before
   public void setup() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("hive.support.concurrency", "false");
 
     HiveServer2 dummyHs2 = new HiveServer2();

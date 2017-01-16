@@ -43,6 +43,7 @@ public class TestCustomAuthentication {
   @BeforeClass
   public static void setUp() throws Exception {
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     hiveConf.writeXml(baos);
     baos.close();

@@ -51,6 +51,7 @@ public class TestHiveMetaStoreTxns {
 
   private final HiveConf conf = new HiveConf();
   private IMetaStoreClient client;
+  {conf.set("fs.default.name", "file:///");}
 
   public TestHiveMetaStoreTxns() throws Exception {
     TxnDbUtil.setConfValues(conf);
