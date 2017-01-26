@@ -2734,7 +2734,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
             public ObjectPair<Path, Path> call() throws Exception {
               SessionState.setCurrentSessionState(parentSession);
               Path destPath = new Path(destf, srcP.getName());
-              if (renameNonLocal) {
+              if (renameNonLocal && !destFs.exists(destPath)) {
                 for (int counter = 1; !destFs.rename(srcP,destPath); counter++) {
                   destPath = new Path(destf, name + ("_copy_" + counter) + filetype);
                 }
