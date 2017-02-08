@@ -64,6 +64,7 @@ public class TestPassProperties {
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     hiveConf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, TEST_WAREHOUSE_DIR);
+    hiveConf.set("fs.default.name", "file:///");
     driver = new Driver(hiveConf);
     SessionState.start(new CliSessionState(hiveConf));
 

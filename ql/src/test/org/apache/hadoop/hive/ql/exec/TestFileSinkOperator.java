@@ -210,6 +210,7 @@ public class TestFileSinkOperator {
     jc.set(HiveConf.ConfVars.HIVE_STATS_DEFAULT_AGGREGATOR.varname,
         TFSOStatsAggregator.class.getName());
     jc.set(HiveConf.ConfVars.HIVESTATSDBCLASS.varname, "custom");
+    jc.set("fs.default.name", "file:///");
   }
 
   private void setBasePath(String testName) {

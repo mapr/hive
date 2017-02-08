@@ -35,6 +35,7 @@ public class TestPlainSaslHelper extends TestCase {
   public void testDoAsSetting(){
 
     HiveConf hconf = new HiveConf();
+    hconf.set("fs.default.name", "file:///");
     assertTrue("default value of hive server2 doAs should be true",
         hconf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS));
 

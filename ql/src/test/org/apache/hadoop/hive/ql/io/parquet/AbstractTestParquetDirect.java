@@ -52,7 +52,9 @@ public abstract class AbstractTestParquetDirect {
 
   @BeforeClass
   public static void initializeFS() throws IOException {
-    localFS = FileSystem.getLocal(new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    localFS = FileSystem.getLocal(conf);
   }
 
   @Rule
@@ -98,10 +100,13 @@ public abstract class AbstractTestParquetDirect {
     temp.deleteOnExit();
     temp.delete();
 
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+
     Path path = new Path(temp.getPath());
 
     ParquetWriter<Void> parquetWriter = new ParquetWriter<Void>(path,
-        new DirectWriteSupport(type, writer, new HashMap<String, String>()));
+        conf, new DirectWriteSupport(type, writer, new HashMap<String, String>()));
     parquetWriter.write(null);
     parquetWriter.close();
 
@@ -140,10 +145,13 @@ public abstract class AbstractTestParquetDirect {
   public static List<ArrayWritable> read(Path parquetFile) throws IOException {
     List<ArrayWritable> records = new ArrayList<ArrayWritable>();
 
+    JobConf jc = new JobConf();
+    jc.set("fs.default.name", "file:///");
+
     RecordReader<Void, ArrayWritable> reader = new MapredParquetInputFormat().
         getRecordReader(new FileSplit(
                 parquetFile, 0, fileLength(parquetFile), (String[]) null),
-            new JobConf(), null);
+            jc, null);
 
     Void alwaysNull = reader.createKey();
     ArrayWritable record = reader.createValue();

@@ -64,7 +64,9 @@ public class TestSessionHooks extends TestCase {
     System.setProperty(ConfVars.HIVE_SERVER2_SESSION_HOOK.varname,
         TestSessionHooks.SessionHookTest.class.getName());
     service = new EmbeddedThriftBinaryCLIService();
-    service.init(new HiveConf());
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    service.init(conf);
     client = new ThriftCLIServiceClient(service);
   }
 

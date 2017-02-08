@@ -182,6 +182,7 @@ public class TestColumnAccess {
 
   private static Driver createDriver() {
     HiveConf conf = new HiveConf(Driver.class);
+    conf.set("fs.default.name", "file:///");
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     conf.setBoolVar(HiveConf.ConfVars.HIVE_STATS_COLLECT_SCANCOLS, true);
     SessionState.start(conf);

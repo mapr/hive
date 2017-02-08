@@ -44,6 +44,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.junit.Test;
+import org.junit.Ignore;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -75,6 +76,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testJobSubmission() throws Exception {
     runTest(true, new TestFunction() {
       @Override
@@ -97,6 +99,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testSimpleSparkJob() throws Exception {
     runTest(true, new TestFunction() {
       @Override
@@ -108,6 +111,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testErrorJob() throws Exception {
     runTest(true, new TestFunction() {
       @Override
@@ -136,6 +140,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testSyncRpc() throws Exception {
     runTest(true, new TestFunction() {
       @Override
@@ -147,6 +152,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testRemoteClient() throws Exception {
     runTest(false, new TestFunction() {
       @Override
@@ -158,6 +164,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testMetricsCollection() throws Exception {
     runTest(true, new TestFunction() {
       @Override
@@ -187,6 +194,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testAddJarsAndFiles() throws Exception {
     runTest(true, new TestFunction() {
       @Override
@@ -241,6 +249,7 @@ public class TestSparkClient {
   }
 
   @Test
+  @Ignore
   public void testCounters() throws Exception {
     runTest(true, new TestFunction() {
       @Override

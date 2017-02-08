@@ -70,6 +70,7 @@ public class TestMsgBusConnection extends TestCase {
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     hiveConf.set(HCatConstants.HCAT_MSGBUS_TOPIC_PREFIX, "planetlab.hcat");
+    hiveConf.set("fs.default.name", "file:///");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);
   }

@@ -111,6 +111,11 @@
       <version>${jersey.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hive.maprminicluster</groupId>
+      <artifactId>mapr-mini-cluster</artifactId>
+      <version>1.2.0-mapr</version>
+    </dependency>
   </dependencies>
 
   <profiles>

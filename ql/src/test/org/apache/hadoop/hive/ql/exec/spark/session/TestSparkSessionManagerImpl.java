@@ -21,6 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.util.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@Ignore
 public class TestSparkSessionManagerImpl {
   private static final Log LOG = LogFactory.getLog(TestSparkSessionManagerImpl.class);
 
@@ -42,6 +44,7 @@ public class TestSparkSessionManagerImpl {
   @Test
   public void testSingleSessionMultipleUse() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("spark.master", "local");
 
     SparkSessionManager sessionManager = SparkSessionManagerImpl.getInstance();
@@ -69,6 +72,7 @@ public class TestSparkSessionManagerImpl {
     sessionManagerHS2.shutdown();
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set("spark.master", "local");
 
     sessionManagerHS2.setup(hiveConf);
@@ -108,6 +112,7 @@ public class TestSparkSessionManagerImpl {
         String threadName = Thread.currentThread().getName();
         System.out.println(threadName + " started.");
         HiveConf conf = new HiveConf();
+        conf.set("fs.default.name", "file:///");
         conf.set("spark.master", "local");
 
         SparkSession prevSession = null;

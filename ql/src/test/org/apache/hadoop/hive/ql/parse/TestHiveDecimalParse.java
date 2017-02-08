@@ -132,6 +132,7 @@ public class TestHiveDecimalParse {
 
   private Driver createDriver() {
     HiveConf conf = new HiveConf(Driver.class);
+    conf.set("fs.default.name", "file:///");
 
     SessionState.start(conf);
     Driver driver = new Driver(conf);

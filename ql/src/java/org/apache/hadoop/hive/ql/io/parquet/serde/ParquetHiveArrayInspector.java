@@ -58,7 +58,7 @@ public class ParquetHiveArrayInspector implements SettableListObjectInspector {
     if (data instanceof ArrayWritable) {
       final Writable[] listContainer = ((ArrayWritable) data).get();
 
-      if (listContainer == null) {
+      if (listContainer == null || listContainer.length == 0) {
         return null;
       }
 
@@ -87,7 +87,7 @@ public class ParquetHiveArrayInspector implements SettableListObjectInspector {
     if (data instanceof ArrayWritable) {
       final Writable[] listContainer = ((ArrayWritable) data).get();
 
-      if (listContainer == null) {
+      if (listContainer == null || listContainer.length == 0) {
         return -1;
       }
 
@@ -112,7 +112,7 @@ public class ParquetHiveArrayInspector implements SettableListObjectInspector {
     if (data instanceof ArrayWritable) {
       final Writable[] listContainer = ((ArrayWritable) data).get();
 
-      if (listContainer == null) {
+      if (listContainer == null || listContainer.length == 0) {
         return null;
       }
 

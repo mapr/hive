@@ -46,6 +46,7 @@ public class TestUseDatabase extends TestCase {
     hcatConf.set(ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
 
     hcatConf.set(ConfVars.SEMANTIC_ANALYZER_HOOK.varname, HCatSemanticAnalyzer.class.getName());
+    hcatConf.set("fs.default.name", "file:///");
     hcatDriver = new Driver(hcatConf);
     SessionState.start(new CliSessionState(hcatConf));
   }

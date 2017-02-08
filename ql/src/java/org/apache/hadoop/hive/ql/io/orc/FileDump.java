@@ -55,8 +55,11 @@ public final class FileDump {
   // not used
   private FileDump() {}
 
-  public static void main(String[] args) throws Exception {
-    Configuration conf = new Configuration();
+  public static void main(String[] args) throws Exception{
+    main(args, new Configuration());
+  }
+
+  public static void main(String[] args, Configuration conf) throws Exception {
 
     List<Integer> rowIndexCols = null;
     Options opts = createOptions();

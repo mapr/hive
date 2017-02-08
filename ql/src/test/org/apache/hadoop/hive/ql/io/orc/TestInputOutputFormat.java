@@ -359,6 +359,7 @@ public class TestInputOutputFormat {
   @Before
   public void openFileSystem () throws Exception {
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestInputOutputFormat." +
         testCaseName.getMethodName() + ".orc");
@@ -669,7 +670,7 @@ public class TestInputOutputFormat {
     public FileStatus[] listStatus(Path path) throws IOException {
       path = path.makeQualified(this);
       List<FileStatus> result = new ArrayList<FileStatus>();
-      String pathname = path.toString();
+      String pathname = normalizePath(path.toString());
       String pathnameAsDir = pathname + "/";
       Set<String> dirs = new TreeSet<String>();
       for(MockFile file: files) {
@@ -691,6 +692,10 @@ public class TestInputOutputFormat {
         result.add(createDirectory(new MockPath(this, pathnameAsDir + dir)));
       }
       return result.toArray(new FileStatus[result.size()]);
+    }
+
+    private static String normalizePath(String path){
+      return path.replace("mock:///", "mock:/");
     }
 
     @Override
@@ -1225,6 +1230,7 @@ public class TestInputOutputFormat {
     conf.set("hive.vectorized.execution.enabled", Boolean.toString(isVectorized));
     conf.set("fs.mock.impl", MockFileSystem.class.getName());
     conf.set("mapred.mapper.class", ExecMapper.class.getName());
+    conf.set("fs.default.name", "file:///");
     Path root = new Path(warehouseDir, tableName);
     // clean out previous contents
     ((MockFileSystem) root.getFileSystem(conf)).clear();

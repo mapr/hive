@@ -42,6 +42,7 @@ public class TestMacroSemanticAnalyzer {
   @Before
   public void setup() throws Exception {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
     context = new Context(conf);
     parseDriver = new ParseDriver();

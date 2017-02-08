@@ -101,6 +101,7 @@ public class TestHiveAuthorizationTaskFactory {
     conf = new HiveConf();
     conf.setVar(ConfVars.HIVE_AUTHORIZATION_TASK_FACTORY,
         TestHiveAuthorizationTaskFactory.DummyHiveAuthorizationTaskFactoryImpl.class.getName());
+    conf.set("fs.default.name", "file:///");
     db = Mockito.mock(Hive.class);
     table = new Table(DB, TABLE);
     partition = new Partition(table);

@@ -73,6 +73,7 @@ public class TestSymlinkTextInputFormat extends TestCase {
   @Override
   protected void setUp() throws IOException {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     job = new JobConf(conf);
 
     TableDesc tblDesc = Utilities.defaultTd;
@@ -133,6 +134,7 @@ public class TestSymlinkTextInputFormat extends TestCase {
 
 
     HiveConf hiveConf = new HiveConf(TestSymlinkTextInputFormat.class);
+    hiveConf.set("fs.default.name", "file:///");
 
     HiveConf.setBoolVar(hiveConf, HiveConf.ConfVars.HIVE_REWORK_MAPREDWORK, true);
     HiveConf.setBoolVar(hiveConf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);

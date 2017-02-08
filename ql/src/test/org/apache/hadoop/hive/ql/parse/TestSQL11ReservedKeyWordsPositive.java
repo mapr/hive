@@ -40,6 +40,7 @@ public class TestSQL11ReservedKeyWordsPositive {
   @BeforeClass
   public static void initialize() {
     conf = new HiveConf(SemanticAnalyzer.class);
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
     SessionState.start(conf);
   }

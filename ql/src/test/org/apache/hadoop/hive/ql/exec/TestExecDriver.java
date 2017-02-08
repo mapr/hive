@@ -83,6 +83,7 @@ public class TestExecDriver extends TestCase {
       conf = new HiveConf(ExecDriver.class);
       conf.setBoolVar(HiveConf.ConfVars.SUBMITVIACHILD, true);
       conf.setBoolVar(HiveConf.ConfVars.SUBMITLOCALTASKVIACHILD, true);
+      conf.set("fs.default.name", "file:///");
 
       SessionState.start(conf);
 

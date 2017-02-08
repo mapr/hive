@@ -49,6 +49,7 @@ public class TestDbTxnManager2 {
 
   @BeforeClass
   public static void setUpClass() throws Exception {
+    conf.set("fs.default.name", "file:///");
     TxnDbUtil.setConfValues(conf);
     conf.setVar(HiveConf.ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
     conf.setBoolVar(HiveConf.ConfVars.HIVEENFORCEBUCKETING, true);

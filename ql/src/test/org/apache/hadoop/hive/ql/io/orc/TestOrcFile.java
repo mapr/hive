@@ -220,6 +220,7 @@ public class TestOrcFile {
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     if(zeroCopy) {
       conf.setBoolean(HiveConf.ConfVars.HIVE_ORC_ZEROCOPY.varname, zeroCopy);
     }

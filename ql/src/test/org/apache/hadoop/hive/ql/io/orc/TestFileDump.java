@@ -58,6 +58,7 @@ public class TestFileDump {
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     testFilePath = new Path("TestFileDump.testDump.orc");
@@ -178,7 +179,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"}, conf);
     System.out.flush();
     System.setOut(origOut);
 
@@ -240,7 +241,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "-d"});
+    FileDump.main(new String[]{testFilePath.toString(), "-d"}, conf);
     System.out.flush();
     System.setOut(origOut);
 
@@ -263,6 +264,7 @@ public class TestFileDump {
     Configuration conf = new Configuration();
     conf.set(HiveConf.ConfVars.HIVE_ORC_ENCODING_STRATEGY.varname, "COMPRESSION");
     conf.setFloat(HiveConf.ConfVars.HIVE_ORC_DICTIONARY_KEY_SIZE_THRESHOLD.varname, 0.49f);
+    conf.set("fs.default.name", "file:///");
     Writer writer = OrcFile.createWriter(fs, testFilePath, conf, inspector,
         100000, CompressionKind.ZLIB, 10000, 1000);
     Random r1 = new Random(1);
@@ -297,7 +299,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"}, conf);
     System.out.flush();
     System.setOut(origOut);
 
@@ -344,7 +346,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=3"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=3"}, conf);
     System.out.flush();
     System.setOut(origOut);
 
@@ -393,7 +395,7 @@ public class TestFileDump {
 
     // replace stdout and run command
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"});
+    FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"}, conf);
     System.out.flush();
     System.setOut(origOut);
 

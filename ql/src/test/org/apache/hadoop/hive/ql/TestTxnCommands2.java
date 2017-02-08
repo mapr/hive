@@ -84,6 +84,7 @@ public class TestTxnCommands2 {
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     hiveConf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, TEST_WAREHOUSE_DIR);
+    hiveConf.set("fs.default.name", "file:///");
     TxnDbUtil.setConfValues(hiveConf);
     hiveConf.setBoolVar(HiveConf.ConfVars.HIVEENFORCEBUCKETING, true);
     TxnDbUtil.prepDb();

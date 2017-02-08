@@ -83,6 +83,7 @@ public class TestHooks {
   }
 
   private static Driver createDriver(HiveConf conf) {
+    conf.set("fs.default.name", "file:///");
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     SessionState.start(conf);
     Driver driver = new Driver(conf);

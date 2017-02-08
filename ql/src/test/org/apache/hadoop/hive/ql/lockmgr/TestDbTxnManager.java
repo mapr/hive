@@ -53,6 +53,7 @@ public class TestDbTxnManager {
   HashSet<WriteEntity> writeEntities;
 
   public TestDbTxnManager() throws Exception {
+    conf.set("fs.default.name", "file:///");
     TxnDbUtil.setConfValues(conf);
     SessionState.start(conf);
     ctx = new Context(conf);
@@ -295,6 +296,7 @@ public class TestDbTxnManager {
 
   @Before
   public void setUp() throws Exception {
+    conf.set("fs.default.name", "file:///");
     TxnDbUtil.prepDb();
     txnMgr = TxnManagerFactory.getTxnManagerFactory().getTxnManager(conf);
     Assert.assertTrue(txnMgr instanceof DbTxnManager);

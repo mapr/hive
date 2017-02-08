@@ -47,6 +47,7 @@ public class TestQBCompact {
   @BeforeClass
   public static void init() throws Exception {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
 
     // Create a table so we can work against it

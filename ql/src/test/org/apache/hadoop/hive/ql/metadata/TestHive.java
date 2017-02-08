@@ -79,7 +79,9 @@ public class TestHive extends TestCase {
     hiveConf = new HiveConf(this.getClass());
     // enable trash so it can be tested
     hiveConf.setFloat("fs.trash.checkpoint.interval", 30);  // FS_TRASH_CHECKPOINT_INTERVAL_KEY (hadoop-2)
-    hiveConf.setFloat("fs.trash.interval", 30);             // FS_TRASH_INTERVAL_KEY (hadoop-2)
+    hiveConf.setFloat("fs.trash.interval", 30);
+    hiveConf.set("fs.default.name", "file:///");
+    // FS_TRASH_INTERVAL_KEY (hadoop-2)
     SessionState.start(hiveConf);
     try {
       hm = Hive.get(hiveConf);
