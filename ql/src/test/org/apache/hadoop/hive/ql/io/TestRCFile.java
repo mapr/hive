@@ -26,11 +26,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -105,6 +101,7 @@ public class TestRCFile {
   @Before
   public void setup() throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     ColumnProjectionUtils.setReadAllColumns(conf);
     fs = FileSystem.getLocal(conf);
     dir = new Path(System.getProperty("test.tmp.dir", ".") + "/mapred");
@@ -391,8 +388,10 @@ public class TestRCFile {
   public void testReadOldFileHeader() throws IOException {
     String[] row = new String[]{"Tester", "Bart", "333 X St.", "Reno", "NV",
                                 "USA"};
+    Path workDir = new Path(System.getProperty("user.dir",
+            "target" + File.separator + "test" + File.separator + "tmp"));
     RCFile.Reader reader =
-      new RCFile.Reader(fs, new Path("src/test/data/rc-file-v0.rc"), conf);
+      new RCFile.Reader(fs, new Path(workDir, "src/test/data/rc-file-v0.rc"), conf);
     LongWritable rowID = new LongWritable();
     BytesRefArrayWritable cols = new BytesRefArrayWritable();
     assertTrue("old file reader first row", reader.next(rowID));

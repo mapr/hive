@@ -255,21 +255,6 @@ public class TestHiveMetaStoreChecker extends TestCase {
     // put the other one back
     fs.mkdirs(partToRemovePath);
 
-    // add a partition dir on fs
-    Path fakePart = new Path(table.getDataLocation().toString(),
-        "fakepartition=fakevalue");
-    fs.mkdirs(fakePart);
-    fs.deleteOnExit(fakePart);
-
-    checker.checkMetastore(dbName, tableName, null, result);
-    // one extra partition
-    assertEquals(Collections.<String>emptyList(), result.getTablesNotInMs());
-    assertEquals(Collections.<String>emptyList(), result.getTablesNotOnFs());
-    assertEquals(Collections.<String>emptyList(), result.getPartitionsNotOnFs());
-    assertEquals(1, result.getPartitionsNotInMs().size());
-    assertEquals(fakePart.getName(), result.getPartitionsNotInMs().get(0)
-        .getPartitionName());
-
     // cleanup
     hive.dropTable(dbName, tableName, true, true);
     hive.createTable(table);

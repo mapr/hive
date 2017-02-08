@@ -83,6 +83,7 @@ public class HCatBaseTest {
     hiveConf.setVar(HiveConf.ConfVars.POSTEXECHOOKS, "");
     hiveConf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     hiveConf.setVar(HiveConf.ConfVars.METASTOREWAREHOUSE, TEST_WAREHOUSE_DIR);
+    hiveConf.set("fs.default.name", "file:///");
 
     if (Shell.WINDOWS) {
       WindowsPathUtil.convertPathsFromWindowsToHdfs(hiveConf);

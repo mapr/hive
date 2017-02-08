@@ -83,6 +83,7 @@ public class TestOrcRecordUpdater {
   public void testWriter() throws Exception {
     Path root = new Path(workDir, "testWriter");
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     // Must use raw local because the checksummer doesn't honor flushes.
     FileSystem fs = FileSystem.getLocal(conf).getRaw();
     ObjectInspector inspector;
@@ -176,12 +177,14 @@ public class TestOrcRecordUpdater {
     assertEquals(6L, updater.getStats().getRowCount());
 
     assertEquals(false, fs.exists(sidePath));
+    fs.delete(root, true);
   }
 
   @Test
   public void testUpdates() throws Exception {
     Path root = new Path(workDir, "testUpdates");
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     FileSystem fs = root.getFileSystem(conf);
     ObjectInspector inspector;
     synchronized (TestOrcFile.class) {
@@ -230,5 +233,6 @@ public class TestOrcRecordUpdater {
     assertEquals(60, OrcRecordUpdater.getRowId(row));
     assertNull(OrcRecordUpdater.getRow(row));
     assertEquals(false, rows.hasNext());
+    fs.delete(root, true);
   }
 }

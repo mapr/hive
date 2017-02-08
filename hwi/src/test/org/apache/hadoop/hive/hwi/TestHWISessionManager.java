@@ -28,11 +28,13 @@ import junit.framework.TestCase;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.history.HiveHistoryViewer;
+import org.junit.Ignore;
 
 /**
  * TestHWISessionManager.
  *
  */
+@Ignore("These tests are hanging")
 public class TestHWISessionManager extends TestCase {
 
   private static String tableName = "test_hwi_table";
@@ -44,6 +46,7 @@ public class TestHWISessionManager extends TestCase {
   public TestHWISessionManager(String name) {
     super(name);
     conf = new HiveConf(TestHWISessionManager.class);
+    conf.set("fs.default.name", "file:///");
     String dataFileDir = conf.get("test.data.files").replace('\\', '/')
         .replace("c:", "");
     dataFilePath = new Path(dataFileDir, "kv1.txt");

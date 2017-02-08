@@ -1,5 +1,3 @@
-
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -65,6 +63,7 @@ public class ThriftCliServiceTestWithCookie {
     port = MetaStoreUtils.findFreePort();
     hiveServer2 = new HiveServer2();
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_AUTH_ENABLED, true);
     // Set the cookie max age to a very low value so that
     // the server sends 401 very frequently

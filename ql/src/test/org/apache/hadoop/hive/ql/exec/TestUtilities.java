@@ -92,7 +92,9 @@ public class TestUtilities extends TestCase {
   public void testgetDbTableName() throws HiveException{
     String tablename;
     String [] dbtab;
-    SessionState.start(new HiveConf(this.getClass()));
+    HiveConf conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
+    SessionState.start(conf);
     String curDefaultdb = SessionState.get().getCurrentDatabase();
 
     //test table without db portion

@@ -54,6 +54,7 @@ public class TestParquetRowGroupFilter extends AbstractTestParquetDirect {
   @Before
   public void initConf() throws Exception {
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
 
   }
 

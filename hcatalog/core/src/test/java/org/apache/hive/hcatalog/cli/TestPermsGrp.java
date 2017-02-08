@@ -97,6 +97,7 @@ public class TestPermsGrp extends TestCase {
     hcatConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hcatConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hcatConf.setTimeVar(HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_TIMEOUT, 60, TimeUnit.SECONDS);
+    hcatConf.set("fs.default.name", "file:///");
     hcatConf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     clientWH = new Warehouse(hcatConf);
     msc = new HiveMetaStoreClient(hcatConf, null);
@@ -195,6 +196,7 @@ public class TestPermsGrp extends TestCase {
   private void callHCatCli(String[] args) {
     List<String> argsList = new ArrayList<String>();
     argsList.add("-Dhive.support.concurrency=false");
+    argsList.add("-Dfs.default.name=file:///");
     argsList.addAll(Arrays.asList(args));
     HCatCli.main(argsList.toArray(new String[]{}));
   }

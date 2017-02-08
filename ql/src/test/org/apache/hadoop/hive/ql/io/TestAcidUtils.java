@@ -184,6 +184,7 @@ public class TestAcidUtils {
   @Test
   public void testBestBase() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     MockFileSystem fs = new MockFileSystem(conf,
         new MockFile("mock:/tbl/part1/base_5/bucket_0", 500, new byte[0]),
         new MockFile("mock:/tbl/part1/base_10/bucket_0", 500, new byte[0]),

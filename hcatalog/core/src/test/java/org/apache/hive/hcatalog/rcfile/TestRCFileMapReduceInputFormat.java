@@ -69,6 +69,7 @@ public class TestRCFileMapReduceInputFormat extends TestCase {
 
   static {
     try {
+      conf.set("fs.default.name", "file:///");
       fs = FileSystem.getLocal(conf);
       Path dir = new Path(System.getProperty("test.tmp.dir", ".") + "/mapred");
       file = new Path(dir, "test_rcfile");

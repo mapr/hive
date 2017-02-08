@@ -50,6 +50,7 @@
     <module>spark-client</module>
     <module>testutils</module>
     <module>packaging</module>
+    <module>mapr-mini-cluster</module>
   </modules>
 
   <properties>
@@ -123,7 +124,7 @@
     <groovy.version>2.1.6</groovy.version>
     <hadoop-20S.version>1.2.1</hadoop-20S.version>
     <!-- hadoop-23.version>2.6.0</hadoop-23.version-->
-    <hadoop-23.version>2.7.0-mapr-1506</hadoop-23.version>
+    <hadoop-23.version>2.7.0-mapr-1607</hadoop-23.version>
     <hadoop.bin.path>${basedir}/${hive.path.to.root}/testutils/hadoop</hadoop.bin.path>
     <hbase.hadoop1.version>0.98.9-hadoop1</hbase.hadoop1.version>
     <hbase.hadoop2.version>0.98.9-hadoop2</hbase.hadoop2.version>

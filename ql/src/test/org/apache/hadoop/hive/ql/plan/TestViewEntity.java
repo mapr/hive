@@ -59,6 +59,7 @@ public class TestViewEntity {
   @BeforeClass
   public static void onetimeSetup() throws Exception {
     HiveConf conf = new HiveConf(Driver.class);
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK,
         CheckInputReadEntity.class.getName());
     HiveConf

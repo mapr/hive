@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.util.StringUtils;
+import com.google.common.annotations.VisibleForTesting;
 
 import javax.sql.DataSource;
 
@@ -2015,5 +2016,10 @@ public class TxnHandler {
   }
   private static String getMessage(SQLException ex) {
     return ex.getMessage() + "(SQLState=" + ex.getSQLState() + ",ErrorCode=" + ex.getErrorCode() + ")";
+  }
+
+  @VisibleForTesting
+  public static void cleanUpConnPool() {
+    connPool = null;
   }
 }

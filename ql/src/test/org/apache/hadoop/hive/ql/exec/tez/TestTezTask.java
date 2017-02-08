@@ -160,9 +160,14 @@ public class TestTezTask {
     task.setConsole(mock(LogHelper.class));
 
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
+
     appLr = mock(LocalResource.class);
 
-    SessionState.start(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
+
+    SessionState.start(hiveConf);
     session = mock(TezClient.class);
     sessionState = mock(TezSessionState.class);
     when(sessionState.getSession()).thenReturn(session);

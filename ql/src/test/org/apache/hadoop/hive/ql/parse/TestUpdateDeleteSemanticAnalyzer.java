@@ -224,6 +224,7 @@ public class TestUpdateDeleteSemanticAnalyzer {
     conf = new HiveConf();
     conf.setVar(HiveConf.ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
     conf.setVar(HiveConf.ConfVars.HIVE_TXN_MANAGER, "org.apache.hadoop.hive.ql.lockmgr.DbTxnManager");
+    conf.set("fs.default.name", "file:///");
   }
 
   public void cleanupTables() throws HiveException {

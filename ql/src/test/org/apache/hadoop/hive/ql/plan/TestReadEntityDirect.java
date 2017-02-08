@@ -178,6 +178,7 @@ public class TestReadEntityDirect {
    */
   private static Driver createDriver() {
     HiveConf conf = new HiveConf(Driver.class);
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK,
         CheckInputReadEntityDirect.class.getName());
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);

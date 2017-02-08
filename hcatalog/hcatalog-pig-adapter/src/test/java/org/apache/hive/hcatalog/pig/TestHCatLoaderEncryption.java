@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import org.junit.Ignore;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,6 +83,7 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class TestHCatLoaderEncryption {
   private static final Logger LOG = LoggerFactory.getLogger(TestHCatLoader.class);
@@ -179,6 +181,7 @@ public class TestHCatLoaderEncryption {
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     hiveConf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, TEST_WAREHOUSE_DIR);
+    hiveConf.set("fs.default.name", "file:///");
 
     if (Shell.WINDOWS) {
       WindowsPathUtil.convertPathsFromWindowsToHdfs(hiveConf);

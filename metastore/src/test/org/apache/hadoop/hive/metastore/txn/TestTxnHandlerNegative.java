@@ -35,6 +35,7 @@ public class TestTxnHandlerNegative {
   public void testBadConnection() throws Exception {
     HiveConf conf = new HiveConf();
     conf.setVar(HiveConf.ConfVars.METASTORECONNECTURLKEY, "blah");
+    TxnHandler.cleanUpConnPool();
     TxnHandler txnHandler1 = new TxnHandler(conf);
     MetaException e = null;
     try {

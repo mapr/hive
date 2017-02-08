@@ -43,6 +43,7 @@ public class TestPrivilegesV2 extends PrivilegesTestBase{
     //set authorization mode to V2
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         SQLStdHiveAuthorizerFactory.class.getName());
+    conf.set("fs.default.name", "file:///");
     db = Mockito.mock(Hive.class);
     table = new Table(DB, TABLE);
     SessionState.start(conf);

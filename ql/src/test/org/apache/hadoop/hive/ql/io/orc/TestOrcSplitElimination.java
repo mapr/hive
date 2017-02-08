@@ -91,6 +91,7 @@ public class TestOrcSplitElimination {
     conf.set(ColumnProjectionUtils.READ_ALL_COLUMNS, "false");
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0,2");
     conf.set(ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR, "userid,subtype");
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
         testCaseName.getMethodName() + ".orc");

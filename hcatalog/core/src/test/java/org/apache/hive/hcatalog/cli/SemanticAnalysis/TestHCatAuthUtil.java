@@ -55,6 +55,7 @@ public class TestHCatAuthUtil {
   public void authEnabledV1Auth() throws Exception {
     HiveConf hcatConf = new HiveConf(this.getClass());
     hcatConf.setBoolVar(ConfVars.HIVE_AUTHORIZATION_ENABLED, true);
+    hcatConf.set("fs.default.name", "file:///");
     SessionState.start(hcatConf);
     assertTrue("hcat auth should be enabled", HCatAuthUtil.isAuthorizationEnabled(hcatConf));
   }
@@ -67,6 +68,7 @@ public class TestHCatAuthUtil {
     HiveConf hcatConf = new HiveConf(this.getClass());
     hcatConf.setBoolVar(ConfVars.HIVE_AUTHORIZATION_ENABLED, true);
     hcatConf.setVar(ConfVars.HIVE_AUTHORIZATION_MANAGER, DummyV2AuthorizerFactory.class.getName());
+    hcatConf.set("fs.default.name", "file:///");
     SessionState.start(hcatConf);
     assertFalse("hcat auth should be disabled", HCatAuthUtil.isAuthorizationEnabled(hcatConf));
   }
@@ -78,6 +80,7 @@ public class TestHCatAuthUtil {
   public void authDisabled() throws Exception {
     HiveConf hcatConf = new HiveConf(this.getClass());
     hcatConf.setBoolVar(ConfVars.HIVE_AUTHORIZATION_ENABLED, false);
+    hcatConf.set("fs.default.name", "file:///");
     SessionState.start(hcatConf);
     assertFalse("hcat auth should be disabled", HCatAuthUtil.isAuthorizationEnabled(hcatConf));
   }

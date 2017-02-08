@@ -46,7 +46,7 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.apache.hadoop.hive.hbase.avro.Address;
 import org.apache.hadoop.hive.hbase.avro.ContactInfo;
 import org.apache.hadoop.hive.hbase.avro.Employee;
@@ -1251,18 +1251,19 @@ public class TestHBaseSerDe extends TestCase {
 
     Object[] expectedFieldsData = {new String("test-row1"), new String("[[42, true, 42432234234]]")};
 
-    MiniDFSCluster miniDfs = null;
+    MapRMiniDFSCluster miniDfs = null;
 
     try {
       // MiniDFSCluster litters files and folders all over the place.
-      miniDfs = new MiniDFSCluster(new Configuration(), 1, true, null);
+      miniDfs = new MapRMiniDFSCluster();
 
-      miniDfs.getFileSystem().mkdirs(new Path("/path/to/schema"));
+      miniDfs.getFileSystem().mkdirs(new Path(miniDfs.getWorkDir() + "/path/to/schema"));
       FSDataOutputStream out = miniDfs.getFileSystem().create(
-          new Path("/path/to/schema/schema.avsc"));
+          new Path(miniDfs.getWorkDir() + "/path/to/schema/schema.avsc"));
       out.writeBytes(RECORD_SCHEMA);
       out.close();
-      String onHDFS = miniDfs.getFileSystem().getUri() + "/path/to/schema/schema.avsc";
+      String onHDFS = miniDfs.getFileSystem().getUri() + miniDfs.getWorkDir().toString()
+              + "/path/to/schema/schema.avsc";
 
       // Create, initialize, and test the SerDe
       HBaseSerDe serDe = new HBaseSerDe();

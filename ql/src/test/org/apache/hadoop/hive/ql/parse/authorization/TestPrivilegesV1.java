@@ -41,6 +41,7 @@ public class TestPrivilegesV1 extends PrivilegesTestBase{
   @Before
   public void setup() throws Exception {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     db = Mockito.mock(Hive.class);
     table = new Table(DB, TABLE);
     partition = new Partition(table);

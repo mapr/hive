@@ -97,6 +97,7 @@ public class TestSessionUserName {
    */
   private HiveConf getAuthV2HiveConf() {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         HiveAuthorizerStoringUserNameFactory.class.getName());
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHENTICATOR_MANAGER,
