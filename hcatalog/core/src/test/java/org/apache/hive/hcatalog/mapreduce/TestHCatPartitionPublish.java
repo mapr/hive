@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import junit.framework.Assert;
 
 import org.apache.hadoop.conf.Configuration;
@@ -66,6 +65,7 @@ import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 
 public class TestHCatPartitionPublish {
   private static Configuration mrConf = null;
