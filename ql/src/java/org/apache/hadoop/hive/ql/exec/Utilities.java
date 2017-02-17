@@ -408,7 +408,14 @@ public final class Utilities {
           in = new InflaterInputStream(in);
         } else {
           LOG.debug("Open file to read in plan: " + localPath);
-          in = localPath.getFileSystem(conf).open(localPath);
+          FileSystem fs = localPath.getFileSystem(conf);
+          if(fs.exists(localPath)) {
+            in = fs.open(localPath);
+          } else {
+            // happens. e.g.: no reduce work.
+            LOG.info("No plan file found: " + path);
+            return null;
+          }
         }
 
         if(MAP_PLAN_NAME.equals(name)){
