@@ -163,6 +163,13 @@ public class Hive {
     }
   };
 
+
+  // Note that while this is an improvement over static initialization, it is still not,
+  // technically, valid, cause nothing prevents us from connecting to several metastores in
+  // the same process. This will still only get the functions from the first metastore.
+  private final static AtomicInteger didRegisterAllFuncs = new AtomicInteger(0);
+  private final static int REG_FUNCS_NO = 0, REG_FUNCS_DONE = 2, REG_FUNCS_PENDING = 1;
+
   // register all permanent functions. need improvement
   static {
     try {
@@ -171,12 +178,6 @@ public class Hive {
       LOG.warn("Failed to access metastore. This class should not accessed in runtime.",e);
     }
   }
-
-  // Note that while this is an improvement over static initialization, it is still not,
-  // technically, valid, cause nothing prevents us from connecting to several metastores in
-  // the same process. This will still only get the functions from the first metastore.
-  private final static AtomicInteger didRegisterAllFuncs = new AtomicInteger(0);
-  private final static int REG_FUNCS_NO = 0, REG_FUNCS_DONE = 2, REG_FUNCS_PENDING = 1;
 
   // register all permanent functions. need improvement
   private static void registerAllFunctionsOnce() throws HiveException {
