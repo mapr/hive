@@ -24,6 +24,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -303,11 +306,18 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
     // it
     String auxJars = HiveConf.getVar(job, HiveConf.ConfVars.HIVEAUXJARS);
     String addedJars = HiveConf.getVar(job, HiveConf.ConfVars.HIVEADDEDJARS);
-    if (StringUtils.isNotBlank(auxJars) || StringUtils.isNotBlank(addedJars)) {
+    String libJars = configureAdditionalJars(job);
+    if (StringUtils.isNotBlank(auxJars) || StringUtils.isNotBlank(addedJars) || StringUtils.isNotBlank(libJars)) {
       String allJars = StringUtils.isNotBlank(auxJars) ? (StringUtils.isNotBlank(addedJars) ? addedJars
           + "," + auxJars
           : auxJars)
           : addedJars;
+      if (StringUtils.isNotBlank(libJars)) {
+          if (StringUtils.isNotBlank(allJars)) {
+            allJars += ",";
+          }
+        allJars += libJars;
+      }
       LOG.info("adding libjars: " + allJars);
       initializeFiles("tmpjars", allJars);
     }
@@ -498,6 +508,39 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
     return (returnVal);
   }
 
+  private String configureAdditionalJars(JobConf job) {
+
+    URLClassLoader classLoader = (URLClassLoader) StringEscapeUtils.class.getClassLoader();
+    URL[] urls = (classLoader).getURLs();
+
+    String patternMatch = "(.*)commons-lang3(.*)\\d\\.\\d(.*)";
+    String  resultPath = "";
+
+    boolean first = true;
+    for(URL url : urls){
+      String pathToFile = url.getFile();
+      if(hasJarPath(pathToFile, patternMatch)){
+        if(first){
+          resultPath += "file://"  + findJarPath(pathToFile, patternMatch);
+          first = false;
+        }
+      }
+    }
+
+    if (!resultPath.isEmpty()) {
+      return resultPath;
+    }
+    return "";
+  }
+
+  private String findJarPath(String pathToJar, String patternMatch) {
+    return pathToJar.matches(patternMatch)? pathToJar : "";
+  }
+
+  private static boolean hasJarPath(String pathToJar, String patternMatch) {
+    return pathToJar.matches(patternMatch);
+  }
+  
   private void handleSampling(DriverContext context, MapWork mWork, JobConf job, HiveConf conf)
       throws Exception {
     assert mWork.getAliasToWork().keySet().size() == 1;
