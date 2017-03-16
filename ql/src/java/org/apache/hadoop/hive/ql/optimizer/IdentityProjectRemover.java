@@ -34,6 +34,9 @@ import org.apache.hadoop.hive.ql.exec.LateralViewForwardOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
+import org.apache.hadoop.hive.ql.exec.RowSchema;
+import org.apache.hadoop.hive.ql.exec.CommonJoinOperator;
+import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.GraphWalker;
@@ -96,7 +99,7 @@ public class IdentityProjectRemover implements Transform {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
-    	
+
       SelectOperator sel = (SelectOperator)nd;
       List<Operator<? extends OperatorDesc>> parents = sel.getParentOperators();
       if (parents.size() != 1 || parents.get(0) instanceof LateralViewForwardOperator) {
@@ -111,11 +114,68 @@ public class IdentityProjectRemover implements Transform {
         // For RS-SEL-RS case. reducer operator in reducer task cannot be null in task compiler
         return null;
       }
+      if(!isCanBeRemoved((sel))) {
+        return null;
+      }
       if(sel.isIdentitySelect()) {
         parent.removeChildAndAdoptItsChildren(sel);
         LOG.debug("Identity project remover optimization removed : " + sel);
       }
       return null;
+    }
+
+    /**
+     * If tree branch contains join with the different schema then we should not remove this select operator.
+     * @param sel current select operator
+     * @return    true or false
+     *
+     */
+    private boolean isCanBeRemoved(SelectOperator sel) {
+      CommonJoinOperator join = getParentJoin(sel.getParentOperators().get(0));
+
+      if(join == null) {
+        return true;
+      }
+      RowSchema orig = sel.getSchema();
+      RowSchema dest = join.getSchema();
+      if(orig.getSignature().size() != dest.getSignature().size()) {
+        return false;
+      }
+
+      for(int i=0; i<orig.getSignature().size(); i++) {
+        ColumnInfo origColumn = orig.getSignature().get(i);
+        ColumnInfo destColumn = dest.getSignature().get(i);
+
+        if (origColumn == null && destColumn == null) {
+          continue;
+        }
+
+        if ((origColumn == null && destColumn != null) ||
+                (origColumn != null && destColumn == null)) {
+          return false;
+        }
+
+        if (!origColumn.internalEquals(destColumn)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /**
+     * Try to find parent Join operator
+     * @param op Operator
+     * @return   Join operator if it exist
+     */
+    private CommonJoinOperator getParentJoin(Operator op) {
+      CommonJoinOperator result;
+      if (op instanceof CommonJoinOperator) {
+        result = (CommonJoinOperator) op;
+      } else {
+        result = op.getParentOperators().size() != 1 ||
+                op instanceof SelectOperator ? null : getParentJoin((Operator) op.getParentOperators().get(0));
+      }
+      return result;
     }
   }
 }
