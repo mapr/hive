@@ -286,7 +286,7 @@ public class ObjectStore implements RawStore, Configurable {
 
       String partitionValidationRegex =
           hiveConf.get(HiveConf.ConfVars.METASTORE_PARTITION_NAME_WHITELIST_PATTERN.name());
-      if (partitionValidationRegex != null && partitionValidationRegex.equals("")) {
+      if (partitionValidationRegex != null && !partitionValidationRegex.isEmpty()) {
         partitionValidationPattern = Pattern.compile(partitionValidationRegex);
       } else {
         partitionValidationPattern = null;

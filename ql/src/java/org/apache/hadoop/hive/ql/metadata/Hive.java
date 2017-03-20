@@ -1600,7 +1600,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
           LinkedHashMap<Map<String, String>, Partition>();
 
       FileSystem fs = loadPath.getFileSystem(conf);
-      FileStatus[] leafStatus = HiveStatsUtils.getFileStatusRecurse(loadPath, numDP+1, fs);
+      FileStatus[] leafStatus = HiveStatsUtils.getFileStatusRecurse(loadPath, numDP, fs);
       // Check for empty partitions
       for (FileStatus s : leafStatus) {
         // Check if the hadoop version supports sub-directories for tables/partitions
@@ -1609,13 +1609,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
           // No leaves in this directory
           LOG.info("NOT moving empty directory: " + s.getPath());
         } else {
-          try {
-            validatePartitionNameCharacters(
-                Warehouse.getPartValuesFromPartName(s.getPath().getParent().toString()));
-          } catch (MetaException e) {
-            throw new HiveException(e);
-          }
-          validPartitions.add(s.getPath().getParent());
+          validPartitions.add(s.getPath());
         }
       }
 
