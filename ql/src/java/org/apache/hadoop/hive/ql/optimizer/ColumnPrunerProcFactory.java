@@ -774,11 +774,13 @@ public final class ColumnPrunerProcFactory {
         ArrayList<String> newOutputColumnNames = new ArrayList<String>();
         ArrayList<ColumnInfo> rs_oldsignature = op.getSchema().getSignature();
         ArrayList<ColumnInfo> rs_newsignature = new ArrayList<ColumnInfo>();
-        for (String col : cols) {
-          int index = originalOutputColumnNames.indexOf(col);
-          newOutputColumnNames.add(col);
-          newColList.add(originalColList.get(index));
-          rs_newsignature.add(rs_oldsignature.get(index));
+        for (int index = 0; index <originalOutputColumnNames.size(); index ++) {
+          String col = originalOutputColumnNames.get(index);
+          if(cols.contains(col)) {
+            newOutputColumnNames.add(col);
+            newColList.add(originalColList.get(index));
+            rs_newsignature.add(rs_oldsignature.get(index));
+          }
         }
         op.getSchema().setSignature(rs_newsignature);
         conf.setColList(newColList);
