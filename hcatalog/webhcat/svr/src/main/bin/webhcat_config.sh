@@ -134,6 +134,7 @@ elif [ ! -f ${HADOOP_PREFIX}/bin/hadoop ]; then
   echo "${this}: Hadoop not found."
   exit 1
 fi
+export BASEMAPR=${MAPR_HOME:-/opt/mapr}
 
 #get the yarn version
 if [ -f $BASEMAPR/conf/hadoop_version ];then
