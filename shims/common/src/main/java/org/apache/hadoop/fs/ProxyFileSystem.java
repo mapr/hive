@@ -174,7 +174,9 @@ public class ProxyFileSystem extends FilterFileSystem {
 
   @Override
   public boolean rename(Path src, Path dst) throws IOException {
-    return super.rename(swizzleParamPath(src), swizzleParamPath(dst));
+    Path dest = swizzleParamPath(dst);
+    // Make sure for existing destination we return false as per FileSystem api contract
+    return super.isFile(dest) ? false : super.rename(swizzleParamPath(src), dest);
   }
 
   @Override

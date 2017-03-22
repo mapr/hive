@@ -1970,6 +1970,8 @@ public class HiveConf extends Configuration {
         "hive.security.authenticator.manager,hive.security.authorization.manager,hive.users.in.admin.role",
         "Comma separated list of configuration options which are immutable at runtime"),
 
+     HIVE_MOVE_FILES_THREAD_COUNT("hive.mv.files.thread", 25, "Number of threads"
+         + " used to move files in move task"),
     // If this is set all move tasks at the end of a multi-insert query will only begin once all
     // outputs are ready
     HIVE_MULTI_INSERT_MOVE_TASKS_SHARE_DEPENDENCIES(
