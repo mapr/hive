@@ -45,6 +45,28 @@ function get_canonical_dir() {
   echo $ret
 }
 
+function find_spark_assembly_path(){
+local SPARK_HOME="$1"
+
+# Use script spark-jars.sh to find SPARK_ASSEMBLY_PATH
+if [ -f "$SPARK_HOME/conf/spark-jars.sh" ] ; then
+  source "$SPARK_HOME/conf/spark-jars.sh"
+  SPARK_ASSEMBLY_PATH="$SPARK_JARS_CLASSPATH"
+fi
+
+# for Spark-1.6.X
+if [ -d "$SPARK_HOME/lib" ] ; then
+  SPARK_ASSEMBLY_PATH=$(ls ${SPARK_HOME}/lib/spark-assembly-*.jar)
+fi
+
+# for Spark-2.X.X +
+if [ -d "$SPARK_HOME/jars" ] ; then
+  SPARK_ASSEMBLY_PATH="${SPARK_HOME}/jars/*"
+fi
+
+echo "$SPARK_ASSEMBLY_PATH"
+}
+
 bin=$(get_canonical_dir "$0")
 
 bin=`cd "$bin"; pwd`
@@ -203,7 +225,7 @@ fi
 # add Spark assembly jar to the classpath
 if [[ -n "$SPARK_HOME" ]]
 then
-  sparkAssemblyPath=`ls ${SPARK_HOME}/lib/spark-assembly-*.jar`
+  sparkAssemblyPath=$(find_spark_assembly_path "$SPARK_HOME")
   CLASSPATH="${CLASSPATH}:${sparkAssemblyPath}"
 fi
 
