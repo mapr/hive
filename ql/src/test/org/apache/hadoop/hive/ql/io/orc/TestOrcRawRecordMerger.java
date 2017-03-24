@@ -19,8 +19,9 @@
 package org.apache.hadoop.hive.ql.io.orc;
 
 import org.apache.orc.CompressionKind;
-import org.apache.orc.impl.MemoryManager;
+import org.apache.orc.MemoryManager;
 import org.apache.orc.StripeInformation;
+import org.apache.orc.impl.MemoryManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -856,7 +857,7 @@ public class TestOrcRawRecordMerger {
     }
 
     // write the base
-    MemoryManager mgr = new MemoryManager(conf){
+    MemoryManager mgr = new MemoryManagerImpl(conf){
       int rowsAddedSinceCheck = 0;
 
       @Override
@@ -960,7 +961,7 @@ public class TestOrcRawRecordMerger {
     }
 
     // write the base
-    MemoryManager mgr = new MemoryManager(conf){
+    MemoryManager mgr = new MemoryManagerImpl(conf){
       int rowsAddedSinceCheck = 0;
 
       @Override

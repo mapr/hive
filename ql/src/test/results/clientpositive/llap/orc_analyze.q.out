@@ -102,11 +102,11 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	100                 
 	rawDataSize         	52600               
-	totalSize           	3197
+	totalSize           	3200
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -150,11 +150,11 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	100                 
 	rawDataSize         	52600               
-	totalSize           	3197
+	totalSize           	3200
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -198,11 +198,11 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	100                 
 	rawDataSize         	52600               
-	totalSize           	3197
+	totalSize           	3200
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -287,11 +287,11 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	100                 
 	rawDataSize         	52600               
-	totalSize           	3197
+	totalSize           	3200
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -401,7 +401,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -444,11 +444,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	22050               
-	totalSize           	2113
+	totalSize           	2114
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -499,7 +499,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -542,11 +542,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	22050               
-	totalSize           	2113
+	totalSize           	2114
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -597,7 +597,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -640,11 +640,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	22050               
-	totalSize           	2113
+	totalSize           	2114
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -740,7 +740,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -783,11 +783,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	22050               
-	totalSize           	2113
+	totalSize           	2114
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -903,11 +903,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	21975
-	totalSize           	5259                
+	totalSize           	5260
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -946,11 +946,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	22043
-	totalSize           	5326                
+	totalSize           	5331
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1001,11 +1001,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	21975
-	totalSize           	5259                
+	totalSize           	5260
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1044,11 +1044,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	22043
-	totalSize           	5326                
+	totalSize           	5331
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1099,11 +1099,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	21975
-	totalSize           	5259                
+	totalSize           	5260
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1142,11 +1142,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	22043
-	totalSize           	5326                
+	totalSize           	5331
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1248,11 +1248,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	21975
-	totalSize           	5259                
+	totalSize           	5260
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1291,11 +1291,11 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
-	numFiles            	1                   
+	COLUMN_STATS_ACCURATE	true
+	numFiles            	1
 	numRows             	50                  
 	rawDataSize         	22043
-	totalSize           	5326                
+	totalSize           	5331
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1456,7 +1456,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -1467,50 +1467,50 @@ Partition Parameters:
 SerDe Library:      	org.apache.hadoop.hive.ql.io.orc.OrcSerde	 
 InputFormat:        	org.apache.hadoop.hive.ql.io.orc.OrcInputFormat	 
 OutputFormat:       	org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat	 
-Compressed:         	No                  	 
-Num Buckets:        	-1                  	 
-Bucket Columns:     	[]                  	 
-Sort Columns:       	[]                  	 
-Storage Desc Params:	 	 
-	serialization.format	1                   
+Compressed:         	No
+Num Buckets:        	-1
+Bucket Columns:     	[]
+Sort Columns:       	[]
+Storage Desc Params:
+	serialization.format	1
 PREHOOK: query: desc formatted orc_create_people partition(state="OH")
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@orc_create_people
 POSTHOOK: query: desc formatted orc_create_people partition(state="OH")
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@orc_create_people
-# col_name            	data_type           	comment             
-	 	 
-id                  	int                 	                    
-first_name          	string              	                    
-last_name           	string              	                    
-address             	string              	                    
-salary              	decimal(10,0)       	                    
-start_date          	timestamp           	                    
-	 	 
-# Partition Information	 	 
-# col_name            	data_type           	comment             
-	 	 
-state               	string              	                    
-	 	 
-# Detailed Partition Information	 	 
-Partition Value:    	[OH]                	 
-Database:           	default             	 
-Table:              	orc_create_people   	 
+# col_name            	data_type           	comment
+
+id                  	int
+first_name          	string
+last_name           	string
+address             	string
+salary              	decimal(10,0)
+start_date          	timestamp
+
+# Partition Information
+# col_name            	data_type           	comment
+
+state               	string
+
+# Detailed Partition Information
+Partition Value:    	[OH]
+Database:           	default
+Table:              	orc_create_people
 #### A masked pattern was here ####
-Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	false               
-	numFiles            	1                   
-	numRows             	-1                  
-	rawDataSize         	-1                  
-	totalSize           	5812                
+Partition Parameters:
+	COLUMN_STATS_ACCURATE	false
+	numFiles            	1
+	numRows             	-1
+	rawDataSize         	-1
+	totalSize           	5812
 #### A masked pattern was here ####
-	 	 
-# Storage Information	 	 
-SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
-InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
-OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat	 
-Compressed:         	No                  	 
+
+# Storage Information
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat
+OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
+Compressed:         	No
 Num Buckets:        	-1                  	 
 Bucket Columns:     	[]                  	 
 Sort Columns:       	[]                  	 
@@ -1556,7 +1556,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -1567,50 +1567,50 @@ Partition Parameters:
 SerDe Library:      	org.apache.hadoop.hive.ql.io.orc.OrcSerde	 
 InputFormat:        	org.apache.hadoop.hive.ql.io.orc.OrcInputFormat	 
 OutputFormat:       	org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat	 
-Compressed:         	No                  	 
-Num Buckets:        	-1                  	 
-Bucket Columns:     	[]                  	 
-Sort Columns:       	[]                  	 
-Storage Desc Params:	 	 
-	serialization.format	1                   
+Compressed:         	No
+Num Buckets:        	-1
+Bucket Columns:     	[]
+Sort Columns:       	[]
+Storage Desc Params:
+	serialization.format	1
 PREHOOK: query: desc formatted orc_create_people partition(state="OH")
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@orc_create_people
 POSTHOOK: query: desc formatted orc_create_people partition(state="OH")
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@orc_create_people
-# col_name            	data_type           	comment             
-	 	 
-id                  	int                 	                    
-first_name          	string              	                    
-last_name           	string              	                    
-address             	string              	                    
-salary              	decimal(10,0)       	                    
-start_date          	timestamp           	                    
-	 	 
-# Partition Information	 	 
-# col_name            	data_type           	comment             
-	 	 
-state               	string              	                    
-	 	 
-# Detailed Partition Information	 	 
-Partition Value:    	[OH]                	 
-Database:           	default             	 
-Table:              	orc_create_people   	 
+# col_name            	data_type           	comment
+
+id                  	int
+first_name          	string
+last_name           	string
+address             	string
+salary              	decimal(10,0)
+start_date          	timestamp
+
+# Partition Information
+# col_name            	data_type           	comment
+
+state               	string
+
+# Detailed Partition Information
+Partition Value:    	[OH]
+Database:           	default
+Table:              	orc_create_people
 #### A masked pattern was here ####
-Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	false               
-	numFiles            	1                   
-	numRows             	-1                  
-	rawDataSize         	-1                  
-	totalSize           	5812                
+Partition Parameters:
+	COLUMN_STATS_ACCURATE	false
+	numFiles            	1
+	numRows             	-1
+	rawDataSize         	-1
+	totalSize           	5812
 #### A masked pattern was here ####
-	 	 
-# Storage Information	 	 
-SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
-InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
-OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat	 
-Compressed:         	No                  	 
+
+# Storage Information
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat
+OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
+Compressed:         	No
 Num Buckets:        	-1                  	 
 Bucket Columns:     	[]                  	 
 Sort Columns:       	[]                  	 
@@ -1656,7 +1656,7 @@ Database:           	default
 Table:              	orc_create_people   	 
 #### A masked pattern was here ####
 Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	true                
+	COLUMN_STATS_ACCURATE	true
 	numFiles            	1                   
 	numRows             	50                  
 	rawDataSize         	21950               
@@ -1667,50 +1667,50 @@ Partition Parameters:
 SerDe Library:      	org.apache.hadoop.hive.ql.io.orc.OrcSerde	 
 InputFormat:        	org.apache.hadoop.hive.ql.io.orc.OrcInputFormat	 
 OutputFormat:       	org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat	 
-Compressed:         	No                  	 
-Num Buckets:        	-1                  	 
-Bucket Columns:     	[]                  	 
-Sort Columns:       	[]                  	 
-Storage Desc Params:	 	 
-	serialization.format	1                   
+Compressed:         	No
+Num Buckets:        	-1
+Bucket Columns:     	[]
+Sort Columns:       	[]
+Storage Desc Params:
+	serialization.format	1
 PREHOOK: query: desc formatted orc_create_people partition(state="OH")
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@orc_create_people
 POSTHOOK: query: desc formatted orc_create_people partition(state="OH")
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@orc_create_people
-# col_name            	data_type           	comment             
-	 	 
-id                  	int                 	                    
-first_name          	string              	                    
-last_name           	string              	                    
-address             	string              	                    
-salary              	decimal(10,0)       	                    
-start_date          	timestamp           	                    
-	 	 
-# Partition Information	 	 
-# col_name            	data_type           	comment             
-	 	 
-state               	string              	                    
-	 	 
-# Detailed Partition Information	 	 
-Partition Value:    	[OH]                	 
-Database:           	default             	 
-Table:              	orc_create_people   	 
+# col_name            	data_type           	comment
+
+id                  	int
+first_name          	string
+last_name           	string
+address             	string
+salary              	decimal(10,0)
+start_date          	timestamp
+
+# Partition Information
+# col_name            	data_type           	comment
+
+state               	string
+
+# Detailed Partition Information
+Partition Value:    	[OH]
+Database:           	default
+Table:              	orc_create_people
 #### A masked pattern was here ####
-Partition Parameters:	 	 
-	COLUMN_STATS_ACCURATE	false               
-	numFiles            	1                   
-	numRows             	-1                  
-	rawDataSize         	-1                  
-	totalSize           	5812                
+Partition Parameters:
+	COLUMN_STATS_ACCURATE	false
+	numFiles            	1
+	numRows             	-1
+	rawDataSize         	-1
+	totalSize           	5812
 #### A masked pattern was here ####
-	 	 
-# Storage Information	 	 
-SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
-InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
-OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat	 
-Compressed:         	No                  	 
+
+# Storage Information
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat
+OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
+Compressed:         	No
 Num Buckets:        	-1                  	 
 Bucket Columns:     	[]                  	 
 Sort Columns:       	[]                  	 
