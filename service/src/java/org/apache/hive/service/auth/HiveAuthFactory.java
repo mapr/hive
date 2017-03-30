@@ -127,8 +127,7 @@ public class HiveAuthFactory {
       // Start delegation token manager
       delegationTokenManager = new HiveDelegationTokenManager();
       try {
-          // rawStore is only necessary for DBTokenStore
-          Object rawStore = null;
+        Object baseHandler = null;
         String tokenStoreClass = conf.getVar(HiveConf.ConfVars.METASTORE_CLUSTER_DELEGATION_TOKEN_STORE_CLS);
 
         if (tokenStoreClass.equals(DBTokenStore.class.getName())) {
@@ -140,15 +139,13 @@ public class HiveAuthFactory {
           // Note: there will be two HS2 life-long opened MSCs, one is stored in HS2 thread local
           // Hive object, the other is in a daemon thread spawned in DelegationTokenSecretManager
           // to remove expired tokens.
-          HMSHandler baseHandler = new HiveMetaStore.HMSHandler(
-                  "new db based metaserver", conf, true);
-          rawStore = baseHandler.getMS();
+          baseHandler = Hive.class;
         }
 
-        delegationTokenManager.startDelegationTokenSecretManager(conf, rawStore, ServerMode.HIVESERVER2);
+        delegationTokenManager.startDelegationTokenSecretManager(conf, baseHandler, ServerMode.HIVESERVER2);
         saslServer.setSecretManager(delegationTokenManager.getSecretManager());
       }
-      catch (MetaException | IOException e) {
+      catch (IOException e) {
         throw new TTransportException("Failed to start token manager", e);
       }
     }
