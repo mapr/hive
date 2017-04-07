@@ -27,6 +27,7 @@ import org.junit.Assert;
 public class TestEmbeddedLockManager extends TestCase {
 
   private int counter;
+  private HiveConf conf = new HiveConf();
 
   public void testLocking() throws LockException {
     HiveConf conf = new HiveConf();
@@ -120,7 +121,8 @@ public class TestEmbeddedLockManager extends TestCase {
   }
 
   private HiveLockObject lockObj(String path, String query) {
-    HiveLockObjectData data = new HiveLockObjectData(String.valueOf(++counter), null, null, query);
+    HiveLockObjectData data = new HiveLockObjectData(String.valueOf(++counter), null, null,
+        query, conf);
     return new HiveLockObject(path.split("/"), data);
   }
 }

@@ -64,7 +64,7 @@ public class TestZookeeperLockManager {
   public void setup() {
     conf = new HiveConf();
     conf.set("fs.default.name", "file:///");
-    lockObjData = new HiveLockObjectData("1", "10", "SHARED", "show tables");
+    lockObjData = new HiveLockObjectData("1", "10", "SHARED", "show tables", conf);
     System.setProperty("java.security.auth.login.config", HiveTestUtils.getFileFromClasspath("mapr.login.conf"));
     hiveLock = new HiveLockObject(TABLE, lockObjData);
     zLock = new ZooKeeperHiveLock(TABLE_LOCK_PATH, hiveLock, HiveLockMode.SHARED);
