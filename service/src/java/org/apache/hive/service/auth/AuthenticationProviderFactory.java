@@ -65,7 +65,7 @@ public final class AuthenticationProviderFactory {
     if (authMethod == AuthMethods.LDAP) {
       return new LdapAuthenticationProviderImpl(conf);
     } else if (authMethod == AuthMethods.PAM) {
-      return new PamAuthenticationProviderImpl(conf);
+      return new PamAuthenticationProviderImpl();
     } else if (authMethod == AuthMethods.CUSTOM) {
       return new CustomAuthenticationProviderImpl(conf);
     } else if (authMethod == AuthMethods.NONE) {
