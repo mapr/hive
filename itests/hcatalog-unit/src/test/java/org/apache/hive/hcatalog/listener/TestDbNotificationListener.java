@@ -71,6 +71,7 @@ public class TestDbNotificationListener {
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     conf.setBoolVar(HiveConf.ConfVars.FIRE_EVENTS_FOR_DML, true);
     conf.setVar(HiveConf.ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
+    conf.set("fs.default.name", "file:///");
     SessionState.start(new CliSessionState(conf));
     msClient = new HiveMetaStoreClient(conf);
     driver = new Driver(conf);
