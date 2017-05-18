@@ -2938,6 +2938,54 @@ public class ObjectStore implements RawStore, Configurable {
     }.run(true);
   }
 
+  @Override
+  public int getNumPartitionsByExpr(String dbName, String tblName,
+                                             byte[] expr) throws MetaException, NoSuchObjectException {
+    final ExpressionTree exprTree = PartFilterExprUtil.makeExpressionTree(expressionProxy, expr);
+    final byte[] tempExpr = expr; // Need to be final to pass it to an inner class
+
+
+    return new GetHelper<Integer>(dbName, tblName, true, true) {
+      private SqlFilterForPushdown filter = new SqlFilterForPushdown();
+
+      @Override
+      protected String describeResult() {
+        return "Partition count";
+      }
+
+      protected boolean canUseDirectSql(GetHelper<Integer> ctx) throws MetaException {
+        return directSql.generateSqlFilterForPushdown(ctx.getTable(), exprTree, filter);
+      };
+
+      @Override
+      protected Integer getSqlResult(GetHelper<Integer> ctx) throws MetaException {
+        return directSql.getNumPartitionsViaSqlFilter(filter);
+      }
+      @Override
+      protected Integer getJdoResult(
+          GetHelper<Integer> ctx) throws MetaException, NoSuchObjectException {
+        Integer numPartitions = null;
+
+        if (exprTree != null) {
+          try {
+            numPartitions = getNumPartitionsViaOrmFilter(ctx.getTable(), exprTree, true);
+          } catch (MetaException e) {
+            numPartitions = null;
+          }
+        }
+
+        // if numPartitions could not be obtained from ORM filters, then get number partitions names, and count them
+        if (numPartitions == null) {
+          List<String> filteredPartNames = new ArrayList<String>();
+          getPartitionNamesPrunedByExprNoTxn(ctx.getTable(), tempExpr, "", (short) -1, filteredPartNames);
+          numPartitions = filteredPartNames.size();
+        }
+
+        return numPartitions;
+      }
+    }.run(true);
+  }
+
   protected List<Partition> getPartitionsByFilterInternal(String dbName, String tblName,
       String filter, final short maxParts, boolean allowSql, boolean allowJdo)
       throws MetaException, NoSuchObjectException {

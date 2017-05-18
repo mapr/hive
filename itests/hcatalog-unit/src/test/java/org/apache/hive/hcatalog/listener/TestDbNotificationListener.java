@@ -71,12 +71,14 @@ public class TestDbNotificationListener {
   public static void connectToMetastore() throws Exception {
     HiveConf conf = new HiveConf();
     conf.set("fs.default.name", "file:///");
-    conf.setVar(HiveConf.ConfVars.METASTORE_EVENT_LISTENERS,
+    conf.setVar(HiveConf.ConfVars.METASTORE_TRANSACTIONAL_EVENT_LISTENERS,
         DbNotificationListener.class.getName());
     conf.setVar(HiveConf.ConfVars.METASTORE_EVENT_DB_LISTENER_TTL, String.valueOf(EVENTS_TTL)+"s");
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     conf.setBoolVar(HiveConf.ConfVars.FIRE_EVENTS_FOR_DML, true);
     conf.setVar(HiveConf.ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
+    conf.setVar(HiveConf.ConfVars.METASTORE_RAW_STORE_IMPL,
+        DummyRawStoreFailEvent.class.getName());
     Class dbNotificationListener =
         Class.forName("org.apache.hive.hcatalog.listener.DbNotificationListener");
     Class[] classes = dbNotificationListener.getDeclaredClasses();
@@ -102,6 +104,7 @@ public class TestDbNotificationListener {
     if (now > Integer.MAX_VALUE) fail("Bummer, time has fallen over the edge");
     else startTime = (int) now;
     firstEventId = msClient.getCurrentNotificationEventId().getEventId();
+    DummyRawStoreFailEvent.setEventSucceed(true);
   }
 
   @Test
@@ -120,6 +123,17 @@ public class TestDbNotificationListener {
     assertNull(event.getTableName());
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"CREATE_DATABASE\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"mydb\",\"timestamp\":[0-9]+}"));
+
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    db = new Database("mydb2", "no description", "file:/tmp", emptyParameters);
+    try {
+      msClient.createDatabase(db);
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(1, rsp.getEventsSize());
   }
 
   @Test
@@ -139,6 +153,18 @@ public class TestDbNotificationListener {
     assertNull(event.getTableName());
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"DROP_DATABASE\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"dropdb\",\"timestamp\":[0-9]+}"));
+
+    db = new Database("dropdb", "no description", "file:/tmp", emptyParameters);
+    msClient.createDatabase(db);
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.dropDatabase("dropdb");
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(3, rsp.getEventsSize());
   }
 
   @Test
@@ -163,6 +189,18 @@ public class TestDbNotificationListener {
     assertEquals("mytable", event.getTableName());
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"CREATE_TABLE\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"default\",\"table\":\"mytable\",\"timestamp\":[0-9]+}"));
+
+    table = new Table("mytable2", "default", "me", startTime, startTime, 0, sd, null,
+        emptyParameters, null, null, null);
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.createTable(table);
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(1, rsp.getEventsSize());
   }
 
   @Test
@@ -193,6 +231,16 @@ public class TestDbNotificationListener {
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"ALTER_TABLE\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"default\",\"table\":\"alttable\"," +
         "\"timestamp\":[0-9]+}"));
+
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.alter_table("default", "alttable", table);
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(2, rsp.getEventsSize());
   }
 
   @Test
@@ -219,6 +267,19 @@ public class TestDbNotificationListener {
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"DROP_TABLE\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"default\",\"table\":" +
         "\"droptable\",\"timestamp\":[0-9]+}"));
+
+    table = new Table("droptable2", "default", "me", startTime, startTime, 0, sd, null,
+        emptyParameters, null, null, null);
+    msClient.createTable(table);
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.dropTable("default", "droptable2");
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(3, rsp.getEventsSize());
   }
 
   @Test
@@ -250,6 +311,18 @@ public class TestDbNotificationListener {
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"ADD_PARTITION\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"default\",\"table\":" +
         "\"addparttable\",\"timestamp\":[0-9]+,\"partitions\":\\[\\{\"ds\":\"today\"}]}"));
+
+    partition = new Partition(Arrays.asList("tomorrow"), "default", "tableDoesNotExist",
+        startTime, startTime, sd, emptyParameters);
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.add_partition(partition);
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(2, rsp.getEventsSize());
   }
 
   @Test
@@ -275,7 +348,6 @@ public class TestDbNotificationListener {
 
     NotificationEventResponse rsp = msClient.getNextNotification(firstEventId, 0, null);
     assertEquals(3, rsp.getEventsSize());
-
     NotificationEvent event = rsp.getEvents().get(2);
     assertEquals(firstEventId + 3, event.getEventId());
     assertTrue(event.getEventTime() >= startTime);
@@ -286,6 +358,16 @@ public class TestDbNotificationListener {
         event.getMessage().matches("\\{\"eventType\":\"ALTER_PARTITION\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"default\",\"table\":\"alterparttable\"," +
         "\"timestamp\":[0-9]+,\"keyValues\":\\{\"ds\":\"today\"}}"));
+
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.alter_partition("default", "alterparttable", newPart, null);
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(3, rsp.getEventsSize());
   }
 
   @Test
@@ -319,6 +401,19 @@ public class TestDbNotificationListener {
     assertTrue(event.getMessage().matches("\\{\"eventType\":\"DROP_PARTITION\",\"server\":\"\"," +
         "\"servicePrincipal\":\"\",\"db\":\"default\",\"table\":" +
         "\"dropparttable\",\"timestamp\":[0-9]+,\"partitions\":\\[\\{\"ds\":\"today\"}]}"));
+
+    partition = new Partition(Arrays.asList("tomorrow"), "default", "dropPartTable",
+        startTime, startTime, sd, emptyParameters);
+    msClient.add_partition(partition);
+    DummyRawStoreFailEvent.setEventSucceed(false);
+    try {
+      msClient.dropPartition("default", "dropparttable", Arrays.asList("tomorrow"), false);
+    } catch (Exception ex) {
+      // expected
+    }
+
+    rsp = msClient.getNextNotification(firstEventId, 0, null);
+    assertEquals(4, rsp.getEventsSize());
   }
 
   @Test
