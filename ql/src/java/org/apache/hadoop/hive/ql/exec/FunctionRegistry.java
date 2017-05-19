@@ -744,6 +744,14 @@ public final class FunctionRegistry {
 
     PrimitiveGrouping pgA = PrimitiveObjectInspectorUtils.getPrimitiveGrouping(pcA);
     PrimitiveGrouping pgB = PrimitiveObjectInspectorUtils.getPrimitiveGrouping(pcB);
+
+    if (pgA == pgB) {
+      // grouping is same, but category is not.
+      if (pgA == PrimitiveGrouping.DATE_GROUP) {
+        // we got timestamp & date and timestamp has higher precedence than date
+        return TypeInfoFactory.timestampTypeInfo;
+      }
+    }
     // handle string types properly
     if (pgA == PrimitiveGrouping.STRING_GROUP && pgB == PrimitiveGrouping.STRING_GROUP) {
       // Compare as strings. Char comparison semantics may be different if/when implemented.
