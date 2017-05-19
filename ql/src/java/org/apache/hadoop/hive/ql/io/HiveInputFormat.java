@@ -295,6 +295,7 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
       LOG.debug("URISyntaxException", e);
     }
 
+    splitPath.getFileSystem(job);
     PartitionDesc part = pathToPartitionInfo.get(splitPath.toString());
     if ((part != null) && (part.getTableDesc() != null)) {
       Utilities.copyTableJobPropertiesToConf(part.getTableDesc(), job);
