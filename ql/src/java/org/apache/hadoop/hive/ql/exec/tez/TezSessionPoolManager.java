@@ -272,7 +272,7 @@ public class TezSessionPoolManager {
   private TezSessionState getSession(HiveConf conf, boolean doOpen,
       boolean forceCreate)
       throws Exception {
-    String queueName = conf.get("tez.queue.name");
+    String queueName = conf.get(TezConfiguration.TEZ_QUEUE_NAME);
 
     // TODO Session re-use completely disabled for doAs=true. Always launches a new session.
     boolean nonDefaultUser = conf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS);
@@ -310,7 +310,7 @@ public class TezSessionPoolManager {
       String queueName, boolean doOpen) throws Exception {
     TezSessionPoolSession retTezSessionState = createAndInitSession(queueName, false);
     if (queueName != null) {
-      conf.set("tez.queue.name", queueName);
+      conf.set(TezConfiguration.TEZ_QUEUE_NAME, queueName);
     }
     if (doOpen) {
       retTezSessionState.open(conf);
