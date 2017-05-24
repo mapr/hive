@@ -34,8 +34,10 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.BlobStorageUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.Warehouse;
@@ -72,8 +74,10 @@ import org.apache.hadoop.hive.ql.io.merge.MergeFileWork;
 import org.apache.hadoop.hive.ql.io.orc.OrcFileStripeMergeInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.rcfile.merge.RCFileBlockMergeInputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.optimizer.GenMRProcContext.GenMRUnionCtx;
 import org.apache.hadoop.hive.ql.optimizer.GenMRProcContext.GenMapRedCtx;
 import org.apache.hadoop.hive.ql.optimizer.listbucketingpruner.ListBucketingPruner;
@@ -93,6 +97,7 @@ import org.apache.hadoop.hive.ql.plan.FileMergeDesc;
 import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
 import org.apache.hadoop.hive.ql.plan.FilterDesc.SampleDesc;
 import org.apache.hadoop.hive.ql.plan.LoadFileDesc;
+import org.apache.hadoop.hive.ql.plan.LoadTableDesc;
 import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.MapredLocalWork;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
@@ -1351,19 +1356,15 @@ public final class GenMapRedUtils {
     cplan.setInputformat("org.apache.hadoop.hive.ql.io.CombineHiveInputFormat");
     // NOTE: we should gather stats in MR1 rather than MR2 at merge job since we don't
     // know if merge MR2 will be triggered at execution time
+    Task<MoveWork> mvTask = GenMapRedUtils.findMoveTask(mvTasks, fsOutput);
     ConditionalTask cndTsk = GenMapRedUtils.createCondTask(conf, currTask, dummyMv, work,
-        fsInputDesc.getFinalDirName().toString());
+        fsInputDesc.getFinalDirName(), finalName, mvTask, dependencyTask);
 
     // keep the dynamic partition context in conditional task resolver context
     ConditionalResolverMergeFilesCtx mrCtx =
         (ConditionalResolverMergeFilesCtx) cndTsk.getResolverCtx();
     mrCtx.setDPCtx(fsInputDesc.getDynPartCtx());
     mrCtx.setLbCtx(fsInputDesc.getLbCtx());
-
-    //
-    // 3. add the moveTask as the children of the conditional task
-    //
-    linkMoveTask(fsOutput, cndTsk, mvTasks, conf, dependencyTask);
   }
 
   /**
@@ -1441,6 +1442,24 @@ public final class GenMapRedUtils {
     }
   }
 
+  /**
+   * Returns the table location path from a TableDesc object.
+   *
+   * @param hconf Configuration object.
+   * @param tableDesc Table description from where to get the table name.
+   * @return The path where the table is located.
+   */
+  private static Path getTableLocationPath(final HiveConf hconf, final TableDesc tableDesc) {
+    Table table = null;
+    try {
+      Hive hive = Hive.get(hconf);
+      table = hive.getTable(tableDesc.getTableName());
+    } catch (HiveException e) {
+      LOG.warn("Unable to get the table location path for: " + tableDesc.getTableName(), e);
+    }
+
+    return (table != null) ? table.getPath() : null;
+  }
 
   /**
    * Add the StatsTask as a dependent task of the MoveTask
@@ -1621,24 +1640,102 @@ public final class GenMapRedUtils {
   }
 
   /**
+   * Checks whether the given input/output paths and a linked MoveWork should be merged into one only MoveWork.
+   * This is an optimization for BlobStore systems to avoid doing two renames/copies that are not necessary.
+   *
+   * @param conf A HiveConf object to check if BlobStorage optimizations are enabled.
+   * @param condInputPath A path that the ConditionalTask uses as input for its sub-tasks.
+   * @param condOutputPath A path that the ConditionalTask uses as output for its sub-tasks.
+   * @param linkedMoveWork A MoveWork that the ConditionalTask uses to link to its sub-tasks.
+   * @return True if both Conditional input/output paths and the linked MoveWork should be merged.
+   */
+  @VisibleForTesting
+  protected static boolean shouldMergeMovePaths(HiveConf conf, Path condInputPath, Path condOutputPath, MoveWork linkedMoveWork) {
+    Path linkedSourcePath, linkedTargetPath;
+
+    if (linkedMoveWork == null || !BlobStorageUtils.areOptimizationsEnabled(conf)) {
+      return false;
+    }
+
+    if (linkedMoveWork.getLoadFileWork() != null && linkedMoveWork.getLoadTableWork() == null) {
+      linkedSourcePath = linkedMoveWork.getLoadFileWork().getSourcePath();
+      linkedTargetPath = linkedMoveWork.getLoadFileWork().getTargetDir();
+    } else if (linkedMoveWork.getLoadTableWork() != null && linkedMoveWork.getLoadFileWork() == null) {
+      linkedSourcePath = linkedMoveWork.getLoadTableWork().getSourcePath();
+      linkedTargetPath = getTableLocationPath(conf, linkedMoveWork.getLoadTableWork().getTable());
+    } else {
+      return false;
+    }
+
+    return condOutputPath.equals(linkedSourcePath)
+        && BlobStorageUtils.isBlobStoragePath(conf, condInputPath)
+        && BlobStorageUtils.isBlobStoragePath(conf, linkedTargetPath);
+  }
+
+  /**
+   * Merges the given Conditional input path and the linked MoveWork into one only MoveWork.
+   * This is an optimization for BlobStore systems to avoid doing two renames or copies that are not necessary.
+   *
+   * @param condInputPath A path that the ConditionalTask uses as input for its sub-tasks.
+   * @param linkedMoveWork A MoveWork that the ConditionalTask uses to link to its sub-tasks.
+   * @return A new MoveWork that has the Conditional input path as source and the linkedMoveWork as target.
+   */
+  @VisibleForTesting
+  protected static MoveWork mergeMovePaths(Path condInputPath, MoveWork linkedMoveWork) {
+    MoveWork newWork = new MoveWork(linkedMoveWork);
+    LoadFileDesc fileDesc = null;
+    LoadTableDesc tableDesc = null;
+
+    if (linkedMoveWork.getLoadFileWork() != null) {
+      fileDesc = new LoadFileDesc(linkedMoveWork.getLoadFileWork());
+      fileDesc.setSourcePath(condInputPath);
+    } else if (linkedMoveWork.getLoadTableWork() != null) {
+      tableDesc = new LoadTableDesc(linkedMoveWork.getLoadTableWork());
+      tableDesc.setSourcePath(condInputPath);
+    } else {
+      throw new IllegalArgumentException("Merging a path with a MoveWork with multi-files work is not allowed.");
+    }
+
+    newWork.setLoadFileWork(fileDesc);
+    newWork.setLoadTableWork(tableDesc);
+
+    return newWork;
+  }
+
+  /**
    * Construct a conditional task given the current leaf task, the MoveWork and the MapredWork.
    *
    * @param conf
    *          HiveConf
    * @param currTask
    *          current leaf task
-   * @param mvWork
+   * @param dummyMoveWork
    *          MoveWork for the move task
    * @param mergeWork
    *          MapredWork for the merge task.
-   * @param inputPath
+   * @param condInputPath
    *          the input directory of the merge/move task
+   * @param condOutputPath
+   *          the output directory of the merge/move task
+   * @param moveTaskToLink
+   *          a MoveTask that may be linked to the conditional sub-tasks
+   * @param dependencyTask
+   *          a dependency task that may be linked to the conditional sub-tasks
    * @return The conditional task
    */
-  @SuppressWarnings("unchecked")
-  public static ConditionalTask createCondTask(HiveConf conf,
-      Task<? extends Serializable> currTask, MoveWork mvWork,
-      Serializable mergeWork, String inputPath) {
+  private static ConditionalTask createCondTask(HiveConf conf,
+      Task<? extends Serializable> currTask, MoveWork dummyMoveWork, Serializable mergeWork,
+      Path condInputPath, Path condOutputPath, Task<MoveWork> moveTaskToLink, DependencyCollectionTask dependencyTask) {
+
+    boolean shouldMergeMovePaths = (moveTaskToLink != null && dependencyTask == null
+        && shouldMergeMovePaths(conf, condInputPath, condOutputPath, moveTaskToLink.getWork()));
+
+    MoveWork workForMoveOnlyTask;
+    if (shouldMergeMovePaths) {
+      workForMoveOnlyTask = mergeMovePaths(condInputPath, moveTaskToLink.getWork());
+    } else {
+      workForMoveOnlyTask = dummyMoveWork;
+    }
 
     // There are 3 options for this ConditionalTask:
     // 1) Merge the partitions
@@ -1647,9 +1744,9 @@ public final class GenMapRedUtils {
     // merge others) in this case the merge is done first followed by the move to prevent
     // conflicts.
     Task<? extends Serializable> mergeOnlyMergeTask = TaskFactory.get(mergeWork, conf);
-    Task<? extends Serializable> moveOnlyMoveTask = TaskFactory.get(mvWork, conf);
+    Task<? extends Serializable> moveOnlyMoveTask = TaskFactory.get(workForMoveOnlyTask, conf);
     Task<? extends Serializable> mergeAndMoveMergeTask = TaskFactory.get(mergeWork, conf);
-    Task<? extends Serializable> mergeAndMoveMoveTask = TaskFactory.get(mvWork, conf);
+    Task<? extends Serializable> mergeAndMoveMoveTask = TaskFactory.get(dummyMoveWork, conf);
 
     // NOTE! It is necessary merge task is the parent of the move task, and not
     // the other way around, for the proper execution of the execute method of
@@ -1657,7 +1754,7 @@ public final class GenMapRedUtils {
     mergeAndMoveMergeTask.addDependentTask(mergeAndMoveMoveTask);
 
     List<Serializable> listWorks = new ArrayList<Serializable>();
-    listWorks.add(mvWork);
+    listWorks.add(workForMoveOnlyTask);
     listWorks.add(mergeWork);
 
     ConditionalWork cndWork = new ConditionalWork(listWorks);
@@ -1673,11 +1770,25 @@ public final class GenMapRedUtils {
     // create resolver
     cndTsk.setResolver(new ConditionalResolverMergeFiles());
     ConditionalResolverMergeFilesCtx mrCtx =
-        new ConditionalResolverMergeFilesCtx(listTasks, inputPath);
+        new ConditionalResolverMergeFilesCtx(listTasks, condInputPath.toString());
     cndTsk.setResolverCtx(mrCtx);
 
     // make the conditional task as the child of the current leaf task
     currTask.addDependentTask(cndTsk);
+
+    if (shouldMergeMovePaths) {
+      // If a new MoveWork was created, then we should link all dependent tasks from the MoveWork to link.
+      if (moveTaskToLink.getDependentTasks() != null) {
+        for (Task dependentTask : moveTaskToLink.getDependentTasks()) {
+          moveOnlyMoveTask.addDependentTask(dependentTask);
+        }
+      }
+    } else {
+      addDependentMoveTasks(moveTaskToLink, conf, moveOnlyMoveTask, dependencyTask);
+    }
+
+    addDependentMoveTasks(moveTaskToLink, conf, mergeOnlyMergeTask, dependencyTask);
+    addDependentMoveTasks(moveTaskToLink, conf, mergeAndMoveMoveTask, dependencyTask);
 
     return cndTsk;
   }
