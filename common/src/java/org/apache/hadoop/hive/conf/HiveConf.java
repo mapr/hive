@@ -2199,7 +2199,8 @@ public class HiveConf extends Configuration {
         "hive.added.files.path,hive.added.jars.path,hive.added.archives.path",
         "Comma separated list of variables which are used internally and should not be configurable."),
     PART_STAT_TABLE_ID_COLUMN_VARCHAR_SIZE("hive.part.stat.table.id.varchar.size", 1024,
-        "Size of ID column in PARTITION_STATS_V2 table. By default this value is 1024.");
+        "Size of ID column in PARTITION_STATS_V2 table. By default this value is 1024."),
+    READ_ALL_HBASE_COLUMN("hive.read.all.hbase.column", false,"If true then Hive will get all column from Hbase table");
 
     public final String varname;
     private final String defaultExpr;
