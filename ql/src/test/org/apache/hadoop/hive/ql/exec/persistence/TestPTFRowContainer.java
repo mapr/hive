@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.exec.persistence;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -49,10 +51,14 @@ public class TestPTFRowContainer {
 
   static SerDe serDe;
   static Configuration cfg;
+  static Path workDir = new Path(System.getProperty("test.tmp.dir",
+          "target" + File.separator + "test" + File.separator + "tmp"));
 
   @BeforeClass
   public static void setupClass()  throws SerDeException {
     cfg = new Configuration();
+    cfg.set("fs.default.name", "file:///");
+    cfg.set("mapr.mapred.localvolume.root.dir.path", workDir.toString());
     serDe = new LazyBinarySerDe();
     Properties p = new Properties();
     p.setProperty(org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS,
