@@ -35,6 +35,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Splitter;
 
@@ -419,11 +421,15 @@ public class CliDriver {
     String line;
     StringBuilder qsb = new StringBuilder();
 
+    Pattern p = Pattern.compile("^(.*?)(?=[-]{2,})(.*)$");
+
     while ((line = r.readLine()) != null) {
+      Matcher m = p.matcher(line);
       // Skipping through comments
-      if (! line.startsWith("--")) {
-        qsb.append(line + "\n");
+      if (m.find()) {
+        line = m.group(1);
       }
+      qsb.append(line + "\n");
     }
 
     return (processLine(qsb.toString()));
