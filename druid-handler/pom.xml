@@ -120,14 +120,6 @@
           <artifactId>druid-aws-common</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.derby</groupId>
-          <artifactId>derbynet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.derby</groupId>
-          <artifactId>derbyclient</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-server</artifactId>
         </exclusion>
@@ -292,6 +284,11 @@
           <artifactId>jackson-databind</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>${jetty.version}</version>
     </dependency>
   </dependencies>
 
