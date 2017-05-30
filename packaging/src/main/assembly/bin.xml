@@ -142,6 +142,7 @@
       <directory>${project.parent.basedir}/bin</directory>
       <includes>
         <include>hive</include>
+        <include>configure.sh</include>
         <include>llap/**/*</include>
         <include>metatool</include>
         <include>hplsql</include>
@@ -161,6 +162,17 @@
       <outputDirectory>bin</outputDirectory>
     </fileSet>
 
+    <fileSet>
+      <fileMode>755</fileMode>
+      <directory>${project.parent.basedir}/ext-bin</directory>
+      <includes>
+        <include>hivemetastore/**/*</include>
+        <include>hiveserver2/**/*</include>
+        <include>hivewebhcat/**/*</include>
+      </includes>
+      <outputDirectory>ext-bin</outputDirectory>
+    </fileSet>
+    
     <fileSet>
       <fileMode>755</fileMode>
       <directory>${project.parent.basedir}/llap-server/bin</directory>

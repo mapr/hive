@@ -1,0 +1,2 @@
+hive --service hiveserver2 --stop
+hive --service hiveserver2 --start

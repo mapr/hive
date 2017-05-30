@@ -1,0 +1,9 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>hive.metastore.execute.setugi</name>
+    <value>true</value>
+
+  </property>
+</configuration>
