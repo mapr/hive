@@ -1493,18 +1493,15 @@ public class SessionState {
       tezSessionState = null;
     }
 
-    if (sparkSession != null) {
-      try {
-        SparkSessionManagerImpl.getInstance().closeSession(sparkSession);
-      } catch (Exception ex) {
-        LOG.error("Error closing spark session.", ex);
-      } finally {
-        sparkSession = null;
-      }
+    try {
+      closeSparkSession();
+      registry.closeCUDFLoaders();
+      dropSessionPaths(conf);
+      unCacheDataNucleusClassLoaders();
+    } finally {
+      // removes the threadlocal variables, closes underlying HMS connection
+      Hive.closeCurrent();
     }
-    registry.closeCUDFLoaders();
-    dropSessionPaths(conf);
-    unCacheDataNucleusClassLoaders();
   }
 
   private void unCacheDataNucleusClassLoaders() {
@@ -1518,6 +1515,18 @@ public class SessionState {
       }
     } catch (Exception e) {
       LOG.info(e);
+    }
+  }
+
+  public void closeSparkSession() {
+    if (sparkSession != null) {
+      try {
+        SparkSessionManagerImpl.getInstance().closeSession(sparkSession);
+      } catch (Exception ex) {
+        LOG.error("Error closing spark session.", ex);
+      } finally {
+        sparkSession = null;
+      }
     }
   }
 
