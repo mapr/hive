@@ -28,3 +28,6 @@ hcatalog/storage-handlers/hbase/target
 hcatalog/webhcat/svr/target
 conf/hive-default.xml.template
 .DS_Store
+mapr-devops/node_modules
+mapr-devops/dist
+mapr-devops/.npmrc

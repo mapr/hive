@@ -1,0 +1,86 @@
+{
+  "dockerInfrastructure": {
+    "dockerClusterTemplates": [
+      {
+        "id": "buildImageCentOS7",
+        "operatingSystem": "CentOS",
+        "operatingSystemVersion": "7.2",
+        "nodeTemplates": [
+          {
+            "dockerImageName": "centos7-java7-build",
+            "instances": 1,
+            "diskProvider": false,
+            "constraints": [
+              "os LIKE centos"
+            ],
+            "serviceNames": [
+              "mapr-core"
+            ]
+          }
+        ],
+        "defaultCPUsPerContainer": 2,
+        "defaultMemoryPerContainer": 4096
+      },
+      {
+        "id": "buildImageCentOS7",
+        "operatingSystem": "CentOS",
+        "operatingSystemVersion": "7.2",
+        "nodeTemplates": [
+          {
+            "dockerImageName": "centos7-java8-build",
+            "instances": 1,
+            "diskProvider": false,
+            "constraints": [
+              "os LIKE centos"
+            ],
+            "serviceNames": [
+              "mapr-core"
+            ]
+          }
+        ],
+        "defaultCPUsPerContainer": 2,
+        "defaultMemoryPerContainer": 4096
+      },
+      {
+        "id": "buildImageCentOS6",
+        "operatingSystem": "CentOS",
+        "operatingSystemVersion": "6.7",
+        "nodeTemplates": [
+          {
+            "dockerImageName": "centos6-java7-build",
+            "instances": 1,
+            "diskProvider": false,
+            "constraints": [
+              "os LIKE centos"
+            ],
+            "serviceNames": [
+              "mapr-core"
+            ]
+          }
+        ],
+        "defaultCPUsPerContainer": 4,
+        "defaultMemoryPerContainer": 8192
+      },
+      {
+        "id": "buildImageUbuntu",
+        "operatingSystem": "CentOS",
+        "operatingSystemVersion": "6.7",
+        "nodeTemplates": [
+          {
+            "dockerImageName": "maprbuild-ubuntu12/build-java7:latest",
+            "instances": 1,
+            "diskProvider": false,
+            "constraints": [
+              "os LIKE ubuntu"
+            ],
+            "serviceNames": [
+              "mapr-core"
+            ]
+          }
+        ],
+        "defaultCPUsPerContainer": 2,
+        "defaultMemoryPerContainer": 4096
+      }
+    ]
+  }
+}
