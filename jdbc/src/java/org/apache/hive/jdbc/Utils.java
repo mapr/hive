@@ -72,32 +72,34 @@ public class Utils {
     // client side params are specified in sess_var_list
 
     // Client param names:
-    static final String AUTH_TYPE = "auth";
+    public static final String AUTH_TYPE = "auth";
+    public static final String AUTH_PRINCIPAL = "principal";
+    public static final String AUTH_MAPRSASL = "maprsasl";
     // We're deprecating this variable's name.
-    static final String AUTH_QOP_DEPRECATED = "sasl.qop";
-    static final String AUTH_QOP = "saslQop";
-    static final String AUTH_SIMPLE = "noSasl";
-    static final String AUTH_TOKEN = "delegationToken";
-    static final String AUTH_USER = "user";
-    static final String AUTH_PRINCIPAL = "principal";
-    static final String AUTH_MAPRSASL = "maprsasl";
-    static final String AUTH_PASSWD = "password";
-    static final String AUTH_KERBEROS_AUTH_TYPE = "kerberosAuthType";
-    static final String AUTH_KERBEROS_AUTH_TYPE_FROM_SUBJECT = "fromSubject";
-    static final String ANONYMOUS_USER = "anonymous";
-    static final String ANONYMOUS_PASSWD = "anonymous";
-    static final String USE_SSL = "ssl";
-    static final String SSL_TRUST_STORE = "sslTrustStore";
-    static final String SSL_TRUST_STORE_PASSWORD = "trustStorePassword";
+    public static final String AUTH_QOP_DEPRECATED = "sasl.qop";
+    public  static final String AUTH_QOP = "saslQop";
+    public  static final String AUTH_SIMPLE = "noSasl";
+    public  static final String AUTH_TOKEN = "delegationToken";
+    public  static final String AUTH_USER = "user";
+    public  static final String AUTH_PASSWD = "password";
+    public static final String AUTH_KERBEROS_AUTH_TYPE = "kerberosAuthType";
+    public static final String AUTH_KERBEROS_AUTH_TYPE_FROM_SUBJECT = "fromSubject";
+    public static final String ANONYMOUS_USER = "anonymous";
+    public static final String ANONYMOUS_PASSWD = "anonymous";
+    public static final String USE_SSL = "ssl";
+    public static final String SSL_TRUST_STORE = "sslTrustStore";
+    public static final String SSL_TRUST_STORE_PASSWORD = "trustStorePassword";
     // We're deprecating the name and placement of this in the parsed map (from hive conf vars to
     // hive session vars).
     static final String TRANSPORT_MODE_DEPRECATED = "hive.server2.transport.mode";
     static final String TRANSPORT_MODE = "transportMode";
     // We're deprecating the name and placement of this in the parsed map (from hive conf vars to
     // hive session vars).
-    static final String HTTP_PATH_DEPRECATED = "hive.server2.thrift.http.path";
-    static final String HTTP_PATH = "httpPath";
-    static final String SERVICE_DISCOVERY_MODE = "serviceDiscoveryMode";
+    public static final String HTTP_PATH_DEPRECATED = "hive.server2.thrift.http.path";
+    public static final String HTTP_PATH = "httpPath";
+    public static final String SERVICE_DISCOVERY_MODE = "serviceDiscoveryMode";
+    public static final String PROPERTY_DRIVER        = "driver";
+    public static final String PROPERTY_URL           = "url";
     // Don't use dynamic service discovery
     static final String SERVICE_DISCOVERY_MODE_NONE = "none";
     // Use ZooKeeper for indirection while using dynamic service discovery
@@ -616,5 +618,15 @@ public class Utils {
       }
     }
     return true;
+  }
+
+  public static String parsePropertyFromUrl(final String url, final String key) {
+    String[] tokens = url.split(";");
+    for (String token : tokens) {
+      if (token.trim().startsWith(key.trim() + "=")) {
+        return token.trim().substring((key.trim() + "=").length());
+      }
+    }
+    return null;
   }
 }

@@ -55,6 +55,8 @@ class BeeLineOpts implements Completer {
   public static final String DEFAULT_NULL_STRING = "NULL";
   public static final char DEFAULT_DELIMITER_FOR_DSV = '|';
 
+  public static String URL_ENV_PREFIX = "BEELINE_URL_";
+
   private final BeeLine beeLine;
   private boolean autosave = false;
   private boolean silent = false;
@@ -96,6 +98,21 @@ class BeeLineOpts implements Completer {
 
   private Map<String, String> hiveVariables = new HashMap<String, String>();
   private Map<String, String> hiveConfVariables = new HashMap<String, String>();
+
+
+  public interface Env {
+    // Env interface to mock out dealing with Environment variables
+    // This allows us to interface with Environment vars through
+    // BeeLineOpts while allowing tests to mock out Env setting if needed.
+    String get(String envVar);
+  }
+
+  public static Env env = new Env() {
+    @Override
+    public String get(String envVar) {
+      return System.getenv(envVar); // base env impl simply defers to System.getenv.
+    }
+  };
 
   public BeeLineOpts(BeeLine beeLine, Properties props) {
     this.beeLine = beeLine;
@@ -519,6 +536,10 @@ class BeeLineOpts implements Completer {
 
   public void setDelimiterForDSV(char delimiterForDSV) {
     this.delimiterForDSV = delimiterForDSV;
+  }
+
+  public static Env getEnv(){
+    return env;
   }
 }
 

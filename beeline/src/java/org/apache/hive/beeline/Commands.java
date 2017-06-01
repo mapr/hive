@@ -32,9 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.net.*;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -53,6 +51,8 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.hive.common.cli.ShellCmdExecutor;
 import org.apache.hive.jdbc.HiveStatement;
+import org.apache.hive.jdbc.Utils;
+import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
 
 
 public class Commands {
@@ -1055,19 +1055,70 @@ public class Commands {
 
     Properties props = new Properties();
     if (url != null) {
-      props.setProperty("url", url);
+      String saveUrl = getUrlToUse(url);
+      props.setProperty(JdbcConnectionParams.PROPERTY_URL, url);
     }
+
+    String value = null;
     if (driver != null) {
-      props.setProperty("driver", driver);
+      props.setProperty(JdbcConnectionParams.PROPERTY_DRIVER, driver);
+    } else {
+      value = Utils.parsePropertyFromUrl(url, JdbcConnectionParams.PROPERTY_DRIVER);
+      if (value != null) {
+        props.setProperty(JdbcConnectionParams.PROPERTY_DRIVER, value);
+      }
     }
+
     if (user != null) {
-      props.setProperty("user", user);
+      props.setProperty(JdbcConnectionParams.AUTH_USER, user);
+    } else {
+      value = Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_USER);
+      if (value != null) {
+        props.setProperty(JdbcConnectionParams.AUTH_USER, value);
+      }
     }
+
     if (pass != null) {
-      props.setProperty("password", pass);
+      props.setProperty(JdbcConnectionParams.AUTH_PASSWD, pass);
+    } else {
+      value = Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_PASSWD);
+      if (value != null) {
+        props.setProperty(JdbcConnectionParams.AUTH_PASSWD, value);
+      }
+    }
+
+    value = Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_TYPE);
+    if (value != null) {
+      props.setProperty(JdbcConnectionParams.AUTH_TYPE, value);
     }
 
     return connect(props);
+  }
+
+  private String  getUrlToUse(String urlParam) {
+    boolean useIndirectUrl = false;
+    // If the url passed to us is a valid url with a protocol, we use it as-is
+    // Otherwise, we assume it is a name of parameter that we have to get the url from
+    try {
+      URI tryParse = new URI(urlParam);
+      if (tryParse.getScheme() == null){
+        // param had no scheme, so not a URL
+        useIndirectUrl = true;
+      }
+    } catch (URISyntaxException e){
+      // param did not parse as a URL, so not a URL
+      useIndirectUrl = true;
+    }
+    if (useIndirectUrl){
+      // Use url param indirectly - as the name of an env var that contains the url
+      // If the urlParam is "default", we would look for a BEELINE_URL_DEFAULT url
+      String envUrl = beeLine.getOpts().getEnv().get(
+              BeeLineOpts.URL_ENV_PREFIX + urlParam.toUpperCase());
+      if (envUrl != null){
+        return envUrl;
+      }
+    }
+    return urlParam; // default return the urlParam passed in as-is.
   }
 
 
@@ -1094,26 +1145,25 @@ public class Commands {
 
   public boolean connect(Properties props) throws IOException {
     String url = getProperty(props, new String[] {
-        "url",
-        "javax.jdo.option.ConnectionURL",
-        "ConnectionURL",
+            JdbcConnectionParams.PROPERTY_URL,
+            "javax.jdo.option.ConnectionURL",
+            "ConnectionURL",
     });
     String driver = getProperty(props, new String[] {
-        "driver",
-        "javax.jdo.option.ConnectionDriverName",
-        "ConnectionDriverName",
+            JdbcConnectionParams.PROPERTY_DRIVER,
+            "javax.jdo.option.ConnectionDriverName",
+            "ConnectionDriverName",
     });
     String username = getProperty(props, new String[] {
-        "user",
-        "javax.jdo.option.ConnectionUserName",
-        "ConnectionUserName",
+            JdbcConnectionParams.AUTH_USER,
+            "javax.jdo.option.ConnectionUserName",
+            "ConnectionUserName",
     });
     String password = getProperty(props, new String[] {
-        "password",
-        "javax.jdo.option.ConnectionPassword",
-        "ConnectionPassword",
+            JdbcConnectionParams.AUTH_PASSWD,
+            "javax.jdo.option.ConnectionPassword",
+            "ConnectionPassword",
     });
-    String auth = getProperty(props, new String[] {"auth"});
 
     if (url == null || url.length() == 0) {
       return beeLine.error("Property \"url\" is required");
@@ -1124,23 +1174,25 @@ public class Commands {
       }
     }
 
-    beeLine.info("Connecting to " + url);
-
-    if (username == null) {
-      username = beeLine.getConsoleReader().readLine("Enter username for " + url + ": ");
-    }
-    props.setProperty("user", username);
-    if (password == null) {
-      password = beeLine.getConsoleReader().readLine("Enter password for " + url + ": ",
-          new Character('*'));
-    }
-    props.setProperty("password", password);
-
+    String auth = getProperty(props, new String[] {"auth"});
     if (auth == null) {
       auth = beeLine.getOpts().getAuthType();
+      if (auth != null) {
+        props.setProperty(JdbcConnectionParams.AUTH_TYPE, auth);
+      }
     }
-    if (auth != null) {
-      props.setProperty("auth", auth);
+
+    beeLine.info("Connecting to " + url);
+    if (Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_PRINCIPAL) == null && !JdbcConnectionParams.AUTH_MAPRSASL.equals(auth)) {
+      if (username == null) {
+        username = beeLine.getConsoleReader().readLine("Enter username for " + url + ": ");
+      }
+      props.setProperty("user", username);
+      if (password == null) {
+        password = beeLine.getConsoleReader().readLine("Enter password for " + url + ": ",
+                new Character('*'));
+      }
+      props.setProperty("password", password);
     }
 
     try {
