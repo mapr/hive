@@ -792,13 +792,13 @@ class MetaStoreDirectSql {
     // Get FieldSchema stuff if any.
     if (!colss.isEmpty()) {
       // We are skipping the CDS table here, as it seems to be totally useless.
-      queryText = "select \"CD_ID\", \"COMMENT\", \"COLUMN_NAME\", \"TYPE_NAME\""
+      queryText = "select \"CD_ID\", \"COLUMN_NAME\", \"TYPE_NAME\""
           + " from \"COLUMNS_V2\" where \"CD_ID\" in (" + colIds + ") and \"INTEGER_IDX\" >= 0"
           + " order by \"CD_ID\" asc, \"INTEGER_IDX\" asc";
       loopJoinOrderedResult(colss, queryText, 0, new ApplyFunc<List<FieldSchema>>() {
         @Override
         public void apply(List<FieldSchema> t, Object[] fields) {
-          t.add(new FieldSchema((String)fields[2], (String)fields[3], (String)fields[1]));
+          t.add(new FieldSchema((String)fields[1], (String)fields[2], null));
         }});
     }
 
