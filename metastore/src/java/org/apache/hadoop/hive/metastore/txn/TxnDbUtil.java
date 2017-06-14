@@ -356,6 +356,11 @@ public final class TxnDbUtil {
 
     if (conn != null) {
       try {
+        conn.rollback();
+      } catch (SQLException e) {
+        System.err.println("Error rolling back: " + e.getMessage());
+      }
+      try {
         conn.close();
       } catch (SQLException e) {
         System.err.println("Error closing Connection: " + e.getMessage());
