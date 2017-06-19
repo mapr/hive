@@ -34,6 +34,8 @@ import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.security.Groups;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +93,11 @@ public class HdfsUtils {
       try {
         //If there is no group of a file, no need to call chgrp
         if (group != null && !group.isEmpty()) {
-          run(fsShell, new String[]{"-chgrp", "-R", group, target.toString()});
+          Groups userToGroupsMappingService = Groups.getUserToGroupsMappingService(conf);
+          String currentUserName = UserGroupInformation.getCurrentUser().getUserName();
+          if (userToGroupsMappingService.getGroups(currentUserName).contains(group)) {
+            run(fsShell, new String[]{"-chgrp", "-R", group, target.toString()});
+          }
         }
         if (aclEnabled) {
           if (null != aclEntries) {
