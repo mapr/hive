@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.hbase;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,26 +96,30 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
     HBaseSplit hbaseSplit = (HBaseSplit) split;
     TableSplit tableSplit = hbaseSplit.getTableSplit();
 
-    setHTable(HiveHBaseInputFormatUtil.getTable(jobConf));
-    setScan(HiveHBaseInputFormatUtil.getScan(jobConf));
 
     Job job = new Job(jobConf);
     TaskAttemptContext tac = ShimLoader.getHadoopShims().newTaskAttemptContext(
         job.getConfiguration(), reporter);
 
-    final org.apache.hadoop.mapreduce.RecordReader<ImmutableBytesWritable, Result>
-    recordReader = createRecordReader(tableSplit, tac);
-    try {
-      recordReader.initialize(tableSplit, tac);
-    } catch (InterruptedException e) {
-      throw new IOException("Failed to initialize RecordReader", e);
+    final org.apache.hadoop.mapreduce.RecordReader<ImmutableBytesWritable, Result> recordReader;
+    synchronized (hbaseTableMonitor) {
+      setHTable(HiveHBaseInputFormatUtil.getTable(jobConf));
+      setScan(HiveHBaseInputFormatUtil.getScan(jobConf));
+      recordReader = createRecordReader(tableSplit, tac);
+      try {
+        recordReader.initialize(tableSplit, tac);
+      } catch (InterruptedException e) {
+        throw new IOException("Failed to initialize RecordReader", e);
+      }
     }
 
     return new RecordReader<ImmutableBytesWritable, ResultWritable>() {
 
       @Override
       public void close() throws IOException {
-        recordReader.close();
+        synchronized (hbaseTableMonitor) {
+          recordReader.close();
+        }
       }
 
       @Override
@@ -427,9 +432,23 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
   }
 
   @Override
-  public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
+  public InputSplit[] getSplits(final JobConf jobConf, final int numSplits) throws IOException {
     synchronized (hbaseTableMonitor) {
-      return getSplitsInternal(jobConf, numSplits);
+      final UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+      if (ugi == null) {
+        return getSplitsInternal(jobConf, numSplits);
+      }
+
+      try {
+        return ugi.doAs(new PrivilegedExceptionAction<InputSplit[]>() {
+          @Override
+          public InputSplit[] run() throws IOException {
+            return getSplitsInternal(jobConf, numSplits);
+          }
+        });
+      } catch (InterruptedException e) {
+        throw new IOException(e);
+      }
     }
   }
 
