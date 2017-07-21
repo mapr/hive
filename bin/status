@@ -58,6 +58,9 @@ fi
 
 # parameter value is hiveserver2 or metastore
 status() {
+  if [ -f sync-pid.sh ] ; then
+    source sync-pid.sh
+  fi
   pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-$1.pid
   if [ -f $pid ]; then
     if kill -0 `cat $pid` > /dev/null 2>&1; then
