@@ -798,6 +798,18 @@ public final class ColumnPrunerProcFactory {
         ArrayList<String> newOutputColumnNames = new ArrayList<String>();
         ArrayList<ColumnInfo> rs_oldsignature = op.getSchema().getSignature();
         ArrayList<ColumnInfo> rs_newsignature = new ArrayList<ColumnInfo>();
+        // The pruning needs to preserve the order of columns in the input schema
+        Set<String> colNames = new HashSet<String>();
+        colNames.addAll(cols);
+        for (int i = 0; i < originalOutputColumnNames.size(); i++) {
+          String colName = originalOutputColumnNames.get(i);
+          if (colNames.contains(colName)) {
+            newOutputColumnNames.add(colName);
+            newColList.add(originalColList.get(i));
+            rs_newsignature.add(rs_oldsignature.get(i));
+          }
+        }
+
         for (String col : cols) {
           int index = originalOutputColumnNames.indexOf(col);
           newOutputColumnNames.add(col);
