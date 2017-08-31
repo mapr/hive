@@ -1,2 +1,0 @@
-bash /opt/mapr/hive/hive-2.1/hcatalog/sbin/webhcat_server.sh stop
-bash /opt/mapr/hive/hive-2.1/hcatalog/sbin/webhcat_server.sh start
