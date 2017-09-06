@@ -447,7 +447,7 @@ public class TestHCatClient {
     HCatClient client = HCatClient.create(new Configuration(hcatConf));
     boolean isExceptionCaught = false;
     // Table creation with a long table name causes ConnectionFailureException
-    final String tableName = "Temptable" + new BigInteger(200, new Random()).toString(2);
+    final String tableName = "Temptable" + new BigInteger(300, new Random()).toString(2);
 
     ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
     cols.add(new HCatFieldSchema("id", Type.INT, "id columns"));
