@@ -91,24 +91,29 @@ public class HdfsUtils {
       final FsShell fsShell = new FsShell();
       fsShell.setConf(conf);
 
-      FileStatus fileStatus = fs.getFileStatus(new Path(conf.get("hive.metastore.warehouse.dir")));
-      String whOwner = fileStatus.getOwner();
-
       try {
         //If there is no group of a file, no need to call chgrp
         if (group != null && !group.isEmpty()) {
-          final String currentUserName = UserGroupInformation.getCurrentUser().getShortUserName();
-          if (whOwner.equals(currentUserName)) {
-            changeGroupIfAllowed(conf, group, fsShell, target, currentUserName);
-          } else {
-            UserGroupInformation ugi = UserGroupInformation.createProxyUser(whOwner, UserGroupInformation.getCurrentUser());
-            ugi.doAs(new PrivilegedAction<Void>() {
-              @Override
-              public Void run() {
-                changeGroupIfAllowed(conf, group, fsShell, target, currentUserName);
-                return null;
-              }
-            });
+          Path whDir = new Path(conf.get("hive.metastore.warehouse.dir"));
+          // for external storage's
+          if (fs.exists(whDir)) {
+            FileStatus fileStatus = fs.getFileStatus(whDir);
+            String whOwner = fileStatus.getOwner();
+            final String currentUserName = UserGroupInformation.getCurrentUser().getShortUserName();
+            if (whOwner.equals(currentUserName)) {
+              changeGroupIfAllowed(conf, group, fsShell, target, currentUserName);
+            } else {
+              UserGroupInformation ugi = UserGroupInformation.createProxyUser(whOwner, UserGroupInformation.getCurrentUser());
+              ugi.doAs(new PrivilegedAction<Void>() {
+                @Override
+                public Void run() {
+                  changeGroupIfAllowed(conf, group, fsShell, target, currentUserName);
+                  return null;
+                }
+              });
+            }
+          }else {
+            run(fsShell, new String[]{"-chgrp", "-R", group, target.toString()});
           }
         }
         if (aclEnabled) {
