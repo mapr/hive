@@ -18,8 +18,6 @@
 
 package org.apache.hive.conftool;
 
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-
 import java.io.File;
 import java.io.IOException;
 import javax.xml.parsers.DocumentBuilder;
@@ -40,7 +38,14 @@ import org.xml.sax.SAXException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ConfTool {
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_USE_SSL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD;
+
+class ConfTool {
   private ConfTool() {
   }
 
@@ -51,6 +56,7 @@ public class ConfTool {
   private static final String CONFIGURATION = "configuration";
   private static final String TRUE = "true";
   private static final String FALSE = "false";
+  private static final String AUTH_CONF = "auth-conf";
   private static final String EMPTY = "";
 
   static String toString(Document doc){
@@ -80,22 +86,33 @@ public class ConfTool {
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (secure) {
       LOG.info("Configuring Hive for MAPR-SASL");
-      if (propertyExists(doc, ConfVars.METASTORE_USE_THRIFT_SASL)) {
-        LOG.info("Property {} exists in {}", ConfVars.METASTORE_USE_THRIFT_SASL , pathToHiveSite);
-        setProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL, TRUE);
-      } else {
-        LOG.info("Property {} does not exist in {}", ConfVars.METASTORE_USE_THRIFT_SASL , pathToHiveSite);
-        addProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL, TRUE);
-      }
-
+      set(doc, METASTORE_USE_THRIFT_SASL, TRUE);
     } else {
       LOG.info("Configuring Hive for no security");
-      if (propertyExists(doc, ConfVars.METASTORE_USE_THRIFT_SASL)) {
-        LOG.info("Property {} exists in {}", ConfVars.METASTORE_USE_THRIFT_SASL , pathToHiveSite);
-        setProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL, FALSE);
-      }
+      set(doc, METASTORE_USE_THRIFT_SASL, FALSE);
     }
     saveToFile(doc, pathToHiveSite);
+  }
+
+  static void enableEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    if (secure) {
+      set(doc, HIVE_SERVER2_THRIFT_SASL_QOP, AUTH_CONF);
+    }
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  private static void set(Document doc, ConfVars confVars, String value){
+    if (propertyExists(doc, confVars)) {
+      LOG.info("Property {} exists in hive-site.xml", confVars);
+      setProperty(doc, confVars, value);
+    } else {
+      LOG.info("Property {} does not exist in hive-site.xml", confVars);
+      addProperty(doc, confVars, value);
+    }
   }
 
   private static void saveToFile(Document doc, String filepath) throws TransformerException {

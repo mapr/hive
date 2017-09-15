@@ -56,6 +56,18 @@ public class ConfToolTest {
 
 
   @Test
+  public void enableEncryptionTrueTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-008.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.enableEncryption(pathToHiveSite, true);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("auth-conf", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
+  }
+
+  @Test
   public void hiveMetaStoreSaslEnabledExistsTestTrue() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-001.xml");
     String pathToHiveSite = url.getPath();

@@ -87,6 +87,7 @@ public class ConfCli {
         HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
       }
       ConfTool.setMaprSasl(pathToHiveSite, security);
+      ConfTool.enableEncryption(pathToHiveSite, security);
     } else {
       HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
     }
