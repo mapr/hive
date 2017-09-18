@@ -19,6 +19,8 @@
 package org.apache.hadoop.hive.maprdb.json.shims;
 
 import org.ojai.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -29,6 +31,8 @@ import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.*;
  * Provide a shims between two version of MapRCore 6.x.x and 5.x.x
  */
 public class MapRDBProxy {
+
+  private static final Logger LOG = LoggerFactory.getLogger(MapRDBProxy.class);
   private static volatile Class<?> mapRDBClass;
   private static volatile Method mapRDMethod;
 
@@ -42,6 +46,10 @@ public class MapRDBProxy {
           try {
             mapRDBClass = Class.forName(MAPRDB_CLASS);
             mapRDMethod = mapRDBClass.getDeclaredMethod("newDocument", Map.class);
+
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("init() => loaded MapR-DB class: {}, method: {}", mapRDBClass.getName(), mapRDMethod);
+            }
           } catch (ClassNotFoundException | NoSuchMethodException e) {
             throw new RuntimeException("Can't load class: " + MAPRDB_CLASS + " Check classpath.");
           }
@@ -51,13 +59,11 @@ public class MapRDBProxy {
   }
 
   public static Document newDocument(Map<String, Object> jsonMap) {
-    Object doc;
     try {
       init();
-      doc = mapRDMethod.invoke(null, jsonMap);
+      return (Document) mapRDMethod.invoke(null, jsonMap);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
-    return (Document) doc;
   }
 }

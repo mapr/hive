@@ -42,6 +42,10 @@ public class DocumentWritable implements Writable {
     return document;
   }
 
+  public void setDocument(Document document) {
+    this.document = document;
+  }
+
   @Override
   public void write(DataOutput out) throws IOException {
     inputFormat.write(out);
@@ -70,10 +74,6 @@ public class DocumentWritable implements Writable {
   @Override
   public int hashCode() {
     return document != null ? document.hashCode() : 0;
-  }
-
-  public void setDocument(Document document) {
-    this.document = document;
   }
 }
 

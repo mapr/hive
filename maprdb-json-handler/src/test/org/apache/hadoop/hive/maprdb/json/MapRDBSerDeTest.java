@@ -40,6 +40,8 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.*;
 
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.ID_KEY;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_COLUMN_ID;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 
@@ -378,6 +380,7 @@ public class MapRDBSerDeTest {
   private Object deserialize(MapRDBSerDe serDe, String columnNames, String columnTypes, Object value)
           throws SerDeException {
     Properties tblProperties = new Properties();
+    tblProperties.setProperty(MAPRDB_COLUMN_ID, ID_KEY);
     tblProperties.setProperty(serdeConstants.LIST_COLUMNS, columnNames);
     tblProperties.setProperty(serdeConstants.LIST_COLUMN_TYPES, columnTypes);
 

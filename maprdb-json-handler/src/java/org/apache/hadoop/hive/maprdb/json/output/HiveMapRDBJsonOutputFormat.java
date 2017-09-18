@@ -20,18 +20,18 @@ package org.apache.hadoop.hive.maprdb.json.output;
 
 import com.mapr.db.mapreduce.TableOutputFormat;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
+import org.apache.hadoop.hive.maprdb.json.shims.RecordWriterWrapper;
 import org.apache.hadoop.hive.maprdb.json.shims.ValueWritableComparable;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.util.Progressable;
 import org.ojai.Document;
+import org.ojai.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,42 +53,19 @@ public class HiveMapRDBJsonOutputFormat extends TableOutputFormat
           String name,
           Progressable progress) throws IOException {
 
+    if (LOG.isDebugEnabled()) LOG.debug(MAPRDB_OUTPUT_TABLE_NAME + " = {}", jobConf.get(MAPRDB_TABLE_NAME));
+
     jobConf.set(MAPRDB_OUTPUT_TABLE_NAME, jobConf.get(MAPRDB_TABLE_NAME));
 
-    final org.apache.hadoop.mapreduce.TaskAttemptContext tac =
+    org.apache.hadoop.mapreduce.TaskAttemptContext tac =
             ShimLoader.getHadoopShims().newTaskAttemptContext(jobConf, progress);
 
-    org.apache.hadoop.mapreduce.RecordWriter recordWriter;
-
     try {
-      recordWriter = getRecordWriter(tac);
+      org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter = getRecordWriter(tac);
+      return new RecordWriterWrapper(recordWriter, tac);
     } catch (InterruptedException e) {
       throw new IOException("Failed to initialize RecordWriter", e);
     }
-
-    final org.apache.hadoop.mapreduce.RecordWriter finalRecordWriter = recordWriter;
-
-    return new RecordWriter<ValueWritableComparable, DocumentWritable>() {
-      @Override
-      public void write(ValueWritableComparable key, DocumentWritable value) throws IOException {
-        Document document = value.getDocument();
-
-        try {
-          finalRecordWriter.write(document.getId(), document);
-        } catch (InterruptedException e) {
-          throw new IOException("Error writing key/value pair", e);
-        }
-      }
-
-      @Override
-      public void close(Reporter reporter) throws IOException {
-        try {
-          finalRecordWriter.close(tac);
-        } catch (InterruptedException e) {
-          LOG.error("Error closing Record Reader: " + e.getMessage());
-        }
-      }
-    };
   }
 
   @Override

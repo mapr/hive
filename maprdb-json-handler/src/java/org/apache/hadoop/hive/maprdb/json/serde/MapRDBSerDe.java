@@ -67,10 +67,10 @@ public class MapRDBSerDe extends AbstractSerDe {
     String columnTypeProperty = tbl.getProperty(serdeConstants.LIST_COLUMN_TYPES);
 
     mappings = new HashMap<>();
-    mappings.put(tbl.getProperty((MAPRDB_COLUMN_ID)), ID_KEY);
+    mappings.put(tbl.getProperty((MAPRDB_COLUMN_ID)).toLowerCase(), ID_KEY);
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("columns " + columnNameProperty + " types " + columnTypeProperty);
+      LOG.debug("Columns: {}, Types: {}", columnNameProperty, columnTypeProperty);
     }
 
     // all table column names

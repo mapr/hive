@@ -23,18 +23,24 @@ import com.mapr.db.mapreduce.impl.TableSplit;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
 import org.apache.hadoop.hive.maprdb.json.shims.MapRDBJsonSplit;
+import org.apache.hadoop.hive.maprdb.json.shims.RecordReaderWrapper;
 import org.apache.hadoop.hive.maprdb.json.shims.ValueWritableComparable;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.ojai.Document;
 import org.ojai.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class HiveMapRDBJsonInputFormat extends TableInputFormat
         implements InputFormat<ValueWritableComparable, DocumentWritable> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HiveMapRDBJsonInputFormat.class);
 
   @Override
   public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
@@ -56,6 +62,19 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
         inputSplits[i] = new MapRDBJsonSplit((TableSplit) splits.get(i), tablePaths[0]);
       }
     }
+
+    if (LOG.isDebugEnabled()){
+      if (inputSplits != null) {
+        long[] splitSizes = new long[inputSplits.length];
+        for (int i = 0; i < inputSplits.length; i++) {
+          splitSizes[i] = inputSplits[i].getLength();
+        }
+        LOG.debug("getSplits() => split number: {}, split size: {}", inputSplits.length, Arrays.toString(splitSizes));
+      }else {
+        LOG.debug("getSplits() => 0 splits");
+      }
+    }
+
     return inputSplits;
   }
 
@@ -72,63 +91,12 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
     org.apache.hadoop.mapreduce.TaskAttemptContext tac =
             ShimLoader.getHadoopShims().newTaskAttemptContext(jobConf, reporter);
 
-    org.apache.hadoop.mapreduce.RecordReader<Value, Document> recordReader;
     try {
-      recordReader = createRecordReader(tableSplit, tac);
+      org.apache.hadoop.mapreduce.RecordReader<Value, Document> recordReader = createRecordReader(tableSplit, tac);
       recordReader.initialize(fileSplit, tac);
+      return new RecordReaderWrapper(recordReader);
     } catch (InterruptedException e) {
       throw new IOException("Failed to initialize RecordReader", e);
     }
-
-    final org.apache.hadoop.mapreduce.RecordReader<Value, Document> finalRecordReader = recordReader;
-
-    return new RecordReader<ValueWritableComparable, DocumentWritable>() {
-
-      @Override
-      public boolean next(ValueWritableComparable key, DocumentWritable value) throws IOException {
-        boolean next;
-        try {
-          next = finalRecordReader.nextKeyValue();
-          if (next) {
-            key.setValue(finalRecordReader.getCurrentKey());
-            value.setDocument(finalRecordReader.getCurrentValue());
-          }
-        } catch (InterruptedException e) {
-          throw new IOException("Error reading the next key/value pair from the input", e);
-        }
-        return next;
-      }
-
-      @Override
-      public ValueWritableComparable createKey() {
-        return new ValueWritableComparable();
-      }
-
-      @Override
-      public DocumentWritable createValue() {
-        return new DocumentWritable();
-      }
-
-      @Override
-      public long getPos() throws IOException {
-        return 0L;
-      }
-
-      @Override
-      public void close() throws IOException {
-        finalRecordReader.close();
-      }
-
-      @Override
-      public float getProgress() throws IOException {
-        float progress;
-        try {
-          progress = finalRecordReader.getProgress();
-        } catch (InterruptedException e) {
-          throw new IOException("Failed to get current progress of the record reader", e);
-        }
-        return progress;
-      }
-    };
   }
 }

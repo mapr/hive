@@ -58,7 +58,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
 
   private Admin getMapRDBAdmin() {
     if (admin == null) {
-      admin = MapRDB.newAdmin(super.getConf());
+      admin = MapRDB.newAdmin(getConf());
     }
     return admin;
   }
@@ -181,7 +181,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
           throw new MetaException(
                   format("'%s' must be STRING or BINARY type, actual: '%s'",
                           MAPRDB_COLUMN_ID,
-                          field.getType().toLowerCase()));
+                          field.getType().toUpperCase()));
         }
         match = true;
         break;
