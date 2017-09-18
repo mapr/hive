@@ -136,6 +136,15 @@ done
 }
 
 #
+# Removes file $HIVE_HOME/conf/.not_configured_yet after first run of Hive configure.sh
+#
+remove_fresh_install_indicator(){
+if [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
+    rm -f "$HIVE_HOME/conf/.not_configured_yet"
+fi
+}
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -155,7 +164,13 @@ while [ $# -gt 0 ]; do
     shift
     ;;
     --customSecure)
-    isSecure="custom"
+    if [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
+      # If the file exist and our configure.sh is passed --customSecure, then we need to
+      # translate this to doing what we normally do for --secure (best we can do)
+      isSecure="true"
+    else
+      isSecure="custom"
+    fi
     shift
     ;;
     --unsecure)
@@ -183,3 +198,5 @@ save_security_flag
 update_hive_site_xml "$HIVE_SITE" "$isSecure"
 
 configure_roles
+
+remove_fresh_install_indicator
