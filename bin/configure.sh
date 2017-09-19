@@ -145,25 +145,38 @@ fi
 }
 
 #
+# Trim string
+#
+trim(){
+STRING=$1
+echo "$(echo -e "${STRING}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+}
+
+#
 # main
 #
 # typically called from core configure.sh
 #
 
-USAGE="usage: $0 [--secure|--unsecure|--customSecure|--help]"
-
-if [ ${#} -gt 1 ]; then
-  echo "$USAGE"
-  return 1 2>/dev/null || exit 1
-fi
+USAGE="Usage: $0 [options]
+where options include:
+    --secure|-s           configure MapR-SASL security cluster
+    --unsecure|-u         configure MapR unsecure cluster
+    --customSecure|-cs    keep existing security configuration
+    --help|-h             print help
+    -EC                   unused option. Added for compatibility purpose
+    -R                    unused option. Added for compatibility purpose
+    -OT [comma separated open Tsdb Server List]
+                          unused option. Added for compatibility purpose"
 
 while [ $# -gt 0 ]; do
-  case "$1" in
-    --secure)
+  OPTION=$(trim $1)
+  case "$OPTION" in
+    --secure|-s)
     isSecure="true"
     shift
     ;;
-    --customSecure)
+    --customSecure|-cs)
     if [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
       # If the file exist and our configure.sh is passed --customSecure, then we need to
       # translate this to doing what we normally do for --secure (best we can do)
@@ -173,7 +186,7 @@ while [ $# -gt 0 ]; do
     fi
     shift
     ;;
-    --unsecure)
+    --unsecure|-u)
     isSecure="false"
     shift
     ;;
@@ -184,9 +197,14 @@ while [ $# -gt 0 ]; do
     -EC)
     shift
     ;;
+    -R)
+    shift
+    ;;
+    -OT)
+    shift;
+    ;;
     *)
-      echo "$USAGE"
-      return 1 2>/dev/null || exit 1
+    shift
     ;;
   esac
 done
