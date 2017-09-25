@@ -31,6 +31,19 @@ public class ConfToolTest {
   }
 
   @Test
+  public void enableHs2HaTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-010.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.enableHs2Ha(pathToHiveSite, "node1,node2");
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY));
+    Assert.assertEquals("node1,node2", ConfTool.getProperty(doc, ConfVars.HIVE_ZOOKEEPER_QUORUM));
+  }
+
+  @Test
   public void setMaprSaslTrueTest2() throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-005.xml");
     String pathToHiveSite = url.getPath();

@@ -41,6 +41,8 @@ public class ConfCli {
   private static final String UNSECURE = "unsecure";
   private static final String PATH = "path";
   private static final String TOOL_NAME = "conftool";
+  private static final String HS2_HA = "hs2ha";
+  private static final String ZK_QUORUM = "zkquorum";
 
   static {
     OptionBuilder.hasArg(false);
@@ -59,6 +61,15 @@ public class ConfCli {
     OptionBuilder.withArgName("path-to-hive-site");
     OptionBuilder.withDescription("Path to hive-site.xml");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(PATH));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 High Availability");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HS2_HA));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("quorum");
+    OptionBuilder.withDescription("Hive Zookeeper Quorum");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ZK_QUORUM));
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -68,28 +79,68 @@ public class ConfCli {
       line = cmdParser.parse(ConfCli.CMD_LINE_OPTIONS, args);
     } catch (ParseException e) {
       LOG.error( "{} : parsing failed.  Reason: {}", TOOL_NAME, e.getLocalizedMessage());
-      HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
+      printHelp();
     }
     if(line == null){
       LOG.error("{} : parsing failed.  Reason: unknown", TOOL_NAME);
       return;
     }
     if (line.hasOption(HELP)) {
-      HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
+      printHelp();
     } else if(line.hasOption(PATH)){
-      boolean security = false;
       String pathToHiveSite = line.getOptionValue(PATH);
-      if(line.hasOption(SECURE)){
-        security = true;
-      } else if (line.hasOption(UNSECURE)){
-        security = false;
-      } else {
-        HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
+      if(isSecurityConfig(line)){
+        if(hasValidSecurityOptions(line)){
+          configureSecurity(pathToHiveSite, getSecurity(line));
+        } else {
+          printHelp();
+        }
       }
-      ConfTool.setMaprSasl(pathToHiveSite, security);
-      ConfTool.enableEncryption(pathToHiveSite, security);
+
+      if(isHs2HaConfig(line)){
+        if(hasValidHs2HaOptions(line)){
+          String zookeeperQuorum = line.getOptionValue(ZK_QUORUM);
+          ConfTool.enableHs2Ha(pathToHiveSite, zookeeperQuorum);
+        } else {
+          printHelp();
+        }
+      }
     } else {
-      HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
+      printHelp();
     }
+  }
+
+  private static boolean isSecurityConfig(CommandLine line){
+    return line.hasOption(SECURE) || line.hasOption(UNSECURE);
+  }
+
+  private static boolean hasValidSecurityOptions(CommandLine line){
+    return !(line.hasOption(SECURE) && line.hasOption(UNSECURE));
+  }
+
+  private static void configureSecurity(String pathToHiveSite, boolean security) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    ConfTool.setMaprSasl(pathToHiveSite, security);
+    ConfTool.enableEncryption(pathToHiveSite, security);
+  }
+
+  private static boolean getSecurity(CommandLine line){
+    if(line.hasOption(SECURE)){
+      return true;
+    } else if (line.hasOption(UNSECURE)){
+      return false;
+    }
+    return true; // never happens
+  }
+
+  private static void printHelp(){
+    HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
+  }
+
+  private static boolean isHs2HaConfig(CommandLine line){
+    return line.hasOption(HS2_HA);
+  }
+
+  private static boolean hasValidHs2HaOptions(CommandLine line){
+    return line.hasOption(HS2_HA) && !line.getOptionValue(ZK_QUORUM).isEmpty();
   }
 }

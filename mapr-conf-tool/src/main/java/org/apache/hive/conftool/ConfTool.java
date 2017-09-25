@@ -41,9 +41,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_USE_SSL;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
 
 class ConfTool {
   private ConfTool() {
@@ -80,9 +79,7 @@ class ConfTool {
   }
 
   static void setMaprSasl(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
+    Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (secure) {
       LOG.info("Configuring Hive for MAPR-SASL");
@@ -95,14 +92,26 @@ class ConfTool {
   }
 
   static void enableEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
+    Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (secure) {
       set(doc, HIVE_SERVER2_THRIFT_SASL_QOP, AUTH_CONF);
     }
     saveToFile(doc, pathToHiveSite);
+  }
+
+  static void enableHs2Ha(String pathToHiveSite, String zookeeperQuorum) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    set(doc, HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY, TRUE);
+    set(doc, HIVE_ZOOKEEPER_QUORUM, zookeeperQuorum);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  private static Document readDocument(String pathToHiveSite) throws ParserConfigurationException, IOException, SAXException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    return docBuilder.parse(pathToHiveSite);
   }
 
   private static void set(Document doc, ConfVars confVars, String value){

@@ -41,6 +41,7 @@ HIVE_SITE="$HIVE_CONF"/hive-site.xml
 HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="$MAPR_HOME/conf/restart"
 NOW=$(date "+%Y%m%d_%H%M%S")
+isHS2HA=false
 declare -A MAPRCLI=( ["hivemetastore"]="hivemeta" ["hiveserver2"]="hs2" ["hivewebhcat"]="hcat")
 declare -A PORTS=( ["hivemetastore"]="9083" ["hiveserver2"]="10000" ["hivewebhcat"]="50111")
 
@@ -48,6 +49,13 @@ if [ "$HADOOP_CLASSPATH" != "" ]; then
   HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"
 else
   HADOOP_CLASSPATH="$HIVE_LIB/*":$(hadoop classpath)
+fi
+
+#
+# Checks if HiveServer2 High Availability flag exists
+#
+if [ -f "$HIVE_CONF/enable_hs2_ha" ]; then
+  isHS2HA=true
 fi
 
 #
@@ -66,7 +74,7 @@ else
 fi
 }
 
-update_hive_site_xml(){
+configure_security(){
 HIVE_SITE="$1"
 isSecure="$2"
 
@@ -153,6 +161,38 @@ echo "$(echo -e "${STRING}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 }
 
 #
+# Enables HiveServer2 High Availability
+#
+configure_hs2_ha(){
+HIVE_SITE=$1
+isHS2HA=$2
+num_hs2=1
+zk_hosts=$(hostname)
+if [ "$isHS2HA" = "true" ]; then
+  if [ -f "$HIVE_CONF/num_hs2" ]; then
+    num_hs2=$(cat "$HIVE_CONF/num_hs2")
+  fi
+  if [ -f "$HIVE_CONF/zk_hosts" ]; then
+    zk_hosts=$(cat "$HIVE_CONF/zk_hosts")
+  fi
+  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
+  set_num_h2_in_warden_file "$num_hs2"
+fi
+}
+
+#
+# Updates hs2 warden file with number of HS2
+#
+set_num_h2_in_warden_file(){
+num_hs2=$1
+ROLE=hiveserver2
+warden_file="$HIVE_HOME/conf/warden.${MAPRCLI[$ROLE]}.conf"
+if [ -f "$warden_file" ]; then
+  sed -i "s/services=hs2:[[:alnum:]]*:cldb/services=hs2:${num_hs2}:cldb/" "${warden_file}"
+fi
+}
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -213,7 +253,9 @@ backup_configuration
 
 save_security_flag
 
-update_hive_site_xml "$HIVE_SITE" "$isSecure"
+configure_security "$HIVE_SITE" "$isSecure"
+
+configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 
 configure_roles
 
