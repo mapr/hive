@@ -41,6 +41,7 @@ HIVE_SITE="$HIVE_CONF"/hive-site.xml
 HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="$MAPR_HOME/conf/restart"
 NOW=$(date "+%Y%m%d_%H%M%S")
+DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
 isHS2HA=false
 declare -A MAPRCLI=( ["hivemetastore"]="hivemeta" ["hiveserver2"]="hs2" ["hivewebhcat"]="hcat")
 declare -A PORTS=( ["hivemetastore"]="9083" ["hiveserver2"]="10000" ["hivewebhcat"]="50111")
@@ -59,6 +60,26 @@ if [ -f "$HIVE_CONF/enable_hs2_ha" ]; then
 fi
 
 #
+# Find mapr user and group
+#
+find_mapr_user_and_group() {
+if [ -z "$MAPR_USER" ] ; then
+  MAPR_USER=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' "$DAEMON_CONF")
+fi
+if [ -z "$MAPR_GROUP" ] ; then
+  MAPR_GROUP=$( awk -F = '$1 == "mapr.daemon.group" { print $2 }' "$DAEMON_CONF")
+fi
+
+if [ -z "$MAPR_USER" ] ; then
+  MAPR_USER=mapr
+fi
+if [ -z "$MAPR_GROUP" ] ; then
+  MAPR_GROUP=mapr
+fi
+}
+
+
+#
 # Saves security flag to file "$HIVE_BIN"/isSecure
 #
 save_security_flag() {
@@ -71,6 +92,18 @@ else
   else
     echo false > "$HIVE_BIN"/isSecure
   fi
+fi
+}
+
+#
+# Grant owners
+#
+grant_admin_permissions_to(){
+if [ ! -z "$MAPR_USER" ]; then
+  chown -R "$MAPR_USER" "$1"
+fi
+if [ ! -z "$MAPR_GROUP" ]; then
+  chgrp -R "$MAPR_GROUP" "$1"
 fi
 }
 
@@ -251,6 +284,8 @@ done
 
 backup_configuration
 
+find_mapr_user_and_group
+
 save_security_flag
 
 configure_security "$HIVE_SITE" "$isSecure"
@@ -260,3 +295,5 @@ configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 configure_roles
 
 remove_fresh_install_indicator
+
+grant_admin_permissions_to "$HIVE_HOME"
