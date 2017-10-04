@@ -83,8 +83,8 @@ public class CLIService extends CompositeService implements ICLIService {
     sessionManager = new SessionManager(hiveServer2);
     defaultFetchRows = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_RESULTSET_DEFAULT_FETCH_SIZE);
     addService(sessionManager);
-    //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
-    if (UserGroupInformation.isSecurityEnabled()) {
+    //  If the hadoop cluster is secure  and authentication method is kerberos, do a kerberos login for the service from the keytab
+    if (hiveConf.getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION).equalsIgnoreCase(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
       try {
         HiveAuthFactory.loginFromKeytab(hiveConf);
         this.serviceUGI = Utils.getUGI();
