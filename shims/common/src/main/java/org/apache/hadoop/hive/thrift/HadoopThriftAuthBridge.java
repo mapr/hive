@@ -386,6 +386,15 @@ public abstract class HadoopThriftAuthBridge {
       return new TUGIAssumingTransportFactory(transFactory, realUgi);
     }
 
+    public void addServerDefinition(TTransportFactory tTransportFactory, String mechanism, String protocol, String serverName,
+                                    Map<String, String> props, CallbackHandler cbh) {
+      if (tTransportFactory instanceof TUGIAssumingTransportFactory) {
+        ((TUGIAssumingTransportFactory) tTransportFactory).addServerDefinition(mechanism, protocol, serverName, props, cbh);
+      } else {
+        throw new UnsupportedOperationException("New server definition could not be added to this TTransportFactory implementation");
+      }
+    }
+
     /**
      * Wrap a TProcessor in such a way that, before processing any RPC, it
      * assumes the UserGroupInformation of the user authenticated by
@@ -643,6 +652,14 @@ public abstract class HadoopThriftAuthBridge {
         this.ugi = ugi;
       }
 
+      void addServerDefinition(String mechanism, String protocol, String serverName,
+                               Map<String, String> props, CallbackHandler cbh) {
+        if (this.wrapped instanceof TSaslServerTransport.Factory) {
+          ((TSaslServerTransport.Factory) this.wrapped).addServerDefinition(mechanism, protocol, serverName, props, cbh);
+        } else {
+          throw new UnsupportedOperationException("New server definition could not be added to this TTransportFactory implementation");
+        }
+      }
 
       @Override
       public TTransport getTransport(final TTransport trans) {
