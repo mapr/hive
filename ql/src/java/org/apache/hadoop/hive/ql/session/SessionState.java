@@ -474,10 +474,10 @@ public class SessionState {
   public HadoopShims.HdfsEncryptionShim getHdfsEncryptionShim(FileSystem fs) throws HiveException {
     if (!hdfsEncryptionShims.containsKey(fs.getUri())) {
       try {
-        if ("hdfs".equals(fs.getUri().getScheme())) {
+        if ("hdfs".equals(fs.getUri().getScheme()) || "maprfs".equals(fs.getUri().getScheme())) {
           hdfsEncryptionShims.put(fs.getUri(), ShimLoader.getHadoopShims().createHdfsEncryptionShim(fs, sessionConf));
         } else {
-          LOG.info("Could not get hdfsEncryptionShim, it is only applicable to hdfs filesystem.");
+          LOG.debug("Could not get hdfsEncryptionShim, it is only applicable to hdfs / maprfs filesystem.");
         }
       } catch (Exception e) {
         throw new HiveException(e);
