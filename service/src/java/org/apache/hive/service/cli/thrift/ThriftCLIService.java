@@ -376,11 +376,11 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
    */
   private String getUserName(TOpenSessionReq req) throws HiveSQLException, IOException {
     String userName = null;
-
-    if (hiveAuthFactory != null && hiveAuthFactory.isSASLWithKerberizedHadoop()) {
+    // Kerberos or MAPR SASL
+    if (hiveAuthFactory != null && (hiveAuthFactory.isSASLWithKerberizedHadoop() || hiveAuthFactory.isSASLWithMaprHadoop())) {
       userName = hiveAuthFactory.getRemoteUser();
     }
-    // NOSASL
+    // Except kerberos, NOSASL
     if (userName == null) {
       userName = TSetIpAddressProcessor.getUserName();
     }
