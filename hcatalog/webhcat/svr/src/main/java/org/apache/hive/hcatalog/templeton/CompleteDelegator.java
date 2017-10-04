@@ -20,13 +20,16 @@ package org.apache.hive.hcatalog.templeton;
 
 import java.io.IOException;
 import java.net.URL;
+import java.security.PrivilegedExceptionAction;
 import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.hcatalog.common.HCatUtil;
 import org.apache.hive.hcatalog.templeton.tool.DelegationTokenCache;
 import org.apache.hive.hcatalog.templeton.tool.JobState;
@@ -56,64 +59,68 @@ public class CompleteDelegator extends TempletonDelegator {
     super(appConf);
   }
 
-  public CompleteBean run(String id, String jobStatus)
-    throws CallbackFailedException, IOException {
+  public CompleteBean run(String user, final String id, final String jobStatus)
+    throws CallbackFailedException, IOException, InterruptedException {
     if (id == null)
       acceptWithError("No jobid given");
 
-    JobState state = null;
-    /* we don't want to cancel the delegation token if we think the callback is going to
-     to be retried, for example, because the job is not complete yet */
-    boolean cancelMetastoreToken = false;
-    try {
-      state = new JobState(id, Main.getAppConfigInstance());
-      if (state.getCompleteStatus() == null)
-        failed("Job not yet complete. jobId=" + id + " Status from JobTracker=" + jobStatus, null);
+    if (user == null)
+      acceptWithError("No user id given");
 
-      Long notified = state.getNotifiedTime();
-      if (notified != null) {
-        cancelMetastoreToken = true;
-        return acceptWithError("Callback already run for jobId=" + id +
-                " at " + new Date(notified));
-      }
+    UserGroupInformation ugi = UgiFactory.getUgi(user);
+    return ugi.doAs(new PrivilegedExceptionAction<CompleteBean>() {
+      public CompleteBean run() throws Exception {
+        JobState state = null;
+        boolean cancelMetastoreToken = false;
+        try {
+          state = new JobState(id, Main.getAppConfigInstance());
+          if (state.getCompleteStatus() == null) {
+            failed("Job not yet complete. jobId=" + id + " Status from JobTracker=" + jobStatus, null);
+          }
+          Long notified = state.getNotifiedTime();
+          if (notified != null) {
+            cancelMetastoreToken = true;
+            return acceptWithError("Callback already run for jobId=" + id +
+              " at " + new Date(notified));
+          }
 
-      String callback = state.getCallback();
-      if (callback == null) {
-        cancelMetastoreToken = true;
-        return new CompleteBean("No callback registered");
-      }
-      
-      try {
-        doCallback(state.getId(), callback);
-        cancelMetastoreToken = true;
-      } catch (Exception e) {
-        failed("Callback failed " + callback + " for " + id, e);
-      }
-
-      state.setNotifiedTime(System.currentTimeMillis());
-      return new CompleteBean("Callback sent");
-    } finally {
-      state.close();
-      IMetaStoreClient client = null;
-      try {
-        if(cancelMetastoreToken) {
-          String metastoreTokenStrForm =
-                  DelegationTokenCache.getStringFormTokenCache().getDelegationToken(id);
-          if(metastoreTokenStrForm != null) {
-            client = HCatUtil.getHiveMetastoreClient(new HiveConf());
-            client.cancelDelegationToken(metastoreTokenStrForm);
-            LOG.debug("Cancelled token for jobId=" + id + " status from JT=" + jobStatus);
-            DelegationTokenCache.getStringFormTokenCache().removeDelegationToken(id);
+          String callback = state.getCallback();
+          if (callback == null) {
+            cancelMetastoreToken = true;
+            return new CompleteBean("No callback registered");
+          }
+          try {
+            doCallback(state.getId(), callback);
+            cancelMetastoreToken = true;
+          } catch (Exception e) {
+            failed("Callback failed " + callback + " for " + id, e);
+          }
+          state.setNotifiedTime(System.currentTimeMillis());
+          return new CompleteBean("Callback sent");
+        } catch( CallbackFailedException ex) {
+          throw new Exception(ex);
+        } finally {
+          state.close();
+          HiveMetaStoreClient client = null;
+          try {
+            if(cancelMetastoreToken) {
+              String metastoreTokenStrForm =
+                DelegationTokenCache.getStringFormTokenCache().getDelegationToken(id);
+                if(metastoreTokenStrForm != null) {
+                  client = HCatUtil.getHiveClient(new HiveConf());
+                  client.cancelDelegationToken(metastoreTokenStrForm);
+                  LOG.debug("Cancelled token for jobId=" + id + " status from JT=" + jobStatus);
+                  DelegationTokenCache.getStringFormTokenCache().removeDelegationToken(id);
+                }
+            }
+          } catch(Exception ex) {
+            LOG.warn("Failed to cancel metastore delegation token for jobId=" + id, ex);
+          } finally {
+            HCatUtil.closeHiveClientQuietly(client);
           }
         }
       }
-      catch(Exception ex) {
-        LOG.warn("Failed to cancel metastore delegation token for jobId=" + id, ex);
-      }
-      finally {
-        HCatUtil.closeHiveClientQuietly(client);
-      }
-    }
+    });
   }
 
   /**
@@ -127,7 +134,7 @@ public class CompleteDelegator extends TempletonDelegator {
     TempletonUtils.fetchUrl(new URL(url));
   }
 
-  private void failed(String msg, Exception e)
+  private static void failed(String msg, Exception e)
     throws CallbackFailedException {
     if (e != null)
       LOG.error(msg, e);
@@ -136,7 +143,7 @@ public class CompleteDelegator extends TempletonDelegator {
     throw new CallbackFailedException(msg);
   }
 
-  private CompleteBean acceptWithError(String msg) {
+  private static CompleteBean acceptWithError(String msg) {
     LOG.error(msg);
     return new CompleteBean(msg);
   }

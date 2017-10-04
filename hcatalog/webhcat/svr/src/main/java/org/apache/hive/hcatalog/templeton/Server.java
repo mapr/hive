@@ -1009,14 +1009,15 @@ public class Server {
    * Notify on a completed job.  Called by JobTracker.
    */
   @GET
-  @Path("internal/complete/{jobid}")
+  @Path("internal/complete/{jobid}/{user}")
   @Produces({MediaType.APPLICATION_JSON})
   public CompleteBean completeJob(@PathParam("jobid") String jobid,
-                                  @QueryParam("status") String jobStatus)
-    throws CallbackFailedException, IOException {
+                                  @QueryParam("status") String jobStatus,
+                                  @PathParam("user") String user)
+    throws CallbackFailedException, IOException, InterruptedException {
     LOG.debug("Received callback " + theUriInfo.getRequestUri());
     CompleteDelegator d = new CompleteDelegator(appConf);
-    return d.run(jobid, jobStatus);
+    return d.run(user, jobid, jobStatus);
   }
 
   /**
