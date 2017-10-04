@@ -456,9 +456,7 @@ public class HiveMetaTool {
          * validate input - Both new and old URI should contain valid host names and valid schemes.
          * port is optional in both the URIs since HDFS HA NN URI doesn't have a port.
          */
-          if (oldURI.getHost() == null || newURI.getHost() == null) {
-            System.err.println("HiveMetaTool:A valid host is required in both old-loc and new-loc");
-          } else if (oldURI.getScheme() == null || newURI.getScheme() == null) {
+        if (oldURI.getScheme() == null || newURI.getScheme() == null) {
             System.err.println("HiveMetaTool:A valid scheme is required in both old-loc and new-loc");
           } else {
             metaTool.updateFSRootLocation(oldURI, newURI, serdepropKey, tablePropKey, isDryRun);
