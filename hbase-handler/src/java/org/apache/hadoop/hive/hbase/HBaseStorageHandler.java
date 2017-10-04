@@ -486,8 +486,8 @@ public class HBaseStorageHandler extends DefaultStorageHandler
       try {
         User curUser = User.getCurrent();
         Job job = new Job(conf);
-        TokenUtil.addTokenForJob(conn, curUser, job);
-      } catch (InterruptedException e) {
+        TokenUtilProxy.addTokenForJob(conn, curUser, job);
+      } catch (Exception e) {
         throw new IOException("Error while obtaining hbase delegation token", e);
       }
       finally {
