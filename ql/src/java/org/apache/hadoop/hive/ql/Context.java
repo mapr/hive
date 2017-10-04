@@ -764,8 +764,10 @@ public class Context {
     if (resDir != null) {
       try {
         FileSystem fs = resDir.getFileSystem(conf);
-        LOG.debug("Deleting result dir: {}",  resDir);
-        fs.delete(resDir, true);
+        if (fs.exists(resDir)) {
+          LOG.debug("Deleting result dir: {}", resDir);
+          fs.delete(resDir, true);
+        }
       } catch (IOException e) {
         LOG.info("Context clear error: " + StringUtils.stringifyException(e));
       }
@@ -774,8 +776,10 @@ public class Context {
     if (resFile != null) {
       try {
         FileSystem fs = resFile.getFileSystem(conf);
-        LOG.debug("Deleting result file: {}",  resFile);
-        fs.delete(resFile, false);
+        if (fs.exists(resFile)) {
+          LOG.debug("Deleting result file: {}", resFile);
+          fs.delete(resFile, false);
+        }
       } catch (IOException e) {
         LOG.info("Context clear error: " + StringUtils.stringifyException(e));
       }
