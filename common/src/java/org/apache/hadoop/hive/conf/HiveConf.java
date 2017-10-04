@@ -3234,8 +3234,10 @@ public class HiveConf extends Configuration {
     HIVE_SESSION_IMPL_WITH_UGI_CLASSNAME("hive.session.impl.withugi.classname", null, "Classname for custom implementation of hive session with UGI"),
 
     // HiveServer2 auth configuration
-    HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication", "NONE",
-      new StringSet("NOSASL", "NONE", "LDAP", "KERBEROS", "PAM", "CUSTOM"),
+    HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication",
+        System.getProperty("hiveserver2.auth") == null ?
+        "NONE" : System.getProperty("hiveserver2.auth"),
+        new StringSet("NOSASL", "NONE", "LDAP", "KERBEROS", "PAM", "CUSTOM"),
         "Client authentication types.\n" +
         "  NONE: no authentication check\n" +
         "  LDAP: LDAP/AD based authentication\n" +
@@ -3320,7 +3322,8 @@ public class HiveConf extends Configuration {
         "will call its Authenticate(user, passed) method to authenticate requests.\n" +
         "The implementation may optionally implement Hadoop's\n" +
         "org.apache.hadoop.conf.Configurable class to grab Hive's Configuration object."),
-    HIVE_SERVER2_PAM_SERVICES("hive.server2.authentication.pam.services", null,
+    HIVE_SERVER2_PAM_SERVICES("hive.server2.authentication.pam.services",
+      System.getProperty("hiveserver2.authentication.pam.services"),
       "List of the underlying pam services that should be used when auth type is PAM\n" +
       "A file with the same name must exist in /etc/pam.d"),
 
