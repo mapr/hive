@@ -153,6 +153,14 @@ public class LoadSemanticAnalyzer extends SemanticAnalyzer {
       fromAuthority = defaultURI.getAuthority();
     }
 
+    // The MapRFileSytem in Yarn has been changed its behavior for getHomeDirectory API.
+    // In MapR-Core 3.x, the getHomeDirectory API returns a directory without the schema "maprfs:";
+    // While in MapR-Core 4.x, the getHomeDirectory API returns a directory with the schema "maprfs:".
+    // Therefore, we need to remove the "maprfs:" from the path here to make Hive-0.13 work on both MapR-Core 3.x and 4.x clusters.
+    if (path.startsWith(fromScheme)) {
+      path = path.substring(fromScheme.length() + 1);
+    }
+
     LOG.debug(fromScheme + "@" + fromAuthority + "@" + path);
     return new URI(fromScheme, fromAuthority, path, null, null);
   }
