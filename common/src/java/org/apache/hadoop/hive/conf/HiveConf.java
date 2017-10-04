@@ -1924,7 +1924,7 @@ public class HiveConf extends Configuration {
         "How long, in ms, to wait to batch input directories for processing during ORC split\n" +
         "generation. 0 means process directories individually. This can increase the number of\n" +
         "metastore calls if metastore metadata cache is used."),
-    HIVE_ORC_INCLUDE_FILE_ID_IN_SPLITS("hive.orc.splits.include.fileid", true,
+    HIVE_ORC_INCLUDE_FILE_ID_IN_SPLITS("hive.orc.splits.include.fileid", false,
         "Include file ID in splits on file systems that support it."),
     HIVE_ORC_ALLOW_SYNTHETIC_FILE_ID_IN_SPLITS("hive.orc.splits.allow.synthetic.fileid", true,
         "Allow synthetic file ID in splits on file systems that don't have a native one."),
