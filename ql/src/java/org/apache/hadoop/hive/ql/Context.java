@@ -556,9 +556,11 @@ public class Context {
       try {
         Path p = entry.getValue();
         FileSystem fs = p.getFileSystem(conf);
-        LOG.debug("Deleting scratch dir: {}",  p);
-        fs.delete(p, true);
-        fs.cancelDeleteOnExit(p);
+        if(fs.exists(p)) {
+          LOG.debug("Deleting scratch dir: {}", p);
+          fs.delete(p, true);
+          fs.cancelDeleteOnExit(p);
+        }
       } catch (Exception e) {
         LOG.warn("Error Removing Scratch: "
             + StringUtils.stringifyException(e));
