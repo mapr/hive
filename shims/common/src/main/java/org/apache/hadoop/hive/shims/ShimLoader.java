@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hive.shims;
 
+import org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.log4j.AppenderSkeleton;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ public abstract class ShimLoader {
   private static volatile HadoopShims hadoopShims;
   private static JettyShims jettyShims;
   private static AppenderSkeleton eventCounter;
+  private static HadoopThriftAuthBridge hadoopThriftAuthBridge;
   private static SchedulerShim schedulerShim;
 
   /**
@@ -99,6 +101,14 @@ public abstract class ShimLoader {
       eventCounter = loadShims(EVENT_COUNTER_SHIM_CLASSES, AppenderSkeleton.class);
     }
     return eventCounter;
+  }
+
+  public static synchronized HadoopThriftAuthBridge getHadoopThriftAuthBridge() {
+    if (hadoopThriftAuthBridge == null) {
+      hadoopThriftAuthBridge = loadShims(HADOOP_THRIFT_AUTH_BRIDGE_CLASSES,
+          HadoopThriftAuthBridge.class);
+    }
+    return hadoopThriftAuthBridge;
   }
 
   public static synchronized SchedulerShim getSchedulerShims() {

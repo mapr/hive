@@ -253,7 +253,7 @@ public abstract class HadoopThriftAuthBridge {
         throw new IOException("Unsupported authentication method: " + method);
       }
     }
-    private static class SaslClientCallbackHandler implements CallbackHandler {
+    public static class SaslClientCallbackHandler implements CallbackHandler {
       private final String userName;
       private final char[] userPassword;
 
@@ -427,6 +427,15 @@ public abstract class HadoopThriftAuthBridge {
      */
     public TTransportFactory wrapTransportFactory(TTransportFactory transFactory) {
       return new TUGIAssumingTransportFactory(transFactory, realUgi);
+    }
+
+    public void addServerDefinition(TTransportFactory tTransportFactory, String mechanism, String protocol, String serverName,
+        Map<String, String> props, CallbackHandler cbh) {
+      if (tTransportFactory instanceof TUGIAssumingTransportFactory) {
+        ((TUGIAssumingTransportFactory) tTransportFactory).addServerDefinition(mechanism, protocol, serverName, props, cbh);
+      } else {
+        throw new UnsupportedOperationException("New server definition could not be added to this TTransportFactory implementation");
+      }
     }
 
     /**
@@ -688,6 +697,15 @@ public abstract class HadoopThriftAuthBridge {
       }
 
 
+      void addServerDefinition(String mechanism, String protocol, String serverName,
+          Map<String, String> props, CallbackHandler cbh) {
+        if (this.wrapped instanceof TSaslServerTransport.Factory) {
+          ((TSaslServerTransport.Factory) this.wrapped).addServerDefinition(mechanism, protocol, serverName, props, cbh);
+        } else {
+          throw new UnsupportedOperationException("New server definition could not be added to this TTransportFactory implementation");
+        }
+      }
+      
       @Override
       public TTransport getTransport(final TTransport trans) {
         return ugi.doAs(new PrivilegedAction<TTransport>() {

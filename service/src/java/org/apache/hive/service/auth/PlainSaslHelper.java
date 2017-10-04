@@ -30,6 +30,7 @@ import javax.security.auth.login.LoginException;
 import javax.security.sasl.AuthenticationException;
 import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.SaslException;
+import org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge;
 
 import org.apache.hive.service.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.hive.service.auth.PlainSaslServer.SaslPlainProvider;
@@ -64,6 +65,17 @@ public final class PlainSaslHelper {
     }
     return saslFactory;
   }
+
+  public static void addPlainDefinitionToFactory(String authTypeStr, TTransportFactory saslTransportFactory,
+                                                 HadoopThriftAuthBridge.Server saslServer) throws LoginException {
+    try {
+      saslServer.addServerDefinition(saslTransportFactory, "PLAIN", authTypeStr, null, new HashMap<String, String>(),
+              new PlainServerCallbackHandler(authTypeStr));
+    } catch (AuthenticationException e) {
+      throw new LoginException("Cannot add PLAIN definition for authentication method: " + authTypeStr);
+    }
+  }
+
 
   public static TTransport getPlainTransport(String username, String password,
     TTransport underlyingTransport) throws SaslException {

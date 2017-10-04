@@ -50,6 +50,8 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.thrift.ThriftCLIService;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.transport.TSaslServerTransport;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.apache.thrift.transport.TTransportFactory;
 import org.slf4j.Logger;
@@ -62,6 +64,27 @@ import org.slf4j.LoggerFactory;
 public class HiveAuthFactory {
   private static final Logger LOG = LoggerFactory.getLogger(HiveAuthFactory.class);
 
+  public enum AuthTypes {
+    NOSASL("NOSASL"),
+    NONE("NONE"),
+    LDAP("LDAP"),
+    KERBEROS("KERBEROS"),
+    CUSTOM("CUSTOM"),
+    PAM("PAM"),
+    MAPRSASL("MAPRSASL");
+
+    private final String authType;
+
+    AuthTypes(String authType) {
+      this.authType = authType;
+    }
+
+    public String getAuthName() {
+      return authType;
+    }
+
+  }
+
   private HadoopThriftAuthBridge.Server saslServer;
   private String authTypeStr;
   private final String transportMode;
@@ -73,10 +96,7 @@ public class HiveAuthFactory {
     this.conf = conf;
     transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
     authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
-
-    // ShimLoader.getHadoopShims().isSecurityEnabled() will only check that
-    // hadoopAuth is not simple, it does not guarantee it is kerberos
-    hadoopAuth = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
+    boolean isAuthTypeSecured = isSASLWithKerberizedHadoop() || isSASLWithMaprHadoop();
 
     // In http mode we use NOSASL as the default auth type
     if (authTypeStr == null) {
@@ -86,7 +106,7 @@ public class HiveAuthFactory {
         authTypeStr = HiveAuthConstants.AuthTypes.NONE.getAuthName();
       }
     }
-    if (isSASLWithKerberizedHadoop()) {
+    if (isAuthTypeSecured || ("PAM".equalsIgnoreCase(authTypeStr) && ShimLoader.getHadoopShims().isSecurityEnabled())) {
       saslServer =
           HadoopThriftAuthBridge.getBridge().createServer(
               conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB),
@@ -133,14 +153,16 @@ public class HiveAuthFactory {
     TTransportFactory transportFactory;
     TSaslServerTransport.Factory serverTransportFactory;
 
-    if (isSASLWithKerberizedHadoop()) {
+    if (isSASLWithKerberizedHadoop() || isSASLWithMaprHadoop()) {
       try {
         serverTransportFactory = saslServer.createSaslServerTransportFactory(
             getSaslProperties());
       } catch (TTransportException e) {
         throw new LoginException(e.getMessage());
       }
-      if (authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.KERBEROS.getAuthName())) {
+
+      if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName()) ||
+              authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())) {
         // no-op
       } else if (authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.NONE.getAuthName()) ||
           authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.LDAP.getAuthName()) ||
@@ -157,12 +179,22 @@ public class HiveAuthFactory {
         throw new LoginException("Unsupported authentication type " + authTypeStr);
       }
       transportFactory = saslServer.wrapTransportFactory(serverTransportFactory);
-    } else if (authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.NONE.getAuthName()) ||
-          authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.LDAP.getAuthName()) ||
-          authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.PAM.getAuthName()) ||
-          authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.CUSTOM.getAuthName())) {
-       transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
-    } else if (authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.NOSASL.getAuthName())) {
+    } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NONE.getAuthName()) ||
+          authTypeStr.equalsIgnoreCase(AuthTypes.LDAP.getAuthName()) ||
+          authTypeStr.equalsIgnoreCase(AuthTypes.CUSTOM.getAuthName())) {
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+    } else if (authTypeStr.equalsIgnoreCase(AuthTypes.PAM.getAuthName())) {
+      if (ShimLoader.getHadoopShims().isSecurityEnabled()) {
+        try {
+          transportFactory = saslServer.createTransportFactory(getSaslProperties());
+        } catch (TTransportException e) {
+          throw new LoginException(e.getMessage());
+        }
+        PlainSaslHelper.addPlainDefinitionToFactory(authTypeStr, transportFactory, saslServer);
+      } else {
+        transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      }
+    } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName())) {
       transportFactory = new TTransportFactory();
     } else {
       throw new LoginException("Unsupported authentication type " + authTypeStr);
@@ -179,7 +211,10 @@ public class HiveAuthFactory {
   public TProcessorFactory getAuthProcFactory(ThriftCLIService service) throws LoginException {
     if (isSASLWithKerberizedHadoop()) {
       return KerberosSaslHelper.getKerberosProcessorFactory(saslServer, service);
-    } else {
+    } else if (isSASLWithMaprHadoop()) {
+      return MapRSecSaslHelper.getProcessorFactory(saslServer, service);
+    }
+    else {
       return PlainSaslHelper.getPlainProcessorFactory(service);
     }
   }
@@ -201,13 +236,19 @@ public class HiveAuthFactory {
   }
 
   public boolean isSASLWithKerberizedHadoop() {
-    return "kerberos".equalsIgnoreCase(hadoopAuth)
-        && !authTypeStr.equalsIgnoreCase(HiveAuthConstants.AuthTypes.NOSASL.getAuthName());
+    return authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())
+            && !authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName());
   }
 
   public boolean isSASLKerberosUser() {
     return AuthMethod.KERBEROS.getMechanismName().equals(getUserAuthMechanism())
             || AuthMethod.TOKEN.getMechanismName().equals(getUserAuthMechanism());
+  }
+
+
+  public boolean isSASLWithMaprHadoop() {
+    return authTypeStr.equalsIgnoreCase(AuthTypes.MAPRSASL.getAuthName())
+            && !authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName());
   }
 
   // Perform kerberos login using the hadoop shim API if the configuration is available
@@ -231,6 +272,10 @@ public class HiveAuthFactory {
     } else {
       return UserGroupInformation.loginUserFromKeytabAndReturnUGI(SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
     }
+  }
+
+  public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
+    return new TSocket(host, port, loginTimeout);
   }
 
   // retrieve delegation token for the given user

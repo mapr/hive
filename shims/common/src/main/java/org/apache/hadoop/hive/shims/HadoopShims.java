@@ -130,6 +130,12 @@ public interface HadoopShims {
 
   CombineFileInputFormatShim getCombineFileInputFormat();
 
+  /**
+   * Return true if the hadoop configuration has security enabled
+   * @return
+   */
+  boolean isSecurityEnabled();
+
   enum JobTrackerState { INITIALIZING, RUNNING };
 
   /**
