@@ -217,11 +217,10 @@ public class AppConfig extends Configuration {
     for (Map.Entry<String, String> e : System.getenv().entrySet())
       set("env." + e.getKey(), e.getValue());
 
-    String templetonDir = getTempletonDir();
+    String webhcatConfDir = getWebhcatConfDir();
     for (String fname : TEMPLETON_CONF_FILENAMES) {
-      logConfigLoadAttempt(templetonDir + File.separator + fname);
-      if (! loadOneClasspathConfig(fname))
-        loadOneFileConfig(templetonDir, fname);
+      logConfigLoadAttempt(webhcatConfDir + File.separator + fname);
+      loadOneFileConfig(webhcatConfDir, fname);
     }
     String hadoopConfDir = getHadoopConfDir();
     for (String fname : HADOOP_CONF_FILENAMES) {
