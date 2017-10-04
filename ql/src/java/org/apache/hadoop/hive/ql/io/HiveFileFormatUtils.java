@@ -300,16 +300,28 @@ public final class HiveFileFormatUtils {
 
   public static HiveOutputFormat<?, ?> getHiveOutputFormat(Configuration conf, TableDesc tableDesc)
       throws HiveException {
-    return getHiveOutputFormat(conf, tableDesc.getOutputFileFormatClass());
+    return getHiveOutputFormat(conf, tableDesc.getOutputFileFormatClass(), tableDesc.getProperties());
   }
 
   public static HiveOutputFormat<?, ?> getHiveOutputFormat(Configuration conf, PartitionDesc partDesc)
       throws HiveException {
-    return getHiveOutputFormat(conf, partDesc.getOutputFileFormatClass());
+    return getHiveOutputFormat(conf, partDesc.getOutputFileFormatClass(), partDesc.getProperties());
   }
 
   private static HiveOutputFormat<?, ?> getHiveOutputFormat(
-      Configuration conf, Class<? extends OutputFormat> outputClass) throws HiveException {
+    Configuration conf, Class<? extends OutputFormat> outputClass, Properties properties) throws HiveException {
+    // MAPR-23264
+    try {
+      if(outputClass == HivePassThroughOutputFormat.class) {
+        if (properties != null && properties.getProperty("storage_handler", "").equals("org.apache.hadoop.hive.hbase.HBaseStorageHandler")) {
+          outputClass = (Class<? extends OutputFormat>) Class.forName("org.apache.hadoop.hive.hbase.HiveHBaseTableOutputFormat");
+        } else {
+          outputClass = HiveOutputFormatImpl.class;
+        }
+      }
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
     OutputFormat<?, ?> outputFormat = ReflectionUtil.newInstance(outputClass, conf);
     if (!(outputFormat instanceof HiveOutputFormat)) {
       outputFormat = new HivePassThroughOutputFormat(outputFormat);
