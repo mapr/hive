@@ -139,9 +139,9 @@ public class HiveHBaseTableOutputFormat extends
         throw new IllegalArgumentException("Illegal Argument " + (value == null ? "null" : value.getClass().getName()));
       }
       if(m_walEnabled) {
-        put.setDurability(Durability.SYNC_WAL);
+        PutProxy.setDurability(put, Durability.SYNC_WAL);
       } else {
-        put.setDurability(Durability.SKIP_WAL);
+        PutProxy.setDurability(put, Durability.SKIP_WAL);
       }
       m_table.put(put);
     }
