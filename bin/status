@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+function get_canonical_dir() {
+  target="$1"
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
+
+bin=$(get_canonical_dir "$0")
+bin=`cd "$bin"; pwd`
+
+# the root of the Hive installation
+if [[ -z $HIVE_HOME ]] ; then
+  export HIVE_HOME=`dirname "$bin"`
+fi
+
+if [ "$HIVE_IDENT_STRING" = "" ]; then
+  export HIVE_IDENT_STRING=`id -nu`
+fi
+
+if [ "$HIVE_PID_DIR" = "" ]; then
+  export HIVE_PID_DIR="$HIVE_HOME/pids"
+fi
+
+# parameter value is hiveserver2 or metastore
+status() {
+  if [ -f sync-pid.sh ] ; then
+    source sync-pid.sh
+  fi
+  pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-$1.pid
+  if [ -f $pid ]; then
+    if kill -0 `cat $pid` > /dev/null 2>&1; then
+      echo $1 running as process `cat $pid`.
+      exit 0
+    fi
+    echo $pid exists with pid `cat $pid` but no $1.
+    exit 1
+  fi
+  echo $1 not running.
+  exit 1
+}
+
+$@
