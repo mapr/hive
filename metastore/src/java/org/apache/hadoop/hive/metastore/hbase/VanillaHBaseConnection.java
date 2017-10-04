@@ -94,7 +94,7 @@ public class VanillaHBaseConnection implements HBaseConnection {
       throws IOException {
     HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
     for (byte[] cf : columnFamilies) {
-      tableDesc.addFamily(new HColumnDescriptor(cf));
+      HTableDescriptorProxy.addFamily(tableDesc, new HColumnDescriptor(cf));
     }
     return tableDesc;
   }

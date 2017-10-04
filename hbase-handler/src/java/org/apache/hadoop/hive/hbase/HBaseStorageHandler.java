@@ -216,7 +216,7 @@ public class HBaseStorageHandler extends DefaultStorageHandler
           }
 
           for (String columnFamily : uniqueColumnFamilies) {
-            tableDesc.addFamily(new HColumnDescriptor(Bytes.toBytes(columnFamily)));
+            HTableDescriptorProxy.addFamily(tableDesc, (new HColumnDescriptor(Bytes.toBytes(columnFamily))));
           }
 
           getHBaseAdmin().createTable(tableDesc);
