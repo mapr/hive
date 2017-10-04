@@ -621,7 +621,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     }
     return hcatShimInstance;
   }
-  private final class HCatHadoopShims23 implements HCatHadoopShims {
+  protected static class HCatHadoopShims23 implements HCatHadoopShims {
     @Override
     public TaskID createTaskID() {
       return new TaskID("", 0, TaskType.MAP, 0);
@@ -692,15 +692,15 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     public String getPropertyName(PropertyName name) {
       switch (name) {
         case CACHE_ARCHIVES:
-          return MRJobConfig.CACHE_ARCHIVES;
+          return "mapreduce.job.cache.archives";
         case CACHE_FILES:
-          return MRJobConfig.CACHE_FILES;
+          return "mapreduce.job.cache.files";
         case CACHE_SYMLINK:
-          return MRJobConfig.CACHE_SYMLINK;
+          return "mapreduce.job.cache.symlink.create";
         case CLASSPATH_ARCHIVES:
-          return MRJobConfig.CLASSPATH_ARCHIVES;
+          return "mapreduce.job.classpath.archives";
         case CLASSPATH_FILES:
-          return MRJobConfig.CLASSPATH_FILES;
+          return "mapreduce.job.classpath.files";
       }
 
       return "";
