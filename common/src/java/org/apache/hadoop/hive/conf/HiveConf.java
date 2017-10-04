@@ -875,7 +875,8 @@ public class HiveConf extends Configuration {
      * @deprecated Use MetastoreConf.USE_THRIFT_SASL
      */
     @Deprecated
-    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled", false,
+    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled",
+         System.getProperty("mapr_sec_enabled") == null ? false : System.getProperty("mapr_sec_enabled"),
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos."),
     /**
      * @deprecated Use MetastoreConf.USE_THRIFT_FRAMED_TRANSPORT
