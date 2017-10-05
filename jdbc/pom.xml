@@ -179,6 +179,7 @@
               </filters>
               <artifactSet>
                 <excludes>
+                  <exclude>com.mapr.hadoop:maprfs</exclude>
                   <exclude>org.apache.commons:commons-compress</exclude>
                   <exclude>org.apache.hadoop:*</exclude>
                   <exclude>org.apache.hive:hive-vector-code-gen</exclude>
