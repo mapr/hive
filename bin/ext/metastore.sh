@@ -72,6 +72,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
     export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
   fi
 
+  ln -sf $pid ${BASEMAPR}/pid
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
   echo $! > $pid
   echo "`date` metastore started, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
@@ -85,6 +86,8 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
       echo stopping metastore
       kill `cat $pid`
       echo "`date` metastore stopped, pid `cat $pid`" >> "$log" 2>&1 < /dev/null
+      rm  ${BASEMAPR}/pid/hive-$HIVE_IDENT_STRING-metastore.pid
+      rm $pid
     else
       echo no metastore to stop
     fi
