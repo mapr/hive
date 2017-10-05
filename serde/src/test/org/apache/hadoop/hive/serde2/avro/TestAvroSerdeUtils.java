@@ -21,7 +21,7 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -205,17 +205,17 @@ public class TestAvroSerdeUtils {
   public void determineSchemaCanReadSchemaFromHDFS() throws IOException, AvroSerdeException,
                                                             URISyntaxException{
     String schemaString = TestAvroObjectInspectorGenerator.RECORD_SCHEMA;
-    MiniDFSCluster miniDfs = null;
+    MapRMiniDFSCluster miniDfs = null;
     try {
       // MiniDFSCluster litters files and folders all over the place.
-      miniDfs = new MiniDFSCluster(new Configuration(), 1, true, null);
+      miniDfs = new MapRMiniDFSCluster();
 
-      miniDfs.getFileSystem().mkdirs(new Path("/path/to/schema"));
+      miniDfs.getFileSystem().mkdirs(new Path("./path/to/schema"));
       FSDataOutputStream out = miniDfs.getFileSystem()
-              .create(new Path("/path/to/schema/schema.avsc"));
+              .create(new Path("./path/to/schema/schema.avsc"));
       out.writeBytes(schemaString);
       out.close();
-      String onHDFS = miniDfs.getFileSystem().getUri() + "/path/to/schema/schema.avsc";
+      String onHDFS = miniDfs.getFileSystem().getUri() + miniDfs.getFileSystem().getWorkingDirectory().toString() + "/path/to/schema/schema.avsc";
 
       Schema schemaFromHDFS =
               AvroSerdeUtils.getSchemaFromFS(onHDFS, miniDfs.getFileSystem().getConf());
