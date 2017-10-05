@@ -45,6 +45,39 @@ function get_canonical_dir() {
   echo $ret
 }
 
+function find_spark_home() {
+local SPARK_HOME_LINK="$1"
+SPARK_HOME=""
+
+# file exists and is a symbolic link
+if [ -h "$SPARK_HOME_LINK" ]; then
+  SPARK_HOME=$(readlink "$SPARK_HOME_LINK")
+fi
+echo $SPARK_HOME
+}
+
+function find_spark_assembly_path(){
+local SPARK_HOME="$1"
+
+# Use script spark-jars.sh to find SPARK_ASSEMBLY_PATH
+if [ -f "$SPARK_HOME/conf/spark-jars.sh" ] ; then
+  source "$SPARK_HOME/conf/spark-jars.sh"
+  SPARK_ASSEMBLY_PATH="$SPARK_JARS_CLASSPATH"
+fi
+
+# for Spark-1.6.X
+if [ -d "$SPARK_HOME/lib" ] ; then
+  SPARK_ASSEMBLY_PATH=$(ls ${SPARK_HOME}/lib/spark-assembly-*.jar)
+fi
+
+# for Spark-2.X.X +
+if [ -d "$SPARK_HOME/jars" ] ; then
+  SPARK_ASSEMBLY_PATH="${SPARK_HOME}/jars/*"
+fi
+
+echo "$SPARK_ASSEMBLY_PATH"
+}
+
 bin=$(get_canonical_dir "$0")
 
 bin=`cd "$bin"; pwd`
@@ -167,15 +200,8 @@ fi
 
 if [[ -z "$SPARK_HOME" ]]
 then
-  bin=`dirname "$0"`
-  # many hadoop installs are in dir/{spark,hive,hadoop,..}
-  if test -e $bin/../../spark; then 
-    sparkHome=$(readlink -f $bin/../../spark)
-    if [[ -d $sparkHome ]]
-    then
-      export SPARK_HOME=$sparkHome
-    fi
-  fi
+  export SPARK_HOME=$(find_spark_home "/usr/local/spark")
+  export SPARK_CONF="$SPARK_HOME/conf/spark-defaults.conf"
 fi
 
 CLASSPATH="${HIVE_CONF_DIR}"
@@ -221,6 +247,14 @@ if [[ -n $SENTRY_HOME ]] ; then
   for f in $SENTRY_HOME/lib/*.jar; do
     CLASSPATH=${CLASSPATH}:${f}
   done
+fi
+
+# add Spark assembly jar to the classpath
+if [[ -n "$SPARK_HOME" && !("$HIVE_SKIP_SPARK_ASSEMBLY" = "true") ]]
+then
+  sparkAssemblyPath=$(find_spark_assembly_path "$SPARK_HOME")
+  CLASSPATH="${CLASSPATH}:${sparkAssemblyPath}"
+  CLASSPATH="${CLASSPATH}:$SPARK_CONF"
 fi
 
 
