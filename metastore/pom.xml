@@ -261,6 +261,11 @@
       <version>1.4.0</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-auth</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
   </dependencies>
 
   <profiles>
