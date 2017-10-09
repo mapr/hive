@@ -120,7 +120,7 @@ public class ConfCli {
 
   private static void configureSecurity(String pathToHiveSite, boolean security) throws IOException, ParserConfigurationException, SAXException, TransformerException {
     ConfTool.setMaprSasl(pathToHiveSite, security);
-    ConfTool.enableEncryption(pathToHiveSite, security);
+    ConfTool.setEncryption(pathToHiveSite, security);
   }
 
   private static boolean getSecurity(CommandLine line){

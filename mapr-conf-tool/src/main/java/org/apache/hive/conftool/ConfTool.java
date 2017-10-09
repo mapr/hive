@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
@@ -56,6 +57,8 @@ class ConfTool {
   private static final String TRUE = "true";
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
+  private static final String PAM = "PAM";
+  private static final String NONE = "NONE";
   private static final String EMPTY = "";
 
   static String toString(Document doc){
@@ -84,18 +87,22 @@ class ConfTool {
     if (secure) {
       LOG.info("Configuring Hive for MAPR-SASL");
       set(doc, METASTORE_USE_THRIFT_SASL, TRUE);
+      set(doc, HIVE_SERVER2_AUTHENTICATION, PAM);
     } else {
       LOG.info("Configuring Hive for no security");
       set(doc, METASTORE_USE_THRIFT_SASL, FALSE);
+      set(doc, HIVE_SERVER2_AUTHENTICATION, NONE);
     }
     saveToFile(doc, pathToHiveSite);
   }
 
-  static void enableEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
+  static void setEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (secure) {
       set(doc, HIVE_SERVER2_THRIFT_SASL_QOP, AUTH_CONF);
+    } else {
+      remove(doc, HIVE_SERVER2_THRIFT_SASL_QOP);
     }
     saveToFile(doc, pathToHiveSite);
   }
@@ -124,6 +131,13 @@ class ConfTool {
     }
   }
 
+  private static void remove(Document doc, ConfVars confVars){
+    if (propertyExists(doc, confVars)) {
+      LOG.info("Property {} exists in hive-site.xml", confVars);
+      removeProperty(doc, confVars);
+    }
+  }
+
   private static void saveToFile(Document doc, String filepath) throws TransformerException {
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
     Transformer transformer = transformerFactory.newTransformer();
@@ -140,6 +154,25 @@ class ConfTool {
     addName(doc, property, confVars);
     addValue(doc, property, value);
     getConfigurationNode(doc).appendChild(property);
+  }
+
+  static void removeProperty(Document doc, ConfVars confVars){
+    LOG.info("Removing property from hive-site.xml: {} = {}", confVars.varname);
+    Node configuration = getConfigurationNode(doc);
+    NodeList properties = configuration.getChildNodes();
+    int length = properties.getLength();
+    for (int i = 0; i <= length - 1; i++) {
+      Node node = properties.item(i);
+      NodeList nameValueDesc = node.getChildNodes();
+      int childLength = nameValueDesc.getLength();
+      for (int j = 0; j <= childLength - 1; j++) {
+        Node childNode = nameValueDesc.item(j);
+        if (NAME.equals(childNode.getNodeName()) && confVars.varname.equals(childNode.getTextContent())) {
+          configuration.removeChild(properties.item(i));
+          return;
+        }
+      }
+    }
   }
 
   static Node getConfigurationNode(Document doc){
