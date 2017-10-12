@@ -159,7 +159,12 @@ fi
 create_restart_file(){
 ROLE=$1
 mkdir -p "$RESTART_DIR"
-echo "maprcli node services -action restart -name ${MAPRCLI[$ROLE]} -nodes $(hostname)" > "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
+cat <<EOF > "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
+#!/bin/bash
+maprcli node services -action restart -name ${MAPRCLI[$ROLE]} -nodes $(hostname)
+EOF
+chmod a+x "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
+chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 }
 
 #
