@@ -92,8 +92,8 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
   public void configureInputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
     Properties tableProperties = tableDesc.getProperties();
 
-    Configuration jobConf = getConf();
-    jobConf.set(MAPRDB_INPUT_TABLE_NAME, tableProperties.getProperty(MAPRDB_TABLE_NAME));
+    getConf().set(MAPRDB_INPUT_TABLE_NAME, tableProperties.getProperty(MAPRDB_TABLE_NAME));
+    jobProperties.put(MAPRDB_INPUT_TABLE_NAME, tableProperties.getProperty(MAPRDB_TABLE_NAME));
   }
 
   @Override
