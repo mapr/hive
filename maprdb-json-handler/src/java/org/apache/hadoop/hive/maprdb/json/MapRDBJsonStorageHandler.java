@@ -112,6 +112,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
   public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
     try {
       Job job = new Job(jobConf);
+      Utils.addDependencyJars(jobConf, MapRDBJsonStorageHandler.class);
       MapRDBMapReduceUtil.configureTableInputFormat(job, jobConf.get(MAPRDB_INPUT_TABLE_NAME));
       MapRDBMapReduceUtil.configureTableOutputFormat(job, jobConf.get(MAPRDB_OUTPUT_TABLE_NAME));
       MapRDBMapReduceUtil.setOutputKeyValueClass(job);

@@ -242,8 +242,6 @@ then
   CLASSPATH="${CLASSPATH}:$SPARK_CONF"
 fi
 
-MAPR_DB_JAR=$(ls "${HIVE_LIB}"/hive-maprdb-json-handler*.jar)
-
 # add the auxillary jars such as serdes
 if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
   hive_aux_jars_abspath=`cd ${HIVE_AUX_JARS_PATH} && pwd`
@@ -261,7 +259,6 @@ if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
         AUX_PARAM=${AUX_PARAM},file://$f;
     fi
   done
-  AUX_PARAM=${AUX_PARAM},file://${MAPR_DB_JAR}
 elif [ "${HIVE_AUX_JARS_PATH}" != "" ]; then
   HIVE_AUX_JARS_PATH=`echo $HIVE_AUX_JARS_PATH | sed 's/,/:/g'`
   if $cygwin; then
@@ -270,9 +267,6 @@ elif [ "${HIVE_AUX_JARS_PATH}" != "" ]; then
   fi
   AUX_CLASSPATH=${AUX_CLASSPATH}:${HIVE_AUX_JARS_PATH}
   AUX_PARAM="file://$(echo ${HIVE_AUX_JARS_PATH} | sed 's/:/,file:\/\//g')"
-  AUX_PARAM=${AUX_PARAM},file://${MAPR_DB_JAR}
-else
-  AUX_PARAM="file://${MAPR_DB_JAR}"
 fi
 
 # adding jars from auxlib directory
