@@ -161,7 +161,10 @@ ROLE=$1
 mkdir -p "$RESTART_DIR"
 cat <<EOF > "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 #!/bin/bash
-maprcli node services -action restart -name ${MAPRCLI[$ROLE]} -nodes $(hostname)
+if [ -z "\$MAPR_USER" ] ; then
+  MAPR_USER=mapr
+fi
+sudo -u \${MAPR_USER} maprcli node services -action restart -name ${MAPRCLI[$ROLE]} -nodes $(hostname)
 EOF
 chmod a+x "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
