@@ -92,6 +92,7 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
             ShimLoader.getHadoopShims().newTaskAttemptContext(jobConf, reporter);
 
     try {
+      setConf(tac.getConfiguration());
       org.apache.hadoop.mapreduce.RecordReader<Value, Document> recordReader = createRecordReader(tableSplit, tac);
       recordReader.initialize(fileSplit, tac);
       return new RecordReaderWrapper(recordReader);
