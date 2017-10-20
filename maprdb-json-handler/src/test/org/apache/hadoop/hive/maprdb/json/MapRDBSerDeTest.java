@@ -23,6 +23,7 @@ import com.mapr.db.impl.MapRDBImpl;
 import com.mapr.db.rowcol.DBValueBuilderImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.maprdb.json.serde.MapRDBSerDe;
+import org.apache.hadoop.hive.maprdb.json.serde.MapRDBSerDeUtils;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -385,7 +386,7 @@ public class MapRDBSerDeTest {
     tblProperties.setProperty(serdeConstants.LIST_COLUMN_TYPES, columnTypes);
 
     serDe.initialize(new Configuration(), tblProperties);
-    return serDe.deserializeField(value, serDe.columnTypes.get(0));
+    return MapRDBSerDeUtils.deserializeField(value, serDe.columnTypes.get(0));
   }
 
   private StructObjectInspector createObjectInspector(final String columnNames, final ObjectInspector oi) {
