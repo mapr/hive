@@ -41,7 +41,6 @@ public class MapRDBSerDe extends AbstractSerDe {
   private static final Logger LOG = LoggerFactory.getLogger(MapRDBSerDe.class);
 
   private List<String> columnNames;
-  public List<TypeInfo> columnTypes;
   private StructTypeInfo rowTypeInfo;
   private StructObjectInspector objectInspector;
 
@@ -70,6 +69,7 @@ public class MapRDBSerDe extends AbstractSerDe {
       columnNames = Arrays.asList(columnNameProperty.split(","));
     }
 
+    List<TypeInfo> columnTypes;
     // all column types
     if (columnTypeProperty.length() == 0) {
       columnTypes = new ArrayList<>();

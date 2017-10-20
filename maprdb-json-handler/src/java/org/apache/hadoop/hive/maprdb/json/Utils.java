@@ -23,11 +23,17 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-public class Utils {
-  private static final Logger log = LoggerFactory.getLogger(Utils.class);
+import static com.google.common.base.Charsets.UTF_8;
+
+public final class Utils {
+  private Utils(){}
+  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+  private static final String CLASS = ".class";
+  private static final String FILE = "file:";
+  private static final String JAR = "jar";
 
   // Thanks, HBase
-  public static void addDependencyJars(Configuration conf, Class<?>... classes) throws IOException {
+  static void addDependencyJars(Configuration conf, Class<?>... classes) throws IOException {
     FileSystem localFs = FileSystem.getLocal(conf);
     Set<String> jars = new HashSet<>();
     // Add jars that are already in the tmpjars variable
@@ -45,11 +51,11 @@ public class Utils {
 
       Path path = findOrCreateJar(clazz, localFs, packagedClasses);
       if (path == null) {
-        log.warn("Could not find jar for class " + clazz + " in order to ship it to the cluster.");
+        LOG.warn("Could not find jar for class " + clazz + " in order to ship it to the cluster.");
         continue;
       }
       if (!localFs.exists(path)) {
-        log.warn("Could not validate jar file " + path + " for class " + clazz);
+        LOG.warn("Could not validate jar file " + path + " for class " + clazz);
         continue;
       }
       jars.add(path.toString());
@@ -68,7 +74,7 @@ public class Utils {
    * that contains a class of the same name. Maintains a mapping from jar contents to the tmp jar
    * created.
    *
-   * @param my_class
+   * @param myClass
    *          the class to find.
    * @param fs
    *          the FileSystem with which to qualify the returned path.
@@ -78,20 +84,21 @@ public class Utils {
    * @throws IOException
    */
   @SuppressWarnings("deprecation")
-  private static Path findOrCreateJar(Class<?> my_class, FileSystem fs,
+  private static Path findOrCreateJar(Class<?> myClass, FileSystem fs,
                                       Map<String,String> packagedClasses) throws IOException {
     // attempt to locate an existing jar for the class.
-    String jar = findContainingJar(my_class, packagedClasses);
+    String jar = findContainingJar(myClass, packagedClasses);
     if (null == jar || jar.isEmpty()) {
-      jar = getJar(my_class);
+      jar = getJar(myClass);
       updateMap(jar, packagedClasses);
     }
 
     if (null == jar || jar.isEmpty()) {
       return null;
     }
-
-    log.debug(String.format("For class %s, using jar %s", my_class.getName(), jar));
+    if(LOG.isDebugEnabled()) {
+      LOG.debug(String.format("For class %s, using jar %s", myClass.getName(), jar));
+    }
     return new Path(jar).makeQualified(fs);
   }
 
@@ -108,18 +115,14 @@ public class Utils {
     if (null == jar || jar.isEmpty()) {
       return;
     }
-    ZipFile zip = null;
-    try {
-      zip = new ZipFile(jar);
+
+    try (ZipFile zip = new ZipFile(jar)) {
       for (Enumeration<? extends ZipEntry> iter = zip.entries(); iter.hasMoreElements();) {
         ZipEntry entry = iter.nextElement();
         if (entry.getName().endsWith("class")) {
           packagedClasses.put(entry.getName(), jar);
         }
       }
-    } finally {
-      if (null != zip)
-        zip.close();
     }
   }
 
@@ -128,23 +131,23 @@ public class Utils {
    * that is not the first thing on the class path that has a class with the same name. Looks first
    * on the classpath and then in the <code>packagedClasses</code> map.
    *
-   * @param my_class
+   * @param myClass
    *          the class to find.
    * @return a jar file that contains the class, or null.
    * @throws IOException
    */
-  private static String findContainingJar(Class<?> my_class, Map<String,String> packagedClasses)
+  private static String findContainingJar(Class<?> myClass, Map<String,String> packagedClasses)
           throws IOException {
-    ClassLoader loader = my_class.getClassLoader();
-    String class_file = my_class.getName().replaceAll("\\.", "/") + ".class";
+    ClassLoader loader = myClass.getClassLoader();
+    String class_file = myClass.getName().replaceAll("\\.", "/") + CLASS;
 
     // first search the classpath
     for (Enumeration<URL> itr = loader.getResources(class_file); itr.hasMoreElements();) {
       URL url = itr.nextElement();
-      if ("jar".equals(url.getProtocol())) {
+      if (JAR.equals(url.getProtocol())) {
         String toReturn = url.getPath();
-        if (toReturn.startsWith("file:")) {
-          toReturn = toReturn.substring("file:".length());
+        if (toReturn.startsWith(FILE)) {
+          toReturn = toReturn.substring(FILE.length());
         }
         // URLDecoder is a misnamed class, since it actually decodes
         // x-www-form-urlencoded MIME type rather than actual
@@ -153,7 +156,7 @@ public class Utils {
         // either unencoded or encoded as "%20"). Replace +s first, so
         // that they are kept sacred during the decoding process.
         toReturn = toReturn.replaceAll("\\+", "%2B");
-        toReturn = URLDecoder.decode(toReturn, "UTF-8");
+        toReturn = URLDecoder.decode(toReturn, UTF_8.name());
         return toReturn.replaceAll("!.*$", "");
       }
     }
@@ -169,23 +172,23 @@ public class Utils {
    * (HBASE-8140) and also for testing on MRv2. First check if we have HADOOP-9426. Lacking that,
    * fall back to the backport.
    *
-   * @param my_class
+   * @param myClass
    *          the class to find.
    * @return a jar file that contains the class, or null.
    */
-  private static String getJar(Class<?> my_class) {
+  private static String getJar(Class<?> myClass) {
     String ret = null;
     String hadoopJarFinder = "org.apache.hadoop.util.JarFinder";
     Class<?> jarFinder = null;
     try {
-      log.debug("Looking for " + hadoopJarFinder + ".");
+      LOG.debug("Looking for " + hadoopJarFinder + ".");
       jarFinder = JavaUtils.loadClass(hadoopJarFinder);
-      log.debug(hadoopJarFinder + " found.");
+      LOG.debug(hadoopJarFinder + " found.");
       Method getJar = jarFinder.getMethod("getJar", Class.class);
-      ret = (String) getJar.invoke(null, my_class);
+      ret = (String) getJar.invoke(null, myClass);
     } catch (ClassNotFoundException e) {
-      log.debug("Using backported JarFinder.");
-      ret = jarFinderGetJar(my_class);
+      LOG.debug("Using backported JarFinder.");
+      ret = jarFinderGetJar(myClass);
     } catch (InvocationTargetException e) {
       // function was properly called, but threw it's own exception.
       // Unwrap it
@@ -202,31 +205,31 @@ public class Utils {
   /**
    * Returns the full path to the Jar containing the class. It always return a JAR.
    *
-   * @param klass
+   * @param clazz
    *          class.
    *
    * @return path to the Jar containing the class.
    */
   @SuppressWarnings("rawtypes")
-  public static String jarFinderGetJar(Class klass) {
-    Preconditions.checkNotNull(klass, "klass");
-    ClassLoader loader = klass.getClassLoader();
+  public static String jarFinderGetJar(Class clazz) {
+    Preconditions.checkNotNull(clazz, "clazz");
+    ClassLoader loader = clazz.getClassLoader();
     if (loader != null) {
-      String class_file = klass.getName().replaceAll("\\.", "/") + ".class";
+      String classFile = clazz.getName().replaceAll("\\.", "/") + CLASS;
       try {
-        for (Enumeration itr = loader.getResources(class_file); itr.hasMoreElements();) {
+        for (Enumeration itr = loader.getResources(classFile); itr.hasMoreElements();) {
           URL url = (URL) itr.nextElement();
           String path = url.getPath();
-          if (path.startsWith("file:")) {
-            path = path.substring("file:".length());
+          if (path.startsWith(FILE)) {
+            path = path.substring(FILE.length());
           }
-          path = URLDecoder.decode(path, "UTF-8");
-          if ("jar".equals(url.getProtocol())) {
-            path = URLDecoder.decode(path, "UTF-8");
+          path = URLDecoder.decode(path, UTF_8.name());
+          if (JAR.equals(url.getProtocol())) {
+            path = URLDecoder.decode(path, UTF_8.name());
             return path.replaceAll("!.*$", "");
           } else if ("file".equals(url.getProtocol())) {
-            String klassName = klass.getName();
-            klassName = klassName.replace(".", "/") + ".class";
+            String klassName = clazz.getName();
+            klassName = klassName.replace(".", "/") + CLASS;
             path = path.substring(0, path.length() - klassName.length());
             File baseDir = new File(path);
             File testDir = new File(System.getProperty("test.build.dir", "target/test-dir"));

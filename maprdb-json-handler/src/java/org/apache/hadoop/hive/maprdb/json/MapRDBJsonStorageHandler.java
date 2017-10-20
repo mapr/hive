@@ -20,8 +20,6 @@ package org.apache.hadoop.hive.maprdb.json;
 
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
-import com.mapr.db.mapreduce.MapRDBMapReduceUtil;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat;
 import org.apache.hadoop.hive.maprdb.json.output.HiveMapRDBJsonOutputFormat;
 import org.apache.hadoop.hive.maprdb.json.serde.MapRDBSerDe;
@@ -36,7 +34,6 @@ import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
-import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,7 +190,6 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
   public void rollbackCreateTable(Table table) throws MetaException {
     boolean isExternal = MetaStoreUtils.isExternalTable(table);
     String tableName = getMapRDBTableName(table);
-    // we have created an MapRDB table, so we delete it to roll back;
     if (!isExternal && getMapRDBAdmin().tableExists(tableName)) {
       getMapRDBAdmin().deleteTable(tableName);
     }

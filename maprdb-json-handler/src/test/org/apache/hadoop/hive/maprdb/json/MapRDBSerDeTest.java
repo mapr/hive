@@ -29,6 +29,8 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.*;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.ojai.Document;
@@ -386,7 +388,7 @@ public class MapRDBSerDeTest {
     tblProperties.setProperty(serdeConstants.LIST_COLUMN_TYPES, columnTypes);
 
     serDe.initialize(new Configuration(), tblProperties);
-    return MapRDBSerDeUtils.deserializeField(value, serDe.columnTypes.get(0));
+    return MapRDBSerDeUtils.deserializeField(value, TypeInfoUtils.getTypeInfosFromTypeString(columnTypes).get(0));
   }
 
   private StructObjectInspector createObjectInspector(final String columnNames, final ObjectInspector oi) {
