@@ -58,7 +58,7 @@ public class DocumentWritable implements Writable {
 
   @Override
   public String toString() {
-    return "Document=" + document.toString();
+    return "Document=" + document;
   }
 
   @Override

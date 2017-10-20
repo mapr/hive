@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.maprdb.json.shims;
 
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.RecordReader;
 import org.ojai.Document;
 import org.ojai.Value;
@@ -26,21 +27,20 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class RecordReaderWrapper implements RecordReader<ValueWritableComparable, DocumentWritable> {
+public class RecordReaderWrapper implements RecordReader<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordReaderWrapper.class);
-  private org.apache.hadoop.mapreduce.RecordReader<Value, Document> recordReader;
+  private final org.apache.hadoop.mapreduce.RecordReader<Value, Document> recordReader;
 
   public RecordReaderWrapper(org.apache.hadoop.mapreduce.RecordReader<Value, Document> recordReader) {
     this.recordReader = recordReader;
   }
 
   @Override
-  public boolean next(ValueWritableComparable key, DocumentWritable value) throws IOException {
+  public boolean next(NullWritable key, DocumentWritable value) throws IOException {
     try {
       boolean next = recordReader.nextKeyValue();
       if (next) {
-        key.setValue(recordReader.getCurrentKey());
         value.setDocument(recordReader.getCurrentValue());
       }
       return next;
@@ -50,8 +50,8 @@ public class RecordReaderWrapper implements RecordReader<ValueWritableComparable
   }
 
   @Override
-  public ValueWritableComparable createKey() {
-    return new ValueWritableComparable();
+  public NullWritable createKey() {
+    return NullWritable.get();
   }
 
   @Override

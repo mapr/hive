@@ -24,8 +24,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
 import org.apache.hadoop.hive.maprdb.json.shims.MapRDBJsonSplit;
 import org.apache.hadoop.hive.maprdb.json.shims.RecordReaderWrapper;
-import org.apache.hadoop.hive.maprdb.json.shims.ValueWritableComparable;
 import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.ojai.Document;
@@ -38,7 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class HiveMapRDBJsonInputFormat extends TableInputFormat
-        implements InputFormat<ValueWritableComparable, DocumentWritable> {
+        implements InputFormat<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(HiveMapRDBJsonInputFormat.class);
 
@@ -79,7 +79,7 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
   }
 
   @Override
-  public RecordReader<ValueWritableComparable, DocumentWritable>
+  public RecordReader<NullWritable, DocumentWritable>
   getRecordReader(
           InputSplit split,
           JobConf jobConf,

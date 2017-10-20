@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.maprdb.json.shims;
 
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -28,11 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class RecordWriterWrapper implements RecordWriter<ValueWritableComparable, DocumentWritable> {
+public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordWriterWrapper.class);
-  private org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter;
-  private TaskAttemptContext tac;
+  private final org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter;
+  private final TaskAttemptContext tac;
 
   public RecordWriterWrapper(org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter, TaskAttemptContext tac) {
     this.recordWriter = recordWriter;
@@ -40,7 +41,7 @@ public class RecordWriterWrapper implements RecordWriter<ValueWritableComparable
   }
 
   @Override
-  public void write(ValueWritableComparable key, DocumentWritable value) throws IOException {
+  public void write(NullWritable key, DocumentWritable value) throws IOException {
     Document document = value.getDocument();
     try {
       recordWriter.write(document.getId(), document);

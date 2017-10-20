@@ -22,8 +22,8 @@ import com.mapr.db.mapreduce.TableOutputFormat;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
 import org.apache.hadoop.hive.maprdb.json.shims.RecordWriterWrapper;
-import org.apache.hadoop.hive.maprdb.json.shims.ValueWritableComparable;
 import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
@@ -41,12 +41,12 @@ import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_OUT
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_TABLE_NAME;
 
 public class HiveMapRDBJsonOutputFormat extends TableOutputFormat
-        implements OutputFormat<ValueWritableComparable, DocumentWritable> {
+        implements OutputFormat<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(HiveMapRDBJsonOutputFormat.class);
 
   @Override
-  public RecordWriter<ValueWritableComparable, DocumentWritable>
+  public RecordWriter<NullWritable, DocumentWritable>
   getRecordWriter(
           FileSystem ignored,
           JobConf jobConf,
