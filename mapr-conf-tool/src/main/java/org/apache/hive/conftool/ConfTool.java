@@ -87,11 +87,9 @@ class ConfTool {
     if (secure) {
       LOG.info("Configuring Hive for MAPR-SASL");
       set(doc, METASTORE_USE_THRIFT_SASL, TRUE);
-      set(doc, HIVE_SERVER2_AUTHENTICATION, PAM);
     } else {
       LOG.info("Configuring Hive for no security");
       set(doc, METASTORE_USE_THRIFT_SASL, FALSE);
-      set(doc, HIVE_SERVER2_AUTHENTICATION, NONE);
     }
     saveToFile(doc, pathToHiveSite);
   }

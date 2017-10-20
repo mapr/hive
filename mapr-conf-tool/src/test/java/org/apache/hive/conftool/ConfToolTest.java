@@ -53,7 +53,6 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
-    Assert.assertEquals("PAM", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_AUTHENTICATION));
   }
 
   @Test
@@ -66,7 +65,6 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals("false", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
-    Assert.assertEquals("NONE", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_AUTHENTICATION));
   }
 
 
