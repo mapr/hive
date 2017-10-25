@@ -37,6 +37,7 @@ HIVE_HOME="$MAPR_HOME"/hive/hive-"$HIVE_VERSION"
 HIVE_BIN="$HIVE_HOME"/bin
 HIVE_LIB="$HIVE_HOME"/lib
 HIVE_CONF="$HIVE_HOME"/conf
+HIVE_LOGS="$HIVE_HOME"/logs
 HIVE_SITE="$HIVE_CONF"/hive-site.xml
 HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
@@ -50,6 +51,7 @@ tl_ip=""
 configChanged=0
 beforeHiveSiteCksum=""
 afterHiveSiteCksum=""
+DEFAULT_DERBY_DB_NAME="metastore_db"
 declare -A MAPRCLI=( ["hivemetastore"]="hivemeta" ["hiveserver2"]="hs2" ["hivewebhcat"]="hcat")
 declare -A PORTS=( ["hivemetastore"]="9083" ["hiveserver2"]="10000" ["hivewebhcat"]="50111")
 
@@ -316,6 +318,30 @@ fi
 }
 
 #
+# Check if Metastore  database is initialized
+#
+is_meta_db_initialized(){
+if [ -f "$HIVE_CONF/.meta_db_init_done" ]; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
+#
+# Initialize Derby Db schema for mapr admin user
+#
+init_derby_schema(){
+if ! is_meta_db_initialized; then
+  if [ -d "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME" ]; then
+    rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
+  fi
+  cd "$HIVE_BIN"
+  nohup sudo -u "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 &
+fi
+}
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -410,6 +436,8 @@ find_mapr_user_and_group
 save_security_flag
 
 configure_security "$HIVE_SITE" "$isSecure"
+
+init_derby_schema
 
 configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 
