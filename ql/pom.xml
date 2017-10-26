@@ -423,7 +423,7 @@
       <version>${gson.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.json</groupId>
+      <groupId>com.tdunning</groupId>
       <artifactId>json</artifactId>
       <version>${json.version}</version>
     </dependency>
