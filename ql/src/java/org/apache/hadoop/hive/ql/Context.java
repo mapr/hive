@@ -135,13 +135,40 @@ public class Context {
 
     // local & non-local tmp location is configurable. however it is the same across
     // all external file systems
-    nonLocalScratchPath = new Path(SessionState.getHDFSSessionPath(conf), executionId);
+    nonLocalScratchPath = findNonLocalScratchPath();
     localScratchDir = new Path(SessionState.getLocalSessionPath(conf), executionId).toUri().getPath();
     scratchDirPermission = HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIRPERMISSION);
     stagingDir = HiveConf.getVar(conf, HiveConf.ConfVars.STAGINGDIR);
     isInheritPerms = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
     isHiveOptimizeInsertDestVolume = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME);
   }
+
+  private Path findNonLocalScratchPath() {
+    if(isScratchDirOverridden()) {
+      String scratchDirFromSession = getScratchDirFromSession();
+      if( scratchDirFromSession != null && !scratchDirFromSession.isEmpty()) {
+        return new Path(scratchDirFromSession);
+      }
+    }
+    return new Path(SessionState.getHDFSSessionPath(conf), executionId);
+  }
+
+  private static boolean isScratchDirOverridden() {
+    SessionState ss = SessionState.get();
+    if(ss != null) {
+      return ss.getOverriddenConfigurations().containsKey(HiveConf.ConfVars.SCRATCHDIR.varname);
+    }
+    return false;
+  }
+
+  private static String getScratchDirFromSession() {
+    SessionState ss = SessionState.get();
+    if(ss != null) {
+      return SessionState.get().getOverriddenConfigurations().get(HiveConf.ConfVars.SCRATCHDIR.varname);
+    }
+    return "";
+  }
+
 
   public void changeDFSScratchDir(String newScratchDir) {
     if (isNonLocalScratchDirUsed)
