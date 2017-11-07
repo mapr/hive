@@ -79,7 +79,10 @@ public class Context {
   private final Map<String, ContentSummary> pathToCS = new ConcurrentHashMap<String, ContentSummary>();
 
   // scratch path to use for all non-local (ie. hdfs) file system tmp folders
-  private final Path nonLocalScratchPath;
+  private Path nonLocalScratchPath;
+  private boolean isNonLocalScratchDirUsed = false;
+  private String CTASTableLocation;
+  private boolean isCTASQuery = false;
 
   // scratch directory to use for local file system tmp folders
   private final String localScratchDir;
@@ -273,6 +276,28 @@ public class Context {
     viewsTokenRewriteStreams = new HashMap<>();
   }
 
+  public void changeDFSScratchDir(String newScratchDir) {
+    if (isNonLocalScratchDirUsed)
+      throw new RuntimeException("Configured scratchdir already in use");
+
+    nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
+
+    LOG.info("INSERT/CTAS query optimization: scratchdir changed to '" + nonLocalScratchPath + "'");
+  }
+
+  public void setCTASTableLocation(String CATSTableLocation){
+    this.CTASTableLocation = CATSTableLocation;
+  }
+
+  public void setCTASQuery(boolean isCTASQuery){
+    this.isCTASQuery = isCTASQuery;
+  }
+
+  private Path getNonLocalScratchDir() {
+    if (!isNonLocalScratchDirUsed)
+      isNonLocalScratchDirUsed = true;
+    return nonLocalScratchPath;
+  }
 
   public Map<LoadTableDesc, WriteEntity> getLoadTableOutputMap() {
     return loadTableOutputMap;
@@ -452,7 +477,7 @@ public class Context {
     }
 
     try {
-      Path dir = FileUtils.makeQualified(nonLocalScratchPath, conf);
+      Path dir = FileUtils.makeQualified(getNonLocalScratchDir(), conf);
       URI uri = dir.toUri();
 
       Path newScratchDir = getScratchDir(uri.getScheme(), uri.getAuthority(),

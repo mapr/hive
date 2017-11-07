@@ -358,6 +358,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     int nextNum;
   }
 
+  private boolean isInsertQueryForOptimize = false;
+  private String destClauseForInsertOptimizer;
+
   public SemanticAnalyzer(QueryState queryState) throws SemanticException {
     super(queryState);
     opToPartPruner = new HashMap<TableScanOperator, ExprNodeDesc>();
@@ -1408,6 +1411,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return alias;
   }
 
+  private boolean hasInsertOptimizeTokens(ASTNode dest) {
+    int destTokenType = dest.getToken().getType();
+
+    return (destTokenType == HiveParser.TOK_DIR && // If dest is a dir make sure it is not local and tmp dir
+            ((ASTNode) dest.getChild(0)).getToken().getType() != HiveParser.TOK_TMP_FILE
+    )
+            ||
+            (destTokenType == HiveParser.TOK_TAB);
+  }
+
+
   /**
    * Phase 1: (including, but not limited to):
    *
@@ -1506,6 +1520,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         }
 
         qbp.setDestForClause(ctx_1.dest, (ASTNode) ast.getChild(0));
+        if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) &&
+                hasInsertOptimizeTokens((ASTNode) ast.getChild(0)) &&
+                !isInsertQueryForOptimize) {
+
+          isInsertQueryForOptimize = true;
+          destClauseForInsertOptimizer = ctx_1.dest;
+        }
         handleInsertStatementSpecPhase1(ast, qbp, ctx_1);
 
         if (qbp.getClauseNamesForDest().size() == 2) {
@@ -11020,6 +11041,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       if ((child = analyzeCreateTable(ast, qb, plannerCtx)) == null) {
         return false;
       }
+      ctx.setCTASQuery(qb.isCTAS());
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) && qb.isCTAS()) {
+        // query is CREATE TABLE AS .. SELECT ... type
+        String dest_path = getCTASTableLocation();
+        ctx.changeDFSScratchDir(dest_path + Path.SEPARATOR + conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST));
+        ctx.setCTASTableLocation(dest_path);
+      }
     } else {
       queryState.setCommandType(HiveOperation.QUERY);
     }
@@ -11079,6 +11107,46 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // Materialization is allowed if it is not a view definition
     getMetaData(qb, createVwDesc == null);
     LOG.info("Completed getting MetaData in Semantic Analysis");
+
+    // change the scratch dir to optimize insert query
+    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME) &&
+            isInsertQueryForOptimize) {
+      // query is an INSERT [INTO/OVERWRITE] query
+      String destClause = destClauseForInsertOptimizer;
+      QBMetaData qbm = qb.getMetaData();
+      Integer dest_type = qbm.getDestTypeForAlias(destClause);
+      String scratchDir = Path.SEPARATOR + conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST);
+      switch(dest_type) {
+        case QBMetaData.DEST_TABLE: {
+          Table dest_tab = qbm.getDestTableForAlias(destClause);
+          if (!dest_tab.isNonNative()) {
+            ctx.changeDFSScratchDir(dest_tab.getPath().toString() + scratchDir);
+          }
+          break;
+        }
+
+        case QBMetaData.DEST_PARTITION: {
+          Partition dest_part = qbm.getDestPartitionForAlias(destClause);
+          Table dest_tab = dest_part.getTable();
+          Path tabPath = dest_tab.getPath();
+          Path partPath = dest_part.getDataLocation();
+
+          Path dest_path = new Path(tabPath.toUri().getScheme(),
+                  tabPath.toUri().getAuthority(), partPath.toUri().getPath());
+
+          ctx.changeDFSScratchDir(dest_path.toString() + scratchDir);
+          break;
+        }
+
+        case QBMetaData.DEST_DFS_FILE: {
+          Path dest_path = new Path(qbm.getDestFileForAlias(destClause));
+          ctx.changeDFSScratchDir(dest_path.toString() + scratchDir);
+          break;
+        }
+        default:
+          LOG.error("Unknown destination type");
+      }
+    }
 
     plannerCtx.setParseTreeAttr(child, ctx_1);
 
@@ -11356,6 +11424,35 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   public List<FieldSchema> getResultSchema() {
     return resultSchema;
   }
+
+  private String getCTASTableLocation() throws SemanticException {
+    if (qb.getTableDesc() == null)
+      return null;
+
+    String location = qb.getTableDesc().getLocation();
+    if (location == null) {
+      // get the table's default location
+      Table dumpTable;
+      Path targetPath;
+      try {
+        dumpTable = db.newTable(qb.getTableDesc().getTableName());
+        if (!db.databaseExists(dumpTable.getDbName())) {
+          throw new SemanticException("ERROR: The database " + dumpTable.getDbName()
+                  + " does not exist.");
+        }
+        Warehouse wh = new Warehouse(conf);
+        targetPath = wh.getDefaultTablePath(db.getDatabase(dumpTable.getDbName()), dumpTable
+                .getTableName());
+      } catch (HiveException e) {
+        throw new SemanticException(e);
+      } catch (MetaException e) {
+        throw new SemanticException(e);
+      }
+      location = targetPath.toString();
+    }
+    return location;
+  }
+
 
   protected void saveViewDefinition() throws SemanticException {
     // Make a copy of the statement's result schema, since we may
