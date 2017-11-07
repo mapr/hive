@@ -1712,7 +1712,7 @@ public class Hive {
    *          true if there is a following task which updates the stats, so, this method need not update.
    * @param writeId write ID allocated for the current load operation
    * @param stmtId statement ID of the current load statement
-   * @param isInsertOverwrite 
+   * @param isInsertOverwrite
    * @return Partition object being loaded with data
    */
   public Partition loadPartition(Path loadPath, Table tbl, Map<String, String> partSpec,
@@ -3658,8 +3658,8 @@ private void constructOneLBLocationMap(FileStatus fSta,
           //if destf is an existing file, rename is actually a replace, and do not need
           // to delete the file first
           if (replace && !srcIsSubDirOfDest) {
-            destFs.delete(destf, true);
             LOG.debug("The path " + destf.toString() + " is deleted");
+            cleanupDest(destFs, destf, conf);
           }
         } catch (FileNotFoundException ignore) {
         }
@@ -3753,7 +3753,19 @@ private void constructOneLBLocationMap(FileStatus fSta,
             }
             return true;
           } else {
-            if (destFs.rename(srcf, destf)) {
+            boolean success;
+            FileStatus srcfs = destFs.getFileStatus(srcf);
+            FileStatus destfs = null;
+            if (destFs.exists(destf)) {
+              destfs = destFs.getFileStatus(destf);
+            }
+            if (srcfs.isDir() && destfs != null && destfs.isDir()) {
+              success = moveResultFilesToDest(destFs, srcf, destf);
+            } else {
+              success = destFs.rename(srcf, destf);
+            }
+
+            if (success) {
               return true;
             }
             return false;
@@ -3813,6 +3825,55 @@ private void constructOneLBLocationMap(FileStatus fSta,
     } else {
       return new HiveException(msg, e);
     }
+  }
+
+  public static void cleanupDest(FileSystem fs, Path destf, HiveConf conf)
+          throws IOException {
+    // delete all files under the destination except the scratch and staging dir, because
+    // scratchdir and staging dirs contain the intermediate results which are moved under
+    // the destination directory
+    FileStatus[] fileStatuses = fs.listStatus(destf);
+    for(FileStatus fileStatus : fileStatuses) {
+      Path file = fileStatus.getPath();
+      if (!skipDeleting(file, conf)) {
+        fs.delete(file, true);
+      }
+    }
+  }
+
+  private static boolean skipDeleting(Path file, HiveConf conf){
+    return file.getName().toLowerCase().startsWith(
+            conf.getVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST).toLowerCase()) || file.getName().toLowerCase().startsWith(
+            conf.getVar(HiveConf.ConfVars.STAGINGDIR).toLowerCase());
+  }
+
+  public static boolean moveResultFilesToDest(FileSystem fs, Path srcd, Path destd)
+    throws IOException, HiveException {
+
+    boolean status = true;
+
+    // rename all files under the source directory to destination
+    FileStatus[] fileStatuses = fs.listStatus(srcd);
+    for(FileStatus fileStatus : fileStatuses) {
+      Path file = fileStatus.getPath();
+
+      if (fileStatus.isDir()) {
+        // directory rename works different from file rename.
+        // For file rename: the files is moved under the destination dir.
+        // For directory rename:
+        //  if the destdir exists and empty it is renamed to the destination directory
+        //  if the destdir exists but NOT empty then it is moved under the dest directory
+        status = fs.rename(file, new Path(destd, file.getName()));
+      } else {
+        status = fs.rename(file, destd);
+      }
+      if (!status) {
+        throw new HiveException("Unable to move result file " + file
+          + " to destination directory: " + destd);
+      }
+    }
+
+    return true;
   }
 
   /**
