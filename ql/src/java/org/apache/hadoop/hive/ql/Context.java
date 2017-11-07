@@ -100,6 +100,10 @@ public class Context {
   // number of previous attempts
   protected int tryCount = 0;
   private TokenRewriteStream tokenRewriteStream;
+  // Holds the qualified name to tokenRewriteStream for the views
+  // referenced by the query. This is used to rewrite the view AST
+  // with column masking and row filtering policies.
+  private final Map<String, TokenRewriteStream> viewsTokenRewriteStreams;
 
   private String executionId;
 
@@ -153,6 +157,7 @@ public class Context {
     opContext = new CompilationOpContext();
     isInheritPerms = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
     isHiveOptimizeInsertDestVolume = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_OPTIMIZE_INSERT_DEST_VOLUME);
+    viewsTokenRewriteStreams = new HashMap<>();
   }
 
   private Path findNonLocalScratchPath() {
@@ -694,6 +699,15 @@ public class Context {
    */
   public TokenRewriteStream getTokenRewriteStream() {
     return tokenRewriteStream;
+  }
+
+  public void addViewTokenRewriteStream(String viewFullyQualifiedName,
+      TokenRewriteStream tokenRewriteStream) {
+    viewsTokenRewriteStreams.put(viewFullyQualifiedName, tokenRewriteStream);
+  }
+
+  public TokenRewriteStream getViewTokenRewriteStream(String viewFullyQualifiedName) {
+    return viewsTokenRewriteStreams.get(viewFullyQualifiedName);
   }
 
   /**
