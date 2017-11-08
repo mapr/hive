@@ -75,27 +75,14 @@ public class TestHS2HttpServerPamConfiguration {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(is(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL.varname
         + " has false value. It is recommended to set to true when PAM is used."));
-    hiveConf.setVar(ConfVars.HIVE_SERVER2_PAM_SERVICES, "sshd");
     hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL, false);
     hiveServer2 = new HiveServer2();
     hiveServer2.init(hiveConf);
   }
 
-  @Test
-  public void testPamServicesAreNotConfigured() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(is(ConfVars.HIVE_SERVER2_PAM_SERVICES.varname + " are not configured."));
-    hiveConf.setVar(ConfVars.HIVE_SERVER2_PAM_SERVICES, "");
-    hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL, true);
-    hiveConf.setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, sslKeyStorePath);
-    hiveConf.setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, keyStorePassword);
-    hiveServer2 = new HiveServer2();
-    hiveServer2.init(hiveConf);
-  }
 
   @Test
   public void testPamCorrectConfiguration() {
-    hiveConf.setVar(ConfVars.HIVE_SERVER2_PAM_SERVICES, "sshd");
     hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL, true);
     hiveConf.setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, sslKeyStorePath);
     hiveConf.setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, keyStorePassword);

@@ -16,7 +16,7 @@
  */
 package org.apache.hive.http.security;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import com.mapr.login.PasswordAuthentication;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.security.UserAuthentication;
@@ -47,15 +47,7 @@ import net.sf.jpam.Pam;
  */
 
 public class PamAuthenticator extends LoginAuthenticator {
-  private final String pamServiceNames;
 
-  public PamAuthenticator(HiveConf conf) throws AuthenticationException {
-    super();
-    pamServiceNames = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_PAM_SERVICES);
-    if (pamServiceNames == null || pamServiceNames.trim().isEmpty()) {
-      throw new AuthenticationException("No PAM services are set.");
-    }
-  }
 
   @Override
   public String getAuthMethod() {
@@ -107,29 +99,10 @@ public class PamAuthenticator extends LoginAuthenticator {
 
   protected UserIdentity login(String username, String password) throws AuthenticationException {
     UserIdentity user = null;
-    if (authenticate(username, password)) {
+    if (PasswordAuthentication.authenticate(username, password)) {
       user = new PamUserIdentity(username);
     }
     return user;
-  }
-
-  private boolean authenticate(String user, String password) throws AuthenticationException {
-    String[] pamServices = pamServiceNames.split(",");
-    String errorMsg = "Error authenticating with the PAM service: ";
-    for (String pamService : pamServices) {
-      try {
-        Pam pam = new Pam(pamService);
-        if (!pam.authenticateSuccessful(user, password)) {
-          return false;
-        }
-      } catch (Throwable e) {
-        // Catch the exception caused by missing jpam.so which otherwise would
-        // crashes the thread and causes the client hanging rather than notifying
-        // the client nicely
-        throw new AuthenticationException(errorMsg + pamService, e);
-      }
-    }
-    return true;
   }
 
   @Override

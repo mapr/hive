@@ -396,14 +396,10 @@ public class HiveServer2 extends CompositeService {
           }
           if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_PAM)) {
             if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL)) {
-              String hiveServer2PamServices = hiveConf.getVar(ConfVars.HIVE_SERVER2_PAM_SERVICES);
-              if (hiveServer2PamServices == null || hiveServer2PamServices.isEmpty()) {
-                throw new IllegalArgumentException(ConfVars.HIVE_SERVER2_PAM_SERVICES.varname + " are not configured.");
-              }
-              builder.setPAMAuthenticator(pamAuthenticator == null ? new PamAuthenticator(hiveConf) : pamAuthenticator);
+              builder.setPAMAuthenticator(pamAuthenticator == null ? new PamAuthenticator() : pamAuthenticator);
               builder.setUsePAM(true);
             } else if (hiveConf.getBoolVar(ConfVars.HIVE_IN_TEST)) {
-              builder.setPAMAuthenticator(pamAuthenticator == null ? new PamAuthenticator(hiveConf) : pamAuthenticator);
+              builder.setPAMAuthenticator(pamAuthenticator == null ? new PamAuthenticator() : pamAuthenticator);
               builder.setUsePAM(true);
             } else {
               throw new IllegalArgumentException(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL.varname + " has false value. It is recommended to set to true when PAM is used.");

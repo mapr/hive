@@ -72,7 +72,6 @@ public class TestHS2HttpServerPam {
     hiveConf.set(ConfVars.HIVE_SERVER2_WEBUI_PORT.varname, webUIPort.toString());
     hiveConf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
-    hiveConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_PAM_SERVICES, "sshd");
     hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_PAM, true);
     hiveConf.setBoolVar(ConfVars.HIVE_IN_TEST, true);
     hiveServer2 = new HiveServer2(new TestPamAuthenticator(hiveConf));
@@ -156,7 +155,7 @@ public class TestHS2HttpServerPam {
     private static final Map<String, String> users = new HashMap<>();
 
     public TestPamAuthenticator(HiveConf conf) throws AuthenticationException {
-      super(conf);
+      super();
     }
 
     static {
