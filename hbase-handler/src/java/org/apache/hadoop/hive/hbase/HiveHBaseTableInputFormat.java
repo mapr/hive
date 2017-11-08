@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.hbase;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,6 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
 
   static final Logger LOG = LoggerFactory.getLogger(HiveHBaseTableInputFormat.class);
   private static final Object hbaseTableMonitor = new Object();
-  private Connection conn = null;
 
   @Override
   public RecordReader<ImmutableBytesWritable, ResultWritable> getRecordReader(
@@ -100,39 +100,39 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
     HBaseSplit hbaseSplit = (HBaseSplit) split;
     TableSplit tableSplit = hbaseSplit.getTableSplit();
 
-    if (conn == null) {
-      conn = ConnectionFactory.createConnection(HBaseConfiguration.create(jobConf));
-    }
-    initializeTable(conn, tableSplit.getTable());
-
-    setScan(HiveHBaseInputFormatUtil.getScan(jobConf));
-
+    final org.apache.hadoop.mapreduce.RecordReader<ImmutableBytesWritable, Result>
+            recordReader;
     Job job = new Job(jobConf);
     TaskAttemptContext tac = ShimLoader.getHadoopShims().newTaskAttemptContext(
         job.getConfiguration(), reporter);
 
-    final org.apache.hadoop.mapreduce.RecordReader<ImmutableBytesWritable, Result>
-    recordReader = createRecordReader(tableSplit, tac);
-    try {
-      recordReader.initialize(tableSplit, tac);
-    } catch (InterruptedException e) {
-      closeTable(); // Free up the HTable connections
-      if (conn != null) {
-        conn.close();
-        conn = null;
+    final  Connection conn;
+    synchronized (hbaseTableMonitor) {
+      conn = ConnectionFactory.createConnection(HBaseConfiguration.create(jobConf));
+      initializeTable(conn, tableSplit.getTable());
+      setScan(HiveHBaseInputFormatUtil.getScan(jobConf));
+      recordReader = createRecordReader(tableSplit, tac);
+      try {
+        recordReader.initialize(tableSplit, tac);
+      } catch (InterruptedException e) {
+        closeTable(); // Free up the HTable connections
+        if (conn != null) {
+          conn.close();
+        }
+        throw new IOException("Failed to initialize RecordReader", e);
       }
-      throw new IOException("Failed to initialize RecordReader", e);
     }
 
     return new RecordReader<ImmutableBytesWritable, ResultWritable>() {
 
       @Override
       public void close() throws IOException {
-        recordReader.close();
-        closeTable();
-        if (conn != null) {
-          conn.close();
-          conn = null;
+        synchronized (hbaseTableMonitor) {
+          recordReader.close();
+          closeTable();
+          if (conn != null) {
+            conn.close();
+          }
         }
       }
 
@@ -447,9 +447,23 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
   }
 
   @Override
-  public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
+  public InputSplit[] getSplits(final JobConf jobConf, final int numSplits) throws IOException {
     synchronized (hbaseTableMonitor) {
-      return getSplitsInternal(jobConf, numSplits);
+      final UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+      if (ugi == null) {
+        return getSplitsInternal(jobConf, numSplits);
+      }
+
+      try {
+        return ugi.doAs(new PrivilegedExceptionAction<InputSplit[]>() {
+          @Override
+          public InputSplit[] run() throws IOException {
+            return getSplitsInternal(jobConf, numSplits);
+          }
+        });
+      } catch (InterruptedException e) {
+        throw new IOException(e);
+      }
     }
   }
 
@@ -461,9 +475,7 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
     }
 
     String hbaseTableName = jobConf.get(HBaseSerDe.HBASE_TABLE_NAME);
-    if (conn == null) {
-      conn = ConnectionFactory.createConnection(HBaseConfiguration.create(jobConf));
-    }
+    Connection conn = ConnectionFactory.createConnection(HBaseConfiguration.create(jobConf));
     TableName tableName = TableName.valueOf(hbaseTableName);
     initializeTable(conn, tableName);
 
@@ -535,7 +547,6 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
       closeTable();
       if (conn != null) {
         conn.close();
-        conn = null;
       }
     }
   }
@@ -544,10 +555,6 @@ public class HiveHBaseTableInputFormat extends TableInputFormatBase
   protected void finalize() throws Throwable {
     try {
       closeTable();
-      if (conn != null) {
-        conn.close();
-        conn = null;
-      }
     } finally {
       super.finalize();
     }
