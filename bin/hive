@@ -415,7 +415,7 @@ if [ "$SKIP_HBASECP" = false ]; then
   if [[ -e $HBASE_HOME/bin/hbase ]] ; then
     HBASE_BIN="$HBASE_HOME/bin/hbase"
   fi
-  HBASE_BIN=${HBASE_BIN:-"$(which hbase)"}
+  HBASE_BIN=${HBASE_BIN:-"$(which hbase 2>/dev/null)"}
   
   # perhaps we've located HBase. If so, include its details on the classpath
   if [[ -n $HBASE_BIN ]] ; then
