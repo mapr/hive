@@ -453,9 +453,15 @@ public final class Utilities {
         } else {
           LOG.debug("Open file to read in plan: {}", localPath);
           FileSystem fs = localPath.getFileSystem(conf);
-          in = fs.open(localPath);
-          serializedSize = fs.getFileStatus(localPath).getLen();
-          planMode = "FILE";
+          if(fs.exists(localPath)) {
+            in = fs.open(localPath);
+            serializedSize = fs.getFileStatus(localPath).getLen();
+            planMode = "FILE";
+          } else {
+            // happens. e.g.: no reduce work.
+            LOG.info("No plan file found: " + path);
+            return null;
+          }
         }
 
         if(MAP_PLAN_NAME.equals(name)){
