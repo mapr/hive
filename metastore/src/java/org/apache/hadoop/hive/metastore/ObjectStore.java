@@ -1971,10 +1971,11 @@ public class ObjectStore implements RawStore, Configurable {
     if (mpart == null) {
       return null;
     }
-    return new Partition(convertList(mpart.getValues()), mpart.getTable().getDatabase()
-        .getName(), mpart.getTable().getTableName(), mpart.getCreateTime(),
-        mpart.getLastAccessTime(), convertToStorageDescriptor(mpart.getSd()),
-        convertMap(mpart.getParameters()));
+
+    return deleteColumnComments(new Partition(convertList(mpart.getValues()), mpart.getTable().getDatabase()
+            .getName(), mpart.getTable().getTableName(), mpart.getCreateTime(),
+            mpart.getLastAccessTime(), convertToStorageDescriptor(mpart.getSd()),
+            convertMap(mpart.getParameters())));
   }
 
   private Partition convertToPart(String dbName, String tblName, MPartition mpart)
@@ -1982,9 +1983,27 @@ public class ObjectStore implements RawStore, Configurable {
     if (mpart == null) {
       return null;
     }
-    return new Partition(convertList(mpart.getValues()), dbName, tblName,
+    return deleteColumnComments(new Partition(convertList(mpart.getValues()), dbName, tblName,
         mpart.getCreateTime(), mpart.getLastAccessTime(),
-        convertToStorageDescriptor(mpart.getSd(), false), convertMap(mpart.getParameters()));
+        convertToStorageDescriptor(mpart.getSd(), false), convertMap(mpart.getParameters())));
+  }
+
+  private static Partition deleteColumnComments(Partition part) throws MetaException {
+    StorageDescriptor storageDescriptor = part.getSd();
+
+    List<FieldSchema> cols = storageDescriptor.getCols();
+
+    if (cols != null && !cols.isEmpty()) {
+      for(FieldSchema fieldSchema : cols) {
+        fieldSchema.unsetComment();
+      }
+    }
+
+
+    storageDescriptor.setCols(cols);
+    part.setSd(storageDescriptor);
+
+    return part;
   }
 
   @Override
