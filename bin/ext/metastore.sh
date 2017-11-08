@@ -61,7 +61,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
   if $cygwin; then
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
-  JAR=${HIVE_LIB}/hive-service-*.jar
+  JAR=${HIVE_LIB}/hive-service-[0-9].*.jar
 
   # hadoop 20 or newer - skip the aux_jars option and hiveconf
 
