@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -1005,7 +1006,11 @@ public class DagUtils {
         return createLocalResource(destFS, dest, type, LocalResourceVisibility.PRIVATE);
       }
       try {
-        destFS.copyFromLocalFile(false, false, src, dest);
+        if (srcStr.startsWith(destFS.getUri().getScheme())){
+          FileUtil.copy(FileSystem.get(conf), src, destFS, dest, false, conf);
+        } else {
+          destFS.copyFromLocalFile(false, false, src, dest);
+        }
         synchronized (notifier) {
           notifier.notifyAll(); // Notify if we have successfully copied the file.
         }
