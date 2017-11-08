@@ -19,7 +19,12 @@
 package org.apache.hadoop.hive.hbase;
 
 import java.io.IOException;
+import java.util.Properties;
 
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
+import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
+import org.apache.hadoop.io.Writable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,10 +37,8 @@ import org.apache.hadoop.hbase.mapred.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableOutputCommitter;
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.hbase.PutWritable;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -51,23 +54,9 @@ import org.apache.hadoop.security.UserGroupInformation;
  */
 public class HiveHBaseTableOutputFormat extends
     TableOutputFormat<ImmutableBytesWritable> implements
-    OutputFormat<ImmutableBytesWritable, Object> {
+    HiveOutputFormat<ImmutableBytesWritable, Object> {
 
   static final Logger LOG = LoggerFactory.getLogger(HiveHBaseTableOutputFormat.class);
-  public static final String HBASE_WAL_ENABLED = "hive.hbase.wal.enabled";
-
-  /**
-   * Update the out table, and output an empty key as the key.
-   *
-   * @param jc the job configuration file
-   * @param finalOutPath the final output table name
-   * @param valueClass the value class
-   * @param isCompressed whether the content is compressed or not
-   * @param tableProperties the table info of the corresponding table
-   * @param progress progress used for status report
-   * @return the RecordWriter for the output file
-   */
-
 
   @Override
   public void checkOutputSpecs(FileSystem fs, JobConf jc) throws IOException {
@@ -98,6 +87,18 @@ public class HiveHBaseTableOutputFormat extends
       String name,
       Progressable progressable) throws IOException {
 
+    return getMyRecordWriter(jobConf);
+  }
+
+  @Override
+  public FileSinkOperator.RecordWriter getHiveRecordWriter(
+    JobConf jobConf, Path finalOutPath, Class<? extends Writable> valueClass, boolean isCompressed,
+    Properties tableProperties, Progressable progress) throws IOException {
+
+    return getMyRecordWriter(jobConf);
+  }
+
+  private MyRecordWriter getMyRecordWriter(JobConf jobConf) throws IOException {
     String hbaseTableName = jobConf.get(HBaseSerDe.HBASE_TABLE_NAME);
     jobConf.set(TableOutputFormat.OUTPUT_TABLE, hbaseTableName);
     final boolean walEnabled = HiveConf.getBoolVar(
@@ -114,7 +115,9 @@ public class HiveHBaseTableOutputFormat extends
   }
 
 
-  static private class MyRecordWriter implements org.apache.hadoop.mapred.RecordWriter<ImmutableBytesWritable, Object> {
+  static private class MyRecordWriter
+          implements org.apache.hadoop.mapred.RecordWriter<ImmutableBytesWritable, Object>,
+          org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter {
     private final HTable m_table;
     private final boolean m_walEnabled;
 
@@ -153,6 +156,16 @@ public class HiveHBaseTableOutputFormat extends
       } finally {
         super.finalize();
       }
+    }
+
+    @Override
+    public void write(Writable w) throws IOException {
+      write(null, w);
+    }
+
+    @Override
+    public void close(boolean abort) throws IOException {
+      close(null);
     }
   }
 }
