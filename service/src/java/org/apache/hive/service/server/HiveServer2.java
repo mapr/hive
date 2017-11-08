@@ -89,6 +89,7 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooDefs.Perms;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.client.ZooKeeperSaslClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -430,16 +431,17 @@ public class HiveServer2 extends CompositeService {
    */
   private void setUpZooKeeperAuth(HiveConf hiveConf) throws Exception {
     if (UserGroupInformation.isSecurityEnabled()) {
-      String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL);
-      if (principal.isEmpty()) {
-        throw new IOException("HiveServer2 Kerberos principal is empty");
+      if(hiveConf.getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION).toLowerCase().equals("kerberos")) {
+        String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL);
+        if (principal.isEmpty()) {
+          throw new IOException("HiveServer2 Kerberos principal is empty");
+        }
+        String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB);
+        if (keyTabFile.isEmpty()) {
+          throw new IOException("HiveServer2 Kerberos keytab is empty");
+        }
       }
-      String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB);
-      if (keyTabFile.isEmpty()) {
-        throw new IOException("HiveServer2 Kerberos keytab is empty");
-      }
-      // Install the JAAS Configuration for the runtime
-      Utils.setZookeeperClientKerberosJaasConfig(principal, keyTabFile);
+      System.setProperty(ZooKeeperSaslClient.LOGIN_CONTEXT_NAME_KEY, "Client");
     }
   }
 
