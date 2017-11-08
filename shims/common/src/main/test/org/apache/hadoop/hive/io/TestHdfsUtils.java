@@ -31,6 +31,8 @@ import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.fs.permission.FsPermission;
 
+import org.apache.hadoop.security.Groups;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Test;
 
 import static org.mockito.Matchers.any;
@@ -116,9 +118,12 @@ public class TestHdfsUtils {
   public void testSetFullFileStatusFailInheritGroupRecursive() throws Exception {
     Configuration conf = new Configuration();
     conf.set("dfs.namenode.acls.enabled", "false");
+    String currentUserName = UserGroupInformation.getCurrentUser().getUserName();
 
     String fakeSourceGroup = "fakeGroup1";
     String fakeTargetGroup = "fakeGroup2";
+    conf.set("hadoop.user.group.static.mapping.overrides", String.format("%s=%s,%s;", currentUserName, fakeSourceGroup, fakeTargetGroup));
+    Groups.getUserToGroupsMappingServiceWithLoadedConfiguration(conf);
     Path fakeTarget = new Path("fakePath");
     HdfsUtils.HadoopFileStatus mockHadoopFileStatus = mock(HdfsUtils.HadoopFileStatus.class);
     FileStatus mockSourceStatus = mock(FileStatus.class);
