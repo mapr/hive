@@ -215,6 +215,14 @@
     </fileSet>
 
     <fileSet>
+      <directory>${project.parent.basedir}/hplsql/src/main/resources</directory>
+      <includes>
+        <include>hplsql-site.xml</include>
+      </includes>
+      <outputDirectory>conf</outputDirectory>
+    </fileSet>
+
+    <fileSet>
       <directory>${project.parent.basedir}/conf</directory>
       <includes>
         <include>*.template</include>
