@@ -239,13 +239,17 @@ public class SessionManager extends CompositeService {
     }
 
     if (isOperationLogEnabled) {
-      LOG.info("Operation log root directory is created: " + operationLogRootDir.getAbsolutePath());
-      try {
-        FileUtils.forceDeleteOnExit(operationLogRootDir);
-      } catch (IOException e) {
-        LOG.warn("Failed to schedule cleanup HS2 operation logging root dir: " +
-            operationLogRootDir.getAbsolutePath(), e);
-      }
+      Runtime.getRuntime().addShutdownHook(new Thread(){
+        @Override
+          public void run() {
+            try {
+              FileUtils.forceDelete(operationLogRootDir);
+            } catch (IOException e) {
+              LOG.warn("Failed to schedule cleanup HS2 operation logging root dir: " +
+                    operationLogRootDir.getAbsolutePath(), e);
+            }
+          }
+      });
     }
   }
 
@@ -330,18 +334,6 @@ public class SessionManager extends CompositeService {
             " seconds has been exceeded. RUNNING background operations will be shut down", e);
       }
       backgroundOperationPool = null;
-    }
-    cleanupLoggingRootDir();
-  }
-
-  private void cleanupLoggingRootDir() {
-    if (isOperationLogEnabled) {
-      try {
-        FileUtils.forceDelete(operationLogRootDir);
-      } catch (Exception e) {
-        LOG.warn("Failed to cleanup root dir of HS2 logging: " + operationLogRootDir
-            .getAbsolutePath(), e);
-      }
     }
   }
 
