@@ -45,6 +45,7 @@ public class TestRowContainer {
   public void testSpillTimestamp() throws HiveException, SerDeException, IOException {
     int blockSize = 10;
     Configuration cfg = new Configuration();
+    cfg.setBoolean("hive.exec.tmp.maprfsvolume", false);
     RowContainer result = new RowContainer(blockSize, cfg, null);
     LazyBinarySerDe serde = new LazyBinarySerDe();
     Properties props = new Properties();

@@ -577,6 +577,9 @@ public class HiveConf extends Configuration {
         "String used as a file extension for output files. \n" +
         "If not set, defaults to the codec extension for text files (e.g. \".gz\"), or no extension otherwise."),
 
+    // Should write RowContainer tmp files on MapRFS local volume?
+    TMP_MAPRFS_VOLUME("hive.exec.tmp.maprfsvolume", true, "hould write RowContainer tmp files on MapRFS local volume?"),
+
     HIVE_IN_TEST("hive.in.test", false, "internal usage only, true in test mode", true),
     HIVE_IN_TEST_SSL("hive.in.ssl.test", false, "internal usage only, true in SSL test mode", true),
     // TODO: this needs to be removed; see TestReplicationScenarios* comments.

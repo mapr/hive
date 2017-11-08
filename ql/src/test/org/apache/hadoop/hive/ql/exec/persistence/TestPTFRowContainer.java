@@ -53,6 +53,7 @@ public class TestPTFRowContainer {
   @BeforeClass
   public static void setupClass()  throws SerDeException {
     cfg = new Configuration();
+    cfg.setBoolean("hive.exec.tmp.maprfsvolume", false);
     serDe = new LazyBinarySerDe();
     Properties p = new Properties();
     p.setProperty(org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS,
