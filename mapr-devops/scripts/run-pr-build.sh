@@ -32,6 +32,6 @@ export MAPR_SNAPSHOTS_REPO=http://maven.corp.maprtech.com/nexus/content/reposito
 export MAPR_MAVEN_REPO=${MAPR_SNAPSHOTS_REPO}
 export MAPR_RELEASES_REPO=http://maven.corp.maprtech.com/nexus/content/repositories/releases/
 
+mvn clean install -DskipTests
 mvn clean install -T 6 -fae -pl \!ql
 mvn surefire-report:report-only -Daggregate=true
-

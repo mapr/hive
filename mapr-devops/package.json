@@ -12,9 +12,8 @@
   "author": "devops",
   "license": "ISC",
   "dependencies": {
-    "private-devops-automation-framework": "^8.12.1",
+    "private-devops-automation-framework": "^9.1.1",
     "typescript": "^2.2.2"
   },
   "devDependencies": {}
 }
-
