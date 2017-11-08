@@ -112,7 +112,7 @@ public class HdfsUtils {
         //If there is no group of a file, no need to call chgrp
         if (group != null && !group.isEmpty()) {
           Groups userToGroupsMappingService = Groups.getUserToGroupsMappingService(conf);
-          String currentUserName = UserGroupInformation.getCurrentUser().getUserName();
+          String currentUserName = UserGroupInformation.getCurrentUser().getShortUserName();
           if (userToGroupsMappingService.getGroups(currentUserName).contains(group)) {
             run(fsShell, new String[]{"-chgrp", "-R", group, target.toString()});
           }
