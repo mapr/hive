@@ -23,7 +23,7 @@ hiveburninclient() {
   if $cygwin; then
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
-  JAR=${HIVE_LIB}/hive-service-*.jar
+  JAR=${HIVE_LIB}/hive-service-[0-9].*.jar
   exec $HADOOP jar $JAR $CLASS $HIVE_OPTS "$@"
 }
 
