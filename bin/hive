@@ -244,7 +244,7 @@ if [ -f "${MAPR_ZK_HOME}/zookeeper-*.jar" ] ; then
   CLASSPATH=${CLASSPATH}:${MAPR_ZK_HOME}/zookeeper-*.jar;
 fi
 if [[ -n $SENTRY_HOME ]] ; then
-  for f in $SENTRY_HOME/lib/*.jar; do
+  for f in $SENTRY_HOME/lib/s*.jar; do
     CLASSPATH=${CLASSPATH}:${f}
   done
 fi
