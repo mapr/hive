@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -e
+
+SCRIPT_DEPLOY_LOCATION="http://artifactory.devops.lab/artifactory/local-flatfiles/"
+
+export PATH
+export gitCloneURL
+export gitSHA=`git rev-parse HEAD`
+
+case $1 in
+    "prepare-environment")
+        echo ""
+        echo "Preparing dev environment .."
+        echo ""
+        cd mapr-devops
+        set +e
+        curl "${SCRIPT_DEPLOY_LOCATION}devops/install-node-environment.sh" | sh
+        set -e
+        source ~/.bashrc
+        npm install
+    ;;
+    "handle-pull-request")
+        echo "Running PR build .... "
+        mapr-devops/pipeline prepare-environment
+        cd mapr-devops
+        source ~/.bashrc
+        npm run build
+        ./bin/hive-build
+    ;;
+    "handle-merge-to-official-fork")
+        mapr-devops/pipeline handle-pull-request
+        npm publish
+    ;;
+    *)
+        echo "Usage:"
+        echo ""
+        echo "mapr-devops/pipeline prepare-environment"
+        echo "mapr-devops/pipeline handle-pull-request"
+        echo "mapr-devops/pipeline handle-merge-to-official-fork"
+        echo ""
+    ;;
+esac
