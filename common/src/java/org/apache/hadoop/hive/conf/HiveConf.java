@@ -4420,6 +4420,8 @@ public class HiveConf extends Configuration {
     HIVE_BLOBSTORE_USE_BLOBSTORE_AS_SCRATCHDIR("hive.blobstore.use.blobstore.as.scratchdir", false,
             "Enable the use of scratch directories directly on blob storage systems (it may cause performance penalties)."),
 
+    READ_ALL_HBASE_COLUMN("hive.read.all.hbase.column", false,"If true then Hive will get all column from Hbase table"),
+
     HIVE_BLOBSTORE_OPTIMIZATIONS_ENABLED("hive.blobstore.optimizations.enabled", true,
             "This parameter enables a number of optimizations when running on blobstores:\n" +
             "(1) If hive.blobstore.use.blobstore.as.scratchdir is false, force the last Hive job to write to the blobstore.\n" +

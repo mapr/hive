@@ -55,6 +55,7 @@ import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.mapred.JobConf;
 
 /**
@@ -83,7 +84,12 @@ class HiveHBaseInputFormatUtil {
       throw new IOException("Cannot read more columns than the given table contains.");
     }
 
-    boolean readAllColumns = ColumnProjectionUtils.isReadAllColumns(jobConf);
+    boolean readAllColumns = true;
+
+    if(!jobConf.getBoolean(HiveConf.ConfVars.READ_ALL_HBASE_COLUMN.varname, false)) {
+      readAllColumns = ColumnProjectionUtils.isReadAllColumns(jobConf);
+    }
+
     Scan scan = new Scan();
     boolean empty = true;
 
