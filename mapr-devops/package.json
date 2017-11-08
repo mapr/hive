@@ -1,0 +1,20 @@
+{
+  "name": "hive-pipeline",
+  "version": "1.0.0",
+  "description": "MapR hive build pipeline",
+  "main": "index.js",
+  "scripts": {
+    "test": "No script",
+    "devops": "devops",
+    "build": "rm -rf ./dist && tsc",
+    "mesosBuild": "node dist/hive-builder.js"
+  },
+  "author": "devops",
+  "license": "ISC",
+  "dependencies": {
+    "private-devops-automation-framework": "^8.12.1",
+    "typescript": "^2.2.2"
+  },
+  "devDependencies": {}
+}
+
