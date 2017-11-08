@@ -56,7 +56,7 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-hiveserver2.pid
   if $cygwin; then
     HIVE_LIB=`cygpath -w "$HIVE_LIB"`
   fi
-  JAR=${HIVE_LIB}/hive-service-*.jar
+  JAR=${HIVE_LIB}/hive-service-[0-9].*.jar
 
   if [ "$MAPR_HIVE_SERVER_LOGIN_OPTS" = "" ]; then
     export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_ECOSYSTEM_LOGIN_OPTS}"
