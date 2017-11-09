@@ -513,5 +513,8 @@ if [ "$TORUN" = "" ] ; then
   exit 7
 else
   set -- "${SERVICE_ARGS[@]}"
+  if [ -f "$HIVE_HOME/bin"/sync-pid.sh ] ; then
+    source "$HIVE_HOME/bin"/sync-pid.sh
+  fi
   $TORUN "$@"
 fi
