@@ -57,6 +57,7 @@
     <module>shims</module>
     <module>spark-client</module>
     <module>testutils</module>
+    <module>mapr-conf-tool</module>
     <module>packaging</module>
   </modules>
 
