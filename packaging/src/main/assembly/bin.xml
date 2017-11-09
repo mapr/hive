@@ -175,6 +175,7 @@
         <include>hive.cmd</include>
         <include>hplsql.cmd</include>
         <include>beeline.cmd</include>
+        <include>sync-pid.sh</include>
         <include>ext/**/*</include>
       </includes>
       <outputDirectory>bin</outputDirectory>
