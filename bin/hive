@@ -520,6 +520,8 @@ if [[ "$SERVICE" =~ ^(hiveserver2|beeline|cli)$ ]] ; then
   fi
 fi
 
+declare -A IS_SERVICE_CMD=(["metastore_start"]=1 ["metastore_stop"]=1 ["metastore_status"]=1 ["hiveserver2_start"]=1 ["hiveserver2_stop"]=1 ["hiveserver2_status"]=1)
+
 if [ "$TORUN" = "" ] ; then
   echo "Service $SERVICE not found"
   echo "Available Services: $SERVICE_LIST"
@@ -527,7 +529,7 @@ if [ "$TORUN" = "" ] ; then
 else
   set -- "${SERVICE_ARGS[@]}"
   if [ -f "$HIVE_HOME/bin"/sync-pid.sh ] ; then
-    source "$HIVE_HOME/bin"/sync-pid.sh
+    [ -n "${IS_SERVICE_CMD[$TORUN]}" ] && source "$HIVE_HOME/bin"/sync-pid.sh
   fi
   $TORUN "$@"
 fi
