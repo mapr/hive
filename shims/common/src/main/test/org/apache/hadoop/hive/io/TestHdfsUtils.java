@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.fs.permission.FsPermission;
 
+import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.security.Groups;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Test;
@@ -128,12 +129,15 @@ public class TestHdfsUtils {
     HdfsUtils.HadoopFileStatus mockHadoopFileStatus = mock(HdfsUtils.HadoopFileStatus.class);
     FileStatus mockSourceStatus = mock(FileStatus.class);
     FsShell mockFsShell = mock(FsShell.class);
+    FileSystem fs = mock(FileSystem.class);
 
     when(mockSourceStatus.getGroup()).thenReturn(fakeSourceGroup);
     when(mockHadoopFileStatus.getFileStatus()).thenReturn(mockSourceStatus);
+    when(fs.getFileStatus(new Path((String) MetastoreConf.ConfVars.WAREHOUSE.getDefaultVal()))).thenReturn(mockSourceStatus);
+    when(mockSourceStatus.getOwner()).thenReturn(currentUserName);
     doThrow(RuntimeException.class).when(mockFsShell).run(any(String[].class));
 
-    HdfsUtils.setFullFileStatus(conf, mockHadoopFileStatus, fakeTargetGroup, mock(FileSystem.class), fakeTarget,
+    HdfsUtils.setFullFileStatus(conf, mockHadoopFileStatus, fakeTargetGroup, fs, fakeTarget,
             true, mockFsShell);
     verify(mockFsShell).run(new String[]{"-chgrp", "-R", fakeSourceGroup, fakeTarget.toString()});
   }
@@ -152,7 +156,9 @@ public class TestHdfsUtils {
     FileStatus mockSourceStatus = mock(FileStatus.class);
     FsShell mockFsShell = mock(FsShell.class);
     AclStatus mockAclStatus = mock(AclStatus.class);
+    FileSystem fs = mock(FileSystem.class);
 
+    when(fs.getFileStatus(new Path((String) MetastoreConf.ConfVars.WAREHOUSE.getDefaultVal()))).thenReturn(mockSourceStatus);
     when(mockSourceStatus.getPermission()).thenReturn(new FsPermission((short) 777));
     when(mockAclStatus.toString()).thenReturn("");
     when(mockHadoopFileStatus.getFileStatus()).thenReturn(mockSourceStatus);
@@ -160,7 +166,7 @@ public class TestHdfsUtils {
     when(mockHadoopFileStatus.getAclStatus()).thenReturn(mockAclStatus);
     doThrow(RuntimeException.class).when(mockFsShell).run(any(String[].class));
 
-    HdfsUtils.setFullFileStatus(conf, mockHadoopFileStatus, "", mock(FileSystem.class), fakeTarget, true, mockFsShell);
+    HdfsUtils.setFullFileStatus(conf, mockHadoopFileStatus, "", fs, fakeTarget, true, mockFsShell);
     verify(mockFsShell).run(new String[]{"-setfacl", "-R", "--set", any(String.class), fakeTarget.toString()});
   }
 
