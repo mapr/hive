@@ -410,13 +410,23 @@ if [ "${AUX_PARAM}" != "" ]; then
 fi
 
 # add default hiveserver2 authentication depending upon security in the cluster
-if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
-    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=PAM"
-    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.authentication.pam.services=login"
-    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
-else
-  HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=NONE"
+if [ -f "$HIVE_HOME"/bin/isSecure ];  then
+  MAPR_SECURITY_STATUS=$(cat "$HIVE_HOME"/bin/isSecure)
 fi
+
+case "$MAPR_SECURITY_STATUS" in
+  "true")
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=PAM"   # This option enables both PAM and MAPRSASL security for HS2
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"  # This option enables MAPRSASL security for HiveMeta
+  ;;
+  "false")
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=NONE"  # This option disables security for HS2
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false" # This option disables security for HiveMeta
+  ;;
+  "custom")
+  # All custom security is configured in hive-site.xml, so do nothing here
+  ;;
+esac
 
 SERVICE_LIST=""
 

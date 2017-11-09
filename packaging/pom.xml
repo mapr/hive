@@ -263,6 +263,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.hive.conftool</groupId>
+      <artifactId>mapr-conf-tool</artifactId>
+    <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
       <artifactId>hive-hcatalog-streaming</artifactId>
       <version>${project.version}</version>
