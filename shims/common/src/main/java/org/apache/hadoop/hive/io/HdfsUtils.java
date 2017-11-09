@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.io;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.List;
 
@@ -90,17 +91,17 @@ public class HdfsUtils {
    * @param target the {@link Path} to copy permissions, group, and ACLs to
    * @param recursion recursively set permissions and ACLs on the target {@link Path}
    */
-  public static void setFullFileStatus(Configuration conf, HdfsUtils.HadoopFileStatus sourceStatus,
-      String targetGroup, FileSystem fs, Path target, boolean recursion) {
+  public static void setFullFileStatus(final Configuration conf, HdfsUtils.HadoopFileStatus sourceStatus,
+      String targetGroup, FileSystem fs, final Path target, boolean recursion) {
     setFullFileStatus(conf, sourceStatus, targetGroup, fs, target, recursion, recursion ? new FsShell() : null);
   }
 
   @VisibleForTesting
-  static void setFullFileStatus(Configuration conf, HdfsUtils.HadoopFileStatus sourceStatus,
-    String targetGroup, FileSystem fs, Path target, boolean recursion, FsShell fsShell) {
+  static void setFullFileStatus(final Configuration conf, HdfsUtils.HadoopFileStatus sourceStatus,
+    String targetGroup, FileSystem fs, final Path target, boolean recursion, final FsShell fsShell) {
     try {
       FileStatus fStatus = sourceStatus.getFileStatus();
-      String group = fStatus.getGroup();
+      final String group = fStatus.getGroup();
       boolean aclEnabled = Objects.equal(conf.get("dfs.namenode.acls.enabled"), "true");
       FsPermission sourcePerm = fStatus.getPermission();
       List<AclEntry> aclEntries = null;
@@ -120,12 +121,22 @@ public class HdfsUtils {
       if (recursion) {
         //use FsShell to change group, permissions, and extended ACL's recursively
         fsShell.setConf(conf);
+        FileStatus fileStatus = fs.getFileStatus(new Path(conf.get("hive.metastore.warehouse.dir")));
+        String whOwner = fileStatus.getOwner();
         //If there is no group of a file, no need to call chgrp
         if (group != null && !group.isEmpty()) {
-          Groups userToGroupsMappingService = Groups.getUserToGroupsMappingService(conf);
-          String currentUserName = UserGroupInformation.getCurrentUser().getShortUserName();
-          if (userToGroupsMappingService.getGroups(currentUserName).contains(group)) {
-            run(fsShell, new String[]{"-chgrp", "-R", group, target.toString()});
+          final String currentUserName = UserGroupInformation.getCurrentUser().getShortUserName();
+          if (whOwner.equals(currentUserName)) {
+            changeGroupIfAllowed(conf, group, fsShell, target, currentUserName);
+          } else {
+            UserGroupInformation ugi = UserGroupInformation.createProxyUser(whOwner, UserGroupInformation.getCurrentUser());
+            ugi.doAs(new PrivilegedAction<Void>() {
+              @Override
+              public Void run() {
+                changeGroupIfAllowed(conf, group, fsShell, target, currentUserName);
+                return null;
+              }
+            });
           }
         }
         if (aclEnabled) {
@@ -166,6 +177,22 @@ public class HdfsUtils {
               "Unable to inherit permissions for file " + target + " from file " + sourceStatus.getFileStatus().getPath(),
               e.getMessage());
       LOG.debug("Exception while inheriting permissions", e);
+    }
+  }
+
+  /**
+   * Change a group when hive.warehouse.subdir.inherit.perms are set to true (default)
+   * If 'user' included in the group of parent owner group, method will recursively inherit this group.
+   * Otherwise it do nothing.
+   */
+  private static void changeGroupIfAllowed(Configuration conf, String group, FsShell fsShell, Path target, String currUser) {
+    try {
+      Groups userToGroupsMappingService = Groups.getUserToGroupsMappingService(conf);
+      if (userToGroupsMappingService.getGroups(currUser).contains(group)) {
+        run(fsShell, new String[]{"-chgrp", "-R", group, target.toString()});
+      }
+    } catch (Exception e) {
+      LOG.warn("Cant set group owner - {} to path: {}, skipped...", group, target);
     }
   }
 
