@@ -37,7 +37,6 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <useStrictFiltering>true</useStrictFiltering>
-      <useTransitiveFiltering>true</useTransitiveFiltering>
       <excludes>
         <exclude>org.apache.hadoop:*</exclude>
         <exclude>org.apache.hive.hcatalog:*</exclude>
@@ -47,6 +46,10 @@
         <exclude>co.cask.tephra:*</exclude>
         <exclude>commons-configuration:commons-configuration</exclude>
         <exclude>org.apache.hive:hive-jdbc:*:standalone</exclude>
+        <exclude>org.apache.hbase:*</exclude>
+        <!--<exclude>org.apache.zookeeper:*</exclude> TODO: uncomment after adding MapR Hadoop 3.x.x  -->
+        <exclude>org.apache.pig:*</exclude>
+        <!--<exclude>com.mapr.hadoop:*</exclude>  TODO: uncomment after adding MapR Hadoop 3.x.x -->
       </excludes>
     </dependencySet>
     <dependencySet>
