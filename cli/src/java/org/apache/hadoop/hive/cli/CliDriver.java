@@ -718,9 +718,9 @@ public class CliDriver {
 
     if (!ss.getIsSilent()) {
       if (logInitFailed) {
-        System.err.println(logInitDetailMessage);
+        console.printError(logInitDetailMessage);
       } else {
-        SessionState.getConsole().printInfo(logInitDetailMessage);
+        console.logInfo(logInitDetailMessage);
       }
     }
 
