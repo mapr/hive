@@ -42,6 +42,7 @@ import java.util.Set;
 public class TestCombineHiveInputFormat extends TestCase {
     public void testAvoidSplitCombination() throws Exception {
         Configuration conf = new Configuration();
+        conf.set("fs.default.name", "file:///");
         JobConf job = new JobConf(conf);
 
         TableDesc tblDesc = Utilities.defaultTd;

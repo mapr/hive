@@ -111,6 +111,7 @@ public class TestTxnCommands2 {
   protected void setUpWithTableProperties(String tableProperties) throws Exception {
     tearDown();
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, TEST_WAREHOUSE_DIR);
@@ -396,7 +397,7 @@ public class TestTxnCommands2 {
    * see HIVE-16177
    * See also {@link TestTxnCommands#testNonAcidToAcidConversion01()}
    */
-  @Test
+  @Ignore // HIVE-16177 is not in Hive-2.3.1
   public void testNonAcidToAcidConversion02() throws Exception {
     //create 2 rows in a file 000001_0 (and an empty 000000_0)
     runStatementOnDriver("insert into " + Table.NONACIDORCTBL + "(a,b) values(1,2),(1,3)");

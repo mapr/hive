@@ -52,6 +52,7 @@ public class TestQBCompact {
   public static void init() throws Exception {
     queryState = new QueryState(null);
     conf = queryState.getConf();
+    conf.set("fs.default.name", "file:///");
     conf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

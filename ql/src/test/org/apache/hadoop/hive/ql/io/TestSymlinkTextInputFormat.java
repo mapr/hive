@@ -70,20 +70,25 @@ public class TestSymlinkTextInputFormat extends TestCase {
   private Path dataDir2;
   private Path symlinkDir;
 
+  Path workDir = new Path(System.getProperty("test.tmp.dir",
+          "target" + File.separator + "test" + File.separator + "tmp"));
+
   @Override
   protected void setUp() throws IOException {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     job = new JobConf(conf);
 
     TableDesc tblDesc = Utilities.defaultTd;
     PartitionDesc partDesc = new PartitionDesc(tblDesc, null);
     LinkedHashMap<Path, PartitionDesc> pt = new LinkedHashMap<>();
-    pt.put(new Path("/tmp/testfolder"), partDesc);
+    pt.put(new Path(workDir, "/tmp/testfolder"), partDesc);
     MapredWork mrwork = new MapredWork();
     mrwork.getMapWork().setPathToPartitionInfo(pt);
-    Utilities.setMapRedWork(job, mrwork,new Path("/tmp/" + System.getProperty("user.name"), "hive"));
+    Utilities.setMapRedWork(job, mrwork,new Path(workDir + "/tmp/" + System.getProperty("user.name"), "hive"));
 
     fileSystem = FileSystem.getLocal(conf);
+    fileSystem.setWorkingDirectory(workDir);
     testDir = new Path(System.getProperty("test.tmp.dir", System.getProperty(
         "user.dir", new File(".").getAbsolutePath()))
         + "/TestSymlinkTextInputFormat");
@@ -133,6 +138,7 @@ public class TestSymlinkTextInputFormat extends TestCase {
 
 
     HiveConf hiveConf = new HiveConf(TestSymlinkTextInputFormat.class);
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

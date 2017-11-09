@@ -45,6 +45,7 @@ public class TestParquetSerDe extends TestCase {
 
       final ParquetHiveSerDe serDe = new ParquetHiveSerDe();
       final Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
       final Properties tbl = createProperties();
       SerDeUtils.initializeSerDe(serDe, conf, tbl, null);
 
@@ -89,6 +90,7 @@ public class TestParquetSerDe extends TestCase {
     // Initialize
     ParquetHiveSerDe serDe = new ParquetHiveSerDe();
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Properties tblProperties = new Properties();
 
     tblProperties.setProperty(serdeConstants.LIST_COLUMNS, "a,s");

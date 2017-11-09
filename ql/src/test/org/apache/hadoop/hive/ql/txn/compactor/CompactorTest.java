@@ -94,6 +94,7 @@ public abstract class CompactorTest {
 
   protected CompactorTest() throws Exception {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     TxnDbUtil.setConfValues(conf);
     TxnDbUtil.cleanDb();
     ms = new HiveMetaStoreClient(conf);

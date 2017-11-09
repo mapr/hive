@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,9 @@ import org.apache.hadoop.hive.ql.plan.PartitionDesc;
 
 public class TestHiveFileFormatUtils extends TestCase {
 
+  Path workDir = new Path(System.getProperty("test.tmp.dir",
+          "target" + File.separator + "test" + File.separator + "tmp"));
+
   public void testGetPartitionDescFromPathRecursively() throws IOException {
 
     PartitionDesc partDesc_3 = new PartitionDesc();
@@ -38,28 +42,28 @@ public class TestHiveFileFormatUtils extends TestCase {
 
     Map<Path, PartitionDesc> pathToPartitionInfo = new HashMap<>();
 
-    pathToPartitionInfo.put(new Path("file:///tbl/par1/part2/part3"), partDesc_3);
-    pathToPartitionInfo.put(new Path("/tbl/par1/part2/part4"), partDesc_4);
-    pathToPartitionInfo.put(new Path("/tbl/par1/part2/part5/"), partDesc_5);
-    pathToPartitionInfo.put(new Path("hdfs:///tbl/par1/part2/part6/"), partDesc_6);
+    pathToPartitionInfo.put(new Path(workDir,"file:///tbl/par1/part2/part3"), partDesc_3);
+    pathToPartitionInfo.put(new Path(workDir,"/tbl/par1/part2/part4"), partDesc_4);
+    pathToPartitionInfo.put(new Path(workDir,"/tbl/par1/part2/part5/"), partDesc_5);
+    pathToPartitionInfo.put(new Path(workDir,"hdfs:///tbl/par1/part2/part6/"), partDesc_6);
 
     // first group
     PartitionDesc ret = null;
     
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("file:///tbl/par1/part2/part3"),
+        pathToPartitionInfo, new Path(workDir,"file:///tbl/par1/part2/part3"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("file:///tbl/par1/part2/part3 not found.", partDesc_3, ret);
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("/tbl/par1/part2/part3"), 
+        pathToPartitionInfo, new Path(workDir,"/tbl/par1/part2/part3"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("/tbl/par1/part2/part3 not found.", partDesc_3, ret);
 
     boolean exception = false;
     try {
       ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-          pathToPartitionInfo, new Path("hdfs:///tbl/par1/part2/part3"),
+          pathToPartitionInfo, new Path(workDir,"hdfs:///tbl/par1/part2/part3"),
           IOPrepareCache.get().allocatePartitionDescMap());
     } catch (IOException e) {
       exception = true;
@@ -70,17 +74,17 @@ public class TestHiveFileFormatUtils extends TestCase {
 
     // second group
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("file:///tbl/par1/part2/part4"),
+        pathToPartitionInfo, new Path(workDir,"file:///tbl/par1/part2/part4"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("file:///tbl/par1/part2/part4 not found.", partDesc_4, ret);
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("/tbl/par1/part2/part4"), 
+        pathToPartitionInfo, new Path(workDir,"/tbl/par1/part2/part4"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("/tbl/par1/part2/part4 not found.", partDesc_4, ret);
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("hdfs:///tbl/par1/part2/part4"),
+        pathToPartitionInfo, new Path(workDir,"hdfs:///tbl/par1/part2/part4"),
         IOPrepareCache.get().allocatePartitionDescMap());
 
     assertEquals("hdfs:///tbl/par1/part2/part4 should  not found", partDesc_4,
@@ -88,24 +92,24 @@ public class TestHiveFileFormatUtils extends TestCase {
 
     // third group
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("file:///tbl/par1/part2/part5"),
+        pathToPartitionInfo, new Path(workDir,"file:///tbl/par1/part2/part5"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("file:///tbl/par1/part2/part5 not found.", partDesc_5, ret);
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("/tbl/par1/part2/part5"), 
+        pathToPartitionInfo, new Path(workDir,"/tbl/par1/part2/part5"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("/tbl/par1/part2/part5 not found.", partDesc_5, ret);
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("hdfs:///tbl/par1/part2/part5"),
+        pathToPartitionInfo, new Path(workDir,"hdfs:///tbl/par1/part2/part5"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("hdfs:///tbl/par1/part2/part5 not found", partDesc_5, ret);
 
     // fourth group
     try {
       ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-          pathToPartitionInfo, new Path("file:///tbl/par1/part2/part6"),
+          pathToPartitionInfo, new Path(workDir,"file:///tbl/par1/part2/part6"),
           IOPrepareCache.get().allocatePartitionDescMap());
     } catch (IOException e) {
       exception = true;
@@ -115,12 +119,12 @@ public class TestHiveFileFormatUtils extends TestCase {
     exception = false;
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("/tbl/par1/part2/part6"), 
+        pathToPartitionInfo, new Path(workDir,"/tbl/par1/part2/part6"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("/tbl/par1/part2/part6 not found.", partDesc_6, ret);
 
     ret = HiveFileFormatUtils.getPartitionDescFromPathRecursively(
-        pathToPartitionInfo, new Path("hdfs:///tbl/par1/part2/part6"),
+        pathToPartitionInfo, new Path(workDir,"hdfs:///tbl/par1/part2/part6"),
         IOPrepareCache.get().allocatePartitionDescMap());
     assertEquals("hdfs:///tbl/par1/part2/part6 not found.", partDesc_6, ret);
 

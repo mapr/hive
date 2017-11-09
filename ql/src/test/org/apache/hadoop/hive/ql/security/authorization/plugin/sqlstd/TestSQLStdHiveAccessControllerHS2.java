@@ -71,6 +71,7 @@ public class TestSQLStdHiveAccessControllerHS2 {
 
   private HiveConf newAuthEnabledConf() {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_AUTHORIZATION_ENABLED, true);
     return conf;
   }

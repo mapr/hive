@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.ql.lockmgr.HiveLockMode;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockObject;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockObject.HiveLockObjectData;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
+import org.apache.hive.common.util.HiveTestUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -62,7 +63,9 @@ public class TestZookeeperLockManager {
   @Before
   public void setup() {
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     lockObjData = new HiveLockObjectData("1", "10", "SHARED", "show tables");
+    System.setProperty("java.security.auth.login.config", HiveTestUtils.getFileFromClasspath("mapr.login.conf"));
     hiveLock = new HiveLockObject(TABLE, lockObjData);
     zLock = new ZooKeeperHiveLock(TABLE_LOCK_PATH, hiveLock, HiveLockMode.SHARED);
 

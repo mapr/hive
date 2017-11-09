@@ -53,6 +53,9 @@ public class TestPTFRowContainer {
   @BeforeClass
   public static void setupClass()  throws SerDeException {
     cfg = new Configuration();
+    cfg.set("fs.default.name", "file:///");
+    cfg.set("mapr.mapred.localvolume.root.dir.name", "localvolume-test-root-dir");
+    cfg.set("mapr.localvolumes.path", System.getProperty("test.tmp.dir"));
     serDe = new LazyBinarySerDe();
     Properties p = new Properties();
     p.setProperty(org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS,

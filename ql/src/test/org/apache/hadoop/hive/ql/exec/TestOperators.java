@@ -358,6 +358,7 @@ public class TestOperators extends TestCase {
   @Test
   public void testFetchOperatorContextQuoting() throws Exception {
     JobConf conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     ArrayList<Path> list = new ArrayList<Path>();
     list.add(new Path("hdfs://nn.example.com/fi\tl\\e\t1"));
     list.add(new Path("hdfs://nn.example.com/file\t2"));
@@ -396,6 +397,7 @@ public class TestOperators extends TestCase {
   @Test
   public void testFetchOperatorContext() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("hive.support.concurrency", "false");
     conf.setVar(HiveConf.ConfVars.HIVEMAPREDMODE, "nonstrict");
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,

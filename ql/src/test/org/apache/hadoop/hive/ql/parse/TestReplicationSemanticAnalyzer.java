@@ -55,9 +55,12 @@ public class TestReplicationSemanticAnalyzer {
 
   @BeforeClass
   public static void initialize() throws HiveException {
-    queryState = new QueryState(new HiveConf(SemanticAnalyzer.class));
+    HiveConf hiveConf = new HiveConf(SemanticAnalyzer.class);
+    hiveConf.set("fs.default.name", "file:///");
+    queryState = new QueryState(hiveConf);
     conf = queryState.getConf();
     conf.set("hive.security.authorization.manager", "");
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
     Hive hiveDb = Hive.get(conf);
     hiveDb.createTable(defaultDB + "." + tblName, cols, null, OrcInputFormat.class, OrcOutputFormat.class);

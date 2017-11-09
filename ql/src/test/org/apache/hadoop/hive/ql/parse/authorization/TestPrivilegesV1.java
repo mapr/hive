@@ -46,6 +46,7 @@ public class TestPrivilegesV1 extends PrivilegesTestBase{
     table = new Table(DB, TABLE);
     partition = new Partition(table);
     HiveConf hiveConf = queryState.getConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

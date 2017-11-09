@@ -89,6 +89,7 @@ public class TestOrcRecordUpdater {
   public void testWriter() throws Exception {
     Path root = new Path(workDir, "testWriter");
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     // Must use raw local because the checksummer doesn't honor flushes.
     FileSystem fs = FileSystem.getLocal(conf).getRaw();
     ObjectInspector inspector;
@@ -189,6 +190,7 @@ public class TestOrcRecordUpdater {
   public void testWriterTblProperties() throws Exception {
     Path root = new Path(workDir, "testWriterTblProperties");
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     // Must use raw local because the checksummer doesn't honor flushes.
     FileSystem fs = FileSystem.getLocal(conf).getRaw();
     ObjectInspector inspector;
@@ -222,7 +224,7 @@ public class TestOrcRecordUpdater {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{root.toUri().toString()});
+    FileDump.main(conf, new String[]{root.toUri().toString()});
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     assertEquals(true, outDump.contains("Compression: SNAPPY"));
@@ -235,6 +237,7 @@ public class TestOrcRecordUpdater {
   public void testUpdates() throws Exception {
     Path root = new Path(workDir, "testUpdates");
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     FileSystem fs = root.getFileSystem(conf);
     ObjectInspector inspector;
     synchronized (TestOrcFile.class) {

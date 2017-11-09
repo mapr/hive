@@ -87,6 +87,7 @@ public class TestVectorizedOrcAcidRowBatchReader {
   @Before
   public void setup() throws Exception {
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     conf.set("bucket_count", "1");
     conf.set(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL, "true");
     conf.setBoolean(HiveConf.ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN.varname, true);

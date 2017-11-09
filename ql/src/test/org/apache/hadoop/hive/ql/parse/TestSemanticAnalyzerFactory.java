@@ -34,6 +34,7 @@ public class TestSemanticAnalyzerFactory {
   public void setup() throws Exception {
     queryState = new QueryState(null);
     conf = queryState.getConf();
+    conf.set("fs.default.name", "file:///");
   }
   @Test
   public void testCreate() throws Exception {

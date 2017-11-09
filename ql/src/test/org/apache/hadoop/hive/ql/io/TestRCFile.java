@@ -105,6 +105,7 @@ public class TestRCFile {
   @Before
   public void setup() throws Exception {
     conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     ColumnProjectionUtils.setReadAllColumns(conf);
     fs = FileSystem.getLocal(conf);
     dir = new Path(System.getProperty("test.tmp.dir", ".") + "/mapred");
@@ -422,6 +423,7 @@ public class TestRCFile {
     int count = 10000;
     boolean create = true;
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     FileSystem fs = FileSystem.getLocal(conf);
     Path file = null;
     // the SerDe part is from TestLazySimpleSerDe
@@ -641,6 +643,7 @@ public class TestRCFile {
 
     RCFileInputFormat inputFormat = new RCFileInputFormat();
     JobConf jobconf = new JobConf(cloneConf);
+    jobconf.set("fs.default.name", "file:///");
     jobconf.set("mapred.input.dir", testDir.toString());
     HiveConf.setLongVar(jobconf, HiveConf.ConfVars.MAPREDMINSPLITSIZE, fileLen);
     InputSplit[] splits = inputFormat.getSplits(jobconf, 1);
@@ -753,6 +756,7 @@ public class TestRCFile {
   @Test
   public void testCloseForErroneousRCFile() throws IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     LocalFileSystem fs = FileSystem.getLocal(conf);
     // create an empty file (which is not a valid rcfile)
     Path path = new Path(System.getProperty("test.tmp.dir", ".")
@@ -795,6 +799,7 @@ public class TestRCFile {
   @Test
   public void testNonExplicitRCFileHeader() throws IOException, SerDeException {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolean(HiveConf.ConfVars.HIVEUSEEXPLICITRCFILEHEADER.varname, false);
     char[] expected = new char[] {'S', 'E', 'Q'};
     testRCFileHeader(expected, conf);
@@ -803,6 +808,7 @@ public class TestRCFile {
   @Test
   public void testExplicitRCFileHeader() throws IOException, SerDeException {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolean(HiveConf.ConfVars.HIVEUSEEXPLICITRCFILEHEADER.varname, true);
     char[] expected = new char[] {'R', 'C', 'F'};
     testRCFileHeader(expected, conf);

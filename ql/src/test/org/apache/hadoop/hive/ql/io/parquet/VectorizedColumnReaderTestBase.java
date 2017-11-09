@@ -72,6 +72,7 @@ public class VectorizedColumnReaderTestBase {
   protected final static int NULL_FREQUENCY = 13;
 
   protected final static Configuration conf = new Configuration();
+  static {conf.set("fs.default.name", "file:///");}
   protected final static Path file = new Path("target/test/TestParquetVectorReader/testParquetFile");
 
   protected static final MessageType schema = parseMessageType(
@@ -316,6 +317,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void intRead(boolean isDictionaryEncoding) throws InterruptedException, HiveException, IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS,"int32_field");
     conf.set(IOConstants.COLUMNS_TYPES,"int");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -345,6 +347,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void longRead(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "int64_field");
     conf.set(IOConstants.COLUMNS_TYPES, "bigint");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -374,6 +377,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void doubleRead(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "double_field");
     conf.set(IOConstants.COLUMNS_TYPES, "double");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -404,6 +408,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void floatRead(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "float_field");
     conf.set(IOConstants.COLUMNS_TYPES, "float");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -434,6 +439,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void booleanRead() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "boolean_field");
     conf.set(IOConstants.COLUMNS_TYPES, "boolean");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -463,6 +469,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void binaryRead(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "binary_field_some_null");
     conf.set(IOConstants.COLUMNS_TYPES, "string");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -501,6 +508,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void structRead(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "struct_field");
     conf.set(IOConstants.COLUMNS_TYPES, "struct<a:int,b:double>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -539,6 +547,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void nestedStructRead0(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "nested_struct_field");
     conf.set(IOConstants.COLUMNS_TYPES, "struct<nsf:struct<c:int,d:int>,e:double>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -582,6 +591,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void nestedStructRead1(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "nested_struct_field");
     conf.set(IOConstants.COLUMNS_TYPES, "struct<nsf:struct<c:int>>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -619,6 +629,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void structReadSomeNull(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "struct_field_some_null");
     conf.set(IOConstants.COLUMNS_TYPES, "struct<f:int,g:double>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -664,6 +675,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void decimalRead(boolean isDictionaryEncoding) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "value");
     conf.set(IOConstants.COLUMNS_TYPES, "decimal(5,2)");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
