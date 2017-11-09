@@ -40,6 +40,7 @@ public class TestHiveRemote extends TestHive {
   protected void setUp() throws Exception {
     super.setUp();
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

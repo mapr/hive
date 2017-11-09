@@ -37,6 +37,7 @@ public class TestQueryHooks {
   @BeforeClass
   public static void setUpBeforeClass() {
     conf = new HiveConf(TestQueryHooks.class);
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_QUERY_LIFETIME_HOOKS, TestLifeTimeHook.class.getName());
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,

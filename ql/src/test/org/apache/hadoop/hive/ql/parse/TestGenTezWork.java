@@ -70,6 +70,7 @@ public class TestGenTezWork {
   public void setUp() throws Exception {
     // Init conf
     final HiveConf conf = new HiveConf(SemanticAnalyzer.class);
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
 
     // Init parse context

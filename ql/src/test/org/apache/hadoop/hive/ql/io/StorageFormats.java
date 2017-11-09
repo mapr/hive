@@ -100,6 +100,7 @@ public class StorageFormats {
     // Add test parameters from official storage formats registered with Hive via
     // StorageFormatDescriptor.
     final Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     for (StorageFormatDescriptor descriptor : ServiceLoader.load(StorageFormatDescriptor.class)) {
       String serdeClass = descriptor.getSerde();
       if (serdeClass == null) {

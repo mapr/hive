@@ -415,6 +415,7 @@ public class TestInputOutputFormat {
   @Before
   public void openFileSystem () throws Exception {
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestInputOutputFormat." +
         testCaseName.getMethodName() + ".orc");
@@ -1265,7 +1266,7 @@ public class TestInputOutputFormat {
       checkAccess();
       path = path.makeQualified(this);
       List<LocatedFileStatus> result = new ArrayList<>();
-      String pathname = path.toString();
+      String pathname = normalizePath(path.toString());
       String pathnameAsDir = pathname + "/";
       Set<String> dirs = new TreeSet<String>();
       MockFile file = findFile(path);
@@ -1280,6 +1281,16 @@ public class TestInputOutputFormat {
         result.add(createLocatedDirectory(new MockPath(this, pathnameAsDir + dir)));
       }
       return result;
+    }
+
+    /**
+     * Normalizes path. Replaces mock:/// with mock:/
+     * @param path path to file
+     * @return Path that starts with mock:/
+     */
+
+    private static String normalizePath(String path){
+      return path.replace("mock:///", "mock:/");
     }
 
     @Override
@@ -1324,7 +1335,7 @@ public class TestInputOutputFormat {
         List<MockFile> files, String pathnameAsDir, Set<String> dirs, List<LocatedFileStatus> result)
         throws IOException {
       for (MockFile file: files) {
-        String filename = file.path.toString();
+        String filename = normalizePath(file.path.toString());
         if (filename.startsWith(pathnameAsDir)) {
           String tail = filename.substring(pathnameAsDir.length());
           int nextSlash = tail.indexOf('/');
@@ -2023,6 +2034,7 @@ public class TestInputOutputFormat {
                                          int partitions
                                          ) throws IOException, HiveException {
     JobConf conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     Utilities.clearWorkMap(conf);
     conf.set("hive.exec.plan", workDir.toString());
     conf.set("mapred.job.tracker", "local");

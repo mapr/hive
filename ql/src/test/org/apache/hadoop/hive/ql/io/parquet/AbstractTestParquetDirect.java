@@ -38,6 +38,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.parquet.column.ParquetProperties;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -53,7 +55,9 @@ public abstract class AbstractTestParquetDirect {
 
   @BeforeClass
   public static void initializeFS() throws IOException {
-    localFS = FileSystem.getLocal(new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    localFS = FileSystem.getLocal(conf);
   }
 
   @Rule
@@ -101,8 +105,20 @@ public abstract class AbstractTestParquetDirect {
 
     Path path = new Path(temp.getPath());
 
-    ParquetWriter<Void> parquetWriter = new ParquetWriter<Void>(path,
-        new DirectWriteSupport(type, writer, new HashMap<String, String>()));
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+
+    WriteSupport writeSupport = new DirectWriteSupport(type, writer, new HashMap<String, String>());
+    CompressionCodecName compressionCodecName = CompressionCodecName.UNCOMPRESSED;
+    int blockSize = 134217728;
+    int pageSize = 1048576;
+    int dictionaryPageSize  = pageSize;
+    boolean enableDictionary = true;
+    boolean validating =false;
+    ParquetProperties.WriterVersion writerVersion = ParquetProperties.WriterVersion.PARQUET_1_0;;
+
+    ParquetWriter<Void> parquetWriter = new ParquetWriter(path,  writeSupport, compressionCodecName, blockSize,
+            pageSize, dictionaryPageSize, enableDictionary, validating, writerVersion, conf);
     parquetWriter.write(null);
     parquetWriter.close();
 
@@ -141,10 +157,12 @@ public abstract class AbstractTestParquetDirect {
   public static List<ArrayWritable> read(Path parquetFile) throws IOException {
     List<ArrayWritable> records = new ArrayList<ArrayWritable>();
 
+    JobConf jc = new JobConf();
+    jc.set("fs.default.name", "file:///");
     RecordReader<NullWritable, ArrayWritable> reader = new MapredParquetInputFormat().
         getRecordReader(new FileSplit(
                 parquetFile, 0, fileLength(parquetFile), (String[]) null),
-            new JobConf(), null);
+            jc, null);
 
     NullWritable alwaysNull = reader.createKey();
     ArrayWritable record = reader.createValue();

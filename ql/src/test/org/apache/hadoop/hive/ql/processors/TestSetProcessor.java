@@ -50,6 +50,7 @@ public class TestSetProcessor {
     setEnv(env);
     System.setProperty(TEST_SYSTEM_PROPERTY, TEST_SYSTEM_PROPERTY_VALUE);
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
     state = SessionState.get();
   }

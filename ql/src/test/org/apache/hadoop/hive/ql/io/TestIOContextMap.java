@@ -64,6 +64,7 @@ public class TestIOContextMap {
       tasks[i] = new FutureTask<Void>(new Callable<Void>() {
         public Void call() throws Exception {
           Configuration conf = new Configuration();
+          conf.set("fs.default.name", "file:///");
           syncThreadStart(cdlIn, cdlOut);
           // Phase 1 - create objects.
           while (true) {
@@ -156,6 +157,7 @@ public class TestIOContextMap {
       tasks[i].get();
     }
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Set<IOContext> resultSet = Sets.newIdentityHashSet();
     for (int i = 0; i < ITER_COUNT; ++i) {
       conf.set(Utilities.INPUT_NAME, "Input " + i);

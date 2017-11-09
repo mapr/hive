@@ -64,6 +64,7 @@ public class TestDummyTxnManager {
 
   @Before
   public void setUp() throws Exception {
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, true);
     conf.setVar(HiveConf.ConfVars.HIVE_TXN_MANAGER, DummyTxnManager.class.getName());
     conf

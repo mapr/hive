@@ -65,6 +65,7 @@ public class TestMapredParquetOutputFormat {
     final ParquetOutputFormat<ParquetHiveRecord> outputFormat = (ParquetOutputFormat<ParquetHiveRecord>) mock(ParquetOutputFormat.class);
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
 
     try {
       new MapredParquetOutputFormat(outputFormat) {
@@ -97,6 +98,7 @@ public class TestMapredParquetOutputFormat {
     tableProps.setProperty("columns.types", "int:int");
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.default.name", "file:///");
 
     new MapredParquetOutputFormat().getHiveRecordWriter(jobConf,
             new Path("/foo"), null, false, tableProps, null);

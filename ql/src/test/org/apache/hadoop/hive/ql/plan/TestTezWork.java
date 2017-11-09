@@ -165,6 +165,7 @@ public class TestTezWork {
   @Test
   public void testConfigureJars() throws Exception {
     final JobConf conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     conf.set(MR_JAR_PROPERTY, "file:///tmp/foo1.jar");
     BaseWork baseWork = Mockito.mock(BaseWork.class);
     Mockito.doAnswer(new Answer<Void>() {
@@ -185,6 +186,7 @@ public class TestTezWork {
   @Test
   public void testConfigureJarsNoExtraJars() throws Exception {
     final JobConf conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     conf.set(MR_JAR_PROPERTY, "file:///tmp/foo1.jar");
     BaseWork baseWork = Mockito.mock(BaseWork.class);
 
@@ -196,6 +198,7 @@ public class TestTezWork {
   @Test
   public void testConfigureJarsWithNull() throws Exception {
     final JobConf conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     conf.set(MR_JAR_PROPERTY, "file:///tmp/foo1.jar");
     BaseWork baseWork = Mockito.mock(BaseWork.class);
     Mockito.doAnswer(new Answer<Void>() {
@@ -216,6 +219,7 @@ public class TestTezWork {
   @Test
   public void testConfigureJarsStartingWithNull() throws Exception {
     final JobConf conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     conf.unset(MR_JAR_PROPERTY);
     BaseWork baseWork = Mockito.mock(BaseWork.class);
     Mockito.doAnswer(new Answer<Void>() {

@@ -42,6 +42,7 @@ public class TestTransactionStatement {
   @BeforeClass
   public static void initialize() {
     HiveConf conf = new HiveConf(SemanticAnalyzer.class);
+    conf.set("fs.default.name", "file:///");
     sessionState = SessionState.start(conf);
   }
   @AfterClass

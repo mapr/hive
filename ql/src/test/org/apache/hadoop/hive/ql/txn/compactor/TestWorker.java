@@ -144,6 +144,7 @@ public class TestWorker extends CompactorTest {
     String delta2 = "/warehouse/foo/delta_4_7";
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     Path file = new Path(System.getProperty("java.io.tmpdir") +
         System.getProperty("file.separator") + "newWriteInputSplitTest");
     FileSystem fs = FileSystem.get(conf);
@@ -189,6 +190,7 @@ public class TestWorker extends CompactorTest {
     String delta2 = "/warehouse/foo/delta_4_7";
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     Path file = new Path(System.getProperty("java.io.tmpdir") +
         System.getProperty("file.separator") + "newWriteInputSplitTest");
     FileSystem fs = FileSystem.get(conf);

@@ -32,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 public class TestContext {
     private static HiveConf conf = new HiveConf();
+    static {conf.set("fs.default.name", "file:///");}
 
     private Context context;
 

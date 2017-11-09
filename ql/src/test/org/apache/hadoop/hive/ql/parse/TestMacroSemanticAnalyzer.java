@@ -44,6 +44,7 @@ public class TestMacroSemanticAnalyzer {
   public void setup() throws Exception {
     queryState = new QueryState(null);
     conf = queryState.getConf();
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
     context = new Context(conf);
     analyzer = new MacroSemanticAnalyzer(queryState);

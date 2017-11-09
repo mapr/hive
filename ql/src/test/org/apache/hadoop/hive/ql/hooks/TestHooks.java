@@ -32,6 +32,7 @@ public class TestHooks {
   @BeforeClass
   public static void onetimeSetup() throws Exception {
     HiveConf conf = new HiveConf(TestHooks.class);
+    conf.set("fs.default.name", "file:///");
     conf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
@@ -43,6 +44,7 @@ public class TestHooks {
   @AfterClass
   public static void onetimeTeardown() throws Exception {
     HiveConf conf = new HiveConf(TestHooks.class);
+    conf.set("fs.default.name", "file:///");
     Driver driver = createDriver(conf);
     driver.run("drop table t1");
   }
@@ -54,6 +56,7 @@ public class TestHooks {
   @Test
   public void testRedactLogString() throws Exception {
     HiveConf conf = new HiveConf(TestHooks.class);
+    conf.set("fs.default.name", "file:///");
     String str;
 
     HiveConf.setVar(conf, HiveConf.ConfVars.QUERYREDACTORHOOKS, SimpleQueryRedactor.class.getName());
@@ -71,6 +74,7 @@ public class TestHooks {
   @Test
   public void testQueryRedactor() throws Exception {
     HiveConf conf = new HiveConf(TestHooks.class);
+    conf.set("fs.default.name", "file:///");
     HiveConf.setVar(conf, HiveConf.ConfVars.QUERYREDACTORHOOKS,
       SimpleQueryRedactor.class.getName());
     conf

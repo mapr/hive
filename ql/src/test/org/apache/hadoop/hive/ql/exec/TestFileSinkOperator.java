@@ -201,6 +201,7 @@ public class TestFileSinkOperator {
   @Before
   public void setup() throws Exception {
     jc = new JobConf();
+    jc.set("fs.default.name", "file:///");
     jc.set(HiveConf.ConfVars.HIVE_STATS_DEFAULT_PUBLISHER.varname,
         TFSOStatsPublisher.class.getName());
     jc.set(HiveConf.ConfVars.HIVE_STATS_DEFAULT_AGGREGATOR.varname,

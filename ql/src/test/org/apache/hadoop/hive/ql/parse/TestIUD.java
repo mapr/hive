@@ -37,6 +37,7 @@ public class TestIUD {
   @BeforeClass
   public static void initialize() {
     conf = new HiveConf(SemanticAnalyzer.class);
+    conf.set("fs.default.name", "file:///");
     SessionState.start(conf);
   }
 

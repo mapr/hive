@@ -104,6 +104,7 @@ public class TestOrcSplitElimination {
   @Before
   public void openFileSystem() throws Exception {
     conf = new JobConf();
+    conf.set("fs.default.name", "file:///");
     // all columns
     conf.set("columns", "userid,string1,subtype,decimal1,ts");
     conf.set("columns.types", "bigint,string,double,decimal,timestamp");

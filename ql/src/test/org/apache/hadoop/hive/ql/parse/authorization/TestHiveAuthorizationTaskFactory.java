@@ -101,6 +101,7 @@ public class TestHiveAuthorizationTaskFactory {
   public void setup() throws Exception {
     queryState = new QueryState(null);
     HiveConf conf = queryState.getConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(ConfVars.HIVE_AUTHORIZATION_TASK_FACTORY,
         TestHiveAuthorizationTaskFactory.DummyHiveAuthorizationTaskFactoryImpl.class.getName());
     conf

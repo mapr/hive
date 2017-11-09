@@ -535,7 +535,9 @@ public class TestVectorSerDeRow extends TestCase {
   }
 
   private LazySerDeParameters getSerDeParams( StructObjectInspector rowObjectInspector) throws SerDeException {
-    return getSerDeParams(new Configuration(), new Properties(), rowObjectInspector);
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    return getSerDeParams(conf, new Properties(), rowObjectInspector);
   }
 
   private LazySerDeParameters getSerDeParams(Configuration conf, Properties tbl, StructObjectInspector rowObjectInspector) throws SerDeException {
@@ -612,6 +614,7 @@ public class TestVectorSerDeRow extends TestCase {
       {
         StructObjectInspector rowObjectInspector = source.rowStructObjectInspector();
         Configuration conf = new Configuration();
+        conf.set("fs.default.name", "file:///");
         Properties tbl = new Properties();
         tbl.setProperty(serdeConstants.FIELD_DELIM, "\t");
         tbl.setProperty(serdeConstants.LINE_DELIM, "\n");

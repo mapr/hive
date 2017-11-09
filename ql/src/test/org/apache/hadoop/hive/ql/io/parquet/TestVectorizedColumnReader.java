@@ -100,6 +100,7 @@ public class TestVectorizedColumnReader extends VectorizedColumnReaderTestBase {
   @Test
   public void testNullSplitForParquetReader() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS,"int32_field");
     conf.set(IOConstants.COLUMNS_TYPES,"int");
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_VECTORIZATION_ENABLED, true);

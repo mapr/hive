@@ -243,6 +243,7 @@ public class TestAcidUtils {
   @Test
   public void testBestBase() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     MockFileSystem fs = new MockFileSystem(conf,
         new MockFile("mock:/tbl/part1/base_5/bucket_0", 500, new byte[0]),
         new MockFile("mock:/tbl/part1/base_10/bucket_0", 500, new byte[0]),
@@ -502,6 +503,7 @@ public class TestAcidUtils {
   @Test
   public void testBaseWithDeleteDeltas() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     conf.setInt(HiveConf.ConfVars.HIVE_TXN_OPERATIONAL_PROPERTIES.varname,
         AcidOperationalProperties.getDefault().toInt());
     MockFileSystem fs = new MockFileSystem(conf,
@@ -540,6 +542,7 @@ public class TestAcidUtils {
   @Test
   public void testOverlapingDeltaAndDeleteDelta() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     conf.setInt(HiveConf.ConfVars.HIVE_TXN_OPERATIONAL_PROPERTIES.varname,
         AcidOperationalProperties.getDefault().toInt());
     MockFileSystem fs = new MockFileSystem(conf,
@@ -577,6 +580,7 @@ public class TestAcidUtils {
     // This test checks that if we have a minor compacted delta for the txn range [40,60]
     // then it will make any delete delta in that range as obsolete.
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     conf.setInt(HiveConf.ConfVars.HIVE_TXN_OPERATIONAL_PROPERTIES.varname,
         AcidUtils.AcidOperationalProperties.getDefault().toInt());
     MockFileSystem fs = new MockFileSystem(conf,
@@ -598,6 +602,7 @@ public class TestAcidUtils {
     // This tests checks that appropriate delta and delete_deltas are included when minor
     // compactions specifies a valid open txn range.
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     conf.setInt(HiveConf.ConfVars.HIVE_TXN_OPERATIONAL_PROPERTIES.varname,
         AcidUtils.AcidOperationalProperties.getDefault().toInt());
     MockFileSystem fs = new MockFileSystem(conf,
@@ -621,6 +626,7 @@ public class TestAcidUtils {
   @Test
   public void deleteDeltasWithOpenTxnInRead() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "mock:///");
     conf.setInt(HiveConf.ConfVars.HIVE_TXN_OPERATIONAL_PROPERTIES.varname,
         AcidUtils.AcidOperationalProperties.getDefault().toInt());
     MockFileSystem fs = new MockFileSystem(conf,
@@ -705,6 +711,7 @@ public class TestAcidUtils {
   public void testAcidOperationalPropertiesSettersAndGetters() throws Exception {
     AcidUtils.AcidOperationalProperties oprProps = AcidUtils.AcidOperationalProperties.getDefault();
     Configuration testConf = new Configuration();
+    testConf.set("fs.default.name", "file:///");
     // Test setter for configuration object.
     AcidUtils.setAcidOperationalProperties(testConf, oprProps);
     assertEquals(1, testConf.getInt(HiveConf.ConfVars.HIVE_TXN_OPERATIONAL_PROPERTIES.varname, 0));
