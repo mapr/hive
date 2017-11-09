@@ -337,7 +337,7 @@ if ! is_meta_db_initialized; then
     rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
   fi
   cd "$HIVE_BIN"
-  nohup sudo -u "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 &
+  nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
 fi
 }
 
