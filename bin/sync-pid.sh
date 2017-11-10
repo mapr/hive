@@ -25,7 +25,7 @@
 #
 
 sync_daemon_pid(){
-  DAEMON_REAL_PID=$1
+  DAEMON_REAL_PID=$(pgrep -af "$1" | grep -v grep | awk '{print $1}')
   DAEMON_PID_FILE=$2
   DAEMON_PID_FROM_FILE=""
   if [ -f "$DAEMON_PID_FILE" ] ; then
@@ -64,23 +64,23 @@ sync_daemon_pid(){
 #
 # HiveServer2 PID synchronization
 #
-HS2_REAL_PID=$(ps axf | grep org.apache.hive.service.server.HiveServer2 | grep -v grep | awk '{print $1}')
+HS2_PID_NAME="org.apache.hive.service.server.HiveServer2"
 HS2_PID_FILE="$HIVE_PID_DIR"/hive-$HIVE_IDENT_STRING-hiveserver2.pid
 
-sync_daemon_pid "$HS2_REAL_PID" "$HS2_PID_FILE"
+sync_daemon_pid "$HS2_PID_NAME" "$HS2_PID_FILE"
 
 #
 # Metastore PID synchronization
 #
-METASTORE_REAL_PID=$(ps axf | grep org.apache.hadoop.hive.metastore.HiveMetaStore | grep -v grep | awk '{print $1}')
+METASTORE_PID_NAME="org.apache.hadoop.hive.metastore.HiveMetaStore"
 METASTORE_PID_FILE="$HIVE_PID_DIR"/hive-$HIVE_IDENT_STRING-metastore.pid
 
-sync_daemon_pid "$METASTORE_REAL_PID" "$METASTORE_PID_FILE"
+sync_daemon_pid "$METASTORE_PID_NAME" "$METASTORE_PID_FILE"
 
 #
 # WebHCat PID synchronization
 #
-WEBHCAT_REAL_PID=$(ps axf | grep org.apache.hive.hcatalog.templeton.Main | grep -v grep | awk '{print $1}')
+WEBHCAT_PID_NAME="org.apache.hive.hcatalog.templeton.Main"
 WEBHCAT_PID_FILE="$HIVE_PID_DIR"/webhcat/webhcat.pid
 
-sync_daemon_pid "$WEBHCAT_REAL_PID" "$WEBHCAT_PID_FILE"
+sync_daemon_pid "$WEBHCAT_PID_NAME" "$WEBHCAT_PID_FILE"
