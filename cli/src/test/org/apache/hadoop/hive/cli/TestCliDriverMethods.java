@@ -170,6 +170,7 @@ public class TestCliDriverMethods extends TestCase {
       historyFile.delete();
     }
     HiveConf configuration = new HiveConf();
+    configuration.set("fs.default.name", "file:///");
     configuration.setBoolVar(ConfVars.HIVE_SESSION_HISTORY_ENABLED, true);
     PrintStream oldOut = System.out;
     ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
@@ -201,8 +202,9 @@ public class TestCliDriverMethods extends TestCase {
    * Test commands exit and quit
    */
   public void testQuit() throws Exception {
-
-    CliSessionState ss = new CliSessionState(new HiveConf());
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    CliSessionState ss = new CliSessionState(conf);
     ss.err = System.err;
     ss.out = System.out;
 
@@ -231,7 +233,9 @@ public class TestCliDriverMethods extends TestCase {
   }
 
   public void testProcessSelectDatabase() throws Exception {
-    CliSessionState sessinState = new CliSessionState(new HiveConf());
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    CliSessionState sessinState = new CliSessionState(conf);
     CliSessionState.start(sessinState);
     ByteArrayOutputStream data = new ByteArrayOutputStream();
     sessinState.err = new PrintStream(data);
@@ -265,7 +269,9 @@ public class TestCliDriverMethods extends TestCase {
     FileUtils.write(homeFile, "-- init hive file for test ");
     setEnv("HIVE_HOME", homeFile.getParentFile().getParentFile().getAbsolutePath());
     setEnv("HIVE_CONF_DIR", homeFile.getParentFile().getAbsolutePath());
-    CliSessionState sessionState = new CliSessionState(new HiveConf());
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    CliSessionState sessionState = new CliSessionState(conf);
 
     ByteArrayOutputStream data = new ByteArrayOutputStream();
 
@@ -338,6 +344,11 @@ public class TestCliDriverMethods extends TestCase {
     @Override
     protected void setupConsoleReader() throws IOException {
       reader = new FakeConsoleReader();
+    }
+
+    @Override
+    public  int run(String[] args) throws Exception {
+      return run(args, true);
     }
 
   }
