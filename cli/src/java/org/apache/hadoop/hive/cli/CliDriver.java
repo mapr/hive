@@ -687,7 +687,11 @@ public class CliDriver {
     System.exit(ret);
   }
 
-  public  int run(String[] args) throws Exception {
+    public  int run(String[] args) throws Exception {
+      return run(args, false);
+    }
+
+    public  int run(String[] args, boolean isLocalFs) throws Exception {
 
     OptionsProcessor oproc = new OptionsProcessor();
     if (!oproc.process_stage1(args)) {
@@ -705,7 +709,12 @@ public class CliDriver {
       logInitDetailMessage = e.getMessage();
     }
 
-    CliSessionState ss = new CliSessionState(new HiveConf(SessionState.class));
+    HiveConf conf = new HiveConf(new HiveConf(SessionState.class));
+    if(isLocalFs){
+      conf.set("fs.default.name", "file:///");
+    }
+
+    CliSessionState ss = new CliSessionState(conf);
     ss.in = System.in;
     try {
       ss.out = new PrintStream(System.out, true, "UTF-8");
@@ -728,7 +737,7 @@ public class CliDriver {
     }
 
     // set all properties specified via command line
-    HiveConf conf = ss.getConf();
+    conf = ss.getConf();
     for (Map.Entry<Object, Object> item : ss.cmdProperties.entrySet()) {
       conf.set((String) item.getKey(), (String) item.getValue());
       ss.getOverriddenConfigurations().put((String) item.getKey(), (String) item.getValue());
