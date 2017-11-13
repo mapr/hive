@@ -50,4 +50,14 @@
     <value>${hive.root}/data/files</value>
     <description></description>
   </property>
+  <property>
+    <name>fs.default.name</name>
+    <value>file:///</value>
+  </property>
+
+  <property>
+    <name>hive.exec.scratchdir</name>
+    <value>${test.tmp.dir}/tmp/hive</value>
+  </property>
+
 </configuration>
