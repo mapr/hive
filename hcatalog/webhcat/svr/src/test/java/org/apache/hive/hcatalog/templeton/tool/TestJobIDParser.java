@@ -27,10 +27,13 @@ import org.junit.Test;
 import junit.framework.Assert;
 
 public class TestJobIDParser {
+  Configuration conf = new Configuration();
+  {conf.set("fs.default.name", "file:///");}
+
   @Test
   public void testParsePig() throws IOException {
     String errFileName = "src/test/data/status/pig";
-    PigJobIDParser pigJobIDParser = new PigJobIDParser(errFileName, new Configuration());
+    PigJobIDParser pigJobIDParser = new PigJobIDParser(errFileName, conf);
     List<String> jobs = pigJobIDParser.parseJobID();
     Assert.assertEquals(jobs.size(), 1);
   }
@@ -38,7 +41,7 @@ public class TestJobIDParser {
   @Test
   public void testParseHive() throws IOException {
     String errFileName = "src/test/data/status/hive";
-    HiveJobIDParser hiveJobIDParser = new HiveJobIDParser(errFileName, new Configuration());
+    HiveJobIDParser hiveJobIDParser = new HiveJobIDParser(errFileName, conf);
     List<String> jobs = hiveJobIDParser.parseJobID();
     Assert.assertEquals(jobs.size(), 1);
   }
@@ -46,7 +49,7 @@ public class TestJobIDParser {
   @Test
   public void testParseJar() throws IOException {
     String errFileName = "src/test/data/status/jar";
-    JarJobIDParser jarJobIDParser = new JarJobIDParser(errFileName, new Configuration());
+    JarJobIDParser jarJobIDParser = new JarJobIDParser(errFileName, conf);
     List<String> jobs = jarJobIDParser.parseJobID();
     Assert.assertEquals(jobs.size(), 1);
   }
@@ -54,7 +57,7 @@ public class TestJobIDParser {
   @Test
   public void testParseStreaming() throws IOException {
     String errFileName = "src/test/data/status/streaming";
-    JarJobIDParser jarJobIDParser = new JarJobIDParser(errFileName, new Configuration());
+    JarJobIDParser jarJobIDParser = new JarJobIDParser(errFileName, conf);
     List<String> jobs = jarJobIDParser.parseJobID();
     Assert.assertEquals(jobs.size(), 1);
   }

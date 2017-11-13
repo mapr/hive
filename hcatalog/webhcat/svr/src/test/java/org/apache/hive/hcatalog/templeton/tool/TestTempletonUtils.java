@@ -41,10 +41,13 @@ public class TestTempletonUtils {
   public static final String testDataDir = System.getProperty("test.tmp.dir");
   File tmpFile;
   File usrFile;
+  Configuration conf;
 
   @Before
   public void setup() {
     try {
+      conf = new Configuration();
+      conf.set("fs.default.name", "file:/");
       tmpFile = new File(testDataDir, "tmp");
       tmpFile.createNewFile();
       usrFile = new File(testDataDir, "usr");
@@ -130,7 +133,7 @@ public class TestTempletonUtils {
     try {
       TempletonUtils.hadoopFsPath(null, null, null);
       TempletonUtils.hadoopFsPath(tmpFile.toURI().toString(), null, null);
-      TempletonUtils.hadoopFsPath(tmpFile.toURI().toString(), new Configuration(), null);
+      TempletonUtils.hadoopFsPath(tmpFile.toURI().toString(), conf, null);
     } catch (FileNotFoundException e) {
       Assert.fail("Couldn't find " + tmpFile.toURI().toString());
     } catch (Exception e) {
@@ -139,7 +142,7 @@ public class TestTempletonUtils {
     }
     try {
       TempletonUtils.hadoopFsPath("/scoobydoo/teddybear",
-                    new Configuration(), null);
+                    conf, null);
       Assert.fail("Should not have found /scoobydoo/teddybear");
     } catch (FileNotFoundException e) {
       // Should go here.
@@ -148,7 +151,7 @@ public class TestTempletonUtils {
       e.printStackTrace();
     }
     try {
-      TempletonUtils.hadoopFsPath("a", new Configuration(), "teddybear");
+      TempletonUtils.hadoopFsPath("a", conf, "teddybear");
       Assert.fail("Should not have found /user/teddybear/a");
     } catch (FileNotFoundException e) {
       Assert.assertTrue(e.getMessage().contains("/user/teddybear/a"));
@@ -173,7 +176,7 @@ public class TestTempletonUtils {
         TempletonUtils.hadoopFsFilename(tmpFile.toURI().toString(), null, null));
       Assert.assertEquals(tmpFile.toURI().toString(),
         TempletonUtils.hadoopFsFilename(tmpFile.toURI().toString(),
-          new Configuration(),
+          conf,
           null));
     } catch (FileNotFoundException e) {
       Assert.fail("Couldn't find name for /tmp");
@@ -184,7 +187,7 @@ public class TestTempletonUtils {
     }
     try {
       TempletonUtils.hadoopFsFilename("/scoobydoo/teddybear",
-                      new Configuration(), null);
+                      conf, null);
       Assert.fail("Should not have found /scoobydoo/teddybear");
     } catch (FileNotFoundException e) {
       // Should go here.
@@ -208,9 +211,9 @@ public class TestTempletonUtils {
         null, null) == null);
       String[] tmp2
         = TempletonUtils.hadoopFsListAsArray(tmpFileName1 + "," + tmpFileName2,
-                                             new Configuration(), null);
-      Assert.assertEquals("file:" + tmpFileName1, tmp2[0]);
-      Assert.assertEquals("file:" + tmpFileName2, tmp2[1]);
+                                             conf, null);
+      Assert.assertEquals("file:" + tmpFileName1, normalize(tmp2[0]));
+      Assert.assertEquals("file:" + tmpFileName2, normalize(tmp2[1]));
       tmpFile1.delete();
       tmpFile2.delete();
     } catch (FileNotFoundException e) {
@@ -221,7 +224,7 @@ public class TestTempletonUtils {
     }
     try {
       TempletonUtils.hadoopFsListAsArray("/scoobydoo/teddybear,joe",
-                         new Configuration(),
+                         conf,
                          null);
       Assert.fail("Should not have found /scoobydoo/teddybear");
     } catch (FileNotFoundException e) {
@@ -245,8 +248,8 @@ public class TestTempletonUtils {
       Assert.assertTrue(TempletonUtils.hadoopFsListAsString("/tmp,/usr",
         null, null) == null);
       Assert.assertEquals("file:" + tmpFileName1 + ",file:" + tmpFileName2,
-        TempletonUtils.hadoopFsListAsString
-        (tmpFileName1 + "," + tmpFileName2, new Configuration(), null));
+              normalize(TempletonUtils.hadoopFsListAsString
+        (tmpFileName1 + "," + tmpFileName2, conf, null)));
     } catch (FileNotFoundException e) {
       Assert.fail("Couldn't find name for " + tmpFile.toURI().toString());
     } catch (Exception e) {
@@ -255,7 +258,7 @@ public class TestTempletonUtils {
     }
     try {
       TempletonUtils.hadoopFsListAsString("/scoobydoo/teddybear,joe",
-                        new Configuration(),
+                        conf,
                         null);
       Assert.fail("Should not have found /scoobydoo/teddybear");
     } catch (FileNotFoundException e) {
@@ -264,6 +267,17 @@ public class TestTempletonUtils {
       // Something else is wrong.
       e.printStackTrace();
     }
+  }
+
+  /**
+   * Replaces ///, // with / in the path
+   *
+   * @param path input path
+   * @return path with only single slashes
+   */
+
+  private static String normalize(String path){
+    return path.replace("///", "/").replace("//", "/");
   }
 
   @Test
