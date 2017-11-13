@@ -269,6 +269,7 @@ public class TestUpdateDeleteSemanticAnalyzer {
     // connection, which is conveniently created by the semantic analyzer.
     Map<String, String> params = new HashMap<String, String>(1);
     params.put(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL, "true");
+    cleanupTables();
     db.createTable("T", Arrays.asList("a", "b"), null, OrcInputFormat.class,
         OrcOutputFormat.class, 2, Arrays.asList("a"), params);
     db.createTable("U", Arrays.asList("a", "b"), Arrays.asList("ds"), OrcInputFormat.class,
