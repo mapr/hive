@@ -42,6 +42,7 @@ public class TestSessionCleanup extends TestCase {
   public void testTempSessionFileCleanup() throws Exception {
     EmbeddedThriftBinaryCLIService service = new EmbeddedThriftBinaryCLIService();
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf
         .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
             "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
@@ -52,8 +53,10 @@ public class TestSessionCleanup extends TestCase {
     SessionHandle sessionHandle = client.openSession("user1", "foobar",
           Collections.<String, String>emptyMap());
     client.executeStatement(sessionHandle, "set a=b", null);
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     File operationLogRootDir = new File(
-        new HiveConf().getVar(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LOG_LOCATION));
+            conf.getVar(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LOG_LOCATION));
     Assert.assertNotEquals(operationLogRootDir.list().length, 0);
     client.closeSession(sessionHandle);
 
@@ -67,8 +70,10 @@ public class TestSessionCleanup extends TestCase {
   }
 
   private String[] getPipeoutFiles() {
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     File localScratchDir = new File(
-        new HiveConf().getVar(HiveConf.ConfVars.LOCALSCRATCHDIR));
+            conf.getVar(HiveConf.ConfVars.LOCALSCRATCHDIR));
     String[] pipeoutFiles = localScratchDir.list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {

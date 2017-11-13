@@ -35,6 +35,7 @@ public class TestPlainSaslHelper extends TestCase {
   public void testDoAsSetting(){
 
     HiveConf hconf = new HiveConf();
+    hconf.set("fs.default.name", "file:///");
     hconf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
