@@ -132,6 +132,7 @@ public class TestDruidStorageHandler {
     );
     druidStorageHandler.preCreateTable(tableMock);
     Configuration config = new Configuration();
+    config.set("fs.default.name", "file:///");
     config.set(String.valueOf(HiveConf.ConfVars.HIVEQUERYID), UUID.randomUUID().toString());
     config.set(String.valueOf(HiveConf.ConfVars.DRUID_WORKING_DIR), tableWorkingPath);
     druidStorageHandler.setConf(config);
@@ -164,6 +165,7 @@ public class TestDruidStorageHandler {
     );
     druidStorageHandler.preCreateTable(tableMock);
     Configuration config = new Configuration();
+    config.set("fs.default.name", "file:///");
     config.set(String.valueOf(HiveConf.ConfVars.HIVEQUERYID), UUID.randomUUID().toString());
     config.set(String.valueOf(HiveConf.ConfVars.DRUID_WORKING_DIR), tableWorkingPath);
     druidStorageHandler.setConf(config);
@@ -191,6 +193,7 @@ public class TestDruidStorageHandler {
 
     String segmentRootPath = temporaryFolder.newFolder().getAbsolutePath();
     Configuration config = new Configuration();
+    config.set("fs.default.name", "file:///");
     druidStorageHandler.setConf(config);
     LocalFileSystem localFileSystem = FileSystem.getLocal(config);
 
