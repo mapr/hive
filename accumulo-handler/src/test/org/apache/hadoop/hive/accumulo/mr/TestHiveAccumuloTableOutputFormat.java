@@ -133,6 +133,8 @@ public class TestHiveAccumuloTableOutputFormat {
     // Set UGI to use Kerberos
     // Have to use the string constant to support hadoop 1
     conf.set("hadoop.security.authentication", "kerberos");
+    conf.set("hadoop.security.custom.auth.principal.class", "javax.security.auth.kerberos.KerberosPrincipal");
+    conf.set("hadoop.security.custom.rpc.auth.method.class", "org.apache.hadoop.security.rpcauth.KerberosAuthMethod");
     UserGroupInformation.setConfiguration(conf);
 
     // Set the current UGI to a fake user
