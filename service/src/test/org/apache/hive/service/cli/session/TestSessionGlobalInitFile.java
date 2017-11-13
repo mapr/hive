@@ -88,6 +88,7 @@ public class TestSessionGlobalInitFile extends TestCase {
 
     // set up service and client
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_GLOBAL_INIT_FILE_LOCATION,
         initFile.getParentFile().getAbsolutePath());
     hiveConf
