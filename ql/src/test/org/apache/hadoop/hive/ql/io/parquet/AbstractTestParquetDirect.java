@@ -112,7 +112,7 @@ public abstract class AbstractTestParquetDirect {
     CompressionCodecName compressionCodecName = CompressionCodecName.UNCOMPRESSED;
     int blockSize = 134217728;
     int pageSize = 1048576;
-    int dictionaryPageSize  = 0;
+    int dictionaryPageSize  = 1048576;
     boolean enableDictionary = true;
     boolean validating =false;
     ParquetProperties.WriterVersion writerVersion = ParquetProperties.WriterVersion.PARQUET_1_0;;
