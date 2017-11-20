@@ -50,6 +50,7 @@ HIVE_SITE="$HIVE_CONF"/hive-site.xml
 HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
 RESTART_LOG_DIR="${RESTART_LOG_DIR:=${MAPR_HOME}/logs/restart_logs}"
+METASTOREWAREHOUSE="/user/hive/warehouse"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -95,6 +96,16 @@ if [ -z "$MAPR_GROUP" ] ; then
 fi
 }
 
+#
+# Checks if Hive has been already configured
+#
+is_hive_not_configured_yet(){
+if [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
 
 #
 # Saves security flag to file "$HIVE_BIN"/isSecure
@@ -240,26 +251,33 @@ chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/${service}.restart"
 }
 
 #
-# Configure Hive roles
+# Checks id hive-site.xml is changed
 #
-configure_roles(){
+is_config_changed(){
 beforeHiveSiteCksum=$(read_old_hive_site_check_sum)
 afterHiveSiteCksum=$(cksum "$HIVE_SITE" | cut -d' ' -f1)
 if [ "$beforeHiveSiteCksum" != "$afterHiveSiteCksum" ]; then
-  configChanged=1
-  save_new_hive_site_check_sum
+  return 0; # 0 = true
+else
+  return 1;
 fi
+}
+
+#
+# Configure Hive roles
+#
+configure_roles(){
 ROLES=(hivemetastore hiveserver2 hivewebhcat)
 for ROLE in "${ROLES[@]}"; do
   if hasRole "${ROLE}"; then
     check_port "${ROLE}"
     copy_warden_files "${ROLE}"
     # only create restart files when required
-    if [ "$configChanged" -eq 1 ] && ! [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
+    if is_config_changed && ! is_hive_not_configured_yet ; then
       create_restart_file "${ROLE}"
     fi
     # we do want to restart RM/TL the first time we configure hive too
-    if [ "$configChanged" -eq 1 -o -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
+    if is_config_changed || is_hive_not_configured_yet ; then
       if [ -n "$tl_ip" ] ; then
         if [ -n "$rm_ip" ] ; then
           create_rm_tl_restart_file resourcemanager "$rm_ip"
@@ -268,6 +286,9 @@ for ROLE in "${ROLES[@]}"; do
       fi
     fi
   fi
+if is_config_changed ; then
+  save_new_hive_site_check_sum
+fi
 done
 }
 
@@ -275,8 +296,8 @@ done
 # Removes file $HIVE_HOME/conf/.not_configured_yet after first run of Hive configure.sh
 #
 remove_fresh_install_indicator(){
-if [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
-    rm -f "$HIVE_HOME/conf/.not_configured_yet"
+if is_hive_not_configured_yet ; then
+  rm -f "$HIVE_HOME/conf/.not_configured_yet"
 fi
 }
 
@@ -349,6 +370,40 @@ if ! is_meta_db_initialized; then
 fi
 }
 
+
+#
+# Check if directory exists in MapR-Fs
+#
+exists_in_mapr_fs(){
+dir="$1"
+if $(hadoop fs -test -d "$dir") ; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
+
+#
+# Create warehouse folder in MapRFS if this is fresh install
+# Set 777 permissions to /user/hive/warehouse folder to enable creation of tables by other users
+# Set 777 permissions to /user/ folder to enable creation of scratch dirs by other users
+#
+configure_impersonation(){
+isSecure="$1"
+if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
+  if [ "${isSecure}" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
+    export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
+  fi
+  if is_hive_not_configured_yet ; then
+    if ! exists_in_mapr_fs "$METASTOREWAREHOUSE" ; then
+      sudo -u "$MAPR_USER" hadoop fs -mkdir "$METASTOREWAREHOUSE"
+    fi
+    sudo -u "$MAPR_USER" hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
+  fi
+fi
+}
+
 #
 # main
 #
@@ -410,7 +465,7 @@ if [ $# -gt 0 ]; then
           isSecure="true"
           shift 1;;
       --customSecure|-c)
-          if [ -f "$HIVE_HOME/conf/.not_configured_yet" ]; then
+          if is_hive_not_configured_yet ; then
             # If the file exist and our configure.sh is passed --customSecure, then we need to
             # translate this to doing what we normally do for --secure (best we can do)
             isSecure="true"
@@ -444,6 +499,8 @@ find_mapr_user_and_group
 save_security_flag
 
 configure_security "$HIVE_SITE" "$isSecure"
+
+configure_impersonation "$isSecure"
 
 init_derby_schema
 
