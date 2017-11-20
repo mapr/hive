@@ -18,8 +18,12 @@
 package org.apache.hadoop.hive.ql.io.orc.encoded;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -37,6 +41,9 @@ import org.apache.hadoop.hive.common.io.encoded.MemoryBuffer;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcConf;
+import org.apache.orc.OrcFile.WriterVersion;
+import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.OrcCodecPool;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderUtils;
 import org.apache.orc.impl.StreamName;
@@ -45,6 +52,9 @@ import org.apache.orc.impl.BufferChunk;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.OrcEncodedColumnBatch;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.PoolFactory;
 import org.apache.orc.OrcProto;
+
+import sun.misc.Cleaner;
+
 
 /**
  * Encoded reader implementation.
@@ -78,6 +88,17 @@ import org.apache.orc.OrcProto;
  */
 class EncodedReaderImpl implements EncodedReader {
   public static final Logger LOG = LoggerFactory.getLogger(EncodedReaderImpl.class);
+  private static Field cleanerField;
+  static {
+    try {
+      // TODO: To make it work for JDK9 use CleanerUtil from https://issues.apache.org/jira/browse/HADOOP-12760
+      final Class<?> dbClazz = Class.forName("java.nio.DirectByteBuffer");
+      cleanerField = dbClazz.getDeclaredField("cleaner");
+      cleanerField.setAccessible(true);
+    } catch (Throwable t) {
+      cleanerField = null;
+    }
+  }
   private static final Object POOLS_CREATION_LOCK = new Object();
   private static Pools POOLS;
   private static class Pools {
@@ -98,17 +119,22 @@ class EncodedReaderImpl implements EncodedReader {
   private final DataReader dataReader;
   private boolean isDataReaderOpen = false;
   private final CompressionCodec codec;
+  private final boolean isCompressed;
+  private final org.apache.orc.CompressionKind compressionKind;
   private final int bufferSize;
   private final List<OrcProto.Type> types;
   private final long rowIndexStride;
   private final DataCache cacheWrapper;
   private boolean isTracingEnabled;
 
-  public EncodedReaderImpl(Object fileKey, List<OrcProto.Type> types, CompressionCodec codec,
+  public EncodedReaderImpl(Object fileKey, List<OrcProto.Type> types,
+      TypeDescription fileSchema, org.apache.orc.CompressionKind kind, WriterVersion version,
       int bufferSize, long strideRate, DataCache cacheWrapper, DataReader dataReader,
       PoolFactory pf) throws IOException {
     this.fileKey = fileKey;
-    this.codec = codec;
+    this.compressionKind = kind;
+    this.isCompressed = kind != org.apache.orc.CompressionKind.NONE;
+    this.codec = OrcCodecPool.getCodec(kind);
     this.types = types;
     this.bufferSize = bufferSize;
     this.rowIndexStride = strideRate;
@@ -127,11 +153,13 @@ class EncodedReaderImpl implements EncodedReader {
 
   /** Helper context for each column being read */
   private static final class ColumnReadContext {
+
     public ColumnReadContext(int colIx, OrcProto.ColumnEncoding encoding,
-                             OrcProto.RowIndex rowIndex) {
+                             OrcProto.RowIndex rowIndex, int colRgIx) {
       this.encoding = encoding;
       this.rowIndex = rowIndex;
       this.colIx = colIx;
+      this.includedIx = colRgIx;
       streamCount = 0;
     }
 
@@ -145,6 +173,8 @@ class EncodedReaderImpl implements EncodedReader {
     OrcProto.RowIndex rowIndex;
     /** Column index in the file. */
     int colIx;
+    /** Column index in the included columns only (for RG masks). */
+    int includedIx;
 
     public void addStream(long offset, OrcProto.Stream stream, int indexIx) {
       streams[streamCount++] = new StreamContext(stream, offset, indexIx);
@@ -154,6 +184,7 @@ class EncodedReaderImpl implements EncodedReader {
     public String toString() {
       StringBuilder sb = new StringBuilder();
       sb.append(" column_index: ").append(colIx);
+      sb.append(" included_index: ").append(includedIx);
       sb.append(" encoding: ").append(encoding);
       sb.append(" stream_count: ").append(streamCount);
       int i = 0;
@@ -197,8 +228,8 @@ class EncodedReaderImpl implements EncodedReader {
 
   @Override
   public void readEncodedColumns(int stripeIx, StripeInformation stripe,
-      OrcProto.RowIndex[] indexes, List<OrcProto.ColumnEncoding> encodings, List<OrcProto.Stream> streamList,
-      boolean[] included, boolean[][] colRgs,
+      OrcProto.RowIndex[] indexes, List<OrcProto.ColumnEncoding> encodings,
+      List<OrcProto.Stream> streamList, boolean[] included, boolean[][] colRgs,
       Consumer<OrcEncodedColumnBatch> consumer) throws IOException {
     // Note: for now we don't have to setError here, caller will setError if we throw.
     // We are also not supposed to call setDone, since we are only part of the operation.
@@ -214,12 +245,19 @@ class EncodedReaderImpl implements EncodedReader {
     // We assume stream list is sorted by column and that non-data
     // streams do not interleave data streams for the same column.
     // 1.2. With that in mind, determine disk ranges to read/get from cache (not by stream).
-    int colRgIx = -1, lastColIx = -1;
-    ColumnReadContext[] colCtxs = new ColumnReadContext[colRgs.length];
-    boolean[] includedRgs = null;
-    boolean isCompressed = (codec != null);
+    ColumnReadContext[] colCtxs = new ColumnReadContext[included.length];
+    int colRgIx = -1;
+    // Don't create context for the 0-s column.
+    for (int i = 1; i < included.length; ++i) {
+      if (!included[i]) continue;
+      colCtxs[i] = new ColumnReadContext(i, encodings.get(i), indexes[i], ++colRgIx);
+      if (isTracingEnabled) {
+        LOG.trace("Creating context: " + colCtxs[i].toString());
+      }
+    }
     CreateHelper listToRead = new CreateHelper();
     boolean hasIndexOnlyCols = false;
+    boolean[] includedRgs = null; // Will always be the same for all cols at the moment.
     for (OrcProto.Stream stream : streamList) {
       long length = stream.getLength();
       int colIx = stream.getColumn();
@@ -227,28 +265,17 @@ class EncodedReaderImpl implements EncodedReader {
       if (!included[colIx] || StreamName.getArea(streamKind) != StreamName.Area.DATA) {
         // We have a stream for included column, but in future it might have no data streams.
         // It's more like "has at least one column included that has an index stream".
-        hasIndexOnlyCols = hasIndexOnlyCols | included[colIx];
+        hasIndexOnlyCols = hasIndexOnlyCols || included[colIx];
         if (isTracingEnabled) {
-          LOG.trace("Skipping stream: " + streamKind + " at " + offset + ", " + length);
+          LOG.trace("Skipping stream for column " + colIx + ": "
+              + streamKind + " at " + offset + ", " + length);
         }
         offset += length;
         continue;
       }
-      ColumnReadContext ctx = null;
-      if (lastColIx != colIx) {
-        ++colRgIx;
-        assert colCtxs[colRgIx] == null;
-        lastColIx = colIx;
-        includedRgs = colRgs[colRgIx];
-        ctx = colCtxs[colRgIx] = new ColumnReadContext(
-            colIx, encodings.get(colIx), indexes[colIx]);
-        if (isTracingEnabled) {
-          LOG.trace("Creating context " + colRgIx + " for column " + colIx + ":" + ctx.toString());
-        }
-      } else {
-        ctx = colCtxs[colRgIx];
-        assert ctx != null;
-      }
+      ColumnReadContext ctx = colCtxs[colIx];
+      assert ctx != null;
+      includedRgs = colRgs[ctx.includedIx];
       int indexIx = RecordReaderUtils.getIndexPosition(ctx.encoding.getKind(),
           types.get(colIx).getKind(), streamKind, isCompressed, hasNull[colIx]);
       ctx.addStream(offset, stream, indexIx);
@@ -263,7 +290,7 @@ class EncodedReaderImpl implements EncodedReader {
         }
       } else {
         RecordReaderUtils.addRgFilteredStreamToRanges(stream, includedRgs,
-            codec != null, indexes[colIx], encodings.get(colIx), types.get(colIx),
+            isCompressed, indexes[colIx], encodings.get(colIx), types.get(colIx),
             bufferSize, hasNull[colIx], offset, length, listToRead, true);
       }
       offset += length;
@@ -275,7 +302,7 @@ class EncodedReaderImpl implements EncodedReader {
       // TODO: there may be a bug here. Could there be partial RG filtering on index-only column?
       if (hasIndexOnlyCols && (includedRgs == null)) {
         OrcEncodedColumnBatch ecb = POOLS.ecbPool.take();
-        ecb.init(fileKey, stripeIx, OrcEncodedColumnBatch.ALL_RGS, colRgs.length);
+        ecb.init(fileKey, stripeIx, OrcEncodedColumnBatch.ALL_RGS, included.length);
         consumer.consumeData(ecb);
       } else {
         LOG.warn("Nothing to read for stripe [" + stripe + "]");
@@ -285,32 +312,54 @@ class EncodedReaderImpl implements EncodedReader {
 
     // 2. Now, read all of the ranges from cache or disk.
     DiskRangeList.MutateHelper toRead = new DiskRangeList.MutateHelper(listToRead.get());
-    if (isTracingEnabled && LOG.isInfoEnabled()) {
-      LOG.trace("Resulting disk ranges to read (file " + fileKey + "): "
+    if (/*isTracingEnabled && */LOG.isInfoEnabled()) {
+      LOG.info("Resulting disk ranges to read (file " + fileKey + "): "
           + RecordReaderUtils.stringifyDiskRanges(toRead.next));
     }
     BooleanRef isAllInCache = new BooleanRef();
     if (hasFileId) {
       cacheWrapper.getFileData(fileKey, toRead.next, stripeOffset, CC_FACTORY, isAllInCache);
-      if (isTracingEnabled && LOG.isInfoEnabled()) {
-        LOG.trace("Disk ranges after cache (file " + fileKey + ", base offset " + stripeOffset
-            + "): " + RecordReaderUtils.stringifyDiskRanges(toRead.next));
+      if (/*isTracingEnabled && */LOG.isInfoEnabled()) {
+        LOG.info("Disk ranges after cache (found everything " + isAllInCache.value + "; file "
+            + fileKey + ", base offset " + stripeOffset  + "): "
+            + RecordReaderUtils.stringifyDiskRanges(toRead.next));
       }
     }
 
+    // TODO: the memory release could be optimized - we could release original buffers after we
+    //       are fully done with each original buffer from disk. For now release all at the end;
+    //       it doesn't increase the total amount of memory we hold, just the duration a bit.
+    //       This is much simpler - we can just remember original ranges after reading them, and
+    //       release them at the end. In a few cases where it's easy to determine that a buffer
+    //       can be freed in advance, we remove it from the map.
+    IdentityHashMap<ByteBuffer, Boolean> toRelease = null;
     if (!isAllInCache.value) {
       if (!isDataReaderOpen) {
         this.dataReader.open();
         isDataReaderOpen = true;
       }
       dataReader.readFileData(toRead.next, stripeOffset, cacheWrapper.getAllocator().isDirectAlloc());
+      toRelease = new IdentityHashMap<>();
+      DiskRangeList drl = toRead.next;
+      while (drl != null) {
+        if (drl instanceof BufferChunk) {
+          toRelease.put(drl.getData(), true);
+        }
+        drl = drl.next;
+      }
     }
 
     // 3. For uncompressed case, we need some special processing before read.
+    //    Basically, we are trying to create artificial, consistent ranges to cache, as there are
+    //    no CBs in an uncompressed file. At the end of this processing, the list would contain
+    //    either cache buffers, or buffers allocated by us and not cached (if we are only reading
+    //    parts of the data for some ranges and don't want to cache it). Both are represented by
+    //    CacheChunks, so the list is just CacheChunk-s from that point on.
     DiskRangeList iter = toRead.next;  // Keep "toRead" list for future use, don't extract().
     if (codec == null) {
-      for (int colIxMod = 0; colIxMod < colRgs.length; ++colIxMod) {
-        ColumnReadContext ctx = colCtxs[colIxMod];
+      for (int colIx = 0; colIx < colCtxs.length; ++colIx) {
+        ColumnReadContext ctx = colCtxs[colIx];
+        if (ctx == null) continue; // This column is not included.
         for (int streamIx = 0; streamIx < ctx.streamCount; ++streamIx) {
           StreamContext sctx = ctx.streams[streamIx];
           DiskRangeList newIter = preReadUncompressedStream(
@@ -319,6 +368,12 @@ class EncodedReaderImpl implements EncodedReader {
             iter = newIter;
           }
         }
+      }
+      // Release buffers as we are done with all the streams... also see toRelease comment.\
+      // With uncompressed streams, we know we are done earlier.
+      if (toRelease != null) {
+        releaseBuffers(toRelease.keySet(), true);
+        toRelease = null;
       }
       if (isTracingEnabled) {
         LOG.trace("Disk ranges after pre-read (file " + fileKey + ", base offset "
@@ -334,74 +389,88 @@ class EncodedReaderImpl implements EncodedReader {
       boolean isLastRg = rgIx == rgCount - 1;
       // Create the batch we will use to return data for this RG.
       OrcEncodedColumnBatch ecb = POOLS.ecbPool.take();
-      ecb.init(fileKey, stripeIx, rgIx, colRgs.length);
+      ecb.init(fileKey, stripeIx, rgIx, included.length);
       boolean isRGSelected = true;
-      for (int colIxMod = 0; colIxMod < colRgs.length; ++colIxMod) {
-        // TODO: simplify this now that high-level cache has been removed.
-        if (colRgs[colIxMod] != null && !colRgs[colIxMod][rgIx]) {
+      for (int colIx = 0; colIx < colCtxs.length; ++colIx) {
+        ColumnReadContext ctx = colCtxs[colIx];
+        if (ctx == null) continue; // This column is not included.
+        if (isTracingEnabled) {
+          LOG.trace("ctx: {} rgIx: {} isLastRg: {} rgCount: {}", ctx, rgIx, isLastRg, rgCount);
+        }
+        // TODO: simplify this now that high-level cache has been removed. Same RGs for all cols.
+        if (colRgs[ctx.includedIx] != null && !colRgs[ctx.includedIx][rgIx]) {
           // RG x col filtered.
           isRGSelected = false;
-          continue;
+          if (isTracingEnabled) {
+            LOG.trace("colIxMod: {} rgIx: {} colRgs[{}]: {} colRgs[{}][{}]: {}", ctx.includedIx, rgIx, ctx.includedIx,
+              Arrays.toString(colRgs[ctx.includedIx]), ctx.includedIx, rgIx, colRgs[ctx.includedIx][rgIx]);
+          }
+           continue;
         }
-        ColumnReadContext ctx = colCtxs[colIxMod];
         OrcProto.RowIndexEntry index = ctx.rowIndex.getEntry(rgIx),
             nextIndex = isLastRg ? null : ctx.rowIndex.getEntry(rgIx + 1);
         ecb.initOrcColumn(ctx.colIx);
         for (int streamIx = 0; streamIx < ctx.streamCount; ++streamIx) {
           StreamContext sctx = ctx.streams[streamIx];
           ColumnStreamData cb = null;
-          if (RecordReaderUtils.isDictionary(sctx.kind, ctx.encoding)) {
-            // This stream is for entire stripe and needed for every RG; uncompress once and reuse.
-            if (isTracingEnabled) {
-              LOG.trace("Getting stripe-level stream [" + sctx.kind + ", " + ctx.encoding + "] for"
-                  + " column " + ctx.colIx + " RG " + rgIx + " at " + sctx.offset + ", " + sctx.length);
-            }
-            if (sctx.stripeLevelStream == null) {
-              sctx.stripeLevelStream = POOLS.csdPool.take();
-              // We will be using this for each RG while also sending RGs to processing.
-              // To avoid buffers being unlocked, run refcount one ahead; we will not increase
-              // it when building the last RG, so each RG processing will decref once, and the
-              // last one will unlock the buffers.
+          try {
+            if (RecordReaderUtils.isDictionary(sctx.kind, ctx.encoding)) {
+              // This stream is for entire stripe and needed for every RG; uncompress once and reuse.
+              if (isTracingEnabled) {
+                LOG.trace("Getting stripe-level stream [" + sctx.kind + ", " + ctx.encoding + "] for"
+                    + " column " + ctx.colIx + " RG " + rgIx + " at " + sctx.offset + ", " + sctx.length);
+              }
+              if (sctx.stripeLevelStream == null) {
+                sctx.stripeLevelStream = POOLS.csdPool.take();
+                // We will be using this for each RG while also sending RGs to processing.
+                // To avoid buffers being unlocked, run refcount one ahead; so each RG
+                 // processing will decref once, and the
+                // last one will unlock the buffers.
+                sctx.stripeLevelStream.incRef();
+                // For stripe-level streams we don't need the extra refcount on the block.
+                // See class comment about refcounts.
+                long unlockUntilCOffset = sctx.offset + sctx.length;
+                DiskRangeList lastCached = readEncodedStream(stripeOffset, iter,
+                    sctx.offset, sctx.offset + sctx.length, sctx.stripeLevelStream,
+                    unlockUntilCOffset, sctx.offset, toRelease);
+                if (lastCached != null) {
+                  iter = lastCached;
+                }
+              }
               sctx.stripeLevelStream.incRef();
-              // For stripe-level streams we don't need the extra refcount on the block.
-              // See class comment about refcounts.
-              long unlockUntilCOffset = sctx.offset + sctx.length;
-              DiskRangeList lastCached = readEncodedStream(stripeOffset, iter,
-                  sctx.offset, sctx.offset + sctx.length, sctx.stripeLevelStream,
-                  unlockUntilCOffset, sctx.offset);
+              cb = sctx.stripeLevelStream;
+            } else {
+              // This stream can be separated by RG using index. Let's do that.
+              // Offset to where this RG begins.
+              long cOffset = sctx.offset + index.getPositions(sctx.streamIndexOffset);
+              // Offset relative to the beginning of the stream of where this RG ends.
+              long nextCOffsetRel = isLastRg ? sctx.length
+                  : nextIndex.getPositions(sctx.streamIndexOffset);
+              // Offset before which this RG is guaranteed to end. Can only be estimated.
+              // We estimate the same way for compressed and uncompressed for now.
+              long endCOffset = sctx.offset + RecordReaderUtils.estimateRgEndOffset(
+                  isCompressed, isLastRg, nextCOffsetRel, sctx.length, bufferSize);
+              // As we read, we can unlock initial refcounts for the buffers that end before
+              // the data that we need for this RG.
+              long unlockUntilCOffset = sctx.offset + nextCOffsetRel;
+              cb = createRgColumnStreamData(
+                  rgIx, isLastRg, ctx.colIx, sctx, cOffset, endCOffset, isCompressed);
+              boolean isStartOfStream = sctx.bufferIter == null;
+              DiskRangeList lastCached = readEncodedStream(stripeOffset,
+                  (isStartOfStream ? iter : sctx.bufferIter), cOffset, endCOffset, cb,
+                  unlockUntilCOffset, sctx.offset, toRelease);
               if (lastCached != null) {
-                iter = lastCached;
+                sctx.bufferIter = iter = lastCached;
               }
             }
-            if (!isLastRg) {
-              sctx.stripeLevelStream.incRef();
-            }
-            cb = sctx.stripeLevelStream;
-          } else {
-            // This stream can be separated by RG using index. Let's do that.
-            // Offset to where this RG begins.
-            long cOffset = sctx.offset + index.getPositions(sctx.streamIndexOffset);
-            // Offset relative to the beginning of the stream of where this RG ends.
-            long nextCOffsetRel = isLastRg ? sctx.length
-                : nextIndex.getPositions(sctx.streamIndexOffset);
-            // Offset before which this RG is guaranteed to end. Can only be estimated.
-            // We estimate the same way for compressed and uncompressed for now.
-            long endCOffset = sctx.offset + RecordReaderUtils.estimateRgEndOffset(
-                isCompressed, isLastRg, nextCOffsetRel, sctx.length, bufferSize);
-            // As we read, we can unlock initial refcounts for the buffers that end before
-            // the data that we need for this RG.
-            long unlockUntilCOffset = sctx.offset + nextCOffsetRel;
-            cb = createRgColumnStreamData(
-                rgIx, isLastRg, ctx.colIx, sctx, cOffset, endCOffset, isCompressed);
-            boolean isStartOfStream = sctx.bufferIter == null;
-            DiskRangeList lastCached = readEncodedStream(stripeOffset,
-                (isStartOfStream ? iter : sctx.bufferIter), cOffset, endCOffset, cb,
-                unlockUntilCOffset, sctx.offset);
-            if (lastCached != null) {
-              sctx.bufferIter = iter = lastCached;
-            }
+            ecb.setStreamData(ctx.colIx, sctx.kind.getNumber(), cb);
+          } catch (Exception ex) {
+            DiskRangeList drl = toRead == null ? null : toRead.next;
+            LOG.error("Error getting stream [" + sctx.kind + ", " + ctx.encoding + "] for"
+                + " column " + ctx.colIx + " RG " + rgIx + " at " + sctx.offset + ", "
+                + sctx.length + "; toRead " + RecordReaderUtils.stringifyDiskRanges(drl), ex);
+            throw (ex instanceof IOException) ? (IOException)ex : new IOException(ex);
           }
-          ecb.setStreamData(colIxMod, sctx.kind.getNumber(), cb);
         }
       }
       if (isRGSelected) {
@@ -415,7 +484,27 @@ class EncodedReaderImpl implements EncodedReader {
     }
 
     // Release the unreleased buffers. See class comment about refcounts.
+    for (int colIx = 0; colIx < colCtxs.length; ++colIx) {
+      ColumnReadContext ctx = colCtxs[colIx];
+      if (ctx == null) continue; // This column is not included.
+      for (int streamIx = 0; streamIx < ctx.streamCount; ++streamIx) {
+        StreamContext sctx = ctx.streams[streamIx];
+        if (sctx == null || sctx.stripeLevelStream == null) continue;
+        if (0 != sctx.stripeLevelStream.decRef()) continue;
+        for (MemoryBuffer buf : sctx.stripeLevelStream.getCacheBuffers()) {
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("Unlocking {} at the end of processing", buf);
+          }
+          cacheWrapper.releaseBuffer(buf);
+        }
+      }
+    }
+
     releaseInitialRefcounts(toRead.next);
+    // Release buffers as we are done with all the streams... also see toRelease comment.
+    if (toRelease != null) {
+      releaseBuffers(toRelease.keySet(), true);
+    }
     releaseCacheChunksIntoObjectPool(toRead.next);
   }
 
@@ -465,6 +554,7 @@ class EncodedReaderImpl implements EncodedReader {
 
   @Override
   public void close() throws IOException {
+    OrcCodecPool.returnCodec(compressionKind, codec);
     dataReader.close();
   }
 
@@ -583,20 +673,19 @@ class EncodedReaderImpl implements EncodedReader {
    *         the master list, so they are safe to keep as iterators for various streams.
    */
   public DiskRangeList readEncodedStream(long baseOffset, DiskRangeList start, long cOffset,
-      long endCOffset, ColumnStreamData csd, long unlockUntilCOffset, long streamOffset)
-          throws IOException {
+      long endCOffset, ColumnStreamData csd, long unlockUntilCOffset, long streamOffset,
+      IdentityHashMap<ByteBuffer, Boolean> toRelease) throws IOException {
     if (csd.getCacheBuffers() == null) {
       csd.setCacheBuffers(new ArrayList<MemoryBuffer>());
     } else {
       csd.getCacheBuffers().clear();
     }
     if (cOffset == endCOffset) return null;
-    boolean isCompressed = codec != null;
     List<ProcCacheChunk> toDecompress = null;
-    List<ByteBuffer> toRelease = null;
     List<IncompleteCb> badEstimates = null;
+    List<ByteBuffer> toReleaseCopies = null;
     if (isCompressed) {
-      toRelease = !dataReader.isTrackingDiskRanges() ? null : new ArrayList<ByteBuffer>();
+      toReleaseCopies = new ArrayList<>();
       toDecompress = new ArrayList<>();
       badEstimates = new ArrayList<>();
     }
@@ -612,11 +701,20 @@ class EncodedReaderImpl implements EncodedReader {
     CacheChunk lastUncompressed = null;
 
     // 2. Go thru the blocks; add stuff to results and prepare the decompression work (see below).
-    lastUncompressed = isCompressed ?
-        prepareRangesForCompressedRead(cOffset, endCOffset, streamOffset,
-            unlockUntilCOffset, current, csd, toRelease, toDecompress, badEstimates)
-      : prepareRangesForUncompressedRead(
-          cOffset, endCOffset, streamOffset, unlockUntilCOffset, current, csd);
+    try {
+      lastUncompressed = isCompressed ?
+          prepareRangesForCompressedRead(cOffset, endCOffset, streamOffset, unlockUntilCOffset,
+              current, csd, toRelease, toReleaseCopies, toDecompress, badEstimates)
+        : prepareRangesForUncompressedRead(
+            cOffset, endCOffset, streamOffset, unlockUntilCOffset, current, csd);
+    } catch (Exception ex) {
+      LOG.error("Failed " + (isCompressed ? "" : "un") + "compressed read; cOffset " + cOffset
+          + ", endCOffset " + endCOffset + ", streamOffset " + streamOffset
+          + ", unlockUntilCOffset " + unlockUntilCOffset + "; ranges passed in "
+          + RecordReaderUtils.stringifyDiskRanges(start) + "; ranges passed to prepare "
+          + RecordReaderUtils.stringifyDiskRanges(current)); // Don't log exception here.
+      throw (ex instanceof IOException) ? (IOException)ex : new IOException(ex);
+    }
 
     // 2.5. Remember the bad estimates for future reference.
     if (badEstimates != null && !badEstimates.isEmpty()) {
@@ -626,7 +724,10 @@ class EncodedReaderImpl implements EncodedReader {
       assert result == null; // We don't expect conflicts from bad estimates.
     }
 
-    if (toDecompress == null || toDecompress.isEmpty()) return lastUncompressed; // Nothing to do.
+    if (toDecompress == null || toDecompress.isEmpty()) {
+      releaseBuffers(toReleaseCopies, false);
+      return lastUncompressed; // Nothing to do.
+    }
 
     // 3. Allocate the buffers, prepare cache keys.
     // At this point, we have read all the CBs we need to read. cacheBuffers contains some cache
@@ -659,22 +760,18 @@ class EncodedReaderImpl implements EncodedReader {
       cacheWrapper.reuseBuffer(chunk.getBuffer());
     }
 
-    // 5. Release original compressed buffers to zero-copy reader if needed.
-    if (toRelease != null) {
-      assert dataReader.isTrackingDiskRanges();
-      for (ByteBuffer buffer : toRelease) {
-        dataReader.releaseBuffer(buffer);
-      }
-    }
+    // 5. Release the copies we made directly to the cleaner.
+    releaseBuffers(toReleaseCopies, false);
 
     // 6. Finally, put uncompressed data to cache.
-
     if (fileKey != null) {
-      long[] collisionMask = cacheWrapper.putFileData(fileKey, cacheKeys, targetBuffers, baseOffset);
+      long[] collisionMask = cacheWrapper.putFileData(
+          fileKey, cacheKeys, targetBuffers, baseOffset);
       processCacheCollisions(collisionMask, toDecompress, targetBuffers, csd.getCacheBuffers());
     }
 
-    // 7. It may happen that we know we won't use some compression buffers anymore.
+    // 7. It may happen that we know we won't use some cache buffers anymore (the alternative
+    //    is that we will use the same buffers for other streams in separate calls).
     //    Release initial refcounts.
     for (ProcCacheChunk chunk : toDecompress) {
       ponderReleaseInitialRefcount(unlockUntilCOffset, streamOffset, chunk);
@@ -683,9 +780,11 @@ class EncodedReaderImpl implements EncodedReader {
     return lastUncompressed;
   }
 
+  /** Subset of readEncodedStream specific to compressed streams, separate to avoid long methods. */
   private CacheChunk prepareRangesForCompressedRead(long cOffset, long endCOffset,
-      long streamOffset, long unlockUntilCOffset, DiskRangeList current, ColumnStreamData columnStreamData,
-      List<ByteBuffer> toRelease, List<ProcCacheChunk> toDecompress,
+      long streamOffset, long unlockUntilCOffset, DiskRangeList current,
+      ColumnStreamData columnStreamData, IdentityHashMap<ByteBuffer, Boolean> toRelease,
+      List<ByteBuffer> toReleaseCopies, List<ProcCacheChunk> toDecompress,
       List<IncompleteCb> badEstimates) throws IOException {
     if (cOffset > current.getOffset()) {
       // Target compression block is in the middle of the range; slice the range in two.
@@ -725,9 +824,15 @@ class EncodedReaderImpl implements EncodedReader {
       } else {
         // 2c. This is a compressed buffer. We need to uncompress it; the buffer can comprise
         // several disk ranges, so we might need to combine them.
+        if (!(current instanceof BufferChunk)) {
+          String msg = "Found an unexpected " + current.getClass().getSimpleName() + ": "
+              + current + " while looking at " + currentOffset;
+          LOG.error(msg);
+          throw new RuntimeException(msg);
+        }
         BufferChunk bc = (BufferChunk)current;
-        ProcCacheChunk newCached = addOneCompressionBuffer(
-            bc, columnStreamData.getCacheBuffers(), toDecompress, toRelease, badEstimates);
+        ProcCacheChunk newCached = addOneCompressionBuffer(bc, columnStreamData.getCacheBuffers(),
+            toDecompress, toRelease, toReleaseCopies, badEstimates);
         lastUncompressed = (newCached == null) ? lastUncompressed : newCached;
         next = (newCached != null) ? newCached.next : null;
         currentOffset = (next != null) ? next.getOffset() : -1;
@@ -741,9 +846,12 @@ class EncodedReaderImpl implements EncodedReader {
     return lastUncompressed;
   }
 
+  /** Subset of readEncodedStream specific to uncompressed streams, separate to avoid long methods. */
   private CacheChunk prepareRangesForUncompressedRead(long cOffset, long endCOffset,
-      long streamOffset, long unlockUntilCOffset, DiskRangeList current, ColumnStreamData columnStreamData)
-          throws IOException {
+      long streamOffset, long unlockUntilCOffset, DiskRangeList current,
+      ColumnStreamData columnStreamData) throws IOException {
+    // Note: we are called after preReadUncompressedStream, so it doesn't have to do nearly as much
+    //       as prepareRangesForCompressedRead does; e.g. every buffer is already a CacheChunk.
     long currentOffset = cOffset;
     CacheChunk lastUncompressed = null;
     boolean isFirst = true;
@@ -783,11 +891,10 @@ class EncodedReaderImpl implements EncodedReader {
    * We could avoid copy in non-zcr case and manage the buffer that was not allocated by our
    * allocator. Uncompressed case is not mainline though so let's not complicate it.
    */
-  private DiskRangeList preReadUncompressedStream(long baseOffset,
-      DiskRangeList start, long streamOffset, long streamEnd) throws IOException {
+  private DiskRangeList preReadUncompressedStream(long baseOffset, DiskRangeList start,
+      long streamOffset, long streamEnd) throws IOException {
     if (streamOffset == streamEnd) return null;
     List<UncompressedCacheChunk> toCache = null;
-    List<ByteBuffer> toRelease = null;
 
     // 1. Find our bearings in the stream.
     DiskRangeList current = findIntersectingPosition(start, streamOffset, streamEnd);
@@ -824,9 +931,6 @@ class EncodedReaderImpl implements EncodedReader {
       if (current.getOffset() >= partEnd) {
         continue; // We have no data at all for this part of the stream (could be unneeded), skip.
       }
-      if (toRelease == null && dataReader.isTrackingDiskRanges()) {
-        toRelease = new ArrayList<ByteBuffer>();
-      }
       // We have some disk buffers... see if we have entire part, etc.
       UncompressedCacheChunk candidateCached = null; // We will cache if we have the entire part.
       DiskRangeList next = current;
@@ -841,21 +945,15 @@ class EncodedReaderImpl implements EncodedReader {
         current = next;
         if (noMoreDataForPart) break; // Done with this part.
 
-        boolean wasSplit = false;
         if (current.getEnd() > partEnd) {
           // If the current buffer contains multiple parts, split it.
           current = current.split(partEnd);
-          wasSplit = true;
         }
         if (isTracingEnabled) {
           LOG.trace("Processing uncompressed file data at ["
               + current.getOffset() + ", " + current.getEnd() + ")");
         }
         BufferChunk curBc = (BufferChunk)current;
-        if (!wasSplit && toRelease != null) {
-          toRelease.add(curBc.getChunk()); // TODO: is it valid to give zcr the modified 2nd part?
-        }
-
         // Track if we still have the entire part.
         long hadEntirePartTo = hasEntirePartTo;
         // We have data until the end of current block if we had it until the beginning.
@@ -916,15 +1014,7 @@ class EncodedReaderImpl implements EncodedReader {
       ++ix;
     }
 
-    // 5. Release original compressed buffers to zero-copy reader if needed.
-    if (toRelease != null) {
-      assert dataReader.isTrackingDiskRanges();
-      for (ByteBuffer buf : toRelease) {
-        dataReader.releaseBuffer(buf);
-      }
-    }
-
-    // 6. Finally, put uncompressed data to cache.
+    // 5. Put uncompressed data to cache.
     if (fileKey != null) {
       long[] collisionMask = cacheWrapper.putFileData(fileKey, cacheKeys, targetBuffers, baseOffset);
       processCacheCollisions(collisionMask, toCache, targetBuffers, null);
@@ -932,7 +1022,6 @@ class EncodedReaderImpl implements EncodedReader {
 
     return lastUncompressed;
   }
-
 
   private int determineUncompressedPartSize() {
     // We will break the uncompressed data in the cache in the chunks that are the size
@@ -1051,8 +1140,11 @@ class EncodedReaderImpl implements EncodedReader {
     // as long as they are still in the same stream and are not already released.
     DiskRangeList prev = cc.prev;
     while (true) {
-      if ((prev == null) || (prev.getEnd() <= streamStartOffset)
-          || !(prev instanceof CacheChunk)) break;
+      // Do not release beyond current stream (we don't know which RGs that buffer is for).
+      if ((prev == null) || (prev.getEnd() <= streamStartOffset)) break;
+      // Only release cache chunks; do not release ProcCacheChunks - they may not yet have data.
+      if (prev.getClass() != CacheChunk.class) break;
+
       CacheChunk prevCc = (CacheChunk)prev;
       if (prevCc.buffer == null) break;
       try {
@@ -1109,24 +1201,100 @@ class EncodedReaderImpl implements EncodedReader {
      This may be necessary for obscure combinations of compression and encoding boundaries. */
   private static DiskRangeList findExactPosition(DiskRangeList ranges, long offset) {
     if (offset < 0) return ranges;
-    return findIntersectingPosition(ranges, offset, offset);
+    ranges = findUpperBound(ranges, offset);
+    ranges = findLowerBound(ranges, offset);
+    if (offset < ranges.getOffset() || offset >= ranges.getEnd()) {
+      throwRangesError(ranges, offset, offset);
+    }
+    return ranges;
   }
 
-  private static DiskRangeList findIntersectingPosition(DiskRangeList ranges, long offset, long end) {
+  private static DiskRangeList findIntersectingPosition(
+      DiskRangeList ranges, long offset, long end) {
     if (offset < 0) return ranges;
-    // We expect the offset to be valid TODO: rather, validate
-    while (ranges.getEnd() <= offset) {
-      ranges = ranges.next;
-    }
-    while (ranges.getOffset() > end) {
-      ranges = ranges.prev;
-    }
+    ranges = findUpperBound(ranges, offset);
+    ranges = findLowerBound(ranges, end);
     // We are now on some intersecting buffer, find the first intersecting buffer.
     while (ranges.prev != null && ranges.prev.getEnd() > offset) {
+      if (ranges.prev.getEnd() > ranges.getOffset()) {
+        throwRangesError(ranges, offset, end);
+      }
       ranges = ranges.prev;
     }
     return ranges;
   }
+
+
+  public static DiskRangeList findLowerBound(DiskRangeList ranges, long end) {
+    while (ranges.getOffset() > end) {
+      if (ranges.prev.getEnd() > ranges.getOffset()) {
+        throwRangesError(ranges, end, end);
+      }
+      ranges = ranges.prev;
+    }
+    return ranges;
+  }
+
+
+  public static DiskRangeList findUpperBound(DiskRangeList ranges, long offset) {
+    while (ranges.getEnd() <= offset) {
+      if (ranges.next.getOffset() < ranges.getEnd()) {
+        throwRangesError(ranges, offset, offset);
+      }
+      ranges = ranges.next;
+    }
+    return ranges;
+  }
+
+  private static void throwRangesError(DiskRangeList ranges, long offset, long end) {
+    // We are going to fail, so it is ok to do expensive stuff. Ranges are broken, play it safe.
+    IdentityHashMap<DiskRangeList, Boolean> seen = new IdentityHashMap<>();
+    seen.put(ranges, true);
+    StringBuilder errors = new StringBuilder();
+    while (ranges.prev != null) {
+      if (ranges.prev.next != ranges) {
+        errors.append("inconsistent list going back: [").append(ranges).append("].prev = [")
+          .append(ranges.prev).append("]; prev.next = [").append(ranges.prev.next).append("]; ");
+        // Stop, as we won't be able to go forward.
+        break;
+      }
+      if (seen.containsKey(ranges.prev)) {
+        errors.append("loop: [").append(ranges).append(
+            "].prev = [").append(ranges.prev).append("]; ");
+        break;
+      }
+      ranges = ranges.prev;
+      seen.put(ranges, true);
+    }
+    seen.clear();
+    seen.put(ranges, true);
+    StringBuilder sb = new StringBuilder("Incorrect ranges detected while looking for ");
+    if (offset == end) {
+      sb.append(offset);
+    } else {
+      sb.append("[").append(offset).append(", ").append(end).append(")");
+    }
+    sb.append(": [").append(ranges).append("], ");
+    while (ranges.next != null) {
+      if (ranges.next.prev != ranges) {
+        errors.append("inconsistent list going forward: [").append(ranges).append(
+            "].next.prev = [").append(ranges.next.prev).append("]; ");
+      }
+      if (seen.containsKey(ranges.next)) {
+        errors.append("loop: [").append(ranges).append(
+            "].next = [").append(ranges.next).append("]; ");
+        break;
+      }
+      ranges = ranges.next;
+      sb.append("[").append(ranges).append("], ");
+      seen.put(ranges, true);
+    }
+    sb.append("; ").append(errors);
+    String error = sb.toString();
+    LOG.error(error);
+    throw new RuntimeException(error);
+  }
+
 
   /**
    * Reads one compression block from the source; handles compression blocks read from
@@ -1142,7 +1310,8 @@ class EncodedReaderImpl implements EncodedReader {
    */
   private ProcCacheChunk addOneCompressionBuffer(BufferChunk current,
       List<MemoryBuffer> cacheBuffers, List<ProcCacheChunk> toDecompress,
-      List<ByteBuffer> toRelease, List<IncompleteCb> badEstimates) throws IOException {
+      IdentityHashMap<ByteBuffer, Boolean> toRelease, List<ByteBuffer> toReleaseCopies,
+      List<IncompleteCb> badEstimates) throws IOException {
     ByteBuffer slice = null;
     ByteBuffer compressed = current.getChunk();
     long cbStartOffset = current.getOffset();
@@ -1165,12 +1334,8 @@ class EncodedReaderImpl implements EncodedReader {
       // Simple case - CB fits entirely in the disk range.
       slice = compressed.slice();
       slice.limit(chunkLength);
-      ProcCacheChunk cc = addOneCompressionBlockByteBuffer(slice, isUncompressed,
+      return addOneCompressionBlockByteBuffer(slice, isUncompressed,
           cbStartOffset, cbEndOffset, chunkLength, current, toDecompress, cacheBuffers);
-      if (compressed.remaining() <= 0 && dataReader.isTrackingDiskRanges()) {
-        toRelease.add(compressed);
-      }
-      return cc;
     }
     if (current.getEnd() < cbEndOffset && !current.hasContiguousNext()) {
       badEstimates.add(addIncompleteCompressionBuffer(cbStartOffset, current, 0));
@@ -1180,6 +1345,7 @@ class EncodedReaderImpl implements EncodedReader {
     // TODO: we could remove extra copy for isUncompressed case by copying directly to cache.
     // We need to consolidate 2 or more buffers into one to decompress.
     ByteBuffer copy = allocateBuffer(chunkLength, compressed.isDirect());
+    toReleaseCopies.add(copy); // We will always release copies at the end.
     int remaining = chunkLength - compressed.remaining();
     int originalPos = compressed.position();
     copy.put(compressed);
@@ -1188,12 +1354,8 @@ class EncodedReaderImpl implements EncodedReader {
     }
     DiskRangeList next = current.next;
     current.removeSelf();
-    if (dataReader.isTrackingDiskRanges()) {
-      if (originalPos == 0) {
-        dataReader.releaseBuffer(compressed); // We copied the entire buffer.
-      } else {
-        toRelease.add(compressed); // There might be slices depending on this buffer.
-      }
+    if (originalPos == 0 && toRelease.remove(compressed)) {
+      releaseBuffer(compressed, true);
     }
 
     int extraChunkCount = 0;
@@ -1210,15 +1372,15 @@ class EncodedReaderImpl implements EncodedReader {
         copy.put(slice);
         ProcCacheChunk cc = addOneCompressionBlockByteBuffer(copy, isUncompressed,
             cbStartOffset, cbEndOffset, remaining, (BufferChunk)next, toDecompress, cacheBuffers);
-        if (compressed.remaining() <= 0 && dataReader.isTrackingDiskRanges()) {
-          dataReader.releaseBuffer(compressed); // We copied the entire buffer.
-        }
+        if (compressed.remaining() <= 0 && toRelease.remove(compressed)) {
+          releaseBuffer(compressed, true); // We copied the entire buffer.
+        } // else there's more data to process; will be handled in next call.
         return cc;
       }
       remaining -= compressed.remaining();
-      copy.put(compressed);
-      if (dataReader.isTrackingDiskRanges()) {
-        dataReader.releaseBuffer(compressed); // We copied the entire buffer.
+      copy.put(compressed); // TODO: move into the if below; account for release call
+      if (toRelease.remove(compressed)) {
+        releaseBuffer(compressed, true); // We copied the entire buffer.
       }
       DiskRangeList tmp = next;
       next = next.hasContiguousNext() ? next.next : null;
@@ -1233,6 +1395,38 @@ class EncodedReaderImpl implements EncodedReader {
       }
     }
   }
+
+  private void releaseBuffers(Collection<ByteBuffer> toRelease, boolean isFromDataReader) {
+    if (toRelease == null) return;
+    for (ByteBuffer buf : toRelease) {
+      releaseBuffer(buf, isFromDataReader);
+    }
+  }
+
+  private void releaseBuffer(ByteBuffer bb, boolean isFromDataReader) {
+    if (isTracingEnabled) {
+      LOG.trace("Releasing the buffer " + System.identityHashCode(bb));
+    }
+    if (isFromDataReader && dataReader.isTrackingDiskRanges()) {
+      dataReader.releaseBuffer(bb);
+      return;
+    }
+    Field localCf = cleanerField;
+    if (!bb.isDirect() || localCf == null) return;
+    try {
+      Cleaner cleaner = (Cleaner) localCf.get(bb);
+      if (cleaner != null) {
+        cleaner.clean();
+      } else {
+        LOG.debug("Unable to clean a buffer using cleaner - no cleaner");
+      }
+    } catch (Exception e) {
+      // leave it for GC to clean up
+      LOG.warn("Unable to clean direct buffers using Cleaner.");
+      cleanerField = null;
+    }
+  }
+
 
   private IncompleteCb addIncompleteCompressionBuffer(
       long cbStartOffset, DiskRangeList target, int extraChunkCount) {

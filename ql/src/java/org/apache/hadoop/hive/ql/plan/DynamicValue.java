@@ -16,27 +16,21 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.hive.ql.io.orc.encoded;
-
-import java.io.IOException;
-
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DataCache;
-import org.apache.orc.DataReader;
-import org.apache.hadoop.hive.ql.io.orc.OrcFile.ReaderOptions;
+package org.apache.hadoop.hive.ql.plan;
 
 
-class ReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl implements Reader {
+import java.io.Serializable;
 
-  public ReaderImpl(Path path, ReaderOptions options) throws IOException {
-    super(path, options);
-  }
 
-  @Override
-  public EncodedReader encodedReader(
-      Object fileKey, DataCache dataCache, DataReader dataReader, PoolFactory pf) throws IOException {
-    return new EncodedReaderImpl(fileKey, types, getSchema(),
-        compressionKind, getWriterVersion(), bufferSize, rowIndexStride, dataCache, dataReader, pf
-        );
+public class DynamicValue implements  Serializable {
+
+  /**
+   * An exception that indicates that the dynamic values are (intentionally)
+   * not available in this context.
+   */
+  public static class NoDynamicValuesException extends RuntimeException {
+    public NoDynamicValuesException(String message) {
+      super(message);
+    }
   }
 }
