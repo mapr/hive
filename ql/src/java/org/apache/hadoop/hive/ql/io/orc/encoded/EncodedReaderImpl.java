@@ -41,6 +41,9 @@ import org.apache.hadoop.hive.common.io.encoded.MemoryBuffer;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcConf;
+import org.apache.orc.OrcFile.WriterVersion;
+import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.OrcCodecPool;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderUtils;
 import org.apache.orc.impl.StreamName;
@@ -116,17 +119,22 @@ class EncodedReaderImpl implements EncodedReader {
   private final DataReader dataReader;
   private boolean isDataReaderOpen = false;
   private final CompressionCodec codec;
+  private final boolean isCompressed;
+  private final org.apache.orc.CompressionKind compressionKind;
   private final int bufferSize;
   private final List<OrcProto.Type> types;
   private final long rowIndexStride;
   private final DataCache cacheWrapper;
   private boolean isTracingEnabled;
 
-  public EncodedReaderImpl(Object fileKey, List<OrcProto.Type> types, CompressionCodec codec,
+  public EncodedReaderImpl(Object fileKey, List<OrcProto.Type> types,
+      TypeDescription fileSchema, org.apache.orc.CompressionKind kind, WriterVersion version,
       int bufferSize, long strideRate, DataCache cacheWrapper, DataReader dataReader,
       PoolFactory pf) throws IOException {
     this.fileKey = fileKey;
-    this.codec = codec;
+    this.compressionKind = kind;
+    this.isCompressed = kind != org.apache.orc.CompressionKind.NONE;
+    this.codec = OrcCodecPool.getCodec(kind);
     this.types = types;
     this.bufferSize = bufferSize;
     this.rowIndexStride = strideRate;
@@ -247,7 +255,6 @@ class EncodedReaderImpl implements EncodedReader {
         LOG.trace("Creating context: " + colCtxs[i].toString());
       }
     }
-    boolean isCompressed = (codec != null);
     CreateHelper listToRead = new CreateHelper();
     boolean hasIndexOnlyCols = false;
     boolean[] includedRgs = null; // Will always be the same for all cols at the moment.
@@ -283,7 +290,7 @@ class EncodedReaderImpl implements EncodedReader {
         }
       } else {
         RecordReaderUtils.addRgFilteredStreamToRanges(stream, includedRgs,
-            codec != null, indexes[colIx], encodings.get(colIx), types.get(colIx),
+            isCompressed, indexes[colIx], encodings.get(colIx), types.get(colIx),
             bufferSize, hasNull[colIx], offset, length, listToRead, true);
       }
       offset += length;
@@ -547,6 +554,7 @@ class EncodedReaderImpl implements EncodedReader {
 
   @Override
   public void close() throws IOException {
+    OrcCodecPool.returnCodec(compressionKind, codec);
     dataReader.close();
   }
 
@@ -673,7 +681,6 @@ class EncodedReaderImpl implements EncodedReader {
       csd.getCacheBuffers().clear();
     }
     if (cOffset == endCOffset) return null;
-    boolean isCompressed = codec != null;
     List<ProcCacheChunk> toDecompress = null;
     List<IncompleteCb> badEstimates = null;
     List<ByteBuffer> toReleaseCopies = null;

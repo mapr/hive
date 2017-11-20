@@ -386,7 +386,6 @@ public class SerDeEncodedDataReader extends CallableWithNdc<Void>
           }
         }
       }
-
     }
 
     private String throwIncludesMismatchError(boolean[] translated) throws IOException {
@@ -552,6 +551,11 @@ public class SerDeEncodedDataReader extends CallableWithNdc<Void>
       currentStripe.firstRowStart = firstStartOffset;
       currentStripe.lastRowStart = lastStartOffset;
       currentStripe.lastRowEnd = currentFileOffset;
+    }
+
+    @Override
+    public CompressionCodec getCompressionCodec() {
+      return null;
     }
   }
 

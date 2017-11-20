@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.hadoop.hive.llap.counters.LlapIOCounters;
-import org.apache.orc.TypeDescription;
+import org.apache.orc.*;
 import org.apache.orc.impl.DataReaderProperties;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.OrcTail;
@@ -61,11 +61,8 @@ import org.apache.hadoop.hive.llap.io.metadata.OrcStripeMetadata;
 import org.apache.hadoop.hive.ql.exec.DDLTask;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.HdfsUtils;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.DataReader;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile.ReaderOptions;
-import org.apache.orc.OrcConf;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcSplit;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader;
@@ -76,12 +73,10 @@ import org.apache.hadoop.hive.ql.io.orc.encoded.OrcBatchKey;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.OrcEncodedColumnBatch;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.PoolFactory;
 import org.apache.orc.impl.RecordReaderUtils;
-import org.apache.orc.StripeInformation;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.common.util.FixedSizedObjectPool;
-import org.apache.orc.OrcProto;
 import org.apache.tez.common.CallableWithNdc;
 
 /**
@@ -831,6 +826,11 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
     public DataWrapperForOrc() throws IOException {
       ensureMetadataReader();
       this.orcDataReader = metadataReader.clone();
+    }
+
+    @Override
+    public CompressionCodec getCompressionCodec() {
+      return orcDataReader.getCompressionCodec();
     }
 
     @Override
