@@ -16,9 +16,17 @@
 ############################################################################
 
 MAPR_HOME="${BASEMAPR:-/opt/mapr}"
+MAPR_ENABLE_LOGS="${MAPR_ENABLE_LOGS:-false}"
+
+configure_logging(){
+{ set +x; } 2> /dev/null
+if [ "$MAPR_ENABLE_LOGS" == "true" ]; then
+  set -x;
+fi
+}
 
 source "$MAPR_HOME"/server/common-ecosystem.sh 2>/dev/null
-{ set +x; } 2>/dev/null
+configure_logging
 if [ $? -ne 0 ]; then
   logError "MAPR_HOME seems to not be set correctly or mapr-core not installed"
   exit 1
@@ -135,13 +143,13 @@ fi
 check_port(){
 ROLE="$1"
 if checkNetworkPortAvailability "${PORTS[$ROLE]}" 2>/dev/null; then
-  { set +x; } 2>/dev/null
+  configure_logging
   registerNetworkPort "$ROLE" "${PORTS[$ROLE]}"
   if [ $? -ne 0 ]; then
     logWarn "$ROLE - Failed to register port: ${PORTS[$ROLE]}"
   fi
 else
-  { set +x; } 2>/dev/null
+  configure_logging
   service=$(whoHasNetworkPort "${PORTS[$ROLE]}")
   if [ "$service" != "$ROLE" ]; then
     logWarn "$ROLE - port ${PORTS[$ROLE]} in use by $service service"
