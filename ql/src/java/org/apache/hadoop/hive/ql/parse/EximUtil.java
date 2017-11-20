@@ -165,9 +165,7 @@ public class EximUtil {
         if (testMode) {
           path = (new Path(System.getProperty("test.tmp.dir"), path)).toUri().getPath();
         } else {
-          path =
-              (new Path(new Path("/user/" + System.getProperty("user.name")), path)).toUri()
-                  .getPath();
+          path = new Path(FileSystem.get(conf).getHomeDirectory(), path).toString();
         }
       }
 

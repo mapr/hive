@@ -36,6 +36,7 @@ updateCli() {
 
 cli () {
   updateCli
+  export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_LOGIN_OPTS}"
   execHiveCmd $CLASS $JAR "$@"
 }
 

@@ -433,8 +433,8 @@ public class HiveConf extends Configuration {
         "Directory name that will be created inside table locations in order to support HDFS encryption. " +
         "This is replaces ${hive.exec.scratchdir} for query results with the exception of read-only tables. " +
         "In all cases ${hive.exec.scratchdir} is still used for other temporary files, such as job plans."),
-    SCRATCHDIR("hive.exec.scratchdir", "/tmp/hive",
-        "HDFS root scratch dir for Hive jobs which gets created with write all (733) permission. " +
+    SCRATCHDIR("hive.exec.scratchdir", "/user/" + System.getProperty("user.name") + "/tmp/hive/",
+        "HDFS root scratch dir for Hive jobs which gets created with write all (777) permission. " +
         "For each connecting user, an HDFS scratch dir: ${hive.exec.scratchdir}/<username> is created, " +
         "with ${hive.scratch.dir.permission}."),
     REPLDIR("hive.repl.rootdir","/user/hive/repl/",
@@ -2145,7 +2145,7 @@ public class HiveConf extends Configuration {
         "When true the HDFS location stored in the index file will be ignored at runtime.\n" +
         "If the data got moved or the name of the cluster got changed, the index data should still be usable."),
 
-    HIVE_EXIM_URI_SCHEME_WL("hive.exim.uri.scheme.whitelist", "hdfs,pfile,file,s3,s3a",
+    HIVE_EXIM_URI_SCHEME_WL("hive.exim.uri.scheme.whitelist", "hdfs,pfile,file,s3,s3a,maprfs",
         "A comma separated list of acceptable URI schemes for import and export."),
     // temporary variable for testing. This is added just to turn off this feature in case of a bug in
     // deployment. It has not been documented in hive-default.xml intentionally, this should be removed
@@ -2426,7 +2426,7 @@ public class HiveConf extends Configuration {
     // binary transport settings
     HIVE_SERVER2_THRIFT_PORT("hive.server2.thrift.port", 10000,
         "Port number of HiveServer2 Thrift interface when hive.server2.transport.mode is 'binary'."),
-    HIVE_SERVER2_THRIFT_SASL_QOP("hive.server2.thrift.sasl.qop", "auth",
+    HIVE_SERVER2_THRIFT_SASL_QOP("hive.server2.thrift.sasl.qop", "auth-conf",
         new StringSet("auth", "auth-int", "auth-conf"),
         "Sasl QOP value; set it to one of following values to enable higher levels of\n" +
         "protection for HiveServer2 communication with clients.\n" +
