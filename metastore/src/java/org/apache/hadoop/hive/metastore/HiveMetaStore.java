@@ -4265,7 +4265,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         }
         // Allow only keys that start with hive.*, hdfs.*, mapred.* for security
         // i.e. don't allow access to db password
-        if (!Pattern.matches("(hive|hdfs|mapred).*", name)) {
+        if (!Pattern.matches("(hive|hdfs|mapred|maprfs|s3|s3n|mapreduce).*", name)) {
           throw new ConfigValSecurityException("For security reasons, the "
               + "config key " + name + " cannot be accessed");
         }

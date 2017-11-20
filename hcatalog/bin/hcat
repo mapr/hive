@@ -19,25 +19,46 @@
 
 # Resolve our absolute path
 # resolve links - $0 may be a softlink
-this="${BASH_SOURCE-$0}"
-while [ -h "$this" ]; do
-    ls=`ls -ld "$this"`
-    link=`expr "$ls" : '.*-> \(.*\)$'`
-    if expr "$link" : '.*/.*' > /dev/null; then
-        this="$link"
-    else
-        this=`dirname "$this"`/"$link"
-    fi
-done
+function get_canonical_dir() {
+  target="$1"
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
 
 # convert relative path to absolute path
-bin=`dirname "$this"`
-script=`basename "$this"`
+bin=`get_canonical_dir "${BASH_SOURCE-$0}"`
+script=`basename "$0"`
 bin=`unset CDPATH; cd "$bin"; pwd`
 this="$bin/$script"
 #to preserve value of 'this' since any other file that defines 'this' and is sourced
 #here (e.g. hcat-config.sh) will overwrite it
 this_hcat=$this
+
+export BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
+HADOOP_DIR=`dirname $HADOOP_DIR`
+export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
 
 function echoerr() {
     echo "${this_hcat}: $@" 1>&2
@@ -64,15 +85,8 @@ for f in $@; do
      fi
 done
 
-# check for hive in the path
-HIVE_IN_PATH=`which hive 2>/dev/null`
-# looks like [ -f '' ] is true...
-if [ -n "$HIVE_IN_PATH" ]; then
-  #dir of hive scrip
-  HIVE_DIR=`dirname "$HIVE_IN_PATH"`
-  #one level up for base dir
-  HIVE_DIR=`dirname "$HIVE_DIR"`
-fi
+# derive HIVE_HOME relative to hcat binary location
+HIVE_DIR="$bin/../../"
 
 # HIVE_HOME env variable overrides hive in the path
 HIVE_HOME=${HIVE_HOME:-$HIVE_DIR}
@@ -143,24 +157,51 @@ if [ "$HIVE_CLASSPATH" != "" ]; then
 fi
 
 # Put external jars, hcat jar, and config file in the classpath
-HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${HCAT_CLASSPATH}:${HCAT_JAR}:${HIVE_CONF_DIR}
+HADOOP_CLASSPATH=${HIVE_CONF_DIR}:${HADOOP_CLASSPATH}:${HCAT_CLASSPATH}:${HCAT_JAR}
 
-# Look for HBase in a BigTop-compatible way. Avoid thrift version
+# Look for HBase in a MapR-compatible way. Avoid thrift version
 # conflict with modern versions of HBase.
-HBASE_HOME=${HBASE_HOME:-"/usr/lib/hbase"}
-HBASE_CONF_DIR=${HBASE_CONF_DIR:-"${HBASE_HOME}/conf"}
-if [ -d ${HBASE_HOME} ] ; then
-   for jar in $(find $HBASE_HOME -name '*.jar' -not -name '*thrift*'); do
+export BASEMAPR=${BASEMAPR:-"/opt/mapr"}
+if [ -f $BASEMAPR/hbase/hbaseversion ]; then
+   MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion 2>/dev/null`
+else
+   MAPR_HBASE_VERSION="*"
+
+fi
+
+MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+MAPR_HBASE_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}-.*[^s]\.jar" -print 2> /dev/null)
+MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}.*tests\.jar" -print 2> /dev/null)
+MAPR_HBASE_CONF_DIR=${MAPR_HBASE_CONF_DIR:-"${MAPR_HBASE_HOME}/conf"}
+
+if [ -d ${MAPR_HBASE_HOME} ] ; then
+   for jar in $(find $MAPR_HBASE_HOME -name '*.jar' -not -name '*thrift*'); do
       HBASE_CLASSPATH=$HBASE_CLASSPATH:${jar}
    done
    export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${HBASE_CLASSPATH}"
 fi
-if [ -d $HBASE_CONF_DIR ] ; then
-    HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${HBASE_CONF_DIR}"
+if [ -d $MAPR_HBASE_CONF_DIR ] ; then
+    HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${MAPR_HBASE_JAR}:${MAPR_HBASE_TEST_JAR}:${MAPR_HBASE_CONF_DIR}"
 fi
 
 export HADOOP_CLASSPATH=$HADOOP_CLASSPATH
+
+export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_LOGIN_OPTS}"
+if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
+  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
+else
+  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false"
+fi
+
 export HADOOP_OPTS=$HADOOP_OPTS
+
+# get the yarn version
+if [ -f $BASEMAPR/conf/hadoop_version ];then
+  MAPR_YARN_VERSION=`cat $BASEMAPR/conf/hadoop_version | grep yarn_version | awk -F'=' '{print $2}'`
+  HADOOP_PREFIX=$BASEMAPR/hadoop/hadoop-$MAPR_YARN_VERSION
+else
+  HADOOP_PREFIX=$HADOOP_PREFIX
+fi
 
 if [ ! -d "${HADOOP_LIBEXEC_DIR}" ]; then
   export HADOOP_LIBEXEC_DIR=$HADOOP_PREFIX/libexec;

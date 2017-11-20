@@ -699,7 +699,7 @@ public class SessionState {
    */
   private Path createRootHDFSDir(HiveConf conf) throws IOException {
     Path rootHDFSDirPath = new Path(HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIR));
-    FsPermission writableHDFSDirPermission = new FsPermission((short)00733);
+    FsPermission writableHDFSDirPermission = new FsPermission((short)00777);
     FileSystem fs = rootHDFSDirPath.getFileSystem(conf);
     if (!fs.exists(rootHDFSDirPath)) {
       Utilities.createDirsWithPermission(conf, rootHDFSDirPath, writableHDFSDirPermission, true);
