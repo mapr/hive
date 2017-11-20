@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatchCtx;
 import org.apache.hadoop.hive.ql.io.IOConstants;
@@ -41,6 +42,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
@@ -115,6 +117,15 @@ public class VectorizedColumnReaderTestBase {
       + "    optional int32 array_element;\n"
       + "  }\n"
       + "}\n"
+      + "repeated int32 list_int32_field;"
+      + "repeated int64 list_int64_field;"
+      + "repeated double list_double_field;"
+      + "repeated float list_float_field;"
+      + "repeated boolean list_boolean_field;"
+      + "repeated fixed_len_byte_array(3) list_byte_array_field;"
+      + "repeated binary list_binary_field;"
+      + "repeated binary list_decimal_field (DECIMAL(5,2));"
+      + "repeated int32 list_int32_field_for_repeat_test;"
       + "} ");
 
   protected static void removeFile() throws IOException {
@@ -214,12 +225,11 @@ public class VectorizedColumnReaderTestBase {
     return (index % NULL_FREQUENCY == 0);
   }
 
-  protected VectorizedParquetRecordReader createParquetReader(String schemaString, Configuration conf)
-    throws IOException, InterruptedException, HiveException {
+  public static VectorizedParquetRecordReader createTestParquetReader(String schemaString, Configuration conf)
+    throws IOException, HiveException {
     conf.set(PARQUET_READ_SCHEMA, schemaString);
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_VECTORIZATION_ENABLED, true);
     HiveConf.setVar(conf, HiveConf.ConfVars.PLAN, "//tmp");
-
     Job vectorJob = new Job(conf, "read vector");
     ParquetInputFormat.setInputPaths(vectorJob, file);
     ParquetInputFormat parquetInputFormat = new ParquetInputFormat(GroupReadSupport.class);
@@ -296,7 +306,7 @@ public class VectorizedColumnReaderTestBase {
     writer.close();
   }
 
-  protected void initialVectorizedRowBatchCtx(Configuration conf) throws HiveException {
+  protected static void initialVectorizedRowBatchCtx(Configuration conf) throws HiveException {
     MapWork mapWork = new MapWork();
     VectorizedRowBatchCtx rbCtx = new VectorizedRowBatchCtx();
     rbCtx.init(createStructObjectInspector(conf), new String[0]);
@@ -305,7 +315,7 @@ public class VectorizedColumnReaderTestBase {
     Utilities.setMapWork(conf, mapWork);
   }
 
-  private StructObjectInspector createStructObjectInspector(Configuration conf) {
+  private static StructObjectInspector createStructObjectInspector(Configuration conf) {
     // Create row related objects
     String columnNames = conf.get(IOConstants.COLUMNS);
     List<String> columnNamesList = DataWritableReadSupport.getColumnNames(columnNames);
@@ -323,7 +333,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message test { required int32 int32_field;}", conf);
+      createTestParquetReader("message test { required int32 int32_field;}", conf);
     VectorizedRowBatch previous = reader.createValue();
     try {
       int c = 0;
@@ -353,7 +363,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message test { required int64 int64_field;}", conf);
+      createTestParquetReader("message test { required int64 int64_field;}", conf);
     VectorizedRowBatch previous = reader.createValue();
     try {
       int c = 0;
@@ -383,7 +393,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message test { required double double_field;}", conf);
+      createTestParquetReader("message test { required double double_field;}", conf);
     VectorizedRowBatch previous = reader.createValue();
     try {
       int c = 0;
@@ -414,7 +424,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message test { required float float_field;}", conf);
+      createTestParquetReader("message test { required float float_field;}", conf);
     VectorizedRowBatch previous = reader.createValue();
     try {
       int c = 0;
@@ -445,7 +455,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message test { required boolean boolean_field;}", conf);
+      createTestParquetReader("message test { required boolean boolean_field;}", conf);
     VectorizedRowBatch previous = reader.createValue();
     try {
       int c = 0;
@@ -475,7 +485,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message test { required binary binary_field_some_null;}", conf);
+      createTestParquetReader("message test { required binary binary_field_some_null;}", conf);
     VectorizedRowBatch previous = reader.createValue();
     int c = 0;
     try {
@@ -519,7 +529,7 @@ public class VectorizedColumnReaderTestBase {
       + "  optional double b;\n"
       + "}\n"
       + "}\n";
-    VectorizedParquetRecordReader reader = createParquetReader(schema, conf);
+    VectorizedParquetRecordReader reader = createTestParquetReader(schema, conf);
     VectorizedRowBatch previous = reader.createValue();
     int c = 0;
     try {
@@ -560,7 +570,7 @@ public class VectorizedColumnReaderTestBase {
       + "  }"
       + "optional double e;\n"
       + "}\n";
-    VectorizedParquetRecordReader reader = createParquetReader(schema, conf);
+    VectorizedParquetRecordReader reader = createTestParquetReader(schema, conf);
     VectorizedRowBatch previous = reader.createValue();
     int c = 0;
     try {
@@ -602,7 +612,7 @@ public class VectorizedColumnReaderTestBase {
       + "    optional int32 c;\n"
       + "  }"
       + "}\n";
-    VectorizedParquetRecordReader reader = createParquetReader(schema, conf);
+    VectorizedParquetRecordReader reader = createTestParquetReader(schema, conf);
     VectorizedRowBatch previous = reader.createValue();
     int c = 0;
     try {
@@ -639,7 +649,7 @@ public class VectorizedColumnReaderTestBase {
       + "  optional int32 f;\n"
       + "  optional double g;\n"
       + "}\n";
-    VectorizedParquetRecordReader reader = createParquetReader(schema, conf);
+    VectorizedParquetRecordReader reader = createTestParquetReader(schema, conf);
     VectorizedRowBatch previous = reader.createValue();
     int c = 0;
     try {
@@ -681,7 +691,7 @@ public class VectorizedColumnReaderTestBase {
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader =
-      createParquetReader("message hive_schema { required value (DECIMAL(5,2));}", conf);
+      createTestParquetReader("message hive_schema { required value (DECIMAL(5,2));}", conf);
     VectorizedRowBatch previous = reader.createValue();
     try {
       int c = 0;
