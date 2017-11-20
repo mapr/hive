@@ -227,6 +227,12 @@ chmod a+x "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 }
 
+#
+# Grant write permission for group in hive logs dir
+#
+grant_write_permission_in_logs_dir() {
+  chmod -R g+w "$HIVE_LOGS"
+}
 
 #
 # Create restart file for rm/tl
@@ -507,6 +513,8 @@ init_derby_schema
 configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 
 configure_roles
+
+grant_write_permission_in_logs_dir
 
 remove_fresh_install_indicator
 
