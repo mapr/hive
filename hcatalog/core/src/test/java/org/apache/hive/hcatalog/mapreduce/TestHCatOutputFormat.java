@@ -62,6 +62,7 @@ public class TestHCatOutputFormat extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
 
     try {
       client = new HiveMetaStoreClient(hiveConf);
@@ -138,6 +139,7 @@ public class TestHCatOutputFormat extends TestCase {
 
   public void testSetOutput() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Job job = new Job(conf, "test outputformat");
 
     Map<String, String> partitionValues = new HashMap<String, String>();

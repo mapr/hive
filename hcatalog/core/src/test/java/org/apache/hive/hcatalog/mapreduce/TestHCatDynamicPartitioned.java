@@ -211,6 +211,7 @@ public class TestHCatDynamicPartitioned extends HCatMapReduceTest {
 // renaming test to make test framework skip it
   public void _testHCatDynamicPartitionMaxPartitions() throws Exception {
     HiveConf hc = new HiveConf(this.getClass());
+    hc.set("fs.default.name", "file:///");
 
     int maxParts = hiveConf.getIntVar(HiveConf.ConfVars.DYNAMICPARTITIONMAXPARTS);
     LOG.info("Max partitions allowed = {}", maxParts);

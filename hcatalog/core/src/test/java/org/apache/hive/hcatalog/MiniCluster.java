@@ -60,6 +60,7 @@ public class MiniCluster {
       final int dataNodes = 1;     // There will be 4 data nodes
       final int taskTrackers = 1;  // There will be 4 task tracker nodes
       Configuration config = new Configuration();
+      config.set("fs.default.name", "file:///");
 
       // Builds and starts the mini dfs and mapreduce clusters
       if(System.getProperty("hadoop.log.dir") == null) {

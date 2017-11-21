@@ -118,6 +118,7 @@ public class TestHCatRecordSerDe extends TestCase {
   public void testRW() throws Exception {
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
 
     for (Entry<Properties, HCatRecord> e : getData().entrySet()) {
       Properties tblProps = e.getKey();

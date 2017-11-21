@@ -139,6 +139,7 @@ public class TestJsonSerDe extends TestCase {
   public void testRW() throws Exception {
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
 
     for (Pair<Properties, HCatRecord> e : getData()) {
       Properties tblProps = e.first;
@@ -179,6 +180,7 @@ public class TestJsonSerDe extends TestCase {
      */
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
 
     for (Pair<Properties, HCatRecord> e : getData()) {
       Properties tblProps = e.first;
@@ -263,6 +265,7 @@ public class TestJsonSerDe extends TestCase {
    */
   public void testLooseJsonReadability() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Properties props = new Properties();
 
     props.put(serdeConstants.LIST_COLUMNS, "s,k");
@@ -290,6 +293,7 @@ public class TestJsonSerDe extends TestCase {
 
   public void testUpperCaseKey() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Properties props = new Properties();
 
     props.put(serdeConstants.LIST_COLUMNS, "empid,name");
@@ -319,6 +323,7 @@ public class TestJsonSerDe extends TestCase {
 
   public void testMapValues() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Properties props = new Properties();
 
     props.put(serdeConstants.LIST_COLUMNS, "a,b");
