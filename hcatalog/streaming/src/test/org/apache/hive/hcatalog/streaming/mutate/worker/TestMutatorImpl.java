@@ -61,6 +61,7 @@ public class TestMutatorImpl {
   private ArgumentCaptor<AcidOutputFormat.Options> captureOptions;
 
   private final HiveConf configuration = new HiveConf();
+  {configuration.set("fs.default.name", "file:///");}
 
   private Mutator mutator;
 
