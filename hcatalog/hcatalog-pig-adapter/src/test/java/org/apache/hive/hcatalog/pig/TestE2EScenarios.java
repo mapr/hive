@@ -84,6 +84,7 @@ public class TestE2EScenarios {
     }
 
     HiveConf hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
@@ -202,6 +203,7 @@ public class TestE2EScenarios {
 
   private TaskAttemptContext createTaskAttemptContext(Configuration tconf) {
     Configuration conf = (tconf == null) ? (new Configuration()) : tconf;
+    conf.set("fs.default.name", "file:///");
     TaskAttemptID taskId = HCatMapRedUtil.createTaskAttemptID(new JobID("200908190029", 1), false, 1, 1);
     conf.setInt("mapred.task.partition", taskId.getId());
     conf.set("mapred.task.id", taskId.toString());

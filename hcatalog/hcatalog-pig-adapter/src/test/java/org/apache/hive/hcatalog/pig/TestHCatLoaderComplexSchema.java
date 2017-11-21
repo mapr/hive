@@ -121,6 +121,7 @@ public class TestHCatLoaderComplexSchema {
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     HiveConf hiveConf = new HiveConf(TestHCatLoaderComplexSchema.class);
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
