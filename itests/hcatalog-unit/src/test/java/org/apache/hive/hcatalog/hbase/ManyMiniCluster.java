@@ -32,7 +32,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class ManyMiniCluster {
 
   //MR stuff
   private boolean miniMRClusterEnabled;
-  private MiniMRCluster mrCluster;
+  private MapRMiniDFSCluster mrCluster;
   private int numTaskTrackers;
   private JobConf jobConf;
 
@@ -180,7 +180,9 @@ public class ManyMiniCluster {
    * @return Configuration of Hive Metastore, this is a standalone not a daemon
    */
   public HiveConf getHiveConf() {
-    return new HiveConf(hiveConf);
+    HiveConf conf = new HiveConf(hiveConf);
+    conf.set("fs.default.name", "file:///");
+    return conf;
   }
 
   /**
@@ -209,21 +211,14 @@ public class ManyMiniCluster {
       if (jobConf == null)
         jobConf = new JobConf();
 
+      jobConf.set("fs.default.name", "file:///");
       jobConf.setInt("mapred.submit.replication", 1);
       jobConf.set("yarn.scheduler.capacity.root.queues", "default");
       jobConf.set("yarn.scheduler.capacity.root.default.capacity", "100");
       //conf.set("hadoop.job.history.location",new File(workDir).getAbsolutePath()+"/history");
       System.setProperty("hadoop.log.dir", new File(workDir, "/logs").getAbsolutePath());
 
-      mrCluster = new MiniMRCluster(jobTrackerPort,
-        taskTrackerPort,
-        numTaskTrackers,
-        getFileSystem().getUri().toString(),
-        numTaskTrackers,
-        null,
-        null,
-        null,
-        jobConf);
+      mrCluster = new MapRMiniDFSCluster(jobConf);
 
       jobConf = mrCluster.createJobConf();
     } catch (IOException e) {

@@ -69,6 +69,7 @@ public class TestPigHBaseStorageHandler extends SkeletonHBaseTest {
   public void Initialize() throws Exception {
 
     hcatConf = new HiveConf(this.getClass());
+    hcatConf.set("fs.default.name", "file:///");
     //hcatConf.set(ConfVars.SEMANTIC_ANALYZER_HOOK.varname,
     //		HCatSemanticAnalyzer.class.getName());
     URI fsuri = getFileSystem().getUri();
@@ -227,6 +228,7 @@ public class TestPigHBaseStorageHandler extends SkeletonHBaseTest {
     populateHBaseTable(hbaseTableName);
 
     Configuration conf = new Configuration(getHbaseConf());
+    conf.set("fs.default.name", "file:///");
     HTable table = new HTable(conf, hbaseTableName);
     Scan scan = new Scan();
     scan.addFamily(Bytes.toBytes("testFamily"));
@@ -317,6 +319,7 @@ public class TestPigHBaseStorageHandler extends SkeletonHBaseTest {
 
     //Query the hbase table and check the key is valid and only 5  are present
     Configuration conf = new Configuration(getHbaseConf());
+    conf.set("fs.default.name", "file:///");
     HTable table = new HTable(conf, hbaseTableName);
     Scan scan = new Scan();
     scan.addFamily(Bytes.toBytes("testFamily"));

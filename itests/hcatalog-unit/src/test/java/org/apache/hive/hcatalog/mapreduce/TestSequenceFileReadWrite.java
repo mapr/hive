@@ -69,9 +69,11 @@ public class TestSequenceFileReadWrite {
     dataDir = new File(System.getProperty("java.io.tmpdir") + File.separator +
         TestSequenceFileReadWrite.class.getCanonicalName() + "-" + System.currentTimeMillis());
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     warehouseDir = HCatUtil.makePathASafeFileName(dataDir + File.separator + "warehouse");
     inputFileName = HCatUtil.makePathASafeFileName(dataDir + File.separator + "input.data");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
@@ -167,6 +169,7 @@ public class TestSequenceFileReadWrite {
     assertTrue(retCode1 == 0);
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(HCatConstants.HCAT_KEY_HIVE_CONF,
         HCatUtil.serialize(hiveConf.getAllProperties()));
     Job job = new Job(conf, "Write-hcat-seq-table");
@@ -213,6 +216,7 @@ public class TestSequenceFileReadWrite {
     assertTrue(retCode1 == 0);
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(HCatConstants.HCAT_KEY_HIVE_CONF,
         HCatUtil.serialize(hiveConf.getAllProperties()));
     Job job = new Job(conf, "Write-hcat-text-table");
