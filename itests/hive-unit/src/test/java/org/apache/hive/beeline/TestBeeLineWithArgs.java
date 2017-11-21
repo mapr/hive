@@ -89,6 +89,7 @@ public class TestBeeLineWithArgs {
   @BeforeClass
   public static void preTests() throws Exception {
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.HIVE_LOCK_MANAGER,
         "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     hiveConf.setBoolVar(HiveConf.ConfVars.HIVEOPTIMIZEMETADATAQUERIES, false);
@@ -119,6 +120,7 @@ public class TestBeeLineWithArgs {
     stmt.execute("set hive.support.concurrency = false");
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     String dataFileDir = conf.get("test.data.files").replace('\\', '/')
         .replace("c:", "");
     Path dataFilePath = new Path(dataFileDir, "kv1.txt");

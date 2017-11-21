@@ -53,6 +53,7 @@ public class TestMetastoreVersion extends TestCase {
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
     System.setProperty(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL.toString(), "true");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     System.setProperty("hive.support.concurrency", "false");
     System.setProperty("hive.metastore.event.listeners",
         DummyListener.class.getName());
@@ -79,6 +80,7 @@ public class TestMetastoreVersion extends TestCase {
   public void testDefaults() {
     System.clearProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString());
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     assertFalse(hiveConf.getBoolVar(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION));
     assertTrue(hiveConf.getBoolVar(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL));
   }
@@ -90,6 +92,7 @@ public class TestMetastoreVersion extends TestCase {
   public void testVersionRestriction () throws Exception {
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "true");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     assertTrue(hiveConf.getBoolVar(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION));
     assertFalse(hiveConf.getBoolVar(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL));
 
@@ -116,6 +119,7 @@ public class TestMetastoreVersion extends TestCase {
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION_RECORD_VERSION.toString(), "true");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);
     driver.run("show tables");
@@ -133,6 +137,7 @@ public class TestMetastoreVersion extends TestCase {
   public void testVersionMatching () throws Exception {
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);
     driver.run("show tables");
@@ -152,6 +157,7 @@ public class TestMetastoreVersion extends TestCase {
   public void testVersionMisMatch () throws Exception {
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);
     driver.run("show tables");
@@ -159,6 +165,7 @@ public class TestMetastoreVersion extends TestCase {
     ObjectStore.setSchemaVerified(false);
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "true");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     setVersion(hiveConf, "fooVersion");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);
@@ -174,12 +181,14 @@ public class TestMetastoreVersion extends TestCase {
   public void testVersionCompatibility () throws Exception {
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);
     driver.run("show tables");
 
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "true");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     setVersion(hiveConf, "3.9000.0");
     SessionState.start(new CliSessionState(hiveConf));
     driver = new Driver(hiveConf);

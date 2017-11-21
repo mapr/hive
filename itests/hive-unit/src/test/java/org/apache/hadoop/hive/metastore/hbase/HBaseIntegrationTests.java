@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.security.SessionStateConfigUserAuthenticator;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactoryForTest;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.maprminicluster.MapRHBaseTestingUtility;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -42,7 +43,7 @@ public class HBaseIntegrationTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(HBaseIntegrationTests.class.getName());
 
-  protected static HBaseTestingUtility utility;
+  protected static MapRHBaseTestingUtility utility;
   protected static HBaseAdmin admin;
   protected static Map<String, String> emptyParameters = new HashMap<>();
   protected static HiveConf conf;
@@ -59,10 +60,12 @@ public class HBaseIntegrationTests {
       LOG.info("Testing with Tephra");
     }
     Configuration hbaseConf = HBaseConfiguration.create();
+    hbaseConf.set("fs.default.name", "file:///");
     hbaseConf.setInt("hbase.master.info.port", -1);
-    utility = new HBaseTestingUtility(hbaseConf);
+    utility = new MapRHBaseTestingUtility(hbaseConf);
     utility.startMiniCluster();
     conf = new HiveConf(utility.getConfiguration(), HBaseIntegrationTests.class);
+    conf.set("fs.default.name", "file:///");
     admin = utility.getHBaseAdmin();
     HBaseStoreTestUtil.initHBaseMetastore(admin, null);
   }
@@ -81,6 +84,7 @@ public class HBaseIntegrationTests {
     // hbase connection, then get a new config file and populate it as desired.
     HBaseReadWrite.setConf(conf);
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
     conf.setVar(HiveConf.ConfVars.METASTORE_RAW_STORE_IMPL,
         "org.apache.hadoop.hive.metastore.hbase.HBaseStore");

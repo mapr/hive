@@ -157,7 +157,9 @@ public class ColumnarStorageBench {
 
     try {
       lazySimpleSerDe = new LazySimpleSerDe();
-      SerDeUtils.initializeSerDe(lazySimpleSerDe, new Configuration(), recordProperties, null);
+      Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
+      SerDeUtils.initializeSerDe(lazySimpleSerDe, conf, recordProperties, null);
       oi = lazySimpleSerDe.getObjectInspector();
 
       for (int i = 0; i < NUMBER_OF_ROWS_TO_TEST; i++) {
@@ -275,6 +277,7 @@ public class ColumnarStorageBench {
       inputFormat = inputFormatImpl;
 
       Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
       SerDeUtils.initializeSerDe(serDe, conf, recordProperties, null);
     }
 
@@ -325,6 +328,7 @@ public class ColumnarStorageBench {
 
     public RecordReader getVectorizedRecordReader(Path inputPath) throws Exception {
       Configuration conf = new Configuration();
+      conf.set("fs.default.name", "file:///");
       conf.set(IOConstants.COLUMNS, getColumnNames(DEFAULT_COLUMN_TYPES));
       conf.set(IOConstants.COLUMNS_TYPES, DEFAULT_COLUMN_TYPES);
       // TODO: VectorizedParquetRecordReader doesn't support map, array now, the value of
@@ -397,8 +401,9 @@ public class ColumnarStorageBench {
     for (int i=0; i < rows.length; i++) {
       recordWritable[i] = storageFormatTest.serialize(rows[i], oi);
     }
-
-    fs = FileSystem.getLocal(new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    fs = FileSystem.getLocal(conf);
 
     writeFile = createTempFile();
     writePath = new Path(writeFile.getPath());

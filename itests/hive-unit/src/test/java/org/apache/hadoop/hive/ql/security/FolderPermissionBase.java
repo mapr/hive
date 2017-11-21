@@ -35,10 +35,14 @@ import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.shims.HadoopShims.MiniDFSShim;
 import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hive.maprminicluster.MapRMiniDFSShim;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
+
+import java.io.File;
 
 /**
  * This test the flag 'hive.warehouse.subdir.inherit.perms'.
@@ -52,6 +56,7 @@ public abstract class FolderPermissionBase {
 
   protected static Path warehouseDir;
   protected static Path baseDfsDir;
+  protected static Path workDir;
 
   protected static final PathFilter hiddenFileFilter = new PathFilter(){
     public boolean accept(Path p){
@@ -76,9 +81,10 @@ public abstract class FolderPermissionBase {
 
 
   public static void baseSetup() throws Exception {
-    MiniDFSShim dfs = ShimLoader.getHadoopShims().getMiniDfs(conf, 4, true, null);
+    MapRMiniDFSShim dfs = new MapRMiniDFSShim(new MapRMiniDFSCluster(conf));
     fs = dfs.getFileSystem();
-    baseDfsDir =  new Path(new Path(fs.getUri()), "/base");
+    workDir = fs.getWorkingDirectory();
+    baseDfsDir =  new Path(new Path(fs.getUri()), workDir + File.separator + "/base");
     fs.mkdirs(baseDfsDir);
     warehouseDir = new Path(baseDfsDir, "warehouse");
     fs.mkdirs(warehouseDir);
@@ -513,7 +519,7 @@ public abstract class FolderPermissionBase {
   @Test
   public void testLoad() throws Exception {
     String tableName = "load";
-    String location = "/hdfsPath";
+    String location = workDir + "/hdfsPath";
     fs.copyFromLocalFile(dataFilePath, new Path(location));
 
     //case 1: load data
@@ -616,7 +622,7 @@ public abstract class FolderPermissionBase {
     Assert.assertEquals(0,ret.getResponseCode());
   }
 
-  @Test
+  @Test@Ignore
   public void testExim() throws Exception {
 
     //export the table to external file.

@@ -102,6 +102,7 @@ public abstract class TestHiveMetaStore extends TestCase {
   @Override
   protected void setUp() throws Exception {
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     warehouse = new Warehouse(hiveConf);
 
     // set some values to use for getting conf. vars
@@ -3255,6 +3256,7 @@ public abstract class TestHiveMetaStore extends TestCase {
   public void testRetriableClientWithConnLifetime() throws Exception {
 
     HiveConf conf = new HiveConf(hiveConf);
+    conf.set("fs.default.name", "file:///");
     conf.setLong(HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_LIFETIME.name(), 60);
     long timeout = 65 * 1000; // Lets use a timeout more than the socket lifetime to simulate a reconnect
 

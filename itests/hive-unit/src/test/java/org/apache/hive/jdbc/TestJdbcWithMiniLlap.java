@@ -104,6 +104,7 @@ public class TestJdbcWithMiniLlap {
     }
 
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
 
     conf.addResource(new URL("file://" + new File(confDir).toURI().getPath()

@@ -57,6 +57,7 @@ public class ThriftCliServiceMessageSizeTest {
     port = MetaStoreUtils.findFreePort();
     hiveServer2 = new HiveServer2();
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
   }
 
   /**

@@ -42,6 +42,7 @@ public class TestRemoteHiveMetaStoreIpAddress extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
 
     if (isServerStarted) {
       assertNotNull("Unable to connect to the MetaStore server", msc);

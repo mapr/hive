@@ -50,6 +50,7 @@ public class TestMarkPartition extends TestCase{
     System.setProperty("hive.metastore.event.clean.freq", "2");
     System.setProperty("hive.metastore.event.expiry.duration", "5");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");

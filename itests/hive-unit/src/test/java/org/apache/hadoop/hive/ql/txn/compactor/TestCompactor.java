@@ -109,6 +109,7 @@ public class TestCompactor {
     }
 
     HiveConf hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.PREEXECHOOKS, "");
     hiveConf.setVar(HiveConf.ConfVars.POSTEXECHOOKS, "");
     hiveConf.setVar(HiveConf.ConfVars.METASTOREWAREHOUSE, TEST_WAREHOUSE_DIR);
@@ -1337,6 +1338,7 @@ public class TestCompactor {
     OrcInputFormat aif = new OrcInputFormat();
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS, columnNamesProperty);
     conf.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES, columnTypesProperty);
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN, true);

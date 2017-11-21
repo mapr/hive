@@ -28,6 +28,8 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.hive.shims.HadoopShims.MiniDFSShim;
 import org.apache.hadoop.hive.shims.Utils;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
+import org.apache.hive.maprminicluster.MapRMiniDFSShim;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,16 +48,17 @@ public class TestStorageBasedMetastoreAuthorizationDrops extends StorageBasedMet
     String currentUserName = Utils.getUGI().getShortUserName();
     conf.set("hadoop.proxyuser." + currentUserName + ".groups", "*");
     conf.set("hadoop.proxyuser." + currentUserName + ".hosts", "*");
-    dfs = ShimLoader.getHadoopShims().getMiniDfs(conf, 4, true, null);
+    dfs = new MapRMiniDFSShim(new MapRMiniDFSCluster(conf));
     FileSystem fs = dfs.getFileSystem();
+    Path workDir = fs.getWorkingDirectory();
 
-    Path warehouseDir = new Path(new Path(fs.getUri()), "/warehouse");
+    Path warehouseDir = new Path(new Path(fs.getUri()), workDir + "/warehouse");
     fs.mkdirs(warehouseDir);
     conf.setVar(HiveConf.ConfVars.METASTOREWAREHOUSE, warehouseDir.toString());
     conf.setBoolVar(HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS, true);
 
     // Set up scratch directory
-    Path scratchDir = new Path(new Path(fs.getUri()), "/scratchdir");
+    Path scratchDir = new Path(new Path(fs.getUri()), workDir + "/scratchdir");
     conf.setVar(HiveConf.ConfVars.SCRATCHDIR, scratchDir.toString());
 
     return conf;

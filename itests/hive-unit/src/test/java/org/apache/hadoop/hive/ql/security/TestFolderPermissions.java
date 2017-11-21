@@ -30,6 +30,7 @@ public class TestFolderPermissions extends FolderPermissionBase {
   @BeforeClass
   public static void setup() throws Exception {
     conf = new HiveConf(TestFolderPermissions.class);
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVEMAPREDMODE, "nonstrict");
     baseSetup();
   }

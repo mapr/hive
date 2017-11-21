@@ -70,6 +70,7 @@ public class TestZooKeeperTokenStore extends TestCase {
 
   private Configuration createConf(String zkPath) {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(HiveDelegationTokenManager.DELEGATION_TOKEN_STORE_ZK_CONNECT_STR, "localhost:"
         + this.zkPort);
     conf.set(HiveDelegationTokenManager.DELEGATION_TOKEN_STORE_ZK_ZNODE, zkPath);

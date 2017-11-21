@@ -507,10 +507,12 @@ public class QTestUtil {
 
   private void startMiniHBaseCluster() throws Exception {
     Configuration hbaseConf = HBaseConfiguration.create();
+    hbaseConf.set("fs.default.name", "file:///");
     hbaseConf.setInt("hbase.master.info.port", -1);
     utility = new HBaseTestingUtility(hbaseConf);
     utility.startMiniCluster();
     conf = new HiveConf(utility.getConfiguration(), Driver.class);
+    conf.set("fs.default.name", "file:///");
     HBaseAdmin admin = utility.getHBaseAdmin();
     // Need to use reflection here to make compilation pass since HBaseIntegrationTests
     // is not compiled in hadoop-1. All HBaseMetastore tests run under hadoop-2, so this
@@ -557,7 +559,9 @@ public class QTestUtil {
       System.out.println("Setting hive-site: "+HiveConf.getHiveSiteLocation());
     }
 
-    queryState = new QueryState(new HiveConf(Driver.class));
+    HiveConf hiveConf = new HiveConf(Driver.class);
+    hiveConf.set("fs.default.name", "file:///");
+    queryState = new QueryState(hiveConf);
     if (useHBaseMetastore) {
       startMiniHBaseCluster();
     } else {
@@ -978,6 +982,7 @@ public class QTestUtil {
     // allocate and initialize a new conf since a test can
     // modify conf by using 'set' commands
     conf = new HiveConf(Driver.class);
+    conf.set("fs.default.name", "file:///");
     initConf();
     initConfFromSetup();
 

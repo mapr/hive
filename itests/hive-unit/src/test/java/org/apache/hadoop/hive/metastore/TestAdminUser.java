@@ -32,6 +32,7 @@ public class TestAdminUser extends TestCase{
 
  public void testCreateAdminNAddUser() throws IOException, Throwable {
    HiveConf conf = new HiveConf();
+   conf.set("fs.default.name", "file:///");
    conf.setVar(ConfVars.USERS_IN_ADMIN_ROLE, "adminuser");
    conf.setVar(ConfVars.HIVE_AUTHORIZATION_MANAGER,SQLStdHiveAuthorizerFactory.class.getName());
    RawStore rawStore = new HMSHandler("testcreateroot", conf).getMS();

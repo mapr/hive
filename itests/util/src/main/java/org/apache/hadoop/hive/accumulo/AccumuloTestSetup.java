@@ -63,6 +63,7 @@ public class AccumuloTestSetup  {
       cfg.setNumTservers(1);
 
       miniCluster = new MiniAccumuloCluster(cfg);
+      miniCluster.useMiniDFS(false);
 
       miniCluster.start();
 

@@ -55,6 +55,7 @@ public class TestHBaseMetastoreMetrics extends HBaseIntegrationTests {
   public void before() throws IOException {
     HBaseReadWrite.setConf(conf);
     conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.METASTORE_RAW_STORE_IMPL,
       "org.apache.hadoop.hive.metastore.hbase.HBaseStore");
     conf.setBoolVar(HiveConf.ConfVars.METASTORE_FASTPATH, true);

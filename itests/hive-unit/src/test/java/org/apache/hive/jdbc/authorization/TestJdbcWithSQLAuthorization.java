@@ -47,6 +47,7 @@ public class TestJdbcWithSQLAuthorization {
   public static void beforeTest() throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(ConfVars.HIVE_AUTHORIZATION_MANAGER, SQLStdHiveAuthorizerFactory.class.getName());
     conf.setVar(ConfVars.HIVE_AUTHENTICATOR_MANAGER, SessionStateUserAuthenticator.class.getName());
     conf.setBoolVar(ConfVars.HIVE_AUTHORIZATION_ENABLED, true);
