@@ -215,6 +215,7 @@ public class TestDbNotificationListener {
   @BeforeClass
   public static void connectToMetastore() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setVar(HiveConf.ConfVars.METASTORE_TRANSACTIONAL_EVENT_LISTENERS,
         DbNotificationListener.class.getName());
     conf.setVar(HiveConf.ConfVars.METASTORE_EVENT_LISTENERS, MockMetaStoreEventListener.class.getName());

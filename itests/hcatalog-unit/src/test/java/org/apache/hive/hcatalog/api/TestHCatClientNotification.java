@@ -65,7 +65,9 @@ public class TestHCatClientNotification {
 
   @BeforeClass
   public static void setupClient() throws Exception {
-    HiveConf conf = new HiveConf(); conf.setVar(HiveConf.ConfVars.METASTORE_EVENT_LISTENERS,
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    conf.setVar(HiveConf.ConfVars.METASTORE_EVENT_LISTENERS,
         DbNotificationListener.class.getName());
     hCatClient = HCatClient.create(conf);
     md = MessageFactory.getInstance().getDeserializer();
