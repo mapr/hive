@@ -55,6 +55,7 @@ import org.apache.pig.PigServer;
 import org.apache.pig.data.Tuple;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -80,7 +81,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-@RunWith(Parameterized.class)
+@Ignore@RunWith(Parameterized.class)
 public class TestHCatLoaderEncryption {
   private static final AtomicInteger salt = new AtomicInteger(new Random().nextInt());
   private static final Logger LOG = LoggerFactory.getLogger(TestHCatLoaderEncryption.class);
