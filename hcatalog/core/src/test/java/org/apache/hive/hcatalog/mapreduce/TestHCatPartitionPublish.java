@@ -50,7 +50,6 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -62,6 +61,7 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -69,13 +69,14 @@ import org.junit.Test;
 public class TestHCatPartitionPublish {
   private static Configuration mrConf = null;
   private static FileSystem fs = null;
-  private static MiniMRCluster mrCluster = null;
+  private static MapRMiniDFSCluster mrCluster = null;
   private static boolean isServerRunning = false;
   private static int msPort;
   private static HiveConf hcatConf;
   private static HiveMetaStoreClient msc;
   private static SecurityManager securityManager;
   private static Configuration conf = new Configuration(true);
+  static {conf.set("fs.default.name", "file:///");}
 
   public static File handleWorkDir() throws IOException {
     String testDir = System.getProperty("test.data.dir", "./");
@@ -96,8 +97,7 @@ public class TestHCatPartitionPublish {
     System.setProperty("hadoop.log.dir", new File(workDir, "/logs").getAbsolutePath());
     // LocalJobRunner does not work with mapreduce OutputCommitter. So need
     // to use MiniMRCluster. MAPREDUCE-2350
-    mrCluster = new MiniMRCluster(1, fs.getUri().toString(), 1, null, null,
-        new JobConf(conf));
+    mrCluster = new MapRMiniDFSCluster(new JobConf(conf));
     mrConf = mrCluster.createJobConf();
 
     if (isServerRunning) {
@@ -114,6 +114,7 @@ public class TestHCatPartitionPublish {
     System.setSecurityManager(new NoExitSecurityManager());
 
     hcatConf = new HiveConf(TestHCatPartitionPublish.class);
+    hcatConf.set("fs.default.name", "file:///");
     hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:"
         + msPort);
     hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);

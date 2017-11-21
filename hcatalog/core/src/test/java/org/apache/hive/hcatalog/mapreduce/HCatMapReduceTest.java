@@ -139,9 +139,12 @@ public abstract class HCatMapReduceTest extends HCatBaseTest {
   @BeforeClass
   public static void setUpOneTime() throws Exception {
     fs = new LocalFileSystem();
-    fs.initialize(fs.getWorkingDirectory().toUri(), new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    fs.initialize(fs.getWorkingDirectory().toUri(), conf);
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setInt(HCatConstants.HCAT_HIVE_CLIENT_EXPIRY_TIME, 0);
     // Hack to initialize cache with 0 expiry time causing it to return a new hive client every time
     // Otherwise the cache doesn't play well with the second test method with the client gets closed() in the
@@ -298,6 +301,7 @@ public abstract class HCatMapReduceTest extends HCatBaseTest {
     MapCreate.writeCount = 0;
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Job job = new Job(conf, "hcat mapreduce write test");
     job.setJarByClass(this.getClass());
     job.setMapperClass(HCatMapReduceTest.MapCreate.class);
@@ -381,6 +385,7 @@ public abstract class HCatMapReduceTest extends HCatBaseTest {
     readRecords.clear();
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,"true");
     Job job = new Job(conf, "hcat mapreduce read test");
     job.setJarByClass(this.getClass());
@@ -412,6 +417,7 @@ public abstract class HCatMapReduceTest extends HCatBaseTest {
 
   protected HCatSchema getTableSchema() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Job job = new Job(conf, "hcat mapreduce read schema test");
     job.setJarByClass(this.getClass());
 

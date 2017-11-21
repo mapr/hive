@@ -60,6 +60,12 @@ public class HCatCli {
 
   @SuppressWarnings("static-access")
   public static void main(String[] args) {
+    main(args, false);
+  }
+
+
+  @SuppressWarnings("static-access")
+  public static void main(String[] args, boolean isLocalFs) {
 
     try {
       LogUtils.initHiveLog4j();
@@ -68,7 +74,11 @@ public class HCatCli {
     }
     LOG = LoggerFactory.getLogger(HCatCli.class);
 
-    CliSessionState ss = new CliSessionState(new HiveConf(SessionState.class));
+    HiveConf conf = new HiveConf(SessionState.class);
+    if(isLocalFs){
+      conf.set("fs.default.name", "file:///");
+    }
+    CliSessionState ss = new CliSessionState(conf);
     ss.in = System.in;
     try {
       ss.out = new PrintStream(System.out, true, "UTF-8");
@@ -77,7 +87,7 @@ public class HCatCli {
       System.exit(1);
     }
 
-    HiveConf conf = ss.getConf();
+    conf = ss.getConf();
 
     HiveConf.setVar(conf, ConfVars.SEMANTIC_ANALYZER_HOOK, HCatSemanticAnalyzer.class.getName());
     String engine = HiveConf.getVar(conf, ConfVars.HIVE_EXECUTION_ENGINE);

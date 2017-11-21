@@ -53,6 +53,7 @@ public class TestHCatInputFormatMethods extends HCatBaseTest {
   public void testGetPartitionAndDataColumns() throws Exception {
 
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     Job myJob = new Job(conf, "hcatTest");
 
     HCatInputFormat.setInput(myJob, "default", "testHCIFMethods");

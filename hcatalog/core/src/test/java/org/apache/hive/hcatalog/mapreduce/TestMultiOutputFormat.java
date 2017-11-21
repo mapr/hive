@@ -53,6 +53,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hive.hcatalog.mapreduce.MultiOutputFormat.JobConfigurer;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -66,12 +67,13 @@ public class TestMultiOutputFormat {
   private static File workDir;
   private static JobConf mrConf = null;
   private static FileSystem fs = null;
-  private static MiniMRCluster mrCluster = null;
+  private static MapRMiniDFSCluster mrCluster = null;
 
   @BeforeClass
   public static void setup() throws IOException {
     createWorkDir();
     Configuration conf = new Configuration(true);
+    conf.set("fs.default.name", "file:///");
     conf.set("yarn.scheduler.capacity.root.queues", "default");
     conf.set("yarn.scheduler.capacity.root.default.capacity", "100");
 
@@ -80,7 +82,7 @@ public class TestMultiOutputFormat {
     // LocalJobRunner does not work with mapreduce OutputCommitter. So need
     // to use MiniMRCluster. MAPREDUCE-2350
     mrConf = new JobConf(conf);
-    mrCluster = new MiniMRCluster(1, fs.getUri().toString(), 1, null, null, mrConf);
+    mrCluster = new MapRMiniDFSCluster(mrConf);
   }
 
   private static void createWorkDir() throws IOException {

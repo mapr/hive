@@ -41,6 +41,7 @@ public class TestUseDatabase extends TestCase {
   protected void setUp() throws Exception {
 
     HiveConf hcatConf = new HiveConf(this.getClass());
+    hcatConf.set("fs.default.name", "file:///");
     hcatConf.set(ConfVars.PREEXECHOOKS.varname, "");
     hcatConf.set(ConfVars.POSTEXECHOOKS.varname, "");
     hcatConf.set(ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
