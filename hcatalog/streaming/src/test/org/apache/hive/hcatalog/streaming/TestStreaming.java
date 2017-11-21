@@ -188,6 +188,7 @@ public class TestStreaming {
 
 
     conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
     conf.set("fs.raw.impl", RawFileSystem.class.getName());
     conf.set("hive.enforce.bucketing", "true");
     conf
@@ -1364,7 +1365,9 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    FileDump.main(conf, new String[]{dbLocation});
     System.err.flush();
     System.setErr(origErr);
 
@@ -1393,7 +1396,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(conf, new String[]{dbLocation});
     System.out.flush();
     System.err.flush();
     System.setErr(origErr);
@@ -1454,7 +1457,9 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    FileDump.main(conf, new String[]{dbLocation});
     System.err.flush();
     System.setErr(origErr);
 
@@ -1468,7 +1473,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation, "--recover", "--skip-dump"});
+    FileDump.main(conf, new String[]{dbLocation, "--recover", "--skip-dump"});
     System.err.flush();
     System.setErr(origErr);
 
@@ -1486,7 +1491,7 @@ public class TestStreaming {
 
     // replace stdout and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(conf, new String[]{dbLocation});
     System.err.flush();
     System.setErr(origErr);
 
@@ -1593,7 +1598,9 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    FileDump.main(conf, new String[]{dbLocation});
     System.err.flush();
     System.setErr(origErr);
 
@@ -1611,7 +1618,7 @@ public class TestStreaming {
 
     // replace stderr and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation, "--recover", "--skip-dump"});
+    FileDump.main(conf, new String[]{dbLocation, "--recover", "--skip-dump"});
     System.err.flush();
     System.setErr(origErr);
 
@@ -1637,7 +1644,7 @@ public class TestStreaming {
 
     // replace stdout and run command
     System.setErr(new PrintStream(myErr));
-    FileDump.main(new String[]{dbLocation});
+    FileDump.main(conf, new String[]{dbLocation});
     System.err.flush();
     System.setErr(origErr);
 
