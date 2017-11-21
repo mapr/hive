@@ -65,6 +65,7 @@ public class TestAuthorizationPreEventListener extends TestCase {
     MetaStoreUtils.startMetaStore(port, ShimLoader.getHadoopThriftAuthBridge());
 
     clientHiveConf = new HiveConf(this.getClass());
+    clientHiveConf.set("fs.default.name", "file:///");
 
     clientHiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + port);
     clientHiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);

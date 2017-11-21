@@ -26,7 +26,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -36,6 +35,7 @@ import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 
 /**
  * Tests DDL with remote metastore service and second namenode (HIVE-6374)
@@ -55,11 +55,11 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
   private static final String Index1Name = "index1_table1_nondefault_nn";
   private static final String Index2Name = "index2_table1_nondefault_nn";
   private static final String tmpdir = System.getProperty("test.tmp.dir");
-  private static final String tmpdirFs2 = "/" + TestDDLWithRemoteMetastoreSecondNamenode.class.getName();
+  private static final String tmpdirFs2 = tmpdir + "/" + TestDDLWithRemoteMetastoreSecondNamenode.class.getName();
   private static final Path tmppath = new Path(tmpdir);
   private static final Path tmppathFs2 = new Path(tmpdirFs2);
   private static String fs2Uri;
-  private static MiniDFSCluster miniDfs = null;
+  private static MapRMiniDFSCluster miniDfs = null;
   private static Hive db;
   private static FileSystem fs, fs2;
   private static HiveConf jobConf;
@@ -76,6 +76,7 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
     tests = new JUnit4TestAdapter(this.getClass()).countTestCases();
     try {
       conf = new HiveConf(ExecDriver.class);
+      conf.set("fs.default.name", "file:///");
       SessionState.start(conf);
 
       // Test with remote metastore service
@@ -89,7 +90,10 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
       // Initialize second mocked filesystem (implement only necessary stuff)
       // Physical files are resides in local file system in the similar location
       jobConf = new HiveConf(conf);
-      miniDfs = new MiniDFSCluster(new Configuration(), 1, true, null);
+      jobConf.set("fs.default.name", "file:///");
+      Configuration configuration = new Configuration();
+      configuration.set("fs.default.name", "file:///");
+      miniDfs = new MapRMiniDFSCluster(configuration);
       fs2 = miniDfs.getFileSystem();
       try {
         fs2.delete(tmppathFs2, true);
@@ -189,11 +193,11 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
     }
     else if (new Path(location).toUri().getScheme()!= null) {
       assertEquals("Partition should be located in the first filesystem",
-              fs.makeQualified(new Path(location)).toString(), locationActual);
+              normalize(fs.makeQualified(new Path(location)).toString()), normalize(locationActual));
     }
     else {
       assertEquals("Partition should be located in the second filesystem",
-              fs2.makeQualified(new Path(location)).toString(), locationActual);
+              normalize(fs2.makeQualified(new Path(location)).toString()), normalize(locationActual));
     }
   }
 
@@ -213,7 +217,7 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
     String location = table.getTTable().getSd().getLocation();
     if (tableLocation != null) {
       assertEquals("Table should be located in the second filesystem",
-              fs2.makeQualified(new Path(tableLocation)).toString(), location);
+              normalize(fs2.makeQualified(new Path(tableLocation)).toString()), normalize(location));
     }
     else {
       // Since warehouse path is non-qualified the table should be located on second filesystem
@@ -250,7 +254,7 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
     String location = database.getLocationUri().toString();
     if (databaseLocation != null) {
       assertEquals("Database should be located in the second filesystem",
-              fs2.makeQualified(new Path(databaseLocation)).toString(), location);
+              normalize(fs2.makeQualified(new Path(databaseLocation)).toString()), normalize(location));
     }
     else {
       // Since warehouse path is non-qualified the database should be located on second filesystem
@@ -258,6 +262,19 @@ public class TestDDLWithRemoteMetastoreSecondNamenode extends TestCase {
               fs2.getUri().getScheme(), new URI(location).getScheme());
     }
   }
+
+  /**
+   * Replaces ///, // with / in the path
+   *
+   * @param path input path
+   * @return path with only single slashes
+   */
+
+  private static String normalize(String path){
+    return path.replace("///", "/").replace("//", "/").replace("file:/", "");
+  }
+
+
 
   public void testCreateTableWithIndexAndPartitionsNonDefaultNameNode() throws Exception {
     assertTrue("Test suite should be initialied", isInitialized );

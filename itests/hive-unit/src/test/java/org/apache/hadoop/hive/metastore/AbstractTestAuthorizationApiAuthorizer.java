@@ -56,6 +56,7 @@ public abstract class AbstractTestAuthorizationApiAuthorizer {
         MetaStoreAuthzAPIAuthorizerEmbedOnly.class.getName());
 
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     if (isRemoteMetastoreMode) {
       int port = MetaStoreUtils.findFreePort();
       MetaStoreUtils.startMetaStore(port, ShimLoader.getHadoopThriftAuthBridge());

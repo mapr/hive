@@ -45,6 +45,7 @@ public class TestMetaStoreMetrics {
     int port = MetaStoreUtils.findFreePort();
 
     hiveConf = new HiveConf(TestMetaStoreMetrics.class);
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + port);
     hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hiveConf.setBoolVar(HiveConf.ConfVars.METASTORE_METRICS, true);

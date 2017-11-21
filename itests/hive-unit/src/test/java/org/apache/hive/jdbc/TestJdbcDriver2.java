@@ -109,6 +109,7 @@ public class TestJdbcDriver2 {
   private static final String dataTypeTableComment = "Table with many column data types";
   private static final String externalTableName = "testjdbcdriverexttbl";
   private static final String externalTableComment = "An external table";
+  private static File workDir = new File(System.getProperty("test.tmp.dir"));
   private static HiveConf conf;
   private static String dataFileDir;
   private static Path dataFilePath;
@@ -184,6 +185,7 @@ public class TestJdbcDriver2 {
   @BeforeClass
   public static void setUpBeforeClass() throws SQLException, ClassNotFoundException {
     conf = new HiveConf(TestJdbcDriver2.class);
+    conf.set("fs.default.name", "file:///");
     dataFileDir = conf.get("test.data.files").replace('\\', '/')
         .replace("c:", "");
     dataFilePath = new Path(dataFileDir, "kv1.txt");

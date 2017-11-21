@@ -47,6 +47,7 @@ public class TestHiveSessionImpl {
     String username = "";
     String password = "";
     HiveConf serverhiveConf = new HiveConf();
+    serverhiveConf.set("fs.default.name", "file:///");
     String ipAddress = null;
     HiveSessionImpl session = new HiveSessionImpl(null, protocol, username, password,
       serverhiveConf, ipAddress) {

@@ -48,6 +48,7 @@ public class TestMiniHiveKdc {
   @Before
   public void setUp() throws Exception {
     hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc(hiveConf);
   }
 

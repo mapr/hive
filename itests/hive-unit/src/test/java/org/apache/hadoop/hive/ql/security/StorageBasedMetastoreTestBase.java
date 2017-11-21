@@ -58,6 +58,7 @@ public class StorageBasedMetastoreTestBase {
 
   protected HiveConf createHiveConf() throws Exception {
     HiveConf conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
     return conf;
   }
 

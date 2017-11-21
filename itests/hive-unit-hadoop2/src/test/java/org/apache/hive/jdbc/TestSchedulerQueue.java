@@ -67,6 +67,8 @@ public class TestSchedulerQueue {
   private static HiveConf conf = new HiveConf();
   private Connection hs2Conn = null;
 
+  static {conf.set("fs.default.name", "file:///");}
+
   @BeforeClass
   public static void beforeTest() throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());

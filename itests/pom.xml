@@ -29,6 +29,7 @@
 
   <properties>
     <hive.path.to.root>..</hive.path.to.root>
+    <spark.version>1.6.0</spark.version>
   </properties>
 
   <modules>

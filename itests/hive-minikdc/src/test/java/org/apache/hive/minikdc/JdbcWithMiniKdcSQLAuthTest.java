@@ -44,6 +44,7 @@ public abstract class JdbcWithMiniKdcSQLAuthTest {
   private static MiniHiveKdc miniHiveKdc = null;
   private Connection hs2Conn;
   protected static HiveConf hiveConf = new HiveConf();
+  static {hiveConf.set("fs.default.name", "file:///");}
 
   public static void beforeTestBase() throws Exception {
     System.err.println("Testing using HS2 mode:"

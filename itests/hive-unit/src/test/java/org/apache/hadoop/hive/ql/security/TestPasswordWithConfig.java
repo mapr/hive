@@ -31,6 +31,7 @@ public class TestPasswordWithConfig {
     String key2 = "key2";
     String val1 = "value1";
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(key1, val1);
 
     assertEquals("key1 should exist in config", val1, ShimLoader.getHadoopShims().getPassword(conf, key1));

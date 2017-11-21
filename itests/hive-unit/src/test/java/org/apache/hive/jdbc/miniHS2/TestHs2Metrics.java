@@ -73,7 +73,9 @@ public class TestHs2Metrics {
 
   @BeforeClass
   public static void setup() throws Exception {
-    miniHS2 = new MiniHS2(new HiveConf());
+    HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
+    miniHS2 = new MiniHS2(conf);
     confOverlay = new HashMap<String, String>();
     confOverlay.put(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     confOverlay.put(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK.varname, MetricCheckingHook.class.getName());
@@ -86,6 +88,7 @@ public class TestHs2Metrics {
   @Before
   public void before() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     MetricsFactory.close();
     MetricsFactory.init(conf);
   }

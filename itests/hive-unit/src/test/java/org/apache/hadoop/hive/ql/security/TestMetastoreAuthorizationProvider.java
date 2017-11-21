@@ -76,7 +76,9 @@ public class TestMetastoreAuthorizationProvider extends TestCase {
   }
 
   protected HiveConf createHiveConf() throws Exception {
-    return new HiveConf(this.getClass());
+    HiveConf conf = new HiveConf(this.getClass());
+    conf.set("fs.default.name", "file:///");
+    return conf;
   }
 
   @Override

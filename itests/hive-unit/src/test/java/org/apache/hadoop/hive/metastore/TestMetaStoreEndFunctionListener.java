@@ -50,6 +50,7 @@ public class TestMetaStoreEndFunctionListener extends TestCase {
     int port = MetaStoreUtils.findFreePort();
     MetaStoreUtils.startMetaStore(port, ShimLoader.getHadoopThriftAuthBridge());
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + port);
     hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");

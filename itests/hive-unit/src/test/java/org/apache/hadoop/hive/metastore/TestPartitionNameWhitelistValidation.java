@@ -43,7 +43,9 @@ public class TestPartitionNameWhitelistValidation {
     System.setProperty(HiveConf.ConfVars.METASTORE_PARTITION_NAME_WHITELIST_PATTERN.varname,
         partitionValidationPattern);
     hiveConf = new HiveConf();
-    SessionState.start(new CliSessionState(hiveConf));
+    hiveConf.set("fs.default.name", "file:///");
+    SessionState.start(new CliSess
+      ionState(hiveConf));
     msc = new HiveMetaStoreClient(hiveConf);
   }
 

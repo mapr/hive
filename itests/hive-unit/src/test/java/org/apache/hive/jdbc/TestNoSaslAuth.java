@@ -59,6 +59,7 @@ public class TestNoSaslAuth {
   public static void beforeTest() throws Exception {
     Class.forName(MiniHS2.getJdbcDriverName());
     HiveConf conf = new HiveConf();
+    conf.set("fs.default.name", "file:///");
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     conf.setBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS, false);
     conf.setVar(ConfVars.HIVE_SERVER2_SESSION_HOOK,

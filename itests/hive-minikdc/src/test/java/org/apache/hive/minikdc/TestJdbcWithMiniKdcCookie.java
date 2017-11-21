@@ -44,6 +44,7 @@ public class TestJdbcWithMiniKdcCookie {
   File dataFile;
   protected static HiveConf hiveConf = new HiveConf();
   private static String HIVE_NON_EXISTENT_USER = "hive_no_exist";
+  static {hiveConf.set("fs.default.name", "file:///");}
 
   @BeforeClass
   public static void beforeTest() throws Exception {

@@ -48,6 +48,9 @@ import org.apache.hive.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.hive.service.cli.thrift.ThriftHttpCLIService;
 import org.apache.hive.service.server.HiveServer2;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
+import org.apache.hive.maprminicluster.MapRMiniDFSShim;
+import org.apache.hive.maprminicluster.MapRMiniMrShim;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +98,7 @@ public class MiniHS2 extends AbstractHiveService {
     private boolean cleanupLocalDirOnStartup = true;
 
     public Builder() {
+      hiveConf.set("fs.default.name", "file:///");
     }
 
     public Builder withMiniMR() {
@@ -215,7 +219,7 @@ public class MiniHS2 extends AbstractHiveService {
 
     if (miniClusterType != MiniClusterType.LOCALFS_ONLY) {
       // Initialize dfs
-      dfs = ShimLoader.getHadoopShims().getMiniDfs(hiveConf, 4, true, null, isHA);
+      dfs = new MapRMiniDFSShim(new MapRMiniDFSCluster(hiveConf));
       fs = dfs.getFileSystem();
       String uriString = fs.getUri().toString();
 
@@ -225,7 +229,7 @@ public class MiniHS2 extends AbstractHiveService {
         // Change the engine to tez
         hiveConf.setVar(ConfVars.HIVE_EXECUTION_ENGINE, "tez");
         // TODO: This should be making use of confDir to load configs setup for Tez, etc.
-        mr = ShimLoader.getHadoopShims().getMiniTezCluster(hiveConf, 2, uriString, false);
+        mr = new MapRMiniMrShim(hiveConf);
         break;
       case LLAP:
         if (usePortsFromConf) {
@@ -233,17 +237,17 @@ public class MiniHS2 extends AbstractHiveService {
         }
         llapCluster = LlapItUtils.startAndGetMiniLlapCluster(hiveConf, null, null);
 
-        mr = ShimLoader.getHadoopShims().getMiniTezCluster(hiveConf, 2, uriString, true);
+        mr = new MapRMiniMrShim(hiveConf);
         break;
       case MR:
-        mr = ShimLoader.getHadoopShims().getMiniMrCluster(hiveConf, 2, uriString, 1);
+        mr = new MapRMiniMrShim(hiveConf);
         break;
       default:
         throw new IllegalArgumentException("Unsupported cluster type " + mr);
       }
       // store the config in system properties
       mr.setupConfiguration(getHiveConf());
-      baseFsDir = new Path(new Path(fs.getUri()), "/base");
+      baseDfsDir =  new Path(new Path(fs.getUri()), fs.getWorkingDirectory() + "/base");
     } else {
       // This is FS only mode, just initialize the dfs root directory.
       fs = FileSystem.getLocal(hiveConf);

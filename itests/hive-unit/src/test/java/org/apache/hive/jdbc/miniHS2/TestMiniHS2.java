@@ -57,6 +57,7 @@ public class TestMiniHS2 {
   @Test
   public void testConfInSession() throws Exception {
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.default.name", "file:///");
     final String DUMMY_CONF_KEY = "hive.test.minihs2.dummy.config";
     final String DUMMY_CONF_VAL = "dummy.val";
     hiveConf.set(DUMMY_CONF_KEY, DUMMY_CONF_VAL);

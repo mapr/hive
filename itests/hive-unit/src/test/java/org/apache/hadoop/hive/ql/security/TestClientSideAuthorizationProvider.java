@@ -67,6 +67,7 @@ public class TestClientSideAuthorizationProvider extends TestCase {
     MetaStoreUtils.startMetaStore(port, ShimLoader.getHadoopThriftAuthBridge());
 
     clientHiveConf = new HiveConf(this.getClass());
+    clientHiveConf.set("fs.default.name", "file:///");
 
     // Turn on client-side authorization
     clientHiveConf.setBoolVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED,true);

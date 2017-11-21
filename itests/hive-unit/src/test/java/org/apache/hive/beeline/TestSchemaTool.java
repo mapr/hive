@@ -55,6 +55,7 @@ public class TestSchemaTool extends TestCase {
     System.setProperty(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname,
         "jdbc:derby:" + testMetastoreDB + ";create=true");
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
     schemaTool = new HiveSchemaTool(
         System.getProperty("test.tmp.dir", "target/tmp"), hiveConf, "derby");
     System.setProperty("beeLine.system.exit", "true");

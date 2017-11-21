@@ -89,6 +89,7 @@ public class TestObjectStoreInitRetry {
   @Test
   public void testObjStoreRetry() throws Exception {
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.default.name", "file:///");
 
     hiveConf.setIntVar(ConfVars.HMSHANDLERATTEMPTS, 4);
     hiveConf.setVar(ConfVars.HMSHANDLERINTERVAL, "1s");

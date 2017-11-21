@@ -71,6 +71,7 @@ public class TestPasswordWithCredentialProvider {
 
     // Set up conf
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(credName, hiveConfPassword);  // Will be superceded by credential provider
     conf.set(credName2, confOnlyPassword);  // Will not be superceded
     assertEquals(hiveConfPassword, conf.get(credName));
