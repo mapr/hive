@@ -504,8 +504,19 @@ for j in $SERVICE_LIST ; do
 done
 
 # to initialize logging for all services
+export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dlog4j.configurationFile=hive-log4j.properties "
 
-export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dlog4j.configurationFile=hive-log4j2.properties "
+export SPLIT_HIVE_LOGS_INTO_FILES="${SPLIT_HIVE_LOGS_INTO_FILES:-true}"
+
+if [ "$SPLIT_HIVE_LOGS_INTO_FILES" = false ] ; then
+  echo "Hive logs will be written only in the hive.logs file. Set SPLIT_HIVE_LOGS_INTO_FILES to true or remove it to write hivemeta and hs2 logs separately."
+else
+  if [ "metastore" = "$SERVICE" ] ; then
+    export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dhive.log.file=${USER}-metastore-${HOSTNAME}.log "
+  else
+    export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dhive.log.file=${USER}-hiveserver2-${HOSTNAME}.log "
+  fi
+fi
 
 if [ -f "${HIVE_CONF_DIR}/parquet-logging.properties" ]; then
   export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Djava.util.logging.config.file=${HIVE_CONF_DIR}/parquet-logging.properties "

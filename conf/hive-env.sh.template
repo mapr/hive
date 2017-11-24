@@ -52,3 +52,8 @@
 
 # Folder containing extra libraries required for hive compilation/execution can be controlled by:
 # export HIVE_AUX_JARS_PATH=
+
+# Split hives logs from one file hive.log to two separate files USER-metastore-NODE.log and
+# USER-hiveserver2-NODE.log. This help to avoid the case when some logs could be missed due to competitive access to the log file.
+# By default logs splits into multiple files.
+# export SPLIT_HIVE_LOGS_INTO_FILES=false
