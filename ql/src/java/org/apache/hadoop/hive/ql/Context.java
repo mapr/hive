@@ -283,10 +283,15 @@ public class Context {
     if(isScratchDirOverridden()) {
       String scratchDirFromSession = getScratchDirFromSession();
       if( scratchDirFromSession != null && !scratchDirFromSession.isEmpty()) {
-        return new Path(scratchDirFromSession);
+        return generateScratchDir(scratchDirFromSession);
       }
     }
     return new Path(SessionState.getHDFSSessionPath(conf), executionId);
+  }
+
+  private Path generateScratchDir(String baseDir){
+    SessionState ss = SessionState.get();
+    return new Path(new Path(baseDir, ss.getSessionId()), executionId);
   }
 
   private static boolean isScratchDirOverridden() {
