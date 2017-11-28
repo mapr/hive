@@ -425,6 +425,10 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
 fi
 }
 
+grant_permissions_to_hive_site(){
+chmod 0640 "$HIVE_SITE"
+}
+
 #
 # main
 #
@@ -534,3 +538,5 @@ grant_write_permission_in_logs_dir
 remove_fresh_install_indicator
 
 grant_admin_permissions_to "$HIVE_HOME"
+
+grant_permissions_to_hive_site
