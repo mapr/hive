@@ -200,4 +200,18 @@ public class ConfToolTest {
     LOG.info(ConfTool.toString(doc));
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
   }
+
+
+  @Test
+  public void setConnectionUrlTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-012.xml");
+    String pathToHiveSite = url.getPath();
+    String connectionUrl = "jdbc:derby:;databaseName=/opt/mapr/hive/hive-2.1/bin/metastore_db;create=true";
+    ConfTool.setConnectionUrl(pathToHiveSite, connectionUrl);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals(connectionUrl, ConfTool.getProperty(doc, ConfVars.METASTORECONNECTURLKEY));
+  }
 }
