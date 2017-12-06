@@ -44,6 +44,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
 
 class ConfTool {
   private ConfTool() {
@@ -120,6 +121,14 @@ class ConfTool {
     set(doc, METASTOREURIS, THRIFT_LOCAL_HOST);
     saveToFile(doc, pathToHiveSite);
   }
+
+  static void setConnectionUrl(String pathToHiveSite, String connectionUrl) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    set(doc, METASTORECONNECTURLKEY, connectionUrl);
+    saveToFile(doc, pathToHiveSite);
+  }
+
 
   private static Document readDocument(String pathToHiveSite) throws ParserConfigurationException, IOException, SAXException {
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();

@@ -44,6 +44,7 @@ public class ConfCli {
   private static final String HS2_HA = "hs2ha";
   private static final String ZK_QUORUM = "zkquorum";
   private static final String INIT_META_STORE_URI = "initMetastoreUri";
+  private static final String CONNECTION_URL = "connurl";
 
   static {
     OptionBuilder.hasArg(false);
@@ -75,6 +76,11 @@ public class ConfCli {
     OptionBuilder.withArgName("quorum");
     OptionBuilder.withDescription("Hive Zookeeper Quorum");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ZK_QUORUM));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("connection-url");
+    OptionBuilder.withDescription("Metastore DB connection URL");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(CONNECTION_URL));
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -114,10 +120,29 @@ public class ConfCli {
       if(isMetaStoreUriConfig(line)){
         ConfTool.initMetaStoreUri(pathToHiveSite);
       }
+
+      if(isConnectionUrlConfig(line)){
+        if(hasValidConnectionUrlOptions(line)){
+          String connectionUrl = line.getOptionValue(CONNECTION_URL);
+          ConfTool.setConnectionUrl(pathToHiveSite, connectionUrl);
+        } else {
+          printHelp();
+        }
+      }
+
     } else {
       printHelp();
     }
   }
+
+  private static boolean isConnectionUrlConfig(CommandLine line){
+    return line.hasOption(CONNECTION_URL);
+  }
+
+  private static boolean hasValidConnectionUrlOptions(CommandLine line){
+    return !line.getOptionValue(CONNECTION_URL).isEmpty();
+  }
+
 
   private static boolean isSecurityConfig(CommandLine line){
     return line.hasOption(SECURE) || line.hasOption(UNSECURE);

@@ -52,6 +52,8 @@ RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
 RESTART_LOG_DIR="${RESTART_LOG_DIR:=${MAPR_HOME}/logs/restart_logs}"
 METASTOREWAREHOUSE="/user/hive/warehouse"
 ROLES_DIR="$MAPR_HOME/roles"
+DERBY_CONNECTION_URL="jdbc:derby:;databaseName=$HIVE_BIN/metastore_db;create=true"
+CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -272,7 +274,7 @@ chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/${service}.restart"
 #
 # Checks id hive-site.xml is changed
 #
-is_config_changed(){
+is_hive_site_changed(){
 beforeHiveSiteCksum=$(read_old_hive_site_check_sum)
 afterHiveSiteCksum=$(cksum "$HIVE_SITE" | cut -d' ' -f1)
 if [ "$beforeHiveSiteCksum" != "$afterHiveSiteCksum" ]; then
@@ -292,11 +294,11 @@ for ROLE in "${ROLES[@]}"; do
     check_port "${ROLE}"
     copy_warden_files "${ROLE}"
     # only create restart files when required
-    if is_config_changed && ! is_hive_not_configured_yet ; then
+    if is_hive_site_changed && ! is_hive_not_configured_yet ; then
       create_restart_file "${ROLE}"
     fi
     # we do want to restart RM/TL the first time we configure hive too
-    if is_config_changed || is_hive_not_configured_yet ; then
+    if is_hive_site_changed || is_hive_not_configured_yet ; then
       if [ -n "$tl_ip" ] ; then
         if [ -n "$rm_ip" ] ; then
           create_rm_tl_restart_file resourcemanager "$rm_ip"
@@ -305,9 +307,6 @@ for ROLE in "${ROLES[@]}"; do
       fi
     fi
   fi
-if is_config_changed ; then
-  save_new_hive_site_check_sum
-fi
 done
 }
 
@@ -377,12 +376,27 @@ fi
 }
 
 #
+# Check if hive.metastore.uris is configured or not
+#
+
+is_connection_url_configured(){
+if grep -q "$CONNECTION_URL_PROPERTY_NAME" "$HIVE_SITE"; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
+#
 # Initialize Derby Db schema for mapr admin user
 #
 init_derby_schema(){
-if ! is_meta_db_initialized; then
+if ! is_meta_db_initialized && is_hive_not_configured_yet; then
   if [ -d "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME" ]; then
     rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
+  fi
+  if ! is_connection_url_configured ;  then
+    java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
   fi
   cd "$HIVE_BIN"
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
@@ -540,3 +554,5 @@ remove_fresh_install_indicator
 grant_admin_permissions_to "$HIVE_HOME"
 
 grant_permissions_to_hive_site
+
+save_new_hive_site_check_sum
