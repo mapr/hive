@@ -458,7 +458,7 @@ public class HiveConf extends Configuration {
     SCRATCHDIRPERMISSION("hive.scratch.dir.permission", "700",
         "The permission for the user specific scratch directories that get created."),
     SUBMITVIACHILD("hive.exec.submitviachild", false, ""),
-    SUBMITLOCALTASKVIACHILD("hive.exec.submit.local.task.via.child", true,
+    SUBMITLOCALTASKVIACHILD("hive.exec.submit.local.task.via.child", false,
         "Determines whether local tasks (typically mapjoin hashtable generation phase) runs in \n" +
         "separate JVM (true recommended) or not. \n" +
         "Avoids the overhead of spawning new JVM, but can lead to out-of-memory issues."),
