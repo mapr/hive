@@ -43,6 +43,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
 
 class ConfTool {
@@ -57,6 +58,7 @@ class ConfTool {
   private static final String TRUE = "true";
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
+  private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String EMPTY = "";
 
   static String toString(Document doc){
@@ -108,6 +110,13 @@ class ConfTool {
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     set(doc, HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY, TRUE);
     set(doc, HIVE_ZOOKEEPER_QUORUM, zookeeperQuorum);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  static void initMetaStoreUri(String pathToHiveSite) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    set(doc, METASTOREURIS, THRIFT_LOCAL_HOST);
     saveToFile(doc, pathToHiveSite);
   }
 

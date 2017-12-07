@@ -43,6 +43,7 @@ public class ConfCli {
   private static final String TOOL_NAME = "conftool";
   private static final String HS2_HA = "hs2ha";
   private static final String ZK_QUORUM = "zkquorum";
+  private static final String INIT_META_STORE_URI = "initMetastoreUri";
   private static final String CONNECTION_URL = "connurl";
 
   static {
@@ -66,6 +67,10 @@ public class ConfCli {
     OptionBuilder.hasArg(false);
     OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 High Availability");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HS2_HA));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Initializes Hive metastore Uri to run on local host");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(INIT_META_STORE_URI));
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("quorum");
@@ -110,6 +115,10 @@ public class ConfCli {
         } else {
           printHelp();
         }
+      }
+
+      if(isMetaStoreUriConfig(line)){
+        ConfTool.initMetaStoreUri(pathToHiveSite);
       }
 
       if(isConnectionUrlConfig(line)){
@@ -163,6 +172,10 @@ public class ConfCli {
 
   private static boolean isHs2HaConfig(CommandLine line){
     return line.hasOption(HS2_HA);
+  }
+
+  private static boolean isMetaStoreUriConfig(CommandLine line){
+    return line.hasOption(INIT_META_STORE_URI);
   }
 
   private static boolean hasValidHs2HaOptions(CommandLine line){

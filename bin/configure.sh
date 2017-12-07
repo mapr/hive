@@ -51,6 +51,7 @@ HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
 RESTART_LOG_DIR="${RESTART_LOG_DIR:=${MAPR_HOME}/logs/restart_logs}"
 METASTOREWAREHOUSE="/user/hive/warehouse"
+ROLES_DIR="$MAPR_HOME/roles"
 DERBY_CONNECTION_URL="jdbc:derby:;databaseName=$HIVE_BIN/metastore_db;create=true"
 CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 
@@ -78,6 +79,18 @@ fi
 if [ -f "$HIVE_CONF/enable_hs2_ha" ]; then
   isHS2HA=true
 fi
+
+#
+# Checks if metastore is installed
+#
+has_metastore(){
+if [ -f "$ROLES_DIR/hivemetastore" ]; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
 
 #
 # Find mapr user and group
@@ -387,6 +400,9 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
   fi
   cd "$HIVE_BIN"
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
+  if has_metastore ; then
+    java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -initMetastoreUri -path "$HIVE_SITE"
+  fi
 fi
 }
 
