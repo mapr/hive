@@ -81,6 +81,11 @@
           </exclusion>
         </exclusions>
    </dependency>
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.release.version}</version>
+    </dependency>
     <!-- used by thrift generated code -->
     <dependency>
       <groupId>commons-lang</groupId>
