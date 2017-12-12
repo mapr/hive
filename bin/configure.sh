@@ -432,7 +432,7 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
   fi
   if is_hive_not_configured_yet ; then
     if ! exists_in_mapr_fs "$METASTOREWAREHOUSE" ; then
-      sudo -u "$MAPR_USER" hadoop fs -mkdir "$METASTOREWAREHOUSE"
+      sudo -u "$MAPR_USER" hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
     fi
     sudo -u "$MAPR_USER" hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
   fi
