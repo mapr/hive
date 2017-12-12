@@ -406,10 +406,23 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
 fi
 }
 
+
+#
+# Check if directory exists in MapR-Fs
+#
+exists_in_mapr_fs(){
+dir="$1"
+if $(hadoop fs -test -d "$dir") ; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
+
 #
 # Create warehouse folder in MapRFS if this is fresh install
 # Set 777 permissions to /user/hive/warehouse folder to enable creation of tables by other users
-# Set 777 permissions to /user/ folder to enable creation of scratch dirs by other users
 #
 configure_impersonation(){
 isSecure="$1"
@@ -418,7 +431,9 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
     export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
   fi
   if is_hive_not_configured_yet ; then
-    sudo -u "$MAPR_USER" hadoop fs -mkdir "$METASTOREWAREHOUSE"
+    if ! exists_in_mapr_fs "$METASTOREWAREHOUSE" ; then
+      sudo -u "$MAPR_USER" hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
+    fi
     sudo -u "$MAPR_USER" hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
   fi
 fi
