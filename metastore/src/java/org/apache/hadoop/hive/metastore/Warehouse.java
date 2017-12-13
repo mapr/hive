@@ -529,6 +529,15 @@ public class Warehouse {
     return true;
   }
 
+  public boolean exists(Path f) throws MetaException {
+    try {
+      return getFs(f).exists(f);
+    } catch (IOException e){
+      MetaStoreUtils.logAndThrowMetaException(e);
+    }
+    return false;
+  }
+
   public static String makePartName(List<FieldSchema> partCols,
       List<String> vals) throws MetaException {
     return makePartName(partCols, vals, null);

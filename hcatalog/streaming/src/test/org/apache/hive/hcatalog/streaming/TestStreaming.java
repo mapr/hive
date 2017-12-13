@@ -222,15 +222,15 @@ public class TestStreaming {
     String[] colNames = new String[] {COL1, COL2};
     String[] colTypes = new String[] {serdeConstants.INT_TYPE_NAME, serdeConstants.STRING_TYPE_NAME};
     String[] bucketCols = new String[] {COL1};
-    String loc1 = dbFolder.newFolder(dbName + ".db").toString();
+    String loc1 = dbFolder.getRoot().toString() + File.separator + dbName + ".db";
     String[] partNames = new String[]{"Continent", "Country"};
     partLoc = createDbAndTable(driver, dbName, tblName, partitionVals, colNames, colTypes, bucketCols, partNames, loc1, 1);
 
     dropDB(msClient, dbName2);
-    String loc2 = dbFolder.newFolder(dbName2 + ".db").toString();
+    String loc2 = dbFolder.getRoot().toString() + File.separator + dbName2 + ".db";
     partLoc2 = createDbAndTable(driver, dbName2, tblName2, null, colNames, colTypes, bucketCols, null, loc2, 2);
 
-    String loc3 = dbFolder.newFolder("testing5.db").toString();
+    String loc3 = dbFolder.getRoot().toString() + File.separator + "testing5.db";
     createStoreSales("testing5", loc3);
 
     runDDL(driver, "drop table testBucketing3.streamedtable");

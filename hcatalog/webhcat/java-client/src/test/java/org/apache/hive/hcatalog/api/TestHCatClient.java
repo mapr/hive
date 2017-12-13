@@ -380,8 +380,13 @@ public class TestHCatClient {
     FileSystem fs = new LocalFileSystem();
     fs.initialize(fs.getWorkingDirectory().toUri(), hcatConf);
 
+    String dbLocation = fs.getWorkingDirectory().toString() + "/tmp/" + dbName;
+    Path dbLocationPath = new Path(dbLocation);
+    if(fs.exists(dbLocationPath)){
+      fs.delete(dbLocationPath, true);
+    }
     HCatCreateDBDesc dbDesc = HCatCreateDBDesc.create(dbName)
-      .ifNotExists(true).location(fs.getWorkingDirectory().toString() + "/tmp/" + dbName).build();
+      .ifNotExists(true).location(dbLocation).build();
     client.createDatabase(dbDesc);
     HCatDatabase newDB = client.getDatabase(dbName);
     assertTrue(newDB.getLocation().matches(".*/tmp/" + dbName));
