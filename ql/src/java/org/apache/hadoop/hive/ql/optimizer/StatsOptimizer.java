@@ -916,7 +916,7 @@ public class StatsOptimizer extends Transform {
             return null;
           }
           Long partRowCnt = Long.parseLong(part.getParameters().get(StatsSetupConst.ROW_COUNT));
-          if (partRowCnt == null) {
+          if (partRowCnt == null || partRowCnt == 0) {
             Logger.debug("Partition doesn't have up to date stats " + part.getSpec());
             return null;
           }
@@ -927,7 +927,7 @@ public class StatsOptimizer extends Transform {
           return null;
         }
         rowCnt = Long.parseLong(tbl.getProperty(StatsSetupConst.ROW_COUNT));
-        if (rowCnt == null) {
+        if (rowCnt == null || rowCnt == 0) {
           // if rowCnt < 1 than its either empty table or table on which stats are not
           //  computed We assume the worse and don't attempt to optimize.
           Logger.debug("Table doesn't have up to date stats " + tbl.getTableName());
