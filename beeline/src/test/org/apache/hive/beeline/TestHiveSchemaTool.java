@@ -18,65 +18,29 @@
 package org.apache.hive.beeline;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
-import org.apache.hadoop.hive.metastore.tools.HiveSchemaHelper;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
-@PrepareForTest({ HiveSchemaHelper.class, HiveSchemaTool.CommandBuilder.class })
+
 public class TestHiveSchemaTool {
 
-  String scriptFile = System.getProperty("java.io.tmpdir") + File.separator + "someScript.sql";
-  @Mock
-  private HiveConf hiveConf;
+  private String scriptFile = getFileFromClasspath("someScript.sql");
+
+  private static HiveConf hiveConf = new HiveConf();
+  static {hiveConf.set("fs.default.name", "file:///");}
   private HiveSchemaTool.CommandBuilder builder;
   private String pasword = "reallySimplePassword";
 
   @Before
-  public void setup() throws IOException {
-    mockStatic(HiveSchemaHelper.class);
-    when(HiveSchemaHelper
-        .getValidConfVar(eq(MetastoreConf.ConfVars.CONNECT_URL_KEY), same(hiveConf)))
-        .thenReturn("someURL");
-    when(HiveSchemaHelper
-        .getValidConfVar(eq(MetastoreConf.ConfVars.CONNECTION_DRIVER), same(hiveConf)))
-        .thenReturn("someDriver");
-
-    File file = new File(scriptFile);
-    if (!file.exists()) {
-      file.createNewFile();
-    }
+  public void setup() {
     builder = new HiveSchemaTool.CommandBuilder(hiveConf, null, null, "testUser", pasword, scriptFile);
-  }
-
-  @After
-  public void globalAssert() throws IOException {
-    verifyStatic();
-    HiveSchemaHelper.getValidConfVar(eq(MetastoreConf.ConfVars.CONNECT_URL_KEY), same(hiveConf));
-    HiveSchemaHelper
-        .getValidConfVar(eq(MetastoreConf.ConfVars.CONNECTION_DRIVER), same(hiveConf));
-
-    new File(scriptFile).delete();
   }
 
   @Test
@@ -88,5 +52,13 @@ public class TestHiveSchemaTool {
   public void shouldReturnActualPassword() throws IOException {
     String[] strings = builder.buildToRun();
     assertTrue(Arrays.asList(strings).contains(pasword));
+  }
+
+  private static String getFileFromClasspath(String name) {
+    URL url = ClassLoader.getSystemResource(name);
+    if (url == null) {
+      throw new IllegalArgumentException("Could not find " + name);
+    }
+    return url.getPath();
   }
 }
