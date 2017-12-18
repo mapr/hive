@@ -46,7 +46,6 @@
         <exclude>commons-configuration:commons-configuration</exclude>
         <exclude>org.apache.hive:hive-jdbc:*:standalone</exclude>
         <exclude>org.apache.hbase:*</exclude>
-        <exclude>org.apache.zookeeper:*</exclude>
         <exclude>org.apache.pig:*</exclude>
         <exclude>com.mapr.hadoop:*</exclude>
       </excludes>
