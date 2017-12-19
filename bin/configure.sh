@@ -91,6 +91,17 @@ else
 fi
 }
 
+#
+# Checks if webhcat is installed
+#
+has_webhcat(){
+if [ -f "$ROLES_DIR/hivewebhcat" ]; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
 
 #
 # Find mapr user and group
@@ -247,6 +258,19 @@ chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 #
 grant_write_permission_in_logs_dir() {
   chmod -R g+w "$HIVE_LOGS"
+}
+
+#
+# Copy log4j api lib to hadoop common libs
+#
+function copy_log4j_for_hadoop_common_classpath() {
+  if has_webhcat ; then
+    LOG4J_API_JAR_PATH=$(ls ${HIVE_LIB}/log4j-api* | awk '{print $1}')
+    HADOOP_SHARE_COMMON_PATH=${HADOOP_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/
+    if [ -f "$LOG4J_API_JAR_PATH" ] ; then
+      ln -s "$LOG4J_API_JAR_PATH" "$HADOOP_SHARE_COMMON_PATH"
+    fi
+  fi
 }
 
 #
@@ -548,6 +572,8 @@ configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 configure_roles
 
 grant_write_permission_in_logs_dir
+
+copy_log4j_for_hadoop_common_classpath
 
 remove_fresh_install_indicator
 
