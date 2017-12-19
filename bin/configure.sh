@@ -492,6 +492,10 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
 fi
 }
 
+grant_permissions_to_hive_site(){
+chmod 0640 "$HIVE_SITE"
+}
+
 #
 # main
 #
@@ -605,5 +609,7 @@ copy_log4j_for_hadoop_common_classpath
 remove_fresh_install_indicator
 
 grant_admin_permissions_to "$HIVE_HOME"
+
+grant_permissions_to_hive_site
 
 save_new_hive_site_check_sum
