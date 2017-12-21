@@ -45,6 +45,18 @@ encryptconf() {
   exec $HADOOP jar ${HIVE_LIB}/${META_JAR} $CLASS $HIVE_OPTS "$@"
 }
 
+
+remove_connection_password_property() {
+  if [ "$HADOOP_CLASSPATH" != "" ]; then
+    HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"
+  else
+    HADOOP_CLASSPATH="$HIVE_LIB/*":$(hadoop classpath)
+  fi
+
+  HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
+  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" -removePasswordProperty
+}
+
 bin=$(dirname "$0")
 bin=$(cd "$bin"; pwd)
 HIVE_HOME=$(dirname "$bin")
@@ -53,5 +65,12 @@ META_JAR="hive-metastore-*.jar"
 
 HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
 HADOOP=$HADOOP_DIR/hadoop
+
+MAPR_HOME="${BASEMAPR:-/opt/mapr}"
+HIVE_HOME="$MAPR_HOME"/hive/hive-"$HIVEMETASTORE_VERSION"
+HIVE_CONF="$HIVE_HOME"/conf
+HIVE_SITE="$HIVE_CONF"/hive-site.xml
+
+remove_connection_password_property
 
 encryptconf "$@"

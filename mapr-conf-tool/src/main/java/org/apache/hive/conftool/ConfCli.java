@@ -45,6 +45,7 @@ public class ConfCli {
   private static final String ZK_QUORUM = "zkquorum";
   private static final String INIT_META_STORE_URI = "initMetastoreUri";
   private static final String CONNECTION_URL = "connurl";
+  private static final String REMOVE_PASSWORD_PROPERTY = "removePasswordProperty";
 
   static {
     OptionBuilder.hasArg(false);
@@ -81,6 +82,10 @@ public class ConfCli {
     OptionBuilder.withArgName("connection-url");
     OptionBuilder.withDescription("Metastore DB connection URL");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(CONNECTION_URL));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Remove ConnectionPassword property from hive-site");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(REMOVE_PASSWORD_PROPERTY));
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -128,6 +133,10 @@ public class ConfCli {
         } else {
           printHelp();
         }
+      }
+
+      if (isRemoveProperty(line)) {
+        ConfTool.removeConnectionPasswordProperty(pathToHiveSite);
       }
 
     } else {
@@ -180,5 +189,14 @@ public class ConfCli {
 
   private static boolean hasValidHs2HaOptions(CommandLine line){
     return line.hasOption(HS2_HA) && !line.getOptionValue(ZK_QUORUM).isEmpty();
+  }
+
+  /**
+   * Returns true if an input param is "-removePasswordProperty"
+   * @param line input param
+   * @return
+   */
+  private static boolean isRemoveProperty(CommandLine line) {
+    return line.hasOption(REMOVE_PASSWORD_PROPERTY);
   }
 }
