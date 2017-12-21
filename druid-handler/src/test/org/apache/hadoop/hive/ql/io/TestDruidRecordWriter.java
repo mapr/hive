@@ -108,7 +108,7 @@ public class TestDruidRecordWriter {
           )
   );
 
-  // This test need this patch https://github.com/druid-io/druid/pull/3483
+  //Test is failing due to Guava dependency, Druid 0.13.0 should have less dependency on Guava
   @Ignore
   @Test
   public void testWrite() throws IOException, SegmentLoadingException {
