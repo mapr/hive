@@ -3381,7 +3381,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         final Path srcP = srcFile.getPath();
         final boolean needToCopy = needToCopy(srcP, destf, srcFs, destFs, configuredOwner, isManaged);
 
-        final boolean isRenameAllowed = !needToCopy && !isSrcLocal;
+        final boolean isRenameAllowed = !needToCopy && !isSrcLocal && !destExists(srcP, destFs, destf);
 
         final String msg = "Unable to move source " + srcP + " to destination " + destf;
 
@@ -3433,6 +3433,16 @@ private void constructOneLBLocationMap(FileStatus fSta,
           throw handlePoolException(pool, e);
         }
       }
+    }
+  }
+
+  private static boolean destExists(Path sourcePath, FileSystem destFs, Path destDirPath) throws HiveException {
+    final String fullName = sourcePath.getName();
+    Path destFilePath = new Path(destDirPath, fullName);
+    try {
+      return destFs.exists(destFilePath);
+    } catch (IOException e) {
+      throw new HiveException(e);
     }
   }
 
