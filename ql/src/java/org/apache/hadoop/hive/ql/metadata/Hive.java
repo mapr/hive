@@ -2913,7 +2913,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         final Path srcP = srcFile.getPath();
         final boolean needToCopy = needToCopy(srcP, destf, srcFs, destFs);
 
-        final boolean isRenameAllowed = !needToCopy && !isSrcLocal;
+        final boolean isRenameAllowed = !needToCopy && !isSrcLocal && !destExists(srcP, destFs, destf);
         // If we do a rename for a non-local file, we will be transfering the original
         // file permissions from source to the destination. Else, in case of mvFile() where we
         // copy from source to destination, we will inherit the destination's parent group ownership.
@@ -2966,6 +2966,16 @@ private void constructOneLBLocationMap(FileStatus fSta,
           throw new HiveException(e.getCause());
         }
       }
+    }
+  }
+
+  private static boolean destExists(Path sourcePath, FileSystem destFs, Path destDirPath) throws HiveException {
+    final String fullname = sourcePath.getName();
+    Path destFilePath = new Path(destDirPath, fullname);
+    try {
+      return destFs.exists(destFilePath);
+    } catch (IOException e) {
+      throw new HiveException(e);
     }
   }
 
