@@ -45,6 +45,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREPWD;
 
 class ConfTool {
   private ConfTool() {
@@ -59,8 +60,6 @@ class ConfTool {
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
-  private static final String PAM = "PAM";
-  private static final String NONE = "NONE";
   private static final String EMPTY = "";
 
   static String toString(Document doc){
@@ -112,6 +111,22 @@ class ConfTool {
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     set(doc, HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY, TRUE);
     set(doc, HIVE_ZOOKEEPER_QUORUM, zookeeperQuorum);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   *  Removes javax.jdo.option.ConnectionPassword property from hive-site
+   *  IN-827
+   * @param pathToHiveSite
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  static void removeConnectionPasswordProperty(String pathToHiveSite) throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    LOG.info("Removing {} property from {}", METASTOREPWD, pathToHiveSite);
+    remove(doc, METASTOREPWD);
     saveToFile(doc, pathToHiveSite);
   }
 
