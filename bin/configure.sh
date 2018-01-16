@@ -266,9 +266,10 @@ grant_write_permission_in_logs_dir() {
 function copy_log4j_for_hadoop_common_classpath() {
   if has_webhcat ; then
     LOG4J_API_JAR_PATH=$(ls ${HIVE_LIB}/log4j-api* | awk '{print $1}')
+    LOG4J_API_JAR_NAME=$(basename ${LOG4J_API_JAR_PATH})
     HADOOP_VERSION=$(cat ${MAPR_HOME}/hadoop/hadoopversion | awk -F'=' '{print $1}')
     HADOOP_SHARE_COMMON_PATH=${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/
-    if [ -f "$LOG4J_API_JAR_PATH" ] ; then
+    if [ -f "$LOG4J_API_JAR_PATH" ] && [ ! -L "$HADOOP_SHARE_COMMON_PATH/$LOG4J_API_JAR_NAME" ] ; then
       ln -s "$LOG4J_API_JAR_PATH" "$HADOOP_SHARE_COMMON_PATH"
     fi
   fi
