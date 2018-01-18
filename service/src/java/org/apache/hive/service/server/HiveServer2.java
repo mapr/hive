@@ -57,7 +57,6 @@ import org.apache.hadoop.hive.ql.exec.spark.session.SparkSessionManagerImpl;
 import org.apache.hadoop.hive.ql.exec.tez.TezSessionPoolManager;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
 import org.apache.hadoop.hive.shims.ShimLoader;
-import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.HiveVersionInfo;
@@ -206,6 +205,10 @@ public class HiveServer2 extends CompositeService {
             builder.setSPNEGOPrincipal(spnegoPrincipal);
             builder.setSPNEGOKeytab(spnegoKeytab);
             builder.setUseSPNEGO(true);
+          }
+          if(hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_PAM)) {
+            builder.setUsePAM(true);
+            builder.setAuthClassName(hiveConf.getVar(ConfVars.HIVE_SERVER2_WEBUI_PAM_AUTHENTICATOR));
           }
           builder.addServlet("llap", LlapServlet.class);
           webServer = builder.build();
