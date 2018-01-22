@@ -64,6 +64,7 @@ import org.apache.hive.jdbc.HiveStatement;
 import org.apache.hive.jdbc.Utils;
 import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
 
+import com.google.common.annotations.VisibleForTesting;
 
 public class Commands {
   private final BeeLine beeLine;
@@ -1039,11 +1040,40 @@ public class Commands {
     return true;
   }
 
-  public String handleMultiLineCmd(String line) throws IOException {
-    //When using -e, console reader is not initialized and command is a single line
-    while (beeLine.getConsoleReader() != null && !(line.trim().endsWith(";")) && beeLine.getOpts()
-        .isAllowMultiLineCommand()) {
+  //startQuote use array type in order to pass int type as input/output parameter.
+  //This method remove comment from current line of a query.
+  //It does not remove comment like strings inside quotes.
+  @VisibleForTesting
+  String removeComments(String line, int[] startQuote) {
+    if (line == null || line.isEmpty()) return line;
+    if (startQuote[0] == -1 && beeLine.isComment(line)) return "";  //assume # can only be used at the beginning of line.
+    StringBuilder builder = new StringBuilder();
+    for (int index = 0; index < line.length(); index++) {
+      if (startQuote[0] == -1 && index < line.length() - 1 && line.charAt(index) == '-' && line.charAt(index + 1) =='-') {
+        return builder.toString().trim();
+      }
 
+      char letter = line.charAt(index);
+      if (startQuote[0] == letter && (index == 0 || line.charAt(index -1) != '\\') ) {
+        startQuote[0] = -1; // Turn escape off.
+      } else if (startQuote[0] == -1 && (letter == '\'' || letter == '"') && (index == 0 || line.charAt(index -1) != '\\')) {
+        startQuote[0] = letter; // Turn escape on.
+      }
+
+      builder.append(letter);
+    }
+
+    return builder.toString().trim();
+  }
+
+  /*
+   * Check if the input line is a multi-line command which needs to read further
+   */
+  public String handleMultiLineCmd(String line) throws IOException {
+    //When using -e, console reader is not initialized and command is always a single line
+    int[] startQuote = {-1};
+    line = removeComments(line,startQuote);
+    while (isMultiLine(line) && beeLine.getOpts().isAllowMultiLineCommand()) {
       StringBuilder prompt = new StringBuilder(beeLine.getPrompt());
       if (!beeLine.getOpts().isSilent()) {
         for (int i = 0; i < prompt.length() - 1; i++) {
@@ -1052,8 +1082,12 @@ public class Commands {
           }
         }
       }
-
       String extra;
+      //avoid NPE below if for some reason -e argument has multi-line command
+      if (beeLine.getConsoleReader() == null) {
+        throw new RuntimeException("Console reader not initialized. This could happen when there "
+            + "is a multi-line command using -e option and which requires further reading from console");
+      }
       if (beeLine.getOpts().isSilent() && beeLine.getOpts().getScriptFile() != null) {
         extra = beeLine.getConsoleReader().readLine(null, jline.console.ConsoleReader.NULL_MASK);
       } else {
@@ -1063,11 +1097,29 @@ public class Commands {
       if (extra == null) { //it happens when using -f and the line of cmds does not end with ;
         break;
       }
-      if (!beeLine.isComment(extra)) {
+      extra = removeComments(extra,startQuote);
+      if (extra != null && !extra.isEmpty()) {
         line += "\n" + extra;
       }
     }
     return line;
+  }
+
+  //returns true if statement represented by line is
+  //not complete and needs additional reading from
+  //console. Used in handleMultiLineCmd method
+  //assumes line would never be null when this method is called
+  private boolean isMultiLine(String line) {
+    line = line.trim();
+    if (line.endsWith(";") || beeLine.isComment(line)) {
+      return false;
+    }
+    // handles the case like line = show tables; --test comment
+    List<String> cmds = getCmdList(line, false);
+    if (!cmds.isEmpty() && cmds.get(cmds.size() - 1).trim().startsWith("--")) {
+      return false;
+    }
+    return true;
   }
 
   public boolean sql(String line, boolean entireLineAsCommand) {
@@ -1138,22 +1190,7 @@ public class Commands {
     }
 
     line = line.trim();
-    List<String> cmdList = new ArrayList<String>();
-    if (entireLineAsCommand) {
-      cmdList.add(line);
-    } else {
-      StringBuffer command = new StringBuffer();
-      for (String cmdpart: line.split(";")) {
-        if (cmdpart.endsWith("\\")) {
-          command.append(cmdpart.substring(0, cmdpart.length() -1)).append(";");
-          continue;
-        } else {
-          command.append(cmdpart);
-        }
-        cmdList.add(command.toString());
-        command.setLength(0);
-      }
-    }
+    List<String> cmdList = getCmdList(line, entireLineAsCommand);
     for (int i = 0; i < cmdList.size(); i++) {
       String sql = cmdList.get(i).trim();
       if (sql.length() != 0) {
@@ -1164,6 +1201,80 @@ public class Commands {
     }
     return true;
   }
+
+  /**
+   * Helper method to parse input from Beeline and convert it to a {@link List} of commands that
+   * can be executed. This method contains logic for handling semicolons that are placed within
+   * quotations. It iterates through each character in the line and checks to see if it is a ;, ',
+   * or "
+   */
+  private List<String> getCmdList(String line, boolean entireLineAsCommand) {
+    List<String> cmdList = new ArrayList<String>();
+    if (entireLineAsCommand) {
+      cmdList.add(line);
+    } else {
+      StringBuffer command = new StringBuffer();
+
+      boolean hasUnterminatedDoubleQuote = false;
+      boolean hasUntermindatedSingleQuote = false;
+
+      int lastSemiColonIndex = 0;
+      char[] lineChars = line.toCharArray();
+
+      boolean wasPrevEscape = false;
+      int index = 0;
+      for (; index < lineChars.length; index++) {
+        switch (lineChars[index]) {
+          case '\'':
+            if (!hasUnterminatedDoubleQuote && !wasPrevEscape) {
+              hasUntermindatedSingleQuote = !hasUntermindatedSingleQuote;
+            }
+            wasPrevEscape = false;
+            break;
+          case '\"':
+            if (!hasUntermindatedSingleQuote && !wasPrevEscape) {
+              hasUnterminatedDoubleQuote = !hasUnterminatedDoubleQuote;
+            }
+            wasPrevEscape = false;
+            break;
+          case ';':
+            if (!hasUnterminatedDoubleQuote && !hasUntermindatedSingleQuote) {
+              addCmdPart(cmdList, command, line.substring(lastSemiColonIndex, index));
+              lastSemiColonIndex = index + 1;
+            }
+            wasPrevEscape = false;
+            break;
+          case '\\':
+            wasPrevEscape = true;
+            break;
+          default:
+            wasPrevEscape = false;
+            break;
+        }
+      }
+      // if the line doesn't end with a ; or if the line is empty, add the cmd part
+      if (lastSemiColonIndex != index || lineChars.length == 0) {
+        addCmdPart(cmdList, command, line.substring(lastSemiColonIndex, index));
+      }
+    }
+    return cmdList;
+  }
+
+  /**
+   * Given a cmdpart (e.g. if a command spans multiple lines), add to the current command, and if
+   * applicable add that command to the {@link List} of commands
+   */
+  private void addCmdPart(List<String> cmdList, StringBuffer command, String cmdpart) {
+    if (cmdpart.endsWith("\\")) {
+      command.append(cmdpart.substring(0, cmdpart.length() - 1)).append(";");
+      return;
+    } else {
+      command.append(cmdpart);
+    }
+    cmdList.add(command.toString());
+    command.setLength(0);
+  }
+
 
   private Runnable createLogRunnable(Statement statement) {
     if (statement instanceof HiveStatement) {
