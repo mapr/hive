@@ -578,6 +578,18 @@ public class TestJdbcWithMiniHS2 {
     stmt.close();
   }
 
+
+  // Test that jdbc does not allow shell commands starting with "!".
+  @Test
+  public void testBangCommand() throws Exception {
+    try (Statement stmt = conTestDb.createStatement()) {
+      stmt.execute("!ls --l");
+      fail("statement should fail, allowing this would be bad security");
+    } catch (HiveSQLException e) {
+      assertTrue(e.getMessage().contains("cannot recognize input near '!'"));
+    }
+  }
+
   @Test
   public void testJoinThriftSerializeInTasks() throws Exception {
     Statement stmt = conTestDb.createStatement();
