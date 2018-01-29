@@ -214,4 +214,20 @@ public class ConfToolTest {
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals(connectionUrl, ConfTool.getProperty(doc, ConfVars.METASTORECONNECTURLKEY));
   }
+
+
+  @Test
+  public void setHs2WebUiPamSslTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-013.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setHs2WebUiPamSsl(pathToHiveSite);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
+    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
+    Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
+  }
 }

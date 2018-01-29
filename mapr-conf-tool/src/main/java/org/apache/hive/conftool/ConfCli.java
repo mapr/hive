@@ -46,6 +46,7 @@ public class ConfCli {
   private static final String INIT_META_STORE_URI = "initMetastoreUri";
   private static final String CONNECTION_URL = "connurl";
   private static final String REMOVE_PASSWORD_PROPERTY = "removePasswordProperty";
+  private static final String WEB_UI_PAM_SSL = "webuipamssl";
 
   static {
     OptionBuilder.hasArg(false);
@@ -86,6 +87,11 @@ public class ConfCli {
     OptionBuilder.hasArg(false);
     OptionBuilder.withDescription("Remove ConnectionPassword property from hive-site");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(REMOVE_PASSWORD_PROPERTY));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEB_UI_PAM_SSL));
+
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -137,6 +143,10 @@ public class ConfCli {
 
       if (isRemoveProperty(line)) {
         ConfTool.removeConnectionPasswordProperty(pathToHiveSite);
+      }
+
+      if(isWebUiHs2PamSslConfig(line)){
+        ConfTool.setHs2WebUiPamSsl(pathToHiveSite);
       }
 
     } else {
@@ -198,5 +208,9 @@ public class ConfCli {
    */
   private static boolean isRemoveProperty(CommandLine line) {
     return line.hasOption(REMOVE_PASSWORD_PROPERTY);
+  }
+
+  private static boolean isWebUiHs2PamSslConfig(CommandLine line) {
+    return line.hasOption(WEB_UI_PAM_SSL);
   }
 }

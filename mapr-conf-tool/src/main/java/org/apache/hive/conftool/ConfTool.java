@@ -46,6 +46,10 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORU
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREPWD;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD;
 
 class ConfTool {
   private ConfTool() {
@@ -60,6 +64,8 @@ class ConfTool {
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
+  private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
+  private static final String MAPR_DEFAULT_SSL_KEYSTORE_PASSWORD = "mapr123";
   private static final String EMPTY = "";
 
   static String toString(Document doc){
@@ -94,6 +100,18 @@ class ConfTool {
     }
     saveToFile(doc, pathToHiveSite);
   }
+
+  static void setHs2WebUiPamSsl(String pathToHiveSite) throws TransformerException, IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    LOG.info("Configuring Hive for HiveServer2 web UI PAM authentication and SSL encryption");
+    set(doc, HIVE_SERVER2_WEBUI_USE_PAM, TRUE);
+    set(doc, HIVE_SERVER2_WEBUI_USE_SSL, TRUE);
+    set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
+    set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, MAPR_DEFAULT_SSL_KEYSTORE_PASSWORD);
+    saveToFile(doc, pathToHiveSite);
+  }
+
 
   static void setEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
