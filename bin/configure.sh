@@ -175,6 +175,19 @@ fi
 }
 
 #
+# Configures PAM an SSl encryption for HiveServer2 Web UI on MapR SASL cluster
+#
+configure_hs2_webui_pam_and_ssl(){
+HIVE_SITE="$1"
+isSecure="$2"
+
+if [ "$isSecure" = "true" ];  then
+  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" "-webuipamssl"
+fi
+}
+
+
+#
 # Check that port is available
 #
 check_port(){
@@ -566,6 +579,8 @@ save_security_flag
 configure_security "$HIVE_SITE" "$isSecure"
 
 configure_impersonation "$isSecure"
+
+configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$isSecure"
 
 init_derby_schema
 
