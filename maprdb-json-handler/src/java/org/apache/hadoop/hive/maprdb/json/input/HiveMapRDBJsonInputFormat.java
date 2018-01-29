@@ -44,7 +44,7 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
 
   @Override
   public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
-
+    super.setConf(jobConf);
     List<org.apache.hadoop.mapreduce.InputSplit> splits;
     Job context = new Job(jobConf);
     try {
