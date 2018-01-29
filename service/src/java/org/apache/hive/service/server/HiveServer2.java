@@ -242,6 +242,10 @@ public class HiveServer2 extends CompositeService {
             builder.setSPNEGOKeytab(spnegoKeytab);
             builder.setUseSPNEGO(true);
           }
+          if(hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_PAM)) {
+            builder.setUsePAM(true);
+            builder.setAuthClassName(hiveConf.getVar(ConfVars.HIVE_SERVER2_WEBUI_PAM_AUTHENTICATOR));
+          }
           builder.addServlet("llap", LlapServlet.class);
           builder.setContextRootRewriteTarget("/hiveserver2.jsp");
           webServer = builder.build();
