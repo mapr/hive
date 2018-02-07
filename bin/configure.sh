@@ -54,6 +54,7 @@ METASTOREWAREHOUSE="/user/hive/warehouse"
 ROLES_DIR="$MAPR_HOME/roles"
 DERBY_CONNECTION_URL="jdbc:derby:;databaseName=$HIVE_BIN/metastore_db;create=true"
 CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
+HIVE_METASTORE_URIS_PROPERTY_NAME="hive.metastore.uris"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -415,11 +416,24 @@ fi
 }
 
 #
-# Check if hive.metastore.uris is configured or not
+# Check if javax.jdo.option.ConnectionURL is configured or not
 #
 
 is_connection_url_configured(){
-if grep -q "$CONNECTION_URL_PROPERTY_NAME" "$HIVE_SITE"; then
+output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -isConfigured "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
+if [ "$output" = "true" ] ; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
+
+#
+# Check if metastore URIs are configured
+#
+is_metastore_uris_configured(){
+output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -isConfigured "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
+if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
   return 1;
@@ -439,7 +453,7 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
   fi
   cd "$HIVE_BIN"
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
-  if has_metastore ; then
+  if has_metastore && ! is_metastore_uris_configured; then
     java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -initMetastoreUri -path "$HIVE_SITE"
   fi
 fi

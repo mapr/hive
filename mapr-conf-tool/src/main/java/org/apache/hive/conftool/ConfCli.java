@@ -47,6 +47,7 @@ public class ConfCli {
   private static final String CONNECTION_URL = "connurl";
   private static final String REMOVE_PASSWORD_PROPERTY = "removePasswordProperty";
   private static final String WEB_UI_PAM_SSL = "webuipamssl";
+  private static final String IS_CONFIGURED = "isConfigured";
 
   static {
     OptionBuilder.hasArg(false);
@@ -92,6 +93,11 @@ public class ConfCli {
     OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEB_UI_PAM_SSL));
 
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("property to check");
+    OptionBuilder.withDescription("Checks if property is set in hive-site.xml.");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(IS_CONFIGURED));
+
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -130,6 +136,11 @@ public class ConfCli {
 
       if(isMetaStoreUriConfig(line)){
         ConfTool.initMetaStoreUri(pathToHiveSite);
+      }
+
+      if(hasIsConfiguredOption(line)){
+        String property = line.getOptionValue(IS_CONFIGURED);
+        printBool(ConfTool.isConfigured(pathToHiveSite, property));
       }
 
       if(isConnectionUrlConfig(line)){
@@ -212,5 +223,13 @@ public class ConfCli {
 
   private static boolean isWebUiHs2PamSslConfig(CommandLine line) {
     return line.hasOption(WEB_UI_PAM_SSL);
+  }
+
+  private static boolean hasIsConfiguredOption(CommandLine line) {
+    return line.hasOption(IS_CONFIGURED);
+  }
+
+  private static void printBool(boolean value){
+    System.out.print(Boolean.toString(value));
   }
 }
