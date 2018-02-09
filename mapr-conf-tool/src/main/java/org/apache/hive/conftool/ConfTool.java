@@ -132,6 +132,11 @@ class ConfTool {
     saveToFile(doc, pathToHiveSite);
   }
 
+  static boolean isConfigured(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    return propertyExists(doc, property);
+  }
+
   /**
    *  Removes javax.jdo.option.ConnectionPassword property from hive-site
    *  IN-827
@@ -248,9 +253,13 @@ class ConfTool {
   }
 
 
-
   static boolean propertyExists(Document doc, ConfVars confVars) {
-    LOG.info("Checking that property exists in hive-site.xml : {}", confVars.varname);
+    return propertyExists(doc, confVars.varname);
+  }
+
+
+  static boolean propertyExists(Document doc, String property) {
+    LOG.info("Checking that property exists in hive-site.xml : {}", property);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();
@@ -260,7 +269,7 @@ class ConfTool {
       int childLength = nameValueDesc.getLength();
       for (int j = 0; j <= childLength - 1; j++) {
         Node childNode = nameValueDesc.item(j);
-        if (NAME.equals(childNode.getNodeName()) && confVars.varname.equals(childNode.getTextContent())) {
+        if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
           return true;
         }
       }
