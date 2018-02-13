@@ -1410,13 +1410,11 @@ public final class Utilities {
     Path tmpPath = Utilities.toTempPath(specPath);
     Path taskTmpPath = Utilities.toTaskTempPath(specPath);
     if (success) {
-      FileStatus[] statuses = HiveStatsUtils.getFileStatusRecurse(
-          tmpPath, ((dpCtx == null) ? 1 : dpCtx.getNumDPCols()), fs);
-      if(statuses != null && statuses.length > 0) {
+      if (fs.exists(tmpPath)) {
         PerfLogger perfLogger = SessionState.getPerfLogger();
         perfLogger.PerfLogBegin("FileSinkOperator", "RemoveTempOrDuplicateFiles");
         // remove any tmp file or double-committed output files
-        List<Path> emptyBuckets = Utilities.removeTempOrDuplicateFiles(fs, statuses, dpCtx, conf, hconf);
+        List<Path> emptyBuckets = Utilities.removeTempOrDuplicateFiles(fs, tmpPath, dpCtx, conf, hconf);
         perfLogger.PerfLogEnd("FileSinkOperator", "RemoveTempOrDuplicateFiles");
         // create empty buckets if necessary
         if (emptyBuckets.size() > 0) {
