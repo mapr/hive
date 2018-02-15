@@ -241,6 +241,7 @@ public class TestVectorizedListColumnReader extends VectorizedColumnReaderTestBa
   private void testListRead(boolean isDictionaryEncoding, String type, int elementNum) throws Exception {
     Configuration conf = new Configuration();
     setTypeConfiguration(type, conf);
+    conf.set("fs.default.name", "file:///");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
     VectorizedParquetRecordReader reader = createTestParquetReader(getSchema(type), conf);
@@ -277,6 +278,7 @@ public class TestVectorizedListColumnReader extends VectorizedColumnReaderTestBa
 
   private void testRepeateListRead(int elementNum, boolean isNull) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS, "list_int32_field_for_repeat_test");
     conf.set(IOConstants.COLUMNS_TYPES, "array<int>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
