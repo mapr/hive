@@ -33,11 +33,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.hive.conftool</groupId>
-      <artifactId>mapr-conf-tool</artifactId>
-      <version>2.1.1-mapr</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <version>${hadoop.version}</version>

@@ -48,6 +48,7 @@ public class ConfCli {
   private static final String REMOVE_PASSWORD_PROPERTY = "removePasswordProperty";
   private static final String WEB_UI_PAM_SSL = "webuipamssl";
   private static final String IS_CONFIGURED = "isConfigured";
+  private static final String WEBHCAT_SSL = "webhcatssl";
 
   static {
     OptionBuilder.hasArg(false);
@@ -63,8 +64,9 @@ public class ConfCli {
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(UNSECURE));
 
     OptionBuilder.hasArg();
-    OptionBuilder.withArgName("path-to-hive-site");
-    OptionBuilder.withDescription("Path to hive-site.xml");
+    OptionBuilder.withArgName("path to xml file");
+    OptionBuilder.withDescription("Path to xml file to configure (hive-site.xml, webhcat-site"
+        + ".xml etc).");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(PATH));
 
     OptionBuilder.hasArg(false);
@@ -93,9 +95,14 @@ public class ConfCli {
     OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEB_UI_PAM_SSL));
 
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Configures webhcat-site.xml for webHCat SSL encryption");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBHCAT_SSL));
+
+
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("property to check");
-    OptionBuilder.withDescription("Checks if property is set in hive-site.xml.");
+    OptionBuilder.withDescription("Checks if property is set in xml file.");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(IS_CONFIGURED));
 
   }
@@ -116,10 +123,10 @@ public class ConfCli {
     if (line.hasOption(HELP)) {
       printHelp();
     } else if(line.hasOption(PATH)){
-      String pathToHiveSite = line.getOptionValue(PATH);
+      String pathToXmlFile = line.getOptionValue(PATH);
       if(isSecurityConfig(line)){
         if(hasValidSecurityOptions(line)){
-          configureSecurity(pathToHiveSite, getSecurity(line));
+          configureSecurity(pathToXmlFile, getSecurity(line));
         } else {
           printHelp();
         }
@@ -128,36 +135,40 @@ public class ConfCli {
       if(isHs2HaConfig(line)){
         if(hasValidHs2HaOptions(line)){
           String zookeeperQuorum = line.getOptionValue(ZK_QUORUM);
-          ConfTool.enableHs2Ha(pathToHiveSite, zookeeperQuorum);
+          ConfTool.enableHs2Ha(pathToXmlFile, zookeeperQuorum);
         } else {
           printHelp();
         }
       }
 
       if(isMetaStoreUriConfig(line)){
-        ConfTool.initMetaStoreUri(pathToHiveSite);
+        ConfTool.initMetaStoreUri(pathToXmlFile);
       }
 
       if(hasIsConfiguredOption(line)){
         String property = line.getOptionValue(IS_CONFIGURED);
-        printBool(ConfTool.isConfigured(pathToHiveSite, property));
+        printBool(ConfTool.isConfigured(pathToXmlFile, property));
       }
 
       if(isConnectionUrlConfig(line)){
         if(hasValidConnectionUrlOptions(line)){
           String connectionUrl = line.getOptionValue(CONNECTION_URL);
-          ConfTool.setConnectionUrl(pathToHiveSite, connectionUrl);
+          ConfTool.setConnectionUrl(pathToXmlFile, connectionUrl);
         } else {
           printHelp();
         }
       }
 
       if (isRemoveProperty(line)) {
-        ConfTool.removeConnectionPasswordProperty(pathToHiveSite);
+        ConfTool.removeConnectionPasswordProperty(pathToXmlFile);
       }
 
       if(isWebUiHs2PamSslConfig(line)){
-        ConfTool.setHs2WebUiPamSsl(pathToHiveSite);
+        ConfTool.setHs2WebUiPamSsl(pathToXmlFile);
+      }
+
+      if(isWeHCatSslConfig(line)){
+        ConfTool.setWebHCatSsl(pathToXmlFile);
       }
 
     } else {
@@ -227,6 +238,10 @@ public class ConfCli {
 
   private static boolean hasIsConfiguredOption(CommandLine line) {
     return line.hasOption(IS_CONFIGURED);
+  }
+
+  private static boolean isWeHCatSslConfig(CommandLine line) {
+    return line.hasOption(WEBHCAT_SSL);
   }
 
   private static void printBool(boolean value){
