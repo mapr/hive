@@ -28,6 +28,11 @@
       <artifactId>hive-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hive.hcatalog</groupId>
+      <artifactId>hive-webhcat</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- For Tests -->
     <dependency>
       <groupId>junit</groupId>
