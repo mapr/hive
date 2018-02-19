@@ -1,6 +1,7 @@
 package org.apache.hive.conftool;
 
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hive.hcatalog.templeton.AppConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -230,4 +231,21 @@ public class ConfToolTest {
     Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
     Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
   }
+
+
+  @Test
+  public void setWebHCatSslTest() throws IOException, ParserConfigurationException, SAXException,
+      TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-001.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setWebHCatSsl(pathToWebHCatSite);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, AppConfig.USE_SSL));
+    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PATH));
+    Assert.assertEquals("mapr123", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PASSWORD));
+  }
+
 }

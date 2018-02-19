@@ -30,6 +30,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.hive.hcatalog.templeton.AppConfig;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -113,6 +114,18 @@ class ConfTool {
   }
 
 
+  static void setWebHCatSsl(String pathToWebHCatSite) throws TransformerException, IOException,
+      SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToWebHCatSite);
+    LOG.info("Reading webhcat-site.xml from path : {}", pathToWebHCatSite);
+    LOG.info("Configuring webHCat for  SSL encryption");
+    set(doc, AppConfig.USE_SSL, TRUE);
+    set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
+    set(doc, AppConfig.KEY_STORE_PASSWORD, MAPR_DEFAULT_SSL_KEYSTORE_PASSWORD);
+    saveToFile(doc, pathToWebHCatSite);
+  }
+
+
   static void setEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
@@ -174,14 +187,20 @@ class ConfTool {
     return docBuilder.parse(pathToHiveSite);
   }
 
-  private static void set(Document doc, ConfVars confVars, String value){
-    if (propertyExists(doc, confVars)) {
-      LOG.info("Property {} exists in hive-site.xml", confVars);
-      setProperty(doc, confVars, value);
+
+  private static void set(Document doc, String property, String value){
+    if (propertyExists(doc, property)) {
+      LOG.info("Property {} exists in xml file", property);
+      setProperty(doc, property, value);
     } else {
-      LOG.info("Property {} does not exist in hive-site.xml", confVars);
-      addProperty(doc, confVars, value);
+      LOG.info("Property {} does not exist in xml file", property);
+      addProperty(doc, property, value);
     }
+  }
+
+
+  private static void set(Document doc, ConfVars confVars, String value){
+    set(doc, confVars.varname, value);
   }
 
   private static void remove(Document doc, ConfVars confVars){
@@ -202,11 +221,15 @@ class ConfTool {
   }
 
   static void addProperty(Document doc, ConfVars confVars, String value) {
-    LOG.info("Adding property to hive-site.xml: {} = {}", confVars.varname, value);
-    Element property = doc.createElement(PROPERTY);
-    addName(doc, property, confVars);
-    addValue(doc, property, value);
-    getConfigurationNode(doc).appendChild(property);
+    addProperty(doc, confVars.varname, value);
+  }
+
+  static void addProperty(Document doc, String property, String value) {
+    LOG.info("Adding property to hive-site.xml: {} = {}", property, value);
+    Element element = doc.createElement(PROPERTY);
+    addName(doc, element, property);
+    addValue(doc, element, value);
+    getConfigurationNode(doc).appendChild(element);
   }
 
   static void removeProperty(Document doc, ConfVars confVars){
@@ -240,10 +263,11 @@ class ConfTool {
     throw new IllegalArgumentException("No <configuration> tag");
   }
 
-  private static void addName(Document doc, Node property, ConfVars confVars) {
-    Element name = doc.createElement(NAME);
-    name.appendChild(doc.createTextNode(confVars.varname));
-    property.appendChild(name);
+
+  private static void addName(Document doc, Node node, String property) {
+    Element element = doc.createElement(NAME);
+    element.appendChild(doc.createTextNode(property));
+    node.appendChild(element);
   }
 
   private static void addValue(Document doc, Node property, String value) {
@@ -278,7 +302,11 @@ class ConfTool {
   }
 
   static void setProperty(Document doc, ConfVars confVars, String value) {
-    LOG.info("Setting value to existing property in hive-site.xml: {} = {}", confVars.varname, value);
+    set(doc, confVars.varname, value);
+  }
+
+  static void setProperty(Document doc, String property, String value) {
+    LOG.info("Setting value to existing property in xml file: {} = {}", property, value);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();
@@ -288,7 +316,7 @@ class ConfTool {
       int childLength = nameValueDesc.getLength();
       for (int j = 0; j <= childLength - 1; j++) {
         Node childNode = nameValueDesc.item(j);
-        if (NAME.equals(childNode.getNodeName()) && confVars.varname.equals(childNode.getTextContent())) {
+        if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
           writeValue(nameValueDesc, value);
         }
       }
@@ -296,6 +324,10 @@ class ConfTool {
   }
 
   static String getProperty(Document doc, ConfVars confVars) {
+    return getProperty(doc, confVars.varname);
+  }
+
+  static String getProperty(Document doc, String property) {
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();
@@ -305,7 +337,7 @@ class ConfTool {
       int childLength = nameValueDesc.getLength();
       for (int j = 0; j <= childLength - 1; j++) {
         Node childNode = nameValueDesc.item(j);
-        if (NAME.equals(childNode.getNodeName()) && confVars.varname.equals(childNode.getTextContent())) {
+        if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
           return readValue(nameValueDesc);
         }
       }

@@ -55,6 +55,7 @@ ROLES_DIR="$MAPR_HOME/roles"
 DERBY_CONNECTION_URL="jdbc:derby:;databaseName=$HIVE_BIN/metastore_db;create=true"
 CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 HIVE_METASTORE_URIS_PROPERTY_NAME="hive.metastore.uris"
+WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -176,7 +177,7 @@ fi
 }
 
 #
-# Configures PAM an SSl encryption for HiveServer2 Web UI on MapR SASL cluster
+# Configures PAM an SSL encryption for HiveServer2 Web UI on MapR SASL cluster
 #
 configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
@@ -187,6 +188,16 @@ if [ "$isSecure" = "true" ];  then
 fi
 }
 
+#
+# Configures  SSL encryption for webHCat on MapR SASL cluster
+#
+configure_webhcat_ssl(){
+WEBHCAT_SITE="$1"
+isSecure="$2"
+if [ "$isSecure" = "true" ];  then
+  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$WEBHCAT_SITE" "-webhcatssl"
+fi
+}
 
 #
 # Check that port is available
@@ -595,6 +606,8 @@ configure_security "$HIVE_SITE" "$isSecure"
 configure_impersonation "$isSecure"
 
 configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$isSecure"
+
+configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
 
 init_derby_schema
 
