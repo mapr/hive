@@ -18,6 +18,9 @@
  */
 package org.apache.hive.hcatalog.templeton;
 
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
@@ -26,7 +29,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
+import org.apache.hadoop.util.Shell;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -63,6 +72,10 @@ public class Main {
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
   public static final int DEFAULT_PORT = 8080;
+  public static final String DEFAULT_HOST = "0.0.0.0";
+  public static final String DEFAULT_KEY_STORE_PATH = "";
+  public static final String DEFAULT_KEY_STORE_PASSWORD = "";
+  public static final String DEFAULT_SSL_PROTOCOL_BLACKLIST = "SSLv2,SSLv3";
   private Server server;
 
   private static volatile AppConfig conf;
@@ -174,7 +187,7 @@ public class Main {
     // to have more control.
     Server server = null;
     if (StringUtils.isEmpty(conf.jettyConfiguration())) {
-      server = new Server(port);
+      server = new Server();
     } else {
         FileInputStream jettyConf = new FileInputStream(conf.jettyConfiguration());
         XmlConfiguration configuration = new XmlConfiguration(jettyConf);
@@ -225,12 +238,44 @@ public class Main {
     root.addServlet(h, "/" + SERVLET_PATH + "/*");
     // Add any redirects
     addRedirects(server);
-
+    server.addConnector(createChannelConnector());
     // Start the server
     server.start();
     this.server = server;
     return server;
   }
+
+  /**
+   Create a channel connector for "http/https" requests
+   */
+
+  private Connector createChannelConnector() {
+    SelectChannelConnector connector;
+    if (conf.getBoolean(AppConfig.USE_SSL, false)) {
+      LOG.info("Using SSL for templeton.");
+      SslContextFactory sslContextFactory = new SslContextFactory();
+      sslContextFactory.setKeyStorePath(conf.get(AppConfig.KEY_STORE_PATH, DEFAULT_KEY_STORE_PATH));
+      sslContextFactory
+          .setKeyStorePassword(conf.get(AppConfig.KEY_STORE_PASSWORD, DEFAULT_KEY_STORE_PASSWORD));
+      Set<String> excludedSSLProtocols = Sets.newHashSet(
+          Splitter.on(",").trimResults().omitEmptyStrings().split(Strings.nullToEmpty(
+              conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
+      sslContextFactory.addExcludeProtocols(
+          excludedSSLProtocols.toArray(new String[excludedSSLProtocols.size()]));
+      connector = new SslSelectChannelConnector(sslContextFactory);
+    } else {
+      connector = new SelectChannelConnector();
+    }
+    connector.setLowResourcesMaxIdleTime(10000);
+    connector.setResolveNames(false);
+    connector.setUseDirectBuffers(false);
+    connector.setReuseAddress(!Shell.WINDOWS);
+    connector.setHost(conf.get(AppConfig.HOST, DEFAULT_HOST));
+    connector.setPort(conf.getInt(AppConfig.PORT, DEFAULT_PORT));
+    connector.setRequestHeaderSize(1024 * 64);
+    return connector;
+  }
+
 
   public FilterHolder makeXSRFFilter() {
     String customHeader = null; // The header to look for. We use "X-XSRF-HEADER" if this is null.
