@@ -40,7 +40,8 @@ initCfgEnv
 #
 # Globals
 #
-HIVE_VERSION=$(cat "$MAPR_HOME"/hive/hiveversion)
+HIVE_VERSION_FILE="$MAPR_HOME"/hive/hiveversion
+HIVE_VERSION=$(cat "$HIVE_VERSION_FILE")
 HIVE_HOME="$MAPR_HOME"/hive/hive-"$HIVE_VERSION"
 HIVE_BIN="$HIVE_HOME"/bin
 HIVE_LIB="$HIVE_HOME"/lib
@@ -622,6 +623,8 @@ copy_log4j_for_hadoop_common_classpath
 remove_fresh_install_indicator
 
 grant_admin_permissions_to "$HIVE_HOME"
+
+grant_admin_permissions_to "$HIVE_VERSION_FILE"
 
 grant_permissions_to_hive_site
 
