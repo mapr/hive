@@ -47,6 +47,7 @@ HIVE_BIN="$HIVE_HOME"/bin
 HIVE_LIB="$HIVE_HOME"/lib
 HIVE_CONF="$HIVE_HOME"/conf
 HIVE_LOGS="$HIVE_HOME"/logs
+HIVE_PIDS="$HIVE_HOME"/pids
 HIVE_SITE="$HIVE_CONF"/hive-site.xml
 HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
@@ -152,17 +153,6 @@ else
 fi
 }
 
-#
-# Grant owners
-#
-grant_admin_permissions_to(){
-if [ ! -z "$MAPR_USER" ]; then
-  chown -R "$MAPR_USER" "$1"
-fi
-if [ ! -z "$MAPR_GROUP" ]; then
-  chgrp -R "$MAPR_GROUP" "$1"
-fi
-}
 
 configure_security(){
 HIVE_SITE="$1"
@@ -509,6 +499,64 @@ chmod 0640 "$HIVE_SITE"
 }
 
 #
+# Grant owners
+#
+set_admin_user_group_to(){
+path=$1
+option=$2
+if [ "$option" = "recursive" ] ; then
+  option="-R"
+fi
+if [ ! -z "$MAPR_USER" ]; then
+  chown ${option} "$MAPR_USER" "$path"
+fi
+if [ ! -z "$MAPR_GROUP" ]; then
+  chgrp ${option} "$MAPR_GROUP" "$path"
+fi
+}
+
+
+#
+# Set owner and group for log directory
+#
+set_log_dir_owner_group(){
+if [ -f "$HIVE_LOGS" ] ; then
+  if [ -f "$HIVE_LOGS/$MAPR_USER" ] ; then
+  set_admin_user_group_to "$HIVE_LOGS/$MAPR_USER" recursive
+  fi
+fi
+}
+
+#
+# Set owner and group for all dirs in $HIVE_HOME. Skips the contents of dirs in exception list
+#
+set_all_dirs_owner_group(){
+# list of exception where not to change owner/group
+declare -A is_exception=(["$HIVE_LOGS"]=1 ["$HIVE_PIDS"]=1)
+for dir in $(ls "$HIVE_HOME") ; do
+  # folder is not in exception list
+  if [ ! -n "${is_exception[$HIVE_HOME/$dir]}" ] ; then
+    set_admin_user_group_to "$HIVE_HOME/$dir" recursive
+  else
+    set_admin_user_group_to "$HIVE_HOME/$dir"
+  fi
+done
+}
+
+
+#
+# Configures owner/group and read/write permissions of Hive components
+#
+configure_permissions(){
+set_all_dirs_owner_group
+set_log_dir_owner_group
+set_admin_user_group_to "$HIVE_VERSION_FILE"
+set_admin_user_group_to "$HIVE_HOME"
+grant_permissions_to_hive_site
+grant_write_permission_in_logs_dir
+}
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -616,16 +664,10 @@ configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 
 configure_roles
 
-grant_write_permission_in_logs_dir
-
 copy_log4j_for_hadoop_common_classpath
 
 remove_fresh_install_indicator
 
-grant_admin_permissions_to "$HIVE_HOME"
-
-grant_admin_permissions_to "$HIVE_VERSION_FILE"
-
-grant_permissions_to_hive_site
+configure_permissions
 
 save_new_hive_site_check_sum
