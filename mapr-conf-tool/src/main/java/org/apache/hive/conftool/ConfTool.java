@@ -51,6 +51,11 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_U
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
+
+/**
+ *  Helper for configuring Hive
+ */
 
 class ConfTool {
   private ConfTool() {
@@ -66,8 +71,14 @@ class ConfTool {
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
-  private static final String MAPR_DEFAULT_SSL_KEYSTORE_PASSWORD = "mapr123";
   private static final String EMPTY = "";
+
+  /**
+   * Converts xml doc to String
+   *
+    * @param doc Document to print
+   * @return xml document as String
+   */
 
   static String toString(Document doc){
 
@@ -89,6 +100,17 @@ class ConfTool {
     return sb.toString();
   }
 
+  /**
+   * Enables/disable Mapr-Sasl security for Hive.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param secure true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
   static void setMaprSasl(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
@@ -102,29 +124,106 @@ class ConfTool {
     saveToFile(doc, pathToHiveSite);
   }
 
-  static void setHs2WebUiPamSsl(String pathToHiveSite) throws TransformerException, IOException, SAXException, ParserConfigurationException {
+  /**
+   * Configures hive.metastore.execute.setugi. When one need to set "true" value, this method
+   * just removes property from hive-site.xml since it has default true value.
+   *
+   * @param pathToHiveSite  hive-site location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setMetaStoreUgi(String pathToHiveSite, boolean security) throws TransformerException,
+      IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    LOG.info("Configuring Hive for HiveServer2 web UI PAM authentication and SSL encryption");
-    set(doc, HIVE_SERVER2_WEBUI_USE_PAM, TRUE);
-    set(doc, HIVE_SERVER2_WEBUI_USE_SSL, TRUE);
-    set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-    set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, MAPR_DEFAULT_SSL_KEYSTORE_PASSWORD);
+    if (security) {
+      LOG.info("Configuring metastore not to use UGI");
+      set(doc, METASTORE_EXECUTE_SET_UGI, FALSE);
+    } else {
+      LOG.info("Configuring metastore to use UGI. Default is true, so removing property from "
+          + "hive-site.xml to enable it");
+      remove(doc, METASTORE_EXECUTE_SET_UGI);
+    }
     saveToFile(doc, pathToHiveSite);
   }
 
+  /**
+   * Configures PAM and SSL encryption for HiveServer2 web UI
+   *
+   * @param pathToHiveSite hive-site location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
 
-  static void setWebHCatSsl(String pathToWebHCatSite) throws TransformerException, IOException,
+  static void setHs2WebUiPamSsl(String pathToHiveSite, boolean security) throws
+      TransformerException, IOException,
+      SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    if(security) {
+      LOG.info("Configuring Hive for HiveServer2 web UI PAM authentication and SSL encryption");
+      set(doc, HIVE_SERVER2_WEBUI_USE_PAM, TRUE);
+      set(doc, HIVE_SERVER2_WEBUI_USE_SSL, TRUE);
+      set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
+      set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, new String
+          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+    } else {
+      LOG.info("Disabling PAM authentication and SSL encryption for HiveServer2 web UI");
+      remove(doc, HIVE_SERVER2_WEBUI_USE_PAM);
+      remove(doc, HIVE_SERVER2_WEBUI_USE_SSL);
+      remove(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
+      remove(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
+    }
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures Ssl encryption for webHCat server
+   *
+   * @param pathToWebHCatSite webhcat-site.xml location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setWebHCatSsl(String pathToWebHCatSite, boolean security) throws
+      TransformerException, IOException,
       SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToWebHCatSite);
     LOG.info("Reading webhcat-site.xml from path : {}", pathToWebHCatSite);
-    LOG.info("Configuring webHCat for  SSL encryption");
-    set(doc, AppConfig.USE_SSL, TRUE);
-    set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-    set(doc, AppConfig.KEY_STORE_PASSWORD, MAPR_DEFAULT_SSL_KEYSTORE_PASSWORD);
+    if(security) {
+      LOG.info("Configuring webHCat for  SSL encryption");
+      set(doc, AppConfig.USE_SSL, TRUE);
+      set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
+      set(doc, AppConfig.KEY_STORE_PASSWORD, new String
+          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+    } else {
+      remove(doc, AppConfig.USE_SSL);
+      remove(doc, AppConfig.KEY_STORE_PATH);
+      remove(doc, AppConfig.KEY_STORE_PASSWORD);
+    }
     saveToFile(doc, pathToWebHCatSite);
   }
 
+  /**
+   * Configures Ssl encryption for HiveServer2
+   *
+   * @param pathToHiveSite hive-site location
+   * @param secure true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
 
   static void setEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
@@ -137,6 +236,18 @@ class ConfTool {
     saveToFile(doc, pathToHiveSite);
   }
 
+  /**
+   * Enables HiveServer2 HA
+   *
+   * @param pathToHiveSite hive-site location
+   * @param zookeeperQuorum comma separated list of nodes of Zookeeper quorum
+   * @throws ParserConfigurationException
+   * @throws IOException
+   * @throws SAXException
+   * @throws TransformerException
+   */
+
+
   static void enableHs2Ha(String pathToHiveSite, String zookeeperQuorum) throws ParserConfigurationException, IOException, SAXException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
@@ -144,6 +255,17 @@ class ConfTool {
     set(doc, HIVE_ZOOKEEPER_QUORUM, zookeeperQuorum);
     saveToFile(doc, pathToHiveSite);
   }
+
+  /**
+   * Checks if property presents in file
+   *
+   * @param pathToHiveSite hive-site location
+   * @param property property name
+   * @return true if property is in hive-site.xml
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
 
   static boolean isConfigured(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
@@ -153,7 +275,7 @@ class ConfTool {
   /**
    *  Removes javax.jdo.option.ConnectionPassword property from hive-site
    *  IN-827
-   * @param pathToHiveSite
+   * @param pathToHiveSite hive-site location
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
@@ -166,12 +288,33 @@ class ConfTool {
     saveToFile(doc, pathToHiveSite);
   }
 
+  /**
+   * Adds hive.metastore.uris=localhost in hive-site.xml
+   *
+   * @param pathToHiveSite hive-site location
+   * @throws ParserConfigurationException
+   * @throws IOException
+   * @throws SAXException
+   * @throws TransformerException
+   */
+
   static void initMetaStoreUri(String pathToHiveSite) throws ParserConfigurationException, IOException, SAXException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     set(doc, METASTOREURIS, THRIFT_LOCAL_HOST);
     saveToFile(doc, pathToHiveSite);
   }
+
+  /**
+   * Sets javax.jdo.option.ConnectionURL
+   *
+   * @param pathToHiveSite hive-site location
+   * @param connectionUrl value to set for ConnectionURL
+   * @throws ParserConfigurationException
+   * @throws IOException
+   * @throws SAXException
+   * @throws TransformerException
+   */
 
   static void setConnectionUrl(String pathToHiveSite, String connectionUrl) throws ParserConfigurationException, IOException, SAXException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
@@ -204,9 +347,13 @@ class ConfTool {
   }
 
   private static void remove(Document doc, ConfVars confVars){
-    if (propertyExists(doc, confVars)) {
-      LOG.info("Property {} exists in hive-site.xml", confVars);
-      removeProperty(doc, confVars);
+    remove(doc, confVars.varname);
+  }
+
+  private static void remove(Document doc, String property){
+    if (propertyExists(doc, property)) {
+      LOG.info("Property {} exists in hive-site.xml", property);
+      removeProperty(doc, property);
     }
   }
 
@@ -224,7 +371,7 @@ class ConfTool {
     addProperty(doc, confVars.varname, value);
   }
 
-  static void addProperty(Document doc, String property, String value) {
+  private static void addProperty(Document doc, String property, String value) {
     LOG.info("Adding property to hive-site.xml: {} = {}", property, value);
     Element element = doc.createElement(PROPERTY);
     addName(doc, element, property);
@@ -233,18 +380,22 @@ class ConfTool {
   }
 
   static void removeProperty(Document doc, ConfVars confVars){
-    LOG.info("Removing property from hive-site.xml: {} = {}", confVars.varname);
+    removeProperty(doc, confVars.varname);
+  }
+
+  private static void removeProperty(Document doc, String property){
+    LOG.info("Removing property from hive-site.xml: {} = {}", property);
     Node configuration = getConfigurationNode(doc);
-    NodeList properties = configuration.getChildNodes();
-    int length = properties.getLength();
+    NodeList childNodes = configuration.getChildNodes();
+    int length = childNodes.getLength();
     for (int i = 0; i <= length - 1; i++) {
-      Node node = properties.item(i);
+      Node node = childNodes.item(i);
       NodeList nameValueDesc = node.getChildNodes();
       int childLength = nameValueDesc.getLength();
       for (int j = 0; j <= childLength - 1; j++) {
         Node childNode = nameValueDesc.item(j);
-        if (NAME.equals(childNode.getNodeName()) && confVars.varname.equals(childNode.getTextContent())) {
-          configuration.removeChild(properties.item(i));
+        if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
+          configuration.removeChild(childNodes.item(i));
           return;
         }
       }
@@ -305,7 +456,7 @@ class ConfTool {
     set(doc, confVars.varname, value);
   }
 
-  static void setProperty(Document doc, String property, String value) {
+  private static void setProperty(Document doc, String property, String value) {
     LOG.info("Setting value to existing property in xml file: {} = {}", property, value);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();

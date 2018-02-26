@@ -31,6 +31,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
+/**
+ CLI manager to configure Hive components
+ */
 public class ConfCli {
   private ConfCli(){}
   private static final Logger LOG = LoggerFactory.getLogger(ConfCli.class.getName());
@@ -164,11 +167,11 @@ public class ConfCli {
       }
 
       if(isWebUiHs2PamSslConfig(line)){
-        ConfTool.setHs2WebUiPamSsl(pathToXmlFile);
+        ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getSecurity(line));
       }
 
       if(isWeHCatSslConfig(line)){
-        ConfTool.setWebHCatSsl(pathToXmlFile);
+        ConfTool.setWebHCatSsl(pathToXmlFile, getSecurity(line));
       }
 
     } else {
@@ -196,6 +199,7 @@ public class ConfCli {
   private static void configureSecurity(String pathToHiveSite, boolean security) throws IOException, ParserConfigurationException, SAXException, TransformerException {
     ConfTool.setMaprSasl(pathToHiveSite, security);
     ConfTool.setEncryption(pathToHiveSite, security);
+    ConfTool.setMetaStoreUgi(pathToHiveSite, security);
   }
 
   private static boolean getSecurity(CommandLine line){
