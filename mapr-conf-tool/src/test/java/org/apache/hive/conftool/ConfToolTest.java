@@ -221,7 +221,7 @@ public class ConfToolTest {
   public void setHs2WebUiPamSslTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-013.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setHs2WebUiPamSsl(pathToHiveSite);
+    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, true);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -234,11 +234,28 @@ public class ConfToolTest {
 
 
   @Test
+  public void disableHs2WebUiPamSslTest() throws IOException, ParserConfigurationException,
+      SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-013.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, false);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
+  }
+
+
+  @Test
   public void setWebHCatSslTest() throws IOException, ParserConfigurationException, SAXException,
       TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-001.xml");
     String pathToWebHCatSite = url.getPath();
-    ConfTool.setWebHCatSsl(pathToWebHCatSite);
+    ConfTool.setWebHCatSsl(pathToWebHCatSite, true);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -248,4 +265,47 @@ public class ConfToolTest {
     Assert.assertEquals("mapr123", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PASSWORD));
   }
 
+  @Test
+  public void disableWebHCatSslTest() throws IOException, ParserConfigurationException,
+      SAXException,
+      TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-001.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setWebHCatSsl(pathToWebHCatSite, false);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.USE_SSL));
+    Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PATH));
+    Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PASSWORD));
+  }
+
+
+  @Test
+  public void setMetaStoreUgiTest() throws IOException, ParserConfigurationException, SAXException,
+      TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-014.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setMetaStoreUgi(pathToWebHCatSite, true);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertEquals("false", ConfTool.getProperty(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
+  }
+
+  @Test
+  public void disableMetaStoreUgiTest() throws IOException, ParserConfigurationException,
+      SAXException,
+      TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-015.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setMetaStoreUgi(pathToWebHCatSite, false);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
+  }
 }
