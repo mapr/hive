@@ -15,62 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-function get_canonical_dir() {
-  target="$1"
-  canonical_name=$(readlink -f ${target} 2>/dev/null)
-  if [[ $? -eq 0 ]]; then
-    canonical_dir=$(dirname $canonical_name)
-    echo ${canonical_dir}
-    return
-  fi
-
-  # Mac has no readlink -f
-  cd $(dirname ${target})
-  target=$(basename ${target})
-
-  # chase down the symlinks
-  while [ -L ${target} ]; do
-    target=$(readlink ${target})
-    cd $(dirname ${target})
-    target=$(basename ${target})
-  done
-
-  canonical_dir=$(pwd -P)
-  ret=${canonical_dir}
-  echo $ret
-}
-
 encryptconf() {
-  CLASS=org.apache.hadoop.hive.metastore.tools.HiveEncryptTool
-  exec $HADOOP jar ${HIVE_LIB}/${META_JAR} $CLASS $HIVE_OPTS "$@"
+  CLASS=org.apache.hive.encryptiontool.EncryptionCli
+  java -cp  ${HADOOP_CLASSPATH}:${HIVE_LIB}/${ENCRYPT_JAR} $CLASS "$@"
 }
 
-
-remove_connection_password_property() {
-  if [ "$HADOOP_CLASSPATH" != "" ]; then
-    HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"
-  else
-    HADOOP_CLASSPATH="$HIVE_LIB/*":$(hadoop classpath)
-  fi
-
-  HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
-  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" -removePasswordProperty
-}
-
-bin=$(dirname "$0")
-bin=$(cd "$bin"; pwd)
-HIVE_HOME=$(dirname "$bin")
+HIVE_HOME=$(cd ${PWD}/.. ; pwd)
 HIVE_LIB=${HIVE_HOME}/lib
-META_JAR="hive-metastore-*.jar"
+ENCRYPT_JAR="mapr-encryption-tool-*.jar"
 
-HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
-HADOOP=$HADOOP_DIR/hadoop
+if [ "$HADOOP_CLASSPATH" != "" ]; then
+  HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"
+else
+  HADOOP_CLASSPATH="$HIVE_LIB/*":$(hadoop classpath)
+fi
 
-MAPR_HOME="${BASEMAPR:-/opt/mapr}"
-HIVE_HOME="$MAPR_HOME"/hive/hive-"$HIVEMETASTORE_VERSION"
-HIVE_CONF="$HIVE_HOME"/conf
-HIVE_SITE="$HIVE_CONF"/hive-site.xml
-
-remove_connection_password_property
 
 encryptconf "$@"
