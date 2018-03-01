@@ -30,6 +30,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hive.hcatalog.templeton.AppConfig;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -267,26 +269,66 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static boolean isConfigured(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
+  static boolean exists(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     return propertyExists(doc, property);
   }
 
   /**
-   *  Removes javax.jdo.option.ConnectionPassword property from hive-site
+   *  Removes property from xml file
    *  IN-827
    * @param pathToHiveSite hive-site location
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void removeConnectionPasswordProperty(String pathToHiveSite) throws IOException, SAXException, ParserConfigurationException, TransformerException {
+  static void delProperty(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
-    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    LOG.info("Removing {} property from {}", METASTOREPWD, pathToHiveSite);
-    remove(doc, METASTOREPWD);
+    LOG.info("Reading xml from path : {}", pathToHiveSite);
+    LOG.info("Removing {} property from {}", property, pathToHiveSite);
+    remove(doc, property);
     saveToFile(doc, pathToHiveSite);
   }
+
+  /**
+   * Adds property to xml file. If property already exists, it replaces its value with new one.
+   * Uses following template
+   * <property>
+   *   <name>property.name</name>
+   *   <value>property.value</value>
+   * </property>
+   *
+   * @param pathToHiveSite hive-site location
+   * @param property name of the property
+   * @param value value of the property
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   * @throws TransformerException
+   */
+
+  static void addProperty(String pathToHiveSite, String property, String value)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    addProperty(doc, property, value);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   *  Return property value from xml file
+   * @param pathToHiveSite hive-site location
+   * @param property name of the property
+   * @return
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static String getProperty(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    return getProperty(doc, property);
+  }
+
 
   /**
    * Adds hive.metastore.uris=localhost in hive-site.xml
@@ -367,18 +409,21 @@ class ConfTool {
     transformer.transform(source, result);
   }
 
+  @VisibleForTesting
   static void addProperty(Document doc, ConfVars confVars, String value) {
     addProperty(doc, confVars.varname, value);
   }
 
   private static void addProperty(Document doc, String property, String value) {
-    LOG.info("Adding property to hive-site.xml: {} = {}", property, value);
+    LOG.info("Adding property to hive-site.xml: {} = {}", property, isPassword(property) ?
+        hidePassword(value) : value);
     Element element = doc.createElement(PROPERTY);
     addName(doc, element, property);
     addValue(doc, element, value);
     getConfigurationNode(doc).appendChild(element);
   }
 
+  @VisibleForTesting
   static void removeProperty(Document doc, ConfVars confVars){
     removeProperty(doc, confVars.varname);
   }
@@ -402,6 +447,7 @@ class ConfTool {
     }
   }
 
+  @VisibleForTesting
   static Node getConfigurationNode(Document doc){
     NodeList nodes = doc.getChildNodes();
     int length = nodes.getLength();
@@ -427,12 +473,13 @@ class ConfTool {
     property.appendChild(name);
   }
 
-
+  @VisibleForTesting
   static boolean propertyExists(Document doc, ConfVars confVars) {
     return propertyExists(doc, confVars.varname);
   }
 
 
+  @VisibleForTesting
   static boolean propertyExists(Document doc, String property) {
     LOG.info("Checking that property exists in hive-site.xml : {}", property);
     Node configuration = getConfigurationNode(doc);
@@ -452,12 +499,23 @@ class ConfTool {
     return false;
   }
 
+  private static boolean isPassword(String property){
+    String propertyLowCase = property.toLowerCase();
+    return propertyLowCase.contains("password") || propertyLowCase.contains("passwd");
+  }
+
+  private static String hidePassword(String password){
+    return StringUtils.repeat("*", password.length());
+  }
+
+  @VisibleForTesting
   static void setProperty(Document doc, ConfVars confVars, String value) {
     set(doc, confVars.varname, value);
   }
 
   private static void setProperty(Document doc, String property, String value) {
-    LOG.info("Setting value to existing property in xml file: {} = {}", property, value);
+    LOG.info("Setting value to existing property in xml file: {} = {}", property, isPassword(property) ?
+        hidePassword(value) : value);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();
@@ -474,10 +532,12 @@ class ConfTool {
     }
   }
 
+  @VisibleForTesting
   static String getProperty(Document doc, ConfVars confVars) {
     return getProperty(doc, confVars.varname);
   }
 
+  @VisibleForTesting
   static String getProperty(Document doc, String property) {
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
