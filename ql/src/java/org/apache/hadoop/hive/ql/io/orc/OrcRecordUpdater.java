@@ -45,6 +45,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.orc.OrcConf;
 import org.apache.orc.impl.AcidStats;
 import org.apache.orc.impl.OrcAcidUtils;
+import org.apache.orc.impl.WriterImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +101,7 @@ public class OrcRecordUpdater implements RecordUpdater {
   // This records how many rows have been inserted or deleted.  It is separate from insertedRows
   // because that is monotonically increasing to give new unique row ids.
   private long rowCountDelta = 0;
-  private final KeyIndexBuilder indexBuilder = new KeyIndexBuilder();
+  private final KeyIndexBuilder indexBuilder = new KeyIndexBuilder("insert");
   private KeyIndexBuilder deleteEventIndexBuilder;
   private StructField recIdField = null; // field to look for the record identifier in
   private StructField rowIdField = null; // field inside recId to look for row id in
@@ -393,7 +394,7 @@ public class OrcRecordUpdater implements RecordUpdater {
       // Initialize a deleteEventWriter if not yet done. (Lazy initialization)
       if (deleteEventWriter == null) {
         // Initialize an indexBuilder for deleteEvents.
-        deleteEventIndexBuilder = new KeyIndexBuilder();
+        deleteEventIndexBuilder = new KeyIndexBuilder("delete");
         // Change the indexBuilder callback too for the deleteEvent file, the remaining writer
         // options remain the same.
 
@@ -556,12 +557,27 @@ public class OrcRecordUpdater implements RecordUpdater {
   }
 
   static class KeyIndexBuilder implements OrcFile.WriterCallback {
-    StringBuilder lastKey = new StringBuilder();
+    private final String builderName;
+    StringBuilder lastKey = new StringBuilder();//list of last keys for each stripe
     long lastTransaction;
     int lastBucket;
     long lastRowId;
     AcidStats acidStats = new AcidStats();
+    /**
+     *  {@link #preStripeWrite(OrcFile.WriterContext)} is normally called by the
+     *  {@link org.apache.orc.MemoryManager} except on close().
+     *  {@link org.apache.orc.impl.WriterImpl#close()} calls preFooterWrite() before it calls
+     *  {@link WriterImpl#flushStripe()} which causes the {@link #ACID_KEY_INDEX_NAME} index to
+     *  have the last entry missing.  It should be also fixed in ORC but that requires upgrading
+     *  the ORC jars to have effect.
+     *
+     *  This is used to decide if we need to make preStripeWrite() call here.
+     */
+    private long numKeysCurrentStripe = 0;
 
+    KeyIndexBuilder(String name) {
+      this.builderName = name;
+    }
     @Override
     public void preStripeWrite(OrcFile.WriterContext context
     ) throws IOException {
@@ -571,11 +587,15 @@ public class OrcRecordUpdater implements RecordUpdater {
       lastKey.append(',');
       lastKey.append(lastRowId);
       lastKey.append(';');
+      numKeysCurrentStripe = 0;
     }
 
     @Override
     public void preFooterWrite(OrcFile.WriterContext context
                                ) throws IOException {
+      if(numKeysCurrentStripe > 0) {
+        preStripeWrite(context);
+      }
       context.getWriter().addUserMetadata(ACID_KEY_INDEX_NAME,
           UTF8.encode(lastKey.toString()));
       context.getWriter().addUserMetadata(OrcAcidUtils.ACID_STATS,
@@ -599,6 +619,7 @@ public class OrcRecordUpdater implements RecordUpdater {
       lastTransaction = transaction;
       lastBucket = bucket;
       lastRowId = rowId;
+      numKeysCurrentStripe++;
     }
   }
 
