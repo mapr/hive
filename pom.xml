@@ -184,9 +184,9 @@
     <orc.version>1.5.1</orc.version>
     <mockito-all.version>1.10.19</mockito-all.version>
     <mina.version>2.0.0-M5</mina.version>
-    <netty.version>4.0.52.Final</netty.version>
+    <netty.version>4.1.17.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
-    <parquet.version>1.8.1</parquet.version>
+    <parquet.version>1.9.0</parquet.version>
     <pig.version>0.16.0</pig.version>
     <powermock.version>1.6.2</powermock.version>
     <protobuf.version>3.11.1</protobuf.version>
@@ -197,7 +197,7 @@
     <tez.version>0.9.2.0-mapr-SNAPSHOT</tez.version>
     <slider.version>0.90.2-incubating</slider.version>
     <super-csv.version>2.2.0</super-csv.version>
-    <spark.version>2.0.0</spark.version>
+    <spark.version>2.3.0</spark.version>
     <scala.binary.version>2.11</scala.binary.version>
     <scala.version>2.11.8</scala.version>
     <tempus-fugit.version>1.1</tempus-fugit.version>
