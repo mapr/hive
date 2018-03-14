@@ -467,7 +467,7 @@ fi
 #
 exists_in_mapr_fs(){
 dir="$1"
-if $(hadoop fs -test -d "$dir") ; then
+if $(sudo -u "$MAPR_USER" -E hadoop fs -test -d "$dir") ; then
   return 0; # 0 = true
 else
   return 1;
@@ -487,9 +487,9 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
   fi
   if is_hive_not_configured_yet ; then
     if ! exists_in_mapr_fs "$METASTOREWAREHOUSE" ; then
-      sudo -u "$MAPR_USER" hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
+      sudo -u "$MAPR_USER" -E hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
     fi
-    sudo -u "$MAPR_USER" hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
+    sudo -u "$MAPR_USER" -E hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
   fi
 fi
 }
