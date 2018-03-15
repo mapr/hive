@@ -248,7 +248,9 @@ public class HBaseRowSerializer {
             if (i > 0) {
               ss.write(separator);
             }
-            serialize(list.get(i), eoi, level + 1, ss);
+            if (list.get(i) != null) {
+              serialize(list.get(i), eoi, level + 1, ss);
+            }
           }
         }
         return true;
@@ -292,8 +294,9 @@ public class HBaseRowSerializer {
               ss.write(sep);
             }
 
-            serialize(list.get(i), fields.get(i).getFieldObjectInspector(),
-                level + 1, ss);
+            if (list.get(i) != null) {
+              serialize(list.get(i), fields.get(i).getFieldObjectInspector(), level + 1, ss);
+            }
           }
         }
         return true;
