@@ -500,7 +500,7 @@ public class TezSessionState {
    * @throws Exception
    */
   public void close(boolean keepTmpDir) throws Exception {
-    if (session != null) {
+    if (getSession() != null) {
       LOG.info("Closing Tez Session");
       closeClient(session);
     } else if (sessionFuture != null) {
