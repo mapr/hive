@@ -708,9 +708,9 @@ public class RowContainer<ROW extends List<Object>>
     private Path tmpFilePath;
 
     public LocalSpillFile(Configuration jobConf, Reporter reporter) {
-      this.jobConf = new JobConf(jobConf);
       jobConf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY,
               Utilities.HADOOP_LOCAL_FS);
+      this.jobConf = new JobConf(jobConf);
       this.reporter = reporter;
     }
 
