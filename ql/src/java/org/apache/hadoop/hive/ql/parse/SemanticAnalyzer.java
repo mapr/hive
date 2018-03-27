@@ -1959,11 +1959,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             getMsg("Table: " + tabName));
       }
       // Disallow update and delete on non-acid tables
-      if ((updating() || deleting()) && !isAcid && isTableWrittenTo) {
+      if ((acidUpdating() || acidDeleting()) && !isAcid && isTableWrittenTo) {
         //isTableWrittenTo: delete from acidTbl where a in (select id from nonAcidTable)
         //so only assert this if we are actually writing to this table
         // Whether we are using an acid compliant transaction manager has already been caught in
-        // UpdateDeleteSemanticAnalyzer, so if we are updating or deleting and getting nonAcid
+        // AcidUpdateDeleteSemanticAnalyzer, so if we are updating or deleting and getting nonAcid
         // here, it means the table itself doesn't support it.
         throw new SemanticException(ErrorMsg.ACID_OP_ON_NONACID_TABLE, tabName);
       }
@@ -6464,7 +6464,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if (dest_tab.getNumBuckets() > 0) {
       enforceBucketing = true;
-      if (updating() || deleting()) {
+      if (acidUpdating() || acidDeleting()) {
         partnCols = getPartitionColsFromBucketColsForUpdateDelete(input, true);
       } else {
         partnCols = getPartitionColsFromBucketCols(dest, qb, dest_tab, table_desc, input, true);
@@ -6531,7 +6531,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if ((dest_tab.getNumBuckets() > 0)) {
       enforceBucketing = true;
-      if (updating() || deleting()) {
+      if (acidUpdating() || acidDeleting()) {
         partnColsNoConvert = getPartitionColsFromBucketColsForUpdateDelete(input, false);
       } else {
         partnColsNoConvert = getPartitionColsFromBucketCols(dest, qb, dest_tab, table_desc, input,
@@ -6960,7 +6960,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     ArrayList<ColumnInfo> vecCol = new ArrayList<ColumnInfo>();
 
-    if (updating() || deleting()) {
+    if (acidUpdating() || acidDeleting()) {
       vecCol.add(new ColumnInfo(VirtualColumn.ROWID.getName(), VirtualColumn.ROWID.getTypeInfo(),
           "", true));
     } else {
@@ -7014,8 +7014,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // If this is an insert, update, or delete on an ACID table then mark that so the
     // FileSinkOperator knows how to properly write to it.
     if (destTableIsAcid) {
-      AcidUtils.Operation wt = updating() ? AcidUtils.Operation.UPDATE :
-          (deleting() ? AcidUtils.Operation.DELETE : AcidUtils.Operation.INSERT);
+      AcidUtils.Operation wt = acidUpdating() ? AcidUtils.Operation.UPDATE :
+          (acidDeleting() ? AcidUtils.Operation.DELETE : AcidUtils.Operation.INSERT);
       fileSinkDesc.setWriteType(wt);
       acidFileSinks.add(fileSinkDesc);
     }
@@ -7195,7 +7195,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // The numbers of input columns and output columns should match for regular query
-    if (!updating() && !deleting() && inColumnCnt != outColumnCnt) {
+    if (!acidUpdating() && !acidDeleting() && inColumnCnt != outColumnCnt) {
       String reason = "Table " + dest + " has " + outColumnCnt
           + " columns, but query has " + inColumnCnt + " columns.";
       throw new SemanticException(ErrorMsg.TARGET_TABLE_COLUMN_MISMATCH.getMsg(
@@ -7214,18 +7214,18 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         MetadataTypedColumnsetSerDe.class);
     boolean isLazySimpleSerDe = table_desc.getDeserializerClass().equals(
         LazySimpleSerDe.class);
-    if (!isMetaDataSerDe && !deleting()) {
+    if (!isMetaDataSerDe && !acidDeleting()) {
 
       // If we're updating, add the ROW__ID expression, then make the following column accesses
       // offset by 1 so that we don't try to convert the ROW__ID
-      if (updating()) {
+      if (acidUpdating()) {
         expressions.add(new ExprNodeColumnDesc(rowFields.get(0).getType(),
             rowFields.get(0).getInternalName(), "", true));
       }
 
       // here only deals with non-partition columns. We deal with partition columns next
       for (int i = 0; i < columnNumber; i++) {
-        int rowFieldsOffset = updating() ? i + 1 : i;
+        int rowFieldsOffset = acidUpdating() ? i + 1 : i;
         ObjectInspector tableFieldOI = tableFields.get(i)
             .getFieldObjectInspector();
         TypeInfo tableFieldTypeInfo = TypeInfoUtils
@@ -7263,7 +7263,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // deal with dynamic partition columns: convert ExprNodeDesc type to String??
     if (dynPart && dpCtx != null && dpCtx.getNumDPCols() > 0) {
       // DP columns starts with tableFields.size()
-      for (int i = tableFields.size() + (updating() ? 1 : 0); i < rowFields.size(); ++i) {
+      for (int i = tableFields.size() + (acidUpdating() ? 1 : 0); i < rowFields.size(); ++i) {
         TypeInfo rowFieldTypeInfo = rowFields.get(i).getType();
         ExprNodeDesc column = new ExprNodeColumnDesc(
             rowFieldTypeInfo, rowFields.get(i).getInternalName(), "", true);
@@ -13106,8 +13106,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   // Note that this method assumes you have already decided this is an Acid table.  It cannot
   // figure out if a table is Acid or not.
   private AcidUtils.Operation getAcidType() {
-    return deleting() ? AcidUtils.Operation.DELETE :
-        (updating() ? AcidUtils.Operation.UPDATE :
+    return acidDeleting() ? AcidUtils.Operation.DELETE :
+        (acidUpdating() ? AcidUtils.Operation.UPDATE :
             AcidUtils.Operation.INSERT);
   }
 
@@ -13121,13 +13121,24 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
   }
 
-  protected boolean updating() {
+  protected boolean acidUpdating() {
     return false;
   }
 
-  protected boolean deleting() {
+  protected boolean acidDeleting() {
     return false;
   }
+
+
+  protected boolean mapRDbJsonDeleting() {
+    return false;
+  }
+
+  protected boolean mapRDbJsonUpdating() {
+    return false;
+  }
+
+
 
   // Make sure the proper transaction manager that supports ACID is being used
   protected void checkAcidTxnManager(Table table) throws SemanticException {

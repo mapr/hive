@@ -35,13 +35,16 @@ import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
-import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import static org.apache.hadoop.hive.ql.io.TableUtils.normalizeColName;
+import static org.apache.hadoop.hive.ql.io.TableUtils.findTable;
+import static org.apache.hadoop.hive.ql.io.TableUtils.addSetRCols;
+import static org.apache.hadoop.hive.ql.io.TableUtils.inputIsPartitioned;
+import static org.apache.hadoop.hive.ql.io.TableUtils.isWritten;
 
 /**
  * A subclass of the {@link org.apache.hadoop.hive.ql.parse.SemanticAnalyzer} that just handles
@@ -49,11 +52,11 @@ import org.apache.hadoop.hive.ql.session.SessionState;
  * statements (since they are actually inserts) and then doing some patch up to make them work as
  * updates and deletes instead.
  */
-public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
+public class AcidUpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
 
   boolean useSuper = false;
 
-  public UpdateDeleteSemanticAnalyzer(QueryState queryState) throws SemanticException {
+  public AcidUpdateDeleteSemanticAnalyzer(QueryState queryState) throws SemanticException {
     super(queryState);
   }
 
@@ -83,12 +86,12 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
   }
 
   @Override
-  protected boolean updating() {
+  protected boolean acidUpdating() {
     return ctx.getAcidOperation() == AcidUtils.Operation.UPDATE;
   }
 
   @Override
-  protected boolean deleting() {
+  protected boolean acidDeleting() {
     return ctx.getAcidOperation() == AcidUtils.Operation.DELETE;
   }
 
@@ -128,18 +131,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     // merge on read.
 
     StringBuilder rewrittenQueryStr = new StringBuilder();
-    Table mTable;
-    try {
-      mTable = db.getTable(tableName[0], tableName[1]);
-    } catch (InvalidTableException e) {
-      LOG.error("Failed to find table " + getDotName(tableName) + " got exception "
-          + e.getMessage());
-      throw new SemanticException(ErrorMsg.INVALID_TABLE.getMsg(getDotName(tableName)), e);
-    } catch (HiveException e) {
-      LOG.error("Failed to find table " + getDotName(tableName) + " got exception "
-          + e.getMessage());
-      throw new SemanticException(e.getMessage(), e);
-    }
+    Table mTable = findTable(tree, db);
 
     List<FieldSchema> partCols = mTable.getPartCols();
     List<String> bucketingCols = mTable.getBucketCols();
@@ -168,7 +160,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     Map<String, ASTNode> setCols = null;
     // Must be deterministic order set for consistent q-test output across Java versions
     Set<String> setRCols = new LinkedHashSet<String>();
-    if (updating()) {
+    if (acidUpdating()) {
       // An update needs to select all of the columns, as we rewrite the entire row.  Also,
       // we need to figure out which columns we are going to replace.  We won't write the set
       // expressions in the rewritten query.  We'll patch that up later.
@@ -243,7 +235,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
         HiveUtils.unparseIdentifier(tableName[1], this.conf) }));
 
     ASTNode where = null;
-    int whereIndex = deleting() ? 1 : 2;
+    int whereIndex = acidDeleting() ? 1 : 2;
     if (children.size() > whereIndex) {
       where = (ASTNode)children.get(whereIndex);
       assert where.getToken().getType() == HiveParser.TOK_WHERE :
@@ -300,7 +292,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     }
 
     // Patch up the projection list for updates, putting back the original set expressions.
-    if (updating() && setColExprs != null) {
+    if (acidUpdating() && setColExprs != null) {
       // Walk through the projection list and replace the column names with the
       // expressions from the original update.  Under the TOK_SELECT (see above) the structure
       // looks like:
@@ -329,7 +321,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     // Walk through all our inputs and set them to note that this read is part of an update or a
     // delete.
     for (ReadEntity input : inputs) {
-      if(isWritten(input)) {
+      if(isWritten(input, outputs)) {
         input.setUpdateOrDelete(true);
       }
     }
@@ -340,7 +332,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
       outputs.clear();
       for (ReadEntity input : inputs) {
         if (input.getTyp() == Entity.Type.PARTITION) {
-          WriteEntity.WriteType writeType = deleting() ? WriteEntity.WriteType.DELETE :
+          WriteEntity.WriteType writeType = acidDeleting() ? WriteEntity.WriteType.DELETE :
               WriteEntity.WriteType.UPDATE;
           outputs.add(new WriteEntity(input.getPartition(), writeType));
         }
@@ -349,14 +341,14 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
       // We still need to patch up the WriteEntities as they will have an insert type.  Change
       // them to the appropriate type for our operation.
       for (WriteEntity output : outputs) {
-        output.setWriteType(deleting() ? WriteEntity.WriteType.DELETE :
+        output.setWriteType(acidDeleting() ? WriteEntity.WriteType.DELETE :
             WriteEntity.WriteType.UPDATE);
       }
     }
 
     // For updates, we need to set the column access info so that it contains information on
     // the columns we are updating.
-    if (updating()) {
+    if (acidUpdating()) {
       ColumnAccessInfo cai = new ColumnAccessInfo();
       for (String colName : setCols.keySet()) {
         cai.add(Table.getCompleteName(mTable.getDbName(), mTable.getTableName()), colName);
@@ -379,60 +371,10 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     }
   }
 
-  /**
-   * Check that {@code readEntity} is also being written
-   */
-  private boolean isWritten(Entity readEntity) {
-    for(Entity writeEntity : outputs) {
-      //make sure to compare them as Entity, i.e. that it's the same table or partition, etc
-      if(writeEntity.toString().equalsIgnoreCase(readEntity.toString())) {
-        return true;
-      }
-    }
-    return false;
-  }
   private String operation() {
-    if (updating()) return "update";
-    else if (deleting()) return "delete";
+    if (acidUpdating()) return "update";
+    else if (acidDeleting()) return "delete";
     else throw new IllegalStateException("UpdateDeleteSemanticAnalyzer neither updating nor " +
           "deleting, operation not known.");
-  }
-
-  private boolean inputIsPartitioned(Set<ReadEntity> inputs) {
-    // We cannot simply look at the first entry, as in the case where the input is partitioned
-    // there will be a table entry as well.  So look for at least one partition entry.
-    for (ReadEntity re : inputs) {
-      if (re.getTyp() == Entity.Type.PARTITION) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // This method find any columns on the right side of a set statement (thus rcols) and puts them
-  // in a set so we can add them to the list of input cols to check.
-  private void addSetRCols(ASTNode node, Set<String> setRCols) {
-
-    // See if this node is a TOK_TABLE_OR_COL.  If so, find the value and put it in the list.  If
-    // not, recurse on any children
-    if (node.getToken().getType() == HiveParser.TOK_TABLE_OR_COL) {
-      ASTNode colName = (ASTNode)node.getChildren().get(0);
-      assert colName.getToken().getType() == HiveParser.Identifier :
-          "Expected column name";
-      setRCols.add(normalizeColName(colName.getText()));
-    } else if (node.getChildren() != null) {
-      for (Node n : node.getChildren()) {
-        addSetRCols((ASTNode)n, setRCols);
-      }
-    }
-  }
-
-  /**
-   * Column names are stored in metastore in lower case, regardless of the CREATE TABLE statement.
-   * Unfortunately there is no single place that normalizes the input query.
-   * @param colName not null
-   */
-  private static String normalizeColName(String colName) {
-    return colName.toLowerCase();
   }
 }

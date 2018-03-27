@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.TaskRunner;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
+import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.lockmgr.DbTxnManager.Heartbeater;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLock;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockObj;
@@ -117,6 +118,8 @@ public class Context {
   // since we want to change where bucket columns are accessed in some operators and
   // optimizations when doing updates and deletes.
   private AcidUtils.Operation acidOperation = AcidUtils.Operation.NOT_ACID;
+
+  private MapRDbJsonUtils.Operation mapRDbJsonOperation = MapRDbJsonUtils.Operation.UNKNOWN;
 
   private boolean needLockMgr;
 
@@ -831,6 +834,15 @@ public class Context {
   public AcidUtils.Operation getAcidOperation() {
     return acidOperation;
   }
+
+  public void setMapRDbJsonOperation(MapRDbJsonUtils.Operation op) {
+    mapRDbJsonOperation = op;
+  }
+
+  public MapRDbJsonUtils.Operation getMapRDbJsonOperation() {
+    return mapRDbJsonOperation;
+  }
+
 
   public String getCboInfo() {
     return cboInfo;

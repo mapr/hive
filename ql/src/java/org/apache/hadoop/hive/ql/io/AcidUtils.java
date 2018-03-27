@@ -20,6 +20,9 @@ package org.apache.hadoop.hive.ql.io;
 
 import org.apache.hadoop.hive.metastore.api.DataOperationType;
 import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -772,6 +775,10 @@ public class AcidUtils {
 
   public static void setTransactionalTableScan(Configuration conf, boolean isAcidTable) {
     HiveConf.setBoolVar(conf, ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN, isAcidTable);
+  }
+
+  public static boolean isAcidTable(ASTNode tree, HiveConf conf) throws SemanticException {
+    return isAcidTable(TableUtils.findTable(tree, conf));
   }
 
   /** Checks if a table is a valid ACID table.

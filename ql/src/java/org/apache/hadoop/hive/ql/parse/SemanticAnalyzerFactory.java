@@ -21,9 +21,9 @@ package org.apache.hadoop.hive.ql.parse;
 import org.antlr.runtime.tree.Tree;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.QueryState;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
+import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.plan.HiveOperation;
-import org.apache.hadoop.hive.ql.session.SessionState;
 
 import java.util.HashMap;
 
@@ -291,7 +291,14 @@ public final class SemanticAnalyzerFactory {
 
       case HiveParser.TOK_UPDATE_TABLE:
       case HiveParser.TOK_DELETE_FROM:
-        return new UpdateDeleteSemanticAnalyzer(queryState);
+        HiveConf hiveConf = queryState.getConf();
+        if (MapRDbJsonUtils.isMapRDbJsonTable(tree, hiveConf)) {
+        return new MapRDbJsonUpdateSemanticAnalyzer(queryState);
+        }
+        if(AcidUtils.isAcidTable(tree, hiveConf)){
+          return new AcidUpdateDeleteSemanticAnalyzer(queryState);
+        }
+
 
       case HiveParser.TOK_START_TRANSACTION:
       case HiveParser.TOK_COMMIT:

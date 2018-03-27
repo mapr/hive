@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.hooks;
 
+import org.apache.hadoop.hive.ql.parse.AcidUpdateDeleteSemanticAnalyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
@@ -149,7 +150,7 @@ public class WriteEntity extends Entity implements Serializable {
 
   /**
    * Only use this if you are very sure of what you are doing.  This is used by the
-   * {@link org.apache.hadoop.hive.ql.parse.UpdateDeleteSemanticAnalyzer} to reset the types to
+   * {@link AcidUpdateDeleteSemanticAnalyzer} to reset the types to
    * update or delete after rewriting and reparsing the queries.
    * @param type new operation type
    */

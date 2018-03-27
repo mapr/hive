@@ -44,9 +44,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TestUpdateDeleteSemanticAnalyzer {
+public class TestAcidUpdateDeleteSemanticAnalyzer {
 
-  static final private Logger LOG = LoggerFactory.getLogger(TestUpdateDeleteSemanticAnalyzer.class.getName());
+  static final private Logger LOG = LoggerFactory.getLogger(TestAcidUpdateDeleteSemanticAnalyzer.class.getName());
 
   private QueryState queryState;
   private HiveConf conf;
@@ -263,9 +263,8 @@ public class TestUpdateDeleteSemanticAnalyzer {
     ASTNode tree = pd.parse(query, ctx);
     tree = ParseUtils.findRootNonNullToken(tree);
 
-    BaseSemanticAnalyzer sem = SemanticAnalyzerFactory.get(queryState, tree);
     SessionState.get().initTxnMgr(conf);
-    db = sem.getDb();
+    db = Hive.get(conf);
 
     // I have to create the tables here (rather than in setup()) because I need the Hive
     // connection, which is conveniently created by the semantic analyzer.
@@ -283,6 +282,7 @@ public class TestUpdateDeleteSemanticAnalyzer {
     partVals.clear();
     partVals.put("ds", "today");
     db.createPartition(u, partVals);
+    BaseSemanticAnalyzer sem = SemanticAnalyzerFactory.get(queryState, tree);
     sem.analyze(tree, ctx);
     // validate the plan
     sem.validate();
