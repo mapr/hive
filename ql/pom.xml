@@ -691,7 +691,6 @@
                   <include>org.apache.hive:hive-serde</include>
                   <include>com.esotericsoftware.kryo:kryo</include>
                   <include>com.twitter:parquet-hadoop-bundle</include>
-                  <include>org.apache.thrift:libthrift</include>
                   <include>commons-lang:commons-lang</include>
                   <include>org.jodd:jodd-core</include>
                   <include>org.json:json</include>
