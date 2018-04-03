@@ -64,11 +64,18 @@ public class AcidUtils {
     }
   };
   public static final String DELTA_PREFIX = "delta_";
+  public static final String DELETE_DELTA_PREFIX = "delete_delta_";
   public static final String DELTA_SIDE_FILE_SUFFIX = "_flush_length";
   public static final PathFilter deltaFileFilter = new PathFilter() {
     @Override
     public boolean accept(Path path) {
       return path.getName().startsWith(DELTA_PREFIX);
+    }
+  };
+  public static final PathFilter deleteEventDeltaDirFilter = new PathFilter() {
+    @Override
+    public boolean accept(Path path) {
+      return path.getName().startsWith(DELETE_DELTA_PREFIX);
     }
   };
   public static final String BUCKET_PREFIX = "bucket_";
