@@ -249,15 +249,6 @@ if [[ -n $SENTRY_HOME ]] ; then
   done
 fi
 
-# add Spark assembly jar to the classpath
-if [[ -n "$SPARK_HOME" && !("$HIVE_SKIP_SPARK_ASSEMBLY" = "true") ]]
-then
-  sparkAssemblyPath=$(find_spark_assembly_path "$SPARK_HOME")
-  CLASSPATH="${CLASSPATH}:${sparkAssemblyPath}"
-  CLASSPATH="${CLASSPATH}:$SPARK_CONF"
-fi
-
-
 # add the auxillary jars such as serdes
 if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
   hive_aux_jars_abspath=`cd ${HIVE_AUX_JARS_PATH} && pwd`
