@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.io;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,14 +29,20 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.AclEntry;
+import org.apache.hadoop.fs.permission.AclEntryScope;
+import org.apache.hadoop.fs.permission.AclEntryType;
 import org.apache.hadoop.fs.permission.AclStatus;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.junit.Test;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,11 +82,15 @@ public class TestHdfsUtils {
     FileStatus mockSourceStatus = mock(FileStatus.class);
     AclStatus mockAclStatus = mock(AclStatus.class);
     FileSystem mockFs = mock(FileSystem.class);
+    ArrayList<AclEntry> acls = new ArrayList<AclEntry>();
+    acls.add(new AclEntry.Builder().setScope(AclEntryScope.ACCESS).setType(AclEntryType.USER).setPermission(FsAction.ALL).build());
+    acls.add(new AclEntry.Builder().setScope(AclEntryScope.ACCESS).setType(AclEntryType.GROUP).setPermission(FsAction.READ_EXECUTE).build());
+    acls.add(new AclEntry.Builder().setScope(AclEntryScope.ACCESS).setType(AclEntryType.OTHER).setPermission(FsAction.NONE).build());
 
     when(mockSourceStatus.getPermission()).thenReturn(new FsPermission((short) 777));
     when(mockAclStatus.toString()).thenReturn("");
     when(mockHadoopFileStatus.getFileStatus()).thenReturn(mockSourceStatus);
-    when(mockHadoopFileStatus.getAclEntries()).thenReturn(new ArrayList<AclEntry>());
+    when(mockHadoopFileStatus.getAclEntries()).thenReturn(acls);
     when(mockHadoopFileStatus.getAclStatus()).thenReturn(mockAclStatus);
     doThrow(RuntimeException.class).when(mockFs).setAcl(any(Path.class), any(List.class));
 
@@ -180,5 +191,21 @@ public class TestHdfsUtils {
     HdfsUtils.setFullFileStatus(conf, mockHadoopFileStatus, "", mock(FileSystem.class), fakeTarget,
             true, mockFsShell);
     verify(mockFsShell).run(new String[]{"-chmod", "-R", any(String.class), fakeTarget.toString()});
+  }
+
+  @Test
+  public void testSkipSetFullFileStatusIfBlobStore() throws IOException {
+    Configuration conf = new Configuration();
+
+    conf.set(HiveConf.ConfVars.HIVE_BLOBSTORE_SUPPORTED_SCHEMES.varname, "s3a");
+    FileSystem fs = mock(FileSystem.class);
+    when(fs.getUri()).thenReturn(URI.create("s3a:///"));
+    HdfsUtils.setFullFileStatus(conf, null, null, fs, null, false);
+
+    verify(fs, never()).getFileStatus(any(Path.class));
+    verify(fs, never()).listStatus(any(Path[].class));
+    verify(fs, never()).setPermission(any(Path.class), any(FsPermission.class));
+    verify(fs, never()).setAcl(any(Path.class), anyList());
+    verify(fs, never()).setOwner(any(Path.class), any(String.class), any(String.class));
   }
 }

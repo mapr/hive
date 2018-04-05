@@ -22,10 +22,6 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 
 import org.apache.hadoop.fs.RemoteIterator;
 
-import java.util.LinkedList;
-
-import java.util.Queue;
-
 import java.util.ArrayList;
 
 import java.util.List;

@@ -34,11 +34,11 @@ public class BlobStorageUtils {
         return path != null && isBlobStorageScheme(conf, path.toUri().getScheme());
     }
 
-    public static boolean isBlobStorageFileSystem(final Configuration conf, final FileSystem fs) {
-        return fs != null && isBlobStorageScheme(conf, fs.getScheme());
+    static boolean isBlobStorageFileSystem(final Configuration conf, final FileSystem fs) {
+        return fs != null && fs.getUri() != null && isBlobStorageScheme(conf, fs.getUri().getScheme());
     }
 
-    public static boolean isBlobStorageScheme(final Configuration conf, final String scheme) {
+    static boolean isBlobStorageScheme(final Configuration conf, final String scheme) {
         Collection<String> supportedBlobStoreSchemes =
                 conf.getStringCollection(HiveConf.ConfVars.HIVE_BLOBSTORE_SUPPORTED_SCHEMES.varname);
 
