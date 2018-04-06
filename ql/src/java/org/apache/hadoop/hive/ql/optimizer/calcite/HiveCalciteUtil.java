@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelOptUtil.InputFinder;
 import org.apache.calcite.plan.RelOptUtil.InputReferencedVisitor;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
@@ -55,6 +56,7 @@ import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveMultiJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.ExprNodeConverter;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -335,25 +337,25 @@ public class HiveCalciteUtil {
       return this.mapOfProjIndxInJoinSchemaToLeafPInfo;
     }
 
-    public static JoinPredicateInfo constructJoinPredicateInfo(Join j) {
+    public static JoinPredicateInfo constructJoinPredicateInfo(Join j) throws CalciteSemanticException {
       return constructJoinPredicateInfo(j, j.getCondition());
     }
-    
-    public static JoinPredicateInfo constructJoinPredicateInfo(MultiJoin mj) {
-      return constructJoinPredicateInfo(mj, mj.getJoinFilter());
+
+    public static JoinPredicateInfo constructJoinPredicateInfo(HiveMultiJoin mj) throws CalciteSemanticException {
+      return constructJoinPredicateInfo(mj, mj.getCondition());
     }
 
-    public static JoinPredicateInfo constructJoinPredicateInfo(Join j, RexNode predicate) {
+    public static JoinPredicateInfo constructJoinPredicateInfo(Join j, RexNode predicate) throws CalciteSemanticException {
       return constructJoinPredicateInfo(j.getInputs(), j.getSystemFieldList(), predicate);
     }
 
-    public static JoinPredicateInfo constructJoinPredicateInfo(MultiJoin mj, RexNode predicate) {
+    public static JoinPredicateInfo constructJoinPredicateInfo(HiveMultiJoin mj, RexNode predicate) throws CalciteSemanticException {
       final List<RelDataTypeField> systemFieldList = ImmutableList.of();
       return constructJoinPredicateInfo(mj.getInputs(), systemFieldList, predicate);
     }
 
     public static JoinPredicateInfo constructJoinPredicateInfo(List<RelNode> inputs,
-            List<RelDataTypeField> systemFieldList, RexNode predicate) {
+            List<RelDataTypeField> systemFieldList, RexNode predicate) throws CalciteSemanticException {
       JoinPredicateInfo jpi = null;
       JoinLeafPredicateInfo jlpi = null;
       List<JoinLeafPredicateInfo> equiLPIList = new ArrayList<JoinLeafPredicateInfo>();
@@ -385,24 +387,24 @@ public class HiveCalciteUtil {
         // 2.2 Classify leaf predicate as Equi vs Non Equi
         if (jlpi.comparisonType.equals(SqlKind.EQUALS)) {
           equiLPIList.add(jlpi);
+
+          // 2.2.1 Maintain join keys (in child & Join Schema)
+          // 2.2.2 Update Join Key to JoinLeafPredicateInfo map with keys
+          for (int i=0; i<inputs.size(); i++) {
+            projsJoinKeys.get(i).addAll(jlpi.getProjsJoinKeysInChildSchema(i));
+            projsJoinKeysInJoinSchema.get(i).addAll(jlpi.getProjsJoinKeysInJoinSchema(i));
+
+            for (Integer projIndx : jlpi.getProjsJoinKeysInJoinSchema(i)) {
+              tmpJLPILst = tmpMapOfProjIndxInJoinSchemaToLeafPInfo.get(projIndx);
+              if (tmpJLPILst == null) {
+                tmpJLPILst = new ArrayList<JoinLeafPredicateInfo>();
+              }
+              tmpJLPILst.add(jlpi);
+              tmpMapOfProjIndxInJoinSchemaToLeafPInfo.put(projIndx, tmpJLPILst);
+            }
+          }
         } else {
           nonEquiLPIList.add(jlpi);
-        }
-
-        // 2.3 Maintain join keys (in child & Join Schema)
-        // 2.4 Update Join Key to JoinLeafPredicateInfo map with keys
-        for (int i=0; i<inputs.size(); i++) {
-          projsJoinKeys.get(i).addAll(jlpi.getProjsJoinKeysInChildSchema(i));
-          projsJoinKeysInJoinSchema.get(i).addAll(jlpi.getProjsJoinKeysInJoinSchema(i));
-
-          for (Integer projIndx : jlpi.getProjsJoinKeysInJoinSchema(i)) {
-            tmpJLPILst = tmpMapOfProjIndxInJoinSchemaToLeafPInfo.get(projIndx);
-            if (tmpJLPILst == null) {
-              tmpJLPILst = new ArrayList<JoinLeafPredicateInfo>();
-            }
-            tmpJLPILst.add(jlpi);
-            tmpMapOfProjIndxInJoinSchemaToLeafPInfo.put(projIndx, tmpJLPILst);
-          }
         }
       }
 
@@ -464,7 +466,7 @@ public class HiveCalciteUtil {
       this.projsJoinKeysInJoinSchema = projsJoinKeysInJoinSchemaBuilder.build();
     }
 
-    public List<RexNode> getJoinKeyExprs(int input) {
+    public List<RexNode> getJoinExprs(int input) {
       return this.joinKeyExprs.get(input);
     }
 
@@ -496,47 +498,66 @@ public class HiveCalciteUtil {
       return this.projsJoinKeysInJoinSchema.get(input);
     }
 
+    // We create the join predicate info object. The object contains the join condition,
+    // split accordingly. If the join condition is not part of the equi-join predicate,
+    // the returned object will be typed as SQLKind.OTHER.
     private static JoinLeafPredicateInfo constructJoinLeafPredicateInfo(List<RelNode> inputs,
-            List<RelDataTypeField> systemFieldList, RexNode pe) {
+            List<RelDataTypeField> systemFieldList, RexNode pe) throws CalciteSemanticException {
       JoinLeafPredicateInfo jlpi = null;
       List<Integer> filterNulls = new ArrayList<Integer>();
-      List<List<RexNode>> joinKeyExprs = new ArrayList<List<RexNode>>();
+      List<List<RexNode>> joinExprs = new ArrayList<List<RexNode>>();
       for (int i=0; i<inputs.size(); i++) {
-        joinKeyExprs.add(new ArrayList<RexNode>());
+        joinExprs.add(new ArrayList<RexNode>());
       }
 
       // 1. Split leaf join predicate to expressions from left, right
-      HiveRelOptUtil.splitJoinCondition(systemFieldList, inputs, pe,
-          joinKeyExprs, filterNulls, null);
+      RexNode otherConditions = HiveRelOptUtil.splitHiveJoinCondition(systemFieldList, inputs, pe,
+          joinExprs, filterNulls, null);
 
-      // 2. Collect child projection indexes used
-      List<Set<Integer>> projsJoinKeysInChildSchema =
-              new ArrayList<Set<Integer>>();
-      for (int i=0; i<inputs.size(); i++) {
-        ImmutableSet.Builder<Integer> projsFromInputJoinKeysInChildSchema = ImmutableSet.builder();
-        InputReferencedVisitor irvLeft = new InputReferencedVisitor();
-        irvLeft.apply(joinKeyExprs.get(i));
-        projsFromInputJoinKeysInChildSchema.addAll(irvLeft.inputPosReferenced);
-        projsJoinKeysInChildSchema.add(projsFromInputJoinKeysInChildSchema.build());
-      }
-
-      // 3. Translate projection indexes to join schema, by adding offset.
-      List<Set<Integer>> projsJoinKeysInJoinSchema =
-              new ArrayList<Set<Integer>>();
-      // The offset of the first input does not need to change.
-      projsJoinKeysInJoinSchema.add(projsJoinKeysInChildSchema.get(0));
-      for (int i=1; i<inputs.size(); i++) {
-        int offSet = inputs.get(i-1).getRowType().getFieldCount();
-        ImmutableSet.Builder<Integer> projsFromInputJoinKeysInJoinSchema = ImmutableSet.builder();
-        for (Integer indx : projsJoinKeysInChildSchema.get(i)) {
-          projsFromInputJoinKeysInJoinSchema.add(indx + offSet);
+      if (otherConditions.isAlwaysTrue()) {
+        // 2. Collect child projection indexes used
+        List<Set<Integer>> projsJoinKeysInChildSchema =
+                new ArrayList<Set<Integer>>();
+        for (int i=0; i<inputs.size(); i++) {
+          ImmutableSet.Builder<Integer> projsFromInputJoinKeysInChildSchema = ImmutableSet.builder();
+          InputReferencedVisitor irvLeft = new InputReferencedVisitor();
+          irvLeft.apply(joinExprs.get(i));
+          projsFromInputJoinKeysInChildSchema.addAll(irvLeft.inputPosReferenced);
+          projsJoinKeysInChildSchema.add(projsFromInputJoinKeysInChildSchema.build());
         }
-        projsJoinKeysInJoinSchema.add(projsFromInputJoinKeysInJoinSchema.build());
-      }
 
-      // 4. Construct JoinLeafPredicateInfo
-      jlpi = new JoinLeafPredicateInfo(pe.getKind(), joinKeyExprs,
-          projsJoinKeysInChildSchema, projsJoinKeysInJoinSchema);
+        // 3. Translate projection indexes to join schema, by adding offset.
+        List<Set<Integer>> projsJoinKeysInJoinSchema =
+                new ArrayList<Set<Integer>>();
+        // The offset of the first input does not need to change.
+        projsJoinKeysInJoinSchema.add(projsJoinKeysInChildSchema.get(0));
+        for (int i=1; i<inputs.size(); i++) {
+          int offSet = inputs.get(i-1).getRowType().getFieldCount();
+          ImmutableSet.Builder<Integer> projsFromInputJoinKeysInJoinSchema = ImmutableSet.builder();
+          for (Integer indx : projsJoinKeysInChildSchema.get(i)) {
+            projsFromInputJoinKeysInJoinSchema.add(indx + offSet);
+          }
+          projsJoinKeysInJoinSchema.add(projsFromInputJoinKeysInJoinSchema.build());
+        }
+
+        // 4. Construct JoinLeafPredicateInfo
+        jlpi = new JoinLeafPredicateInfo(pe.getKind(), joinExprs,
+            projsJoinKeysInChildSchema, projsJoinKeysInJoinSchema);
+      } else {
+        // 2. Construct JoinLeafPredicateInfo
+        ImmutableBitSet refCols = InputFinder.bits(pe);
+        int count = 0;
+        for (int i=0; i<inputs.size(); i++) {
+          final int length = inputs.get(i).getRowType().getFieldCount();
+          ImmutableBitSet inputRange = ImmutableBitSet.range(count, count + length);
+          if (inputRange.contains(refCols)) {
+            joinExprs.get(i).add(pe);
+          }
+          count += length;
+        }
+        jlpi = new JoinLeafPredicateInfo(SqlKind.OTHER, joinExprs,
+            new ArrayList<Set<Integer>>(), new ArrayList<Set<Integer>>());
+      }
 
       return jlpi;
     }
@@ -766,12 +787,13 @@ public class HiveCalciteUtil {
 
   private static class InputRefsCollector extends RexVisitorImpl<Void> {
 
-    private Set<Integer> inputRefSet = new HashSet<Integer>();
+    private final Set<Integer> inputRefSet = new HashSet<Integer>();
 
     private InputRefsCollector(boolean deep) {
       super(deep);
     }
 
+    @Override
     public Void visitInputRef(RexInputRef inputRef) {
       inputRefSet.add(inputRef.getIndex());
       return null;
