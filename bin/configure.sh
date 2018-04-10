@@ -495,7 +495,7 @@ fi
 }
 
 grant_permissions_to_hive_site(){
-chmod 0640 "$HIVE_SITE"
+chmod 0644 "$HIVE_SITE"
 }
 
 #
