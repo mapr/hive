@@ -495,7 +495,7 @@ for j in $SERVICE_LIST ; do
 done
 
 # to initialize logging for all services
-export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dlog4j.configurationFile=hive-log4j.properties "
+export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dlog4j.configurationFile=hive-log4j2.properties "
 
 export SPLIT_HIVE_LOGS_INTO_FILES="${SPLIT_HIVE_LOGS_INTO_FILES:-true}"
 
