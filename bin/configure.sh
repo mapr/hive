@@ -422,7 +422,7 @@ fi
 #
 
 is_connection_url_configured(){
-output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -isConfigured "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -434,7 +434,7 @@ fi
 # Check if metastore URIs are configured
 #
 is_metastore_uris_configured(){
-output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -isConfigured "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
