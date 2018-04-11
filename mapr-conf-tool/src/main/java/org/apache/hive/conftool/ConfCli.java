@@ -48,10 +48,11 @@ public class ConfCli {
   private static final String ZK_QUORUM = "zkquorum";
   private static final String INIT_META_STORE_URI = "initMetastoreUri";
   private static final String CONNECTION_URL = "connurl";
-  private static final String REMOVE_PASSWORD_PROPERTY = "removePasswordProperty";
   private static final String WEB_UI_PAM_SSL = "webuipamssl";
-  private static final String IS_CONFIGURED = "isConfigured";
+  private static final String EXIST_PROPERTY = "existProperty";
   private static final String WEBHCAT_SSL = "webhcatssl";
+  private static final String ADD_PROPERTY = "addProperty";
+  private static final String DEL_PROPERTY = "delProperty";
 
   static {
     OptionBuilder.hasArg(false);
@@ -90,9 +91,6 @@ public class ConfCli {
     OptionBuilder.withDescription("Metastore DB connection URL");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(CONNECTION_URL));
 
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Remove ConnectionPassword property from hive-site");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(REMOVE_PASSWORD_PROPERTY));
 
     OptionBuilder.hasArg(false);
     OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
@@ -106,22 +104,37 @@ public class ConfCli {
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("property to check");
     OptionBuilder.withDescription("Checks if property is set in xml file.");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(IS_CONFIGURED));
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(EXIST_PROPERTY));
 
+    OptionBuilder.withValueSeparator();
+    OptionBuilder.hasArgs(2);
+    OptionBuilder.withArgName("property=value");
+    OptionBuilder.withDescription("Key, value of property that should be written to xml file. In "
+        + "case it already exists, it is replaced with new value. Property is added like: \n"
+        + "<property>\n"
+        + "  <name>property-name<\\name>\n"
+        + "  <value>property-value<\\value>\n"
+        + "<\\property>");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ADD_PROPERTY));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("property-name");
+    OptionBuilder.withDescription("Removes property from xml file");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(DEL_PROPERTY));
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
     CommandLineParser cmdParser = new GnuParser();
     CommandLine line = null;
     try {
-      line = cmdParser.parse(ConfCli.CMD_LINE_OPTIONS, args);
+      line = cmdParser.parse(CMD_LINE_OPTIONS, args);
     } catch (ParseException e) {
-      LOG.error( "{} : parsing failed.  Reason: {}", TOOL_NAME, e.getLocalizedMessage());
       printHelp();
+      throw new IllegalArgumentException(TOOL_NAME + ": Parsing failed.  Reason: " + e
+          .getLocalizedMessage());
     }
     if(line == null){
-      LOG.error("{} : parsing failed.  Reason: unknown", TOOL_NAME);
-      return;
+      throw new IllegalArgumentException(TOOL_NAME + ": parsing failed.  Reason: unknown");
     }
     if (line.hasOption(HELP)) {
       printHelp();
@@ -132,6 +145,7 @@ public class ConfCli {
           configureSecurity(pathToXmlFile, getSecurity(line));
         } else {
           printHelp();
+          throw new IllegalArgumentException("Incorrect security configuration options");
         }
       }
 
@@ -141,6 +155,7 @@ public class ConfCli {
           ConfTool.enableHs2Ha(pathToXmlFile, zookeeperQuorum);
         } else {
           printHelp();
+          throw new IllegalArgumentException("Incorrect HS2 HA configuration options");
         }
       }
 
@@ -148,9 +163,14 @@ public class ConfCli {
         ConfTool.initMetaStoreUri(pathToXmlFile);
       }
 
-      if(hasIsConfiguredOption(line)){
-        String property = line.getOptionValue(IS_CONFIGURED);
-        printBool(ConfTool.isConfigured(pathToXmlFile, property));
+      if(isExistVerification(line)){
+        if (hasValidExistPropertyOptions(line)) {
+          String property = line.getOptionValue(EXIST_PROPERTY);
+          printBool(ConfTool.exists(pathToXmlFile, property));
+        } else {
+          printHelp();
+          throw new IllegalArgumentException("Incorrect property verification options");
+        }
       }
 
       if(isConnectionUrlConfig(line)){
@@ -159,11 +179,22 @@ public class ConfCli {
           ConfTool.setConnectionUrl(pathToXmlFile, connectionUrl);
         } else {
           printHelp();
+          throw new IllegalArgumentException("Incorrect connection URL configuration options");
         }
       }
 
-      if (isRemoveProperty(line)) {
-        ConfTool.removeConnectionPasswordProperty(pathToXmlFile);
+      if (isDelProperty(line)) {
+        String property = line.getOptionValue(DEL_PROPERTY);
+        ConfTool.delProperty(pathToXmlFile, property);
+      }
+
+      if (isAddProperty(line)) {
+        String[] optionValues = line.getOptionValues(ADD_PROPERTY);
+        if (optionValues.length == 2){
+          String property = optionValues[0];
+          String value = optionValues[1];
+        ConfTool.addProperty(pathToXmlFile, property, value);
+        }
       }
 
       if(isWebUiHs2PamSslConfig(line)){
@@ -184,7 +215,7 @@ public class ConfCli {
   }
 
   private static boolean hasValidConnectionUrlOptions(CommandLine line){
-    return !line.getOptionValue(CONNECTION_URL).isEmpty();
+    return line.getOptionValue(CONNECTION_URL) != null && !line.getOptionValue(CONNECTION_URL).isEmpty();
   }
 
 
@@ -224,24 +255,27 @@ public class ConfCli {
   }
 
   private static boolean hasValidHs2HaOptions(CommandLine line){
-    return line.hasOption(HS2_HA) && !line.getOptionValue(ZK_QUORUM).isEmpty();
+    return line.hasOption(HS2_HA) && line.getOptionValue(ZK_QUORUM) != null && !line.getOptionValue(ZK_QUORUM).isEmpty();
   }
 
-  /**
-   * Returns true if an input param is "-removePasswordProperty"
-   * @param line input param
-   * @return
-   */
-  private static boolean isRemoveProperty(CommandLine line) {
-    return line.hasOption(REMOVE_PASSWORD_PROPERTY);
+  private static boolean isDelProperty(CommandLine line) {
+    return line.hasOption(DEL_PROPERTY);
+  }
+
+  private static boolean isAddProperty(CommandLine line) {
+    return line.hasOption(ADD_PROPERTY);
   }
 
   private static boolean isWebUiHs2PamSslConfig(CommandLine line) {
     return line.hasOption(WEB_UI_PAM_SSL);
   }
 
-  private static boolean hasIsConfiguredOption(CommandLine line) {
-    return line.hasOption(IS_CONFIGURED);
+  private static boolean isExistVerification(CommandLine line) {
+    return line.hasOption(EXIST_PROPERTY);
+  }
+
+  private static boolean hasValidExistPropertyOptions(CommandLine line) {
+    return line.hasOption(EXIST_PROPERTY) && line.getOptionValue(EXIST_PROPERTY) != null && !line.getOptionValue(EXIST_PROPERTY).isEmpty();
   }
 
   private static boolean isWeHCatSslConfig(CommandLine line) {

@@ -308,4 +308,45 @@ public class ConfToolTest {
     Document doc = docBuilder.parse(pathToWebHCatSite);
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
   }
+
+  @Test
+  public void delPropertyTest()
+      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-016.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "test.property.to.delete";
+    ConfTool.delProperty(pathToHiveSite, property);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertFalse(ConfTool.propertyExists(doc, property));
+  }
+
+  @Test
+  public void addPropertyTest()
+      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-017.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "test.property.to.add";
+    String value = "test.value.to.add";
+    ConfTool.addProperty(pathToHiveSite, property, value);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertTrue(ConfTool.propertyExists(doc, property));
+  }
+
+  @Test
+  public void getPropertyFromFileTest()
+      throws SAXException, ParserConfigurationException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-021.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "test.property.to.get";
+    ConfTool.getProperty(pathToHiveSite, property);
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Assert.assertEquals("test.value", ConfTool.getProperty(pathToHiveSite, property));
+  }
 }
