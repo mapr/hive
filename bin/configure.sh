@@ -49,7 +49,6 @@ HIVE_CONF="$HIVE_HOME"/conf
 HIVE_LOGS="$HIVE_HOME"/logs
 HIVE_PIDS="$HIVE_HOME"/pids
 HIVE_SITE="$HIVE_CONF"/hive-site.xml
-HIVE_CONFIG_TOOL_MAIN_CLASS="org.apache.hive.conftool.ConfCli"
 RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
 RESTART_LOG_DIR="${RESTART_LOG_DIR:=${MAPR_HOME}/logs/restart_logs}"
 METASTOREWAREHOUSE="/user/hive/warehouse"
@@ -71,11 +70,6 @@ DEFAULT_DERBY_DB_NAME="metastore_db"
 declare -A MAPRCLI=( ["hivemetastore"]="hivemeta" ["hiveserver2"]="hs2" ["hivewebhcat"]="hcat")
 declare -A PORTS=( ["hivemetastore"]="9083" ["hiveserver2"]="10000" ["hivewebhcat"]="50111")
 
-if [ "$HADOOP_CLASSPATH" != "" ]; then
-  HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"
-else
-  HADOOP_CLASSPATH="$HIVE_LIB/*":$(hadoop classpath)
-fi
 
 #
 # Checks if HiveServer2 High Availability flag exists
@@ -159,11 +153,11 @@ HIVE_SITE="$1"
 isSecure="$2"
 
 if [ "$isSecure" = "true" ];  then
-  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" "-secure"
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-secure"
 fi
 
 if [ "$isSecure" = "false" ];  then
-  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" "-unsecure"
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-unsecure"
 fi
 }
 
@@ -175,7 +169,7 @@ HIVE_SITE="$1"
 isSecure="$2"
 
 if [ "$isSecure" = "true" ];  then
-  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" "-webuipamssl"
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl"
 fi
 }
 
@@ -186,7 +180,7 @@ configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
 if [ "$isSecure" = "true" ];  then
-  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$WEBHCAT_SITE" "-webhcatssl"
+  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl"
 fi
 }
 
@@ -384,7 +378,7 @@ if [ "$isHS2HA" = "true" ]; then
   if [ -f "$HIVE_CONF/zk_hosts" ]; then
     zk_hosts=$(cat "$HIVE_CONF/zk_hosts")
   fi
-  java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
   set_num_h2_in_warden_file "$num_hs2"
 fi
 }
@@ -422,7 +416,7 @@ fi
 #
 
 is_connection_url_configured(){
-output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(. ${HIVE_BIN}/conftool -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -434,7 +428,7 @@ fi
 # Check if metastore URIs are configured
 #
 is_metastore_uris_configured(){
-output=$(java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(. ${HIVE_BIN}/conftool -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -451,12 +445,12 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
     rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
   fi
   if ! is_connection_url_configured ;  then
-    java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
+    . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
   fi
   cd "$HIVE_BIN"
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
   if has_metastore && ! is_metastore_uris_configured; then
-    java -cp "$HADOOP_CLASSPATH" "$HIVE_CONFIG_TOOL_MAIN_CLASS" -initMetastoreUri -path "$HIVE_SITE"
+    . ${HIVE_BIN}/conftool -initMetastoreUri -path "$HIVE_SITE"
   fi
 fi
 }
