@@ -181,6 +181,7 @@
         <include>beeline.cmd</include>
         <include>sync-pid.sh</include>
         <include>encryptconf</include>
+        <include>conftool</include>
         <include>ext/**/*</include>
       </includes>
       <outputDirectory>bin</outputDirectory>

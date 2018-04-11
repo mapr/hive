@@ -15,8 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-encryptconf() {
-  CLASS=org.apache.hive.encryptiontool.EncryptionCli
+
+conftool() {
+  CLASS=org.apache.hive.conftool.ConfCli
   java -cp  ${HADOOP_CLASSPATH} $CLASS "$@"
 }
 
@@ -29,5 +30,4 @@ else
   HADOOP_CLASSPATH="$HIVE_LIB/*":$(hadoop classpath)
 fi
 
-
-encryptconf "$@"
+conftool "$@"
