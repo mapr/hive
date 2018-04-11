@@ -1,7 +1,7 @@
 package org.apache.hive.encryptiontool;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.FileUtils;
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -9,10 +9,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 
 public class EncryptionToolTest {
   private static final Logger LOG = LoggerFactory.getLogger(EncryptionToolTest.class.getName());
@@ -45,5 +43,4 @@ public class EncryptionToolTest {
   public static void cleanUp() throws IOException {
     FileUtils.deleteDirectory(new File(tmp));
   }
-
 }
