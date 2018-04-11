@@ -62,6 +62,7 @@
     <module>kryo-registrator</module>
     <module>testutils</module>
     <module>mapr-conf-tool</module>
+    <module>mapr-encryption-tool</module>
     <module>packaging</module>
     <module>standalone-metastore</module>
     <module>upgrade-acid</module>
