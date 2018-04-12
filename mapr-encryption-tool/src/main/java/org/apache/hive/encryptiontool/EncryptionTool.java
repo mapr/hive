@@ -29,11 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *  Helper for Encrypring Hive passwords
+ *  Helper for Encrypting Hive passwords
  */
 
 class EncryptionTool {
   private EncryptionTool() {
+  }
+
+  static {
+    System.setProperty("log4j.configurationFile", "log4j2.properties");
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(EncryptionTool.class.getName());
