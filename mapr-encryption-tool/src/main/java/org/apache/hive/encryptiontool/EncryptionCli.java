@@ -37,6 +37,11 @@ import static org.apache.hive.encryptiontool.EncryptionTool.encryptPassword;
  */
 public class EncryptionCli {
   private EncryptionCli(){}
+
+  static {
+    System.setProperty("log4j.configurationFile", "log4j2.properties");
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(EncryptionCli.class.getName());
   private static final HelpFormatter HELP_FORMATTER = new HelpFormatter();
   private static final String TOOL_NAME = "encryptconf";
