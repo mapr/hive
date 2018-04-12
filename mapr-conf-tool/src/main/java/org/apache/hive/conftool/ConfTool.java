@@ -63,6 +63,10 @@ class ConfTool {
   private ConfTool() {
   }
 
+  static {
+    System.setProperty("log4j.configurationFile", "log4j2.properties");
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
   private static final String NAME = "name";
   private static final String VALUE = "value";
