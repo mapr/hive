@@ -36,10 +36,6 @@ class EncryptionTool {
   private EncryptionTool() {
   }
 
-  static {
-    System.setProperty("log4j.configurationFile", "log4j2.properties");
-  }
-
   private static final Logger LOG = LoggerFactory.getLogger(EncryptionTool.class.getName());
 
 
