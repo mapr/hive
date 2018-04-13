@@ -15,14 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 conftool() {
   CLASS=org.apache.hive.conftool.ConfCli
-  java -cp  ${HADOOP_CLASSPATH} $CLASS "$@"
+  java -Dlog4j.configurationFile=${HIVE_CONF}/${LOG_FILE} -cp ${HADOOP_CLASSPATH} $CLASS "$@"
 }
 
 HIVE_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}" )/.." && pwd)"
 HIVE_LIB=${HIVE_HOME}/lib
+HIVE_CONF=${HIVE_HOME}/conf
+LOG_FILE="conftool-log4j2.properties"
 
 if [ "$HADOOP_CLASSPATH" != "" ]; then
   HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"
