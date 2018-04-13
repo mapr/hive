@@ -463,6 +463,16 @@
       <source>${project.parent.basedir}/hcatalog/README.txt</source>
       <outputDirectory>hcatalog/share/doc/hcatalog</outputDirectory>
     </file>
+    <file>
+      <source>${project.parent.basedir}/mapr-conf-tool/src/main/resources/conftool-log4j2.properties</source>
+      <outputDirectory>conf</outputDirectory>
+      <destName>conftool-log4j2.properties</destName>
+    </file>
+    <file>
+      <source>${project.parent.basedir}/mapr-encryption-tool/src/main/resources/encrypttool-log4j2.properties</source>
+      <outputDirectory>conf</outputDirectory>
+      <destName>encrypttool-log4j2.properties</destName>
+    </file>
   </files>
 
 </assembly>

@@ -48,7 +48,6 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREPWD;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
@@ -63,9 +62,6 @@ class ConfTool {
   private ConfTool() {
   }
 
-  static {
-    System.setProperty("log4j.configurationFile", "log4j2.properties");
-  }
 
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
   private static final String NAME = "name";

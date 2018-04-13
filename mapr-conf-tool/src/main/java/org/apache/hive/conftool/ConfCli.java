@@ -37,9 +37,6 @@ import java.io.IOException;
 public class ConfCli {
   private ConfCli(){}
 
-  static {
-    System.setProperty("log4j.configurationFile", "log4j2.properties");
-  }
 
   private static final Logger LOG = LoggerFactory.getLogger(ConfCli.class.getName());
   private static final Options CMD_LINE_OPTIONS = new Options();
