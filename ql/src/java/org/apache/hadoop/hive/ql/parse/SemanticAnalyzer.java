@@ -113,6 +113,7 @@ import org.apache.hadoop.hive.ql.io.AcidUtils.Operation;
 import org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
+import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.io.NullRowsInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
@@ -2167,7 +2168,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               name + " but it's not in isInsertIntoTable() or getInsertOverwriteTables()";
           // Disallow update and delete on non-acid tables
           boolean isAcid = AcidUtils.isAcidTable(ts.tableHandle);
-          if ((updating(name) || deleting(name)) && !isAcid) {
+          boolean isMapRDbJson = MapRDbJsonUtils.isMapRDbJsonTable(ts.tableHandle);
+          if ((updating(name) || deleting(name)) && !(isAcid || isMapRDbJson)) {
             // Whether we are using an acid compliant transaction manager has already been caught in
             // UpdateDeleteSemanticAnalyzer, so if we are updating or deleting and getting nonAcid
             // here, it means the table itself doesn't support it.
@@ -6665,7 +6667,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if (dest_tab.getNumBuckets() > 0) {
       enforceBucketing = true;
-      if (updating(dest) || deleting(dest)) {
+      boolean isAcid = AcidUtils.isAcidTable(dest_tab);
+      if ((updating(dest) || deleting(dest)) && isAcid) {
         partnCols = getPartitionColsFromBucketColsForUpdateDelete(input, true);
       } else {
         partnCols = getPartitionColsFromBucketCols(dest, qb, dest_tab, table_desc, input, true);
@@ -6732,7 +6735,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if ((dest_tab.getNumBuckets() > 0)) {
       enforceBucketing = true;
-      if (updating(dest) || deleting(dest)) {
+      boolean isAcid = AcidUtils.isAcidTable(dest_tab);
+      if (updating(dest) || deleting(dest) && isAcid) {
         partnColsNoConvert = getPartitionColsFromBucketColsForUpdateDelete(input, false);
       } else {
         partnColsNoConvert = getPartitionColsFromBucketCols(dest, qb, dest_tab, table_desc, input,
@@ -6781,6 +6785,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     Table dest_tab = null; // destination table if any
     boolean destTableIsAcid = false; // should the destination table be written to using ACID
+    boolean destTableIsMapRDbJson = false; // should the destination table be written to using MapRDbJSon
     boolean destTableIsTemporary = false;
     boolean destTableIsMaterialization = false;
     Partition dest_part = null;// destination partition if any
@@ -6800,6 +6805,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       dest_tab = qbm.getDestTableForAlias(dest);
       destTableIsAcid = AcidUtils.isAcidTable(dest_tab);
+      destTableIsMapRDbJson = MapRDbJsonUtils.isMapRDbJsonTable(dest_tab);
       destTableIsTemporary = dest_tab.isTemporary();
 
       // Is the user trying to insert into a external tables
@@ -6915,7 +6921,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       // list of dynamically created partitions are known.
       if ((dpCtx == null || dpCtx.getNumDPCols() == 0)) {
         output = new WriteEntity(dest_tab,  determineWriteType(ltd, isNonNativeTable, dest));
-        if (!outputs.add(output)) {
+        if (!outputs.add(output) && !destTableIsMapRDbJson) {
           throw new SemanticException(ErrorMsg.OUTPUT_SPECIFIED_MULTIPLE_TIMES
               .getMsg(dest_tab.getTableName()));
         }
@@ -7176,8 +7182,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     inputRR = opParseCtx.get(input).getRowResolver();
 
     ArrayList<ColumnInfo> vecCol = new ArrayList<ColumnInfo>();
-
-    if (updating(dest) || deleting(dest)) {
+    boolean isAcid = AcidUtils.isAcidTable(dest_tab);
+    if (updating(dest) || deleting(dest) && isAcid) {
       vecCol.add(new ColumnInfo(VirtualColumn.ROWID.getName(), VirtualColumn.ROWID.getTypeInfo(),
           "", true));
     } else {
@@ -7206,6 +7212,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     // If this table is working with ACID semantics, turn off merging
     canBeMerged &= !destTableIsAcid;
+    canBeMerged &= !destTableIsMapRDbJson;
 
     // Generate the partition columns from the parent input
     if (dest_type.intValue() == QBMetaData.DEST_TABLE
@@ -7423,7 +7430,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // The numbers of input columns and output columns should match for regular query
-    if (!updating(dest) && !deleting(dest) && inColumnCnt != outColumnCnt) {
+    boolean isMapRDbJsonTable = MapRDbJsonUtils.isMapRDbJsonTable(table_desc);
+    if (((!updating(dest) && !deleting(dest)) || isMapRDbJsonTable) && inColumnCnt != outColumnCnt) {
       String reason = "Table " + dest + " has " + outColumnCnt
           + " columns, but query has " + inColumnCnt + " columns.";
       throw new SemanticException(ErrorMsg.TARGET_TABLE_COLUMN_MISMATCH.getMsg(
@@ -7446,14 +7454,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       // If we're updating, add the ROW__ID expression, then make the following column accesses
       // offset by 1 so that we don't try to convert the ROW__ID
-      if (updating(dest)) {
+
+      if (updating(dest) && !isMapRDbJsonTable) {
         expressions.add(new ExprNodeColumnDesc(rowFields.get(0).getType(),
             rowFields.get(0).getInternalName(), "", true));
       }
 
       // here only deals with non-partition columns. We deal with partition columns next
       for (int i = 0; i < columnNumber; i++) {
-        int rowFieldsOffset = updating(dest) ? i + 1 : i;
+        int rowFieldsOffset = updating(dest) && !isMapRDbJsonTable? i + 1 : i;
         ObjectInspector tableFieldOI = tableFields.get(i)
             .getFieldObjectInspector();
         TypeInfo tableFieldTypeInfo = TypeInfoUtils

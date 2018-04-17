@@ -29,6 +29,7 @@ public final class MapRDBConstants {
   public static final String MAPRDB_TABLE_NAME = MAPRDB_PFX + "table.name";
   public static final String MAPRDB_INPUT_TABLE_NAME = MAPRDB_PFX + "mapreduce.inputtable";
   public static final String MAPRDB_OUTPUT_TABLE_NAME = MAPRDB_PFX + "mapred.outputtable";
+  public static final String MAPRDB_IS_IN_TEST_MODE = MAPRDB_PFX + "is.in.test.mode";
   public static final String ID_KEY = DocumentConstants.ID_KEY;
   //map '_id' to one of column names
   public static final String MAPRDB_COLUMN_ID = MAPRDB_PFX + "column.id";

@@ -39,6 +39,8 @@ import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.metastore.TransactionalValidationListener;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.shims.HadoopShims;
 import org.apache.hadoop.hive.shims.HadoopShims.HdfsFileStatusWithId;
 import org.apache.hadoop.hive.shims.ShimLoader;
@@ -1176,5 +1178,17 @@ public class AcidUtils {
       return AcidOperationalProperties.getLegacy();
     }
     return AcidOperationalProperties.parseString(resultStr);
+  }
+
+  /**
+   * Checks if a table is a valid ACID table.
+   * @param tree parse tree
+   * @param conf configuration
+   * @return true if table is a legit ACID table, false otherwise
+   * @throws SemanticException
+   */
+
+  public static boolean isAcidTable(ASTNode tree, HiveConf conf) throws SemanticException {
+    return isAcidTable(TableUtils.findTable(tree, conf));
   }
 }
