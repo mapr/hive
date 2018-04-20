@@ -69,4 +69,10 @@ public class ProxyLocalFileSystem extends FilterFileSystem {
 
     fs.initialize(name, conf);
   }
+
+
+  @Override
+  public String getScheme() {
+    return "file";
+  }
 }
