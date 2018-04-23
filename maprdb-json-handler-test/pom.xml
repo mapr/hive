@@ -47,6 +47,12 @@
             <artifactId>maprdb</artifactId>
             <version>${mapr.release.version.5.x.x}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.json</groupId>
+                    <artifactId>json</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.mapr.db</groupId>

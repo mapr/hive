@@ -500,7 +500,7 @@ public class LlapServiceDriver {
 
     FSDataOutputStream os = lfs.create(new Path(tmpDir, "config.json"));
     OutputStreamWriter w = new OutputStreamWriter(os);
-    configs.write(w);
+    w.write(configs.toString());
     w.close();
     os.close();
 
