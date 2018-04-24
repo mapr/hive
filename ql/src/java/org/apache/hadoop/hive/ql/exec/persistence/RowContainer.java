@@ -795,8 +795,10 @@ public class RowContainer<ROW extends List<Object>>
 
   SpillFile getSpillFile(Configuration jobConf, Reporter reporter) throws IOException {
     boolean fTmpFileOnDfs = HiveConf.getBoolVar(jobConf, HiveConf.ConfVars.TMP_MAPRFS_VOLUME);
+    String engine = HiveConf.getVar(jobConf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE);
+    boolean isTezEngine = "tez".equalsIgnoreCase(engine);
     String tmpDirDfs = null;
-    if (fTmpFileOnDfs) {
+    if (fTmpFileOnDfs && !isTezEngine) {
       try {
         tmpDirDfs = getDfsTmpDir(jobConf);
         FileSystem dfs = FileSystem.get(jobConf);
