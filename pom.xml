@@ -117,7 +117,7 @@
     <maven.build-helper.plugin.version>1.8</maven.build-helper.plugin.version>
 
     <!-- Library Dependency Versions -->
-    <mapr.release.version>6.0.0-mapr</mapr.release.version>
+    <mapr.release.version>6.1.0-mapr-SNAPSHOT</mapr.release.version> <!-- TODO: remove SNAPSHOT after 6.1.0 release -->
     <accumulo.version>1.7.3</accumulo.version>
     <activemq.version>5.5.0</activemq.version>
     <ant.version>1.9.1</ant.version>
@@ -1257,7 +1257,7 @@
                   <onlyWhenRelease>true</onlyWhenRelease>
                 </requireReleaseDeps>
               </rules>
-              <fail>true</fail>
+              <fail>false</fail> <!-- TODO: reset to true after 6.1.0 release -->
             </configuration>
           </execution>
           <execution>
