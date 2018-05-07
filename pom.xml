@@ -110,7 +110,7 @@
     <maven.build-helper.plugin.version>1.8</maven.build-helper.plugin.version>
 
     <!-- Library Dependency Versions -->
-    <mapr.release.version>6.0.0-mapr</mapr.release.version>
+    <mapr.release.version>6.1.0-mapr-SNAPSHOT</mapr.release.version> <!-- TODO: remove SNAPSHOT after 6.1.0 release -->
     <accumulo.version>1.6.0</accumulo.version>
     <activemq.version>5.5.0</activemq.version>
     <ant.version>1.9.1</ant.version>
@@ -212,6 +212,18 @@
   </properties>
 
   <repositories>
+    <!-- TODO: Remove after 6.1.0 release -->
+    <repository>
+      <id>repository_cv</id>
+      <name>Private MapR repo for CyberVision</name>
+      <url>http://repository_cv.mapr.com/nexus/content/groups/mapr-public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
    <!-- This needs to be removed before checking in-->
     <repository>
       <id>mapr</id>
@@ -1030,7 +1042,7 @@
                   <onlyWhenRelease>true</onlyWhenRelease>
                 </requireReleaseDeps>
               </rules>
-              <fail>true</fail>
+              <fail>false</fail> <!-- TODO: reset to true after 6.1.0 release -->
             </configuration>
           </execution>
           <execution>
