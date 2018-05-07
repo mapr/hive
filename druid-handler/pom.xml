@@ -111,6 +111,14 @@
           <groupId>io.druid</groupId>
           <artifactId>druid-aws-common</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.derby</groupId>
+          <artifactId>derbynet</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.derby</groupId>
+          <artifactId>derbyclient</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
