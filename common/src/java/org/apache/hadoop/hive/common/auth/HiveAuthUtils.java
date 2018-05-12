@@ -17,15 +17,26 @@
  */
 package org.apache.hadoop.hive.common.auth;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
@@ -122,4 +133,46 @@ public class HiveAuthUtils {
     }
     return thriftServerSocket;
   }
+
+  //Create SSL Socket for MAPRSASL connection. Ignore SSL trusted servers as MAPRSASL perform encryption by itself
+  public static TTransport getTrustAllSSLSocket(String host, int port, int loginTimeout) throws TTransportException {
+    TrustManager[] trustAllCerts = new TrustManager[]{
+        new X509ExtendedTrustManager() {
+          @Override
+          public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+          }
+          @Override
+          public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+          }
+          @Override
+          public X509Certificate[] getAcceptedIssuers() {
+            return null;
+          }
+          @Override
+          public void checkClientTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
+          }
+          @Override
+          public void checkServerTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
+          }
+          @Override
+          public void checkClientTrusted(X509Certificate[] x509Certificates, String s, SSLEngine sslEngine) throws CertificateException {
+          }
+          @Override
+          public void checkServerTrusted(X509Certificate[] x509Certificates, String s, SSLEngine sslEngine) throws CertificateException {
+          }
+        }
+    };
+    SSLSocket socket;
+    try {
+      SSLContext sslContext = SSLContext.getInstance("SSL");
+      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+      SSLSocketFactory factory = sslContext.getSocketFactory();
+      socket = (SSLSocket) factory.createSocket(host, port);
+      socket.setSoTimeout(loginTimeout);
+    } catch (NoSuchAlgorithmException | IOException | KeyManagementException e) {
+      throw new TTransportException("Couldn't create Trust All SSL socket", e);
+    }
+    return new TSocket(socket);
+  }
+
 }
