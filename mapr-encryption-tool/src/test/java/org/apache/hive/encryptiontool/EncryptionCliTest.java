@@ -43,7 +43,7 @@ public class EncryptionCliTest {
   }
 
   @Test
-  public void createKeyStoreTest(){
+  public void createKeyStoreTest() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     System.setOut(new PrintStream(baos));
     String jceksFileName = "test.jceks";
@@ -56,9 +56,64 @@ public class EncryptionCliTest {
     File jceksFile = new File(pathToJceks);
     Assert.assertTrue(jceksFile.exists());
     Assert.assertFalse(jceksFile.isDirectory());
+    Assert.assertEquals(value, EncryptionTool.getProperty(property, pathToJceks, true));
     String output = baos.toString();
     Assert.assertFalse(output.contains("Print help information"));
   }
+
+  @Test
+  public void createKeyStoreOverwriteTest() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    String jceksFileName = "testOverwrite.jceks";
+    String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
+    LOG.info("Path to jcek file: " + pathToJceks);
+    String property = "test.property";
+    String value = "test.value";
+    String newValue = "new.test.value";
+    EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--property", property + "=" +
+        value, "--inTestMode"});
+    File jceksFile = new File(pathToJceks);
+    Assert.assertTrue(jceksFile.exists());
+    Assert.assertFalse(jceksFile.isDirectory());
+    Assert.assertEquals(value, EncryptionTool.getProperty(property, pathToJceks, true));
+    EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--property", property + "=" +
+        newValue, "--inTestMode", "--overwrite"});
+    Assert.assertEquals(newValue, EncryptionTool.getProperty(property, pathToJceks, true));
+    String output = baos.toString();
+    Assert.assertFalse(output.contains("Print help information"));
+  }
+
+  @Test
+  public void aliasExistsTrueTest() {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    String jceksFileName = "aliasExists.jceks";
+    String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
+    LOG.info("Path to jcek file: " + pathToJceks);
+    String property = "test.property";
+    String value = "test.value";
+    EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--property", property + "=" +
+        value, "--inTestMode", "--overwrite"});
+    EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--aliasExists", property, "--inTestMode"});
+    String output = baos.toString();
+    Assert.assertEquals("true", output);
+  }
+
+  @Test
+  public void aliasExistsFalseTest() {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    String jceksFileName = "aliasExistsFalse.jceks";
+    String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
+    LOG.info("Path to jcek file: " + pathToJceks);
+    String property = "test.property";
+    EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--aliasExists", property, "--inTestMode"});
+    String output = baos.toString();
+    Assert.assertEquals("false", output);
+  }
+
+
 
   @Test
   public void parsingErrorTest() {

@@ -257,7 +257,7 @@ import javax.servlet.http.HttpServletResponse;
    Create a channel connector for "http/https" requests.
    */
 
-  private Connector createChannelConnector() {
+  private Connector createChannelConnector() throws IOException {
     ServerConnector connector;
     final HttpConfiguration httpConf = new HttpConfiguration();
     httpConf.setRequestHeaderSize(1024 * 64);
@@ -267,7 +267,7 @@ import javax.servlet.http.HttpServletResponse;
       LOG.info("Using SSL for templeton.");
       SslContextFactory sslContextFactory = new SslContextFactory();
       sslContextFactory.setKeyStorePath(conf.get(AppConfig.KEY_STORE_PATH, DEFAULT_KEY_STORE_PATH));
-      sslContextFactory.setKeyStorePassword(conf.get(AppConfig.KEY_STORE_PASSWORD, DEFAULT_KEY_STORE_PASSWORD));
+      sslContextFactory.setKeyStorePassword(new String(conf.getPassword(AppConfig.KEY_STORE_PASSWORD)));
       Set<String> excludedSSLProtocols = Sets.newHashSet(Splitter.on(",").trimResults().omitEmptyStrings()
           .split(Strings.nullToEmpty(conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
       sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(new String[excludedSSLProtocols.size()]));

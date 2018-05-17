@@ -16,6 +16,8 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URL;
 
+import static org.apache.hadoop.hive.conf.Constants.HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG;
+
 public class ConfToolTest {
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
 
@@ -262,6 +264,7 @@ public class ConfToolTest {
     Document doc = docBuilder.parse(pathToWebHCatSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, AppConfig.USE_SSL));
     Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PATH));
+    Assert.assertEquals("jceks://maprfs/user/mapr/hivewebhcat.jceks", ConfTool.getProperty(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
     Assert.assertEquals("mapr123", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PASSWORD));
   }
 
@@ -279,6 +282,7 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.USE_SSL));
     Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PATH));
     Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PASSWORD));
+    Assert.assertFalse(ConfTool.propertyExists(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
   }
 
 
@@ -348,5 +352,57 @@ public class ConfToolTest {
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Assert.assertEquals("test.value", ConfTool.getProperty(pathToHiveSite, property));
+  }
+
+  @Test
+  public void appendPropertyValueToExistingTest() throws ParserConfigurationException, IOException, SAXException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.appendPropertyValue(doc, "append.to.existing.property", "newValue");
+    Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(doc, "append.to.existing.property"));
+  }
+
+  @Test
+  public void appendPropertyValueNonExistingTest() throws ParserConfigurationException, IOException, SAXException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.appendPropertyValue(doc, "append.non.existing", "newValue");
+    Assert.assertEquals("newValue", ConfTool.getProperty(doc, "append.non.existing"));
+  }
+
+  @Test
+  public void appendPropertyValueToEmptyTest() throws ParserConfigurationException, IOException, SAXException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.appendPropertyValue(doc, "append.to.empty.property", "newValue");
+    Assert.assertEquals("newValue", ConfTool.getProperty(doc, "append.to.empty.property"));
+  }
+
+  @Test
+  public void appendPropertyValueTheSameTest() throws ParserConfigurationException, IOException, SAXException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.appendPropertyValue(doc, "append.the.existing.value", "newValue");
+    Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(doc, "append.the.existing.value"));
   }
 }

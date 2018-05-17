@@ -18,8 +18,19 @@
 
 package org.apache.hive.conftool;
 
-import java.io.File;
-import java.io.IOException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hive.hcatalog.templeton.AppConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -29,30 +40,21 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.IOException;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hive.hcatalog.templeton.AppConfig;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
+import static org.apache.hadoop.hive.conf.Constants.HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
 
 /**
  *  Helper for configuring Hive
@@ -73,6 +75,7 @@ class ConfTool {
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
+  private static final String WEBHCAT_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hivewebhcat.jceks";
   private static final String EMPTY = "";
 
   /**
@@ -208,10 +211,12 @@ class ConfTool {
       set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
       set(doc, AppConfig.KEY_STORE_PASSWORD, new String
           (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, WEBHCAT_CREDENTIAL_PROVIDER_PATH);
     } else {
       remove(doc, AppConfig.USE_SSL);
       remove(doc, AppConfig.KEY_STORE_PATH);
       remove(doc, AppConfig.KEY_STORE_PASSWORD);
+      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToWebHCatSite);
   }
@@ -372,6 +377,29 @@ class ConfTool {
     return docBuilder.parse(pathToHiveSite);
   }
 
+  /**
+   * Append value to existing joined by coma(','). If new value is already present, nothing will be changed.
+   * If property does not exist, it will be added as a new one.
+   * @param doc xml document
+   * @param property property name
+   * @param value value to append
+   */
+  @VisibleForTesting
+  static void appendPropertyValue(Document doc, String property, String value){
+    if (propertyExists(doc, property)) {
+      LOG.info("Property {} exists in xml file. Append value: {}", property, value);
+      String oldPropertyValue = getProperty(doc, property);
+      if (!oldPropertyValue.contains(value)) {
+        if (!oldPropertyValue.isEmpty()) {
+          value = Joiner.on(",").join(oldPropertyValue, value);
+        }
+        setProperty(doc, property, value);
+      }
+    } else {
+      LOG.info("Property {} does not exist in xml file", property);
+      addProperty(doc, property, value);
+    }
+  }
 
   private static void set(Document doc, String property, String value){
     if (propertyExists(doc, property)) {
