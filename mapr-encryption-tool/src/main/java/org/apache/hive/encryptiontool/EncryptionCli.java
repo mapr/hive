@@ -1,19 +1,19 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one or more
-* contributor license agreements.  See the NOTICE file distributed with
-* this work for additional information regarding copyright ownership.
-* The ASF licenses this file to you under the Apache License, Version 2.0
-* (the "License"); you may not use this file except in compliance with
-* the License.  You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hive.encryptiontool;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -30,14 +30,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static org.apache.hive.encryptiontool.EncryptionTool.deleteIfExists;
 import static org.apache.hive.encryptiontool.EncryptionTool.encryptPassword;
 
 /**
  CLI manager to encrypt Hive passwords for components
  */
 public class EncryptionCli {
-  private EncryptionCli(){}
-
+  private EncryptionCli() {
+  }
 
   private static final Logger LOG = LoggerFactory.getLogger(EncryptionCli.class.getName());
   private static final HelpFormatter HELP_FORMATTER = new HelpFormatter();
@@ -47,12 +48,13 @@ public class EncryptionCli {
   private static final String KEY_STORE_NAME = "keystorename";
   private static final String KEY_STORE_PATH = "keyStorePath";
   private static final String PROPERTY = "property";
+  private static final String ALIAS_EXISTS = "aliasExists";
+  private static final String OVERWRITE = "overwrite";
   private static final String EMPTY_STRING = "";
   @VisibleForTesting
   private static final String IN_TEST_MODE = "inTestMode";
 
-  static
-  {
+  static {
     LOG.info("Initializing HiveEncryptTool");
 
     OptionBuilder.hasArg(false);
@@ -65,19 +67,26 @@ public class EncryptionCli {
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName(KEY_STORE_NAME);
-    OptionBuilder.withDescription("Create KeyStore to store properties from *.xml using valid "
-        + "path in MapRFS");
+    OptionBuilder.withDescription("Create KeyStore to store properties from *.xml using valid path in MapRFS");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(KEY_STORE_PATH));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("alias name");
+    OptionBuilder.withDescription("Check for alias existence using valid path in MapRFS");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ALIAS_EXISTS));
 
     OptionBuilder.withValueSeparator();
     OptionBuilder.hasArgs(2);
     OptionBuilder.withArgName("property=value");
     OptionBuilder.withDescription("Key, value of property that should be written to keystore");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(PROPERTY));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Overwrites property if it exists");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(OVERWRITE));
   }
 
-
-  private static void printHelp(){
+  private static void printHelp() {
     HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
   }
 
@@ -88,11 +97,10 @@ public class EncryptionCli {
       line = cmdParser.parse(CMD_LINE_OPTIONS, args);
     } catch (ParseException e) {
       printHelp();
-      throw new IllegalArgumentException(TOOL_NAME + ": Parsing failed.  Reason: " + e
-          .getLocalizedMessage());
+      throw new IllegalArgumentException(TOOL_NAME + ": Parsing failed.  Reason: " + e.getLocalizedMessage());
     }
 
-    if(line == null){
+    if (line == null) {
       throw new IllegalArgumentException(TOOL_NAME + ": parsing failed.  Reason: unknown");
     }
 
@@ -103,9 +111,9 @@ public class EncryptionCli {
 
       if (hiveVars.length != 2) {
         printHelp();
-        throw new IllegalArgumentException(TOOL_NAME + ": property takes in 2 required arguments "
-            + "separated by = ;" +
-            "was passed " + hiveVars.length + " arguments");
+        throw new IllegalArgumentException(
+            TOOL_NAME + ": property takes in 2 required arguments " + "separated by = ;" + "was passed "
+                + hiveVars.length + " arguments");
       }
 
       String propertyName = hiveVars[0];
@@ -114,53 +122,69 @@ public class EncryptionCli {
 
       try {
         LOG.info("Creating keystore... ");
-        if(!isTestMode(line)) {
-          encryptPassword(propertyName, propertyValue, pathToKeyStore);
-        } else {
-          encryptPassword(propertyName, propertyValue, pathToKeyStore, true);
-
+        boolean isLocalFs = isTestMode(line);
+        if (line.hasOption(OVERWRITE)) {
+          deleteIfExists(propertyName, pathToKeyStore, isLocalFs);
         }
+        encryptPassword(propertyName, propertyValue, pathToKeyStore, isLocalFs);
       } catch (IOException e) {
         printHelp();
-        throw new IllegalArgumentException(TOOL_NAME + ": Error while creating credential "
-            + "keystore. Reason: " + e
-            .getLocalizedMessage());
+        throw new IllegalArgumentException(
+            TOOL_NAME + ": Error while creating credential " + "keystore. Reason: " + e.getLocalizedMessage());
       }
 
       LOG.info("KeyStore successfully created");
-
-    } if(noPropertyArgument(line)) {
-      throw new IllegalArgumentException(TOOL_NAME + ": Invalid arguments. No -" + PROPERTY + " "
-          + "argument.");
-    } if (noKeyStoreArgument(line)) {
-      throw new IllegalArgumentException(TOOL_NAME + ": Invalid arguments. No -" + KEY_STORE_PATH + " "
-          + "argument.");
+    } else if (isAliasExist(line)) {
+      String pathToKeyStore = line.getOptionValue(KEY_STORE_PATH);
+      String alias = line.getOptionValue(ALIAS_EXISTS);
+      try {
+        printBool(EncryptionTool.aliasExists(alias, pathToKeyStore, isTestMode(line)));
+      } catch (IOException e) {
+        printHelp();
+        throw new IllegalArgumentException(String.format("%s: Error while checking alias for existence. Reason: %s",
+            TOOL_NAME, e.getLocalizedMessage()));
+      }
+    }
+    if (noActionArgument(line)) {
+      throw new IllegalArgumentException(String.format("%s: Invalid arguments. No %s or %s argument.",
+          TOOL_NAME, PROPERTY, ALIAS_EXISTS));
+    }
+    if (noKeyStoreArgument(line)) {
+      throw new IllegalArgumentException(TOOL_NAME + ": Invalid arguments. No -" + KEY_STORE_PATH + " " + "argument.");
     }
   }
 
-  private static boolean hasEmptyOptionsOnly(CommandLine line){
+  private static boolean hasEmptyOptionsOnly(CommandLine line) {
     Option options[] = line.getOptions();
-    for (Option option : options){
-      if (!option.getValue().isEmpty()){
+    for (Option option : options) {
+      if (!option.getValue().isEmpty()) {
         return false;
       }
     }
     return true;
   }
 
-  private static boolean isValidKeyStoreConfiguration(CommandLine line){
+  private static boolean isValidKeyStoreConfiguration(CommandLine line) {
     return line.hasOption(KEY_STORE_PATH) && line.hasOption(PROPERTY);
   }
 
-  private static boolean noPropertyArgument(CommandLine line){
-    return line.hasOption(KEY_STORE_PATH) && !line.hasOption(PROPERTY);
+  private static boolean isAliasExist(CommandLine line) {
+    return line.hasOption(KEY_STORE_PATH) && line.hasOption(ALIAS_EXISTS);
   }
 
-  private static boolean noKeyStoreArgument(CommandLine line){
+  private static boolean noActionArgument(CommandLine line) {
+    return line.hasOption(KEY_STORE_PATH) && !line.hasOption(PROPERTY) && !line.hasOption(ALIAS_EXISTS);
+  }
+
+  private static boolean noKeyStoreArgument(CommandLine line) {
     return !line.hasOption(KEY_STORE_PATH) && line.hasOption(PROPERTY);
   }
 
-  private static boolean isTestMode(CommandLine line){
+  private static boolean isTestMode(CommandLine line) {
     return line.hasOption(IN_TEST_MODE);
+  }
+
+  private static void printBool(boolean value){
+    System.out.print(Boolean.toString(value));
   }
 }

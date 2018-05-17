@@ -55,6 +55,7 @@ public class ConfCli {
   private static final String WEBHCAT_SSL = "webhcatssl";
   private static final String ADD_PROPERTY = "addProperty";
   private static final String DEL_PROPERTY = "delProperty";
+  private static final String GET_PROPERTY = "getProperty";
 
   static {
     OptionBuilder.hasArg(false);
@@ -123,6 +124,11 @@ public class ConfCli {
     OptionBuilder.withArgName("property-name");
     OptionBuilder.withDescription("Removes property from xml file");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(DEL_PROPERTY));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("property-name");
+    OptionBuilder.withDescription("Retrieves the property value.");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_PROPERTY));
   }
 
   public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -195,7 +201,17 @@ public class ConfCli {
         if (optionValues.length == 2){
           String property = optionValues[0];
           String value = optionValues[1];
-        ConfTool.addProperty(pathToXmlFile, property, value);
+          ConfTool.addProperty(pathToXmlFile, property, value);
+        }
+      }
+
+      if (isGetProperty(line)) {
+        String property = line.getOptionValue(GET_PROPERTY);
+        String propertyValue = ConfTool.getProperty(pathToXmlFile, property);
+        if (!propertyValue.isEmpty()) {
+          System.out.print(propertyValue);
+        } else {
+          throw new IllegalArgumentException("Property does not exist!");
         }
       }
 
@@ -266,6 +282,10 @@ public class ConfCli {
 
   private static boolean isAddProperty(CommandLine line) {
     return line.hasOption(ADD_PROPERTY);
+  }
+
+  private static boolean isGetProperty(CommandLine line) {
+    return line.hasOption(GET_PROPERTY);
   }
 
   private static boolean isWebUiHs2PamSslConfig(CommandLine line) {

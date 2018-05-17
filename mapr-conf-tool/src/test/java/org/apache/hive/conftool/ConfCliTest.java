@@ -124,6 +124,37 @@ public class ConfCliTest {
   }
 
   @Test
+  public void getPropertyTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-021.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "test.property.to.get";
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    ConfCli.main(new String[]{"--getProperty", property, "--path", pathToHiveSite});
+    Assert.assertEquals("test.value", baos.toString());
+  }
+
+  @Test
+  public void getPropertyIncorrectArgumentsTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-021.xml");
+    String pathToHiveSite = url.getPath();
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Missing argument for option");
+    ConfCli.main(new String[]{"--getProperty", "--path", pathToHiveSite});
+  }
+
+  @Test
+  public void getPropertyNonexistentProperty() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-021.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "test.nonexistent.property";
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Property does not exist!");
+    ConfCli.main(new String[]{"--getProperty", property, "--path", pathToHiveSite});
+  }
+
+  @Test
   public void configureSecurityEnabledTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-020.xml");
     String pathToHiveSite = url.getPath();
@@ -279,9 +310,12 @@ public class ConfCliTest {
     ConfCli.main(new String[]{"--webhcatssl", "--path", pathToWebHCatSite});
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.keystore.path"));
+    Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "hadoop.security.credential.provider.path"));
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.keystore.password"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToWebHCatSite, "templeton.use.ssl"));
     Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToWebHCatSite, "templeton.keystore.path"));
+    Assert.assertEquals("jceks://maprfs/user/mapr/hivewebhcat.jceks",
+        ConfTool.getProperty(pathToWebHCatSite, "hadoop.security.credential.provider.path"));
     Assert.assertEquals(new String
         (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToWebHCatSite, "templeton.keystore.password"));
   }

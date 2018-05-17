@@ -58,6 +58,10 @@ CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 HIVE_METASTORE_URIS_PROPERTY_NAME="hive.metastore.uris"
 WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
 
+WEBHCAT_KEYSTORE_ALIAS="templeton.keystore.password"
+WEBHCAT_KEYSTORE_PATH="/user/${MAPR_USER}/hivewebhcat.jceks"
+KEYSTORE_PERMS="644"
+
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
 isHS2HA=false
@@ -181,9 +185,42 @@ WEBHCAT_SITE="$1"
 isSecure="$2"
 if [ "$isSecure" = "true" ];  then
   . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl"
+  KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -getProperty ${WEBHCAT_KEYSTORE_ALIAS})
+  create_keystore_credential "$WEBHCAT_KEYSTORE_PATH" "$WEBHCAT_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
+  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -delProperty ${WEBHCAT_KEYSTORE_ALIAS}
 fi
 }
 
+#
+# Writes keystore credential to the '.jceks' file. If there is no such file, it will be created.
+# If hive is not configured yet and the credential with the same alias exists, it will be overwritten.
+# If keystore credential with the same alias already exists and hive is configured, it will not be overwritten.
+#
+create_keystore_credential(){
+KEYSTORE_PATH="$1"
+ALIAS="$2"
+PASSWORD="$3"
+if is_hive_not_configured_yet ; then
+  ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD} -overwrite
+else
+  if ! keystore_alias_exists; then
+    ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD}
+  fi
+fi
+su "$MAPR_USER" -c "hadoop fs -chmod $KEYSTORE_PERMS $KEYSTORE_PATH"
+}
+
+#
+# Check whether alias in the particular keystore exists. 'ALIAS' and 'KEYSTORE_PATH' variables have to be set.
+#
+keystore_alias_exists(){
+ALIAS_EXISTS=$(${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -aliasExists ${ALIAS})
+if [ "$ALIAS_EXISTS" = "true" ]; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
+}
 #
 # Check that port is available
 #

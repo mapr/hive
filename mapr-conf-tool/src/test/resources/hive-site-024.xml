@@ -1,0 +1,21 @@
+<configuration>
+
+    <property>
+        <name>append.to.existing.property</name>
+        <value>oldValue</value>
+        <description>Test appending new value to the old one</description>
+    </property>
+
+    <property>
+        <name>append.to.empty.property</name>
+        <value></value>
+        <description>Test appending new value to the empty value</description>
+    </property>
+
+    <property>
+        <name>append.the.existing.value</name>
+        <value>oldValue,newValue</value>
+        <description>Test appending the existing value</description>
+    </property>
+
+</configuration>
