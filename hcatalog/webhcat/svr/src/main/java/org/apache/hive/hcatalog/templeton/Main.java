@@ -249,14 +249,14 @@ public class Main {
    Create a channel connector for "http/https" requests
    */
 
-  private Connector createChannelConnector() {
+  private Connector createChannelConnector() throws IOException {
     SelectChannelConnector connector;
     if (conf.getBoolean(AppConfig.USE_SSL, false)) {
       LOG.info("Using SSL for templeton.");
       SslContextFactory sslContextFactory = new SslContextFactory();
       sslContextFactory.setKeyStorePath(conf.get(AppConfig.KEY_STORE_PATH, DEFAULT_KEY_STORE_PATH));
       sslContextFactory
-          .setKeyStorePassword(conf.get(AppConfig.KEY_STORE_PASSWORD, DEFAULT_KEY_STORE_PASSWORD));
+          .setKeyStorePassword(new String(conf.getPassword(AppConfig.KEY_STORE_PASSWORD)));
       Set<String> excludedSSLProtocols = Sets.newHashSet(
           Splitter.on(",").trimResults().omitEmptyStrings().split(Strings.nullToEmpty(
               conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
