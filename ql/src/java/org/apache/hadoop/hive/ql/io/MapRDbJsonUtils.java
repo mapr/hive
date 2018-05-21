@@ -84,18 +84,6 @@ public final class MapRDbJsonUtils {
   }
 
   /**
-   * Returns mapr.column.id name from MapR Db JSON table
-   *
-   * @param table table object
-   * @return mapr.column.id name from MapR Db JSON table
-   */
-
-  public static String getMapRColumnId(Table table){
-    Map<String, String> tblParams = table.getParameters();
-    return tblParams.get(MAPRDB_COLUMN_ID).trim();
-  }
-
-  /**
    * Checks if a table is MapRDbJson table.
    * @param table_desc table description
    * @return true if a table is MapRDbJson table*
