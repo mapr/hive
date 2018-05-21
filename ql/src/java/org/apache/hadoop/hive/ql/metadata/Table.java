@@ -75,6 +75,8 @@ import org.apache.hive.common.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.lang.String.format;
+
 /**
  * A Hive Table: is a fundamental unit of data in Hive that shares a common schema/DDL.
  *
@@ -87,6 +89,9 @@ public class Table implements Serializable {
   private static final long serialVersionUID = 1L;
 
   static final private Logger LOG = LoggerFactory.getLogger("hive.ql.metadata.Table");
+  private static final String MAPRDB_PFX = "maprdb.";
+  //map '_id' to one of column names
+  private static final String MAPRDB_COLUMN_ID = MAPRDB_PFX + "column.id";
 
   private org.apache.hadoop.hive.metastore.api.Table tTable;
 
@@ -1081,5 +1086,20 @@ public class Table implements Serializable {
 
   public boolean hasDeserializer() {
     return deserializer != null;
+  }
+
+  /**
+   * Returns mapr.column.id name from MapR Db JSON table
+   *
+   * @return mapr.column.id name from MapR Db JSON table
+   */
+
+
+  public String getMapRColumnId() throws SemanticException {
+    Map<String, String> tblParams = getParameters();
+    if (tblParams == null || tblParams.isEmpty() || !tblParams.containsKey(MAPRDB_COLUMN_ID)) {
+      throw new SemanticException(format("Column %s is not specified", MAPRDB_COLUMN_ID));
+    }
+    return tblParams.get(MAPRDB_COLUMN_ID).trim();
   }
 };

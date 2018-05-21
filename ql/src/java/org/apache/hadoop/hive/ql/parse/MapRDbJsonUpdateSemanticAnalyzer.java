@@ -120,6 +120,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
    */
   private void checkValidSetClauseTarget(ASTNode colName, Table targetTable) throws SemanticException {
     String columnName = normalizeColName(colName.getText());
+    String mapRDbColumnId = targetTable.getMapRColumnId();
 
     // Make sure this isn't one of the partitioning columns, that's not supported.
     for (FieldSchema fschema : targetTable.getPartCols()) {
@@ -130,6 +131,10 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
     //updating bucket column should move row from one file to another - not supported
     if(targetTable.getBucketCols() != null && targetTable.getBucketCols().contains(columnName)) {
       throw new SemanticException(ErrorMsg.UPDATE_CANNOT_UPDATE_BUCKET_VALUE,columnName);
+    }
+    // updating maprdb.column.id is not supported
+    if(mapRDbColumnId.equalsIgnoreCase(columnName)) {
+      throw new SemanticException(ErrorMsg.UPDATE_CANNOT_UPDATE_MAPR_DB_COLUMN_ID_VALUE, columnName);
     }
     boolean foundColumnInTargetTable = false;
     for(FieldSchema col : targetTable.getCols()) {
@@ -796,7 +801,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
     //this is a tmp table and thus Session scoped and acid requires SQL statement to be serial in a
     // given session, i.e. the name can be fixed across all invocations
     String tableName = "merge_tmp_table";
-    String mapRDbColumnId = MapRDbJsonUtils.getMapRColumnId(targetTable);
+    String mapRDbColumnId = targetTable.getMapRColumnId();
     rewrittenQueryStr.append("\nINSERT INTO ").append(tableName)
       .append("\n  SELECT cardinality_violation(")
       .append(getSimpleTableName(target)).append(".").append(mapRDbColumnId) ;
