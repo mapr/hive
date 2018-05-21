@@ -134,6 +134,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
 
     List<FieldSchema> partCols = mTable.getPartCols();
     List<String> bucketingCols = mTable.getBucketCols();
+    String mapRDbColumnId = mTable.getMapRColumnId();
 
     rewrittenQueryStr.append("insert into table ");
     rewrittenQueryStr.append(getDotName(new String[] { HiveUtils.unparseIdentifier(tableName[0], this.conf),
@@ -200,6 +201,12 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
         if (bucketingCols != null && bucketingCols.contains(columnName)) {
           throw new SemanticException(ErrorMsg.UPDATE_CANNOT_UPDATE_BUCKET_VALUE, columnName);
         }
+
+        // updating maprdb.column.id is not supported
+        if(mapRDbColumnId.equalsIgnoreCase(columnName)) {
+           throw new SemanticException(ErrorMsg.UPDATE_CANNOT_UPDATE_MAPR_DB_COLUMN_ID_VALUE, columnName);
+        }
+
         // This means that in UPDATE T SET x = _something_
         // _something_ can be whatever is supported in SELECT _something_
         setCols.put(columnName, (ASTNode) assignment.getChildren().get(1));
