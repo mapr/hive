@@ -300,6 +300,8 @@ public class ConfCliTest {
     Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.keystore.path"));
     Assert.assertEquals(new String
         (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.keystore.password"));
+    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2webui.jceks",
+        ConfTool.getProperty(pathToHiveSite, "hadoop.security.credential.provider.path"));
   }
 
 
