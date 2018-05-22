@@ -168,6 +168,7 @@ public final class DbTxnManager extends HiveTxnManagerImpl {
   private Runnable shutdownRunner = null;
   private static final int SHUTDOWN_HOOK_PRIORITY = 0;
 
+  private Hive hive = null;
   /**
    * We do this on every call to make sure TM uses same MS connection as is used by the caller (Driver,
    * SemanticAnalyzer, etc).  {@code Hive} instances are cached using ThreadLocal and
@@ -185,9 +186,9 @@ public final class DbTxnManager extends HiveTxnManagerImpl {
    */
   IMetaStoreClient getMS() throws LockException {
     try {
-      return Hive.get(conf).getMSC();
+      return hive.getMSC();
     }
-    catch(HiveException|MetaException e) {
+    catch(MetaException e) {
       String msg = "Unable to reach Hive Metastore: " + e.getMessage();
       LOG.error(msg, e);
       throw new LockException(e);
@@ -972,7 +973,20 @@ public final class DbTxnManager extends HiveTxnManagerImpl {
     if (conf == null) {
       throw new RuntimeException("Must call setHiveConf before any other methods.");
     }
+    initHiveDb();
     initHeartbeatExecutorService();
+  }
+
+  private synchronized void initHiveDb() throws LockException {
+    try {
+      if (hive == null) {
+        hive = Hive.get(conf);
+      }
+    } catch (HiveException e) {
+      String msg = "Unable to reach Hive Metastore: " + e.getMessage();
+      LOG.error(msg, e);
+      throw new LockException(e);
+    }
   }
 
   private synchronized void initHeartbeatExecutorService() {
