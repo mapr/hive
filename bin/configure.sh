@@ -62,6 +62,8 @@ WEBHCAT_KEYSTORE_ALIAS="templeton.keystore.password"
 WEBHCAT_KEYSTORE_PATH="/user/${MAPR_USER}/hivewebhcat.jceks"
 HS2_KEYSTORE_ALIAS="hive.server2.keystore.password"
 HS2_KEYSTORE_PATH="/user/${MAPR_USER}/hiveserver2.jceks"
+HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS="hive.server2.webui.keystore.password"
+HIVE_SERVER2_WEBUI_KEYSTORE_PATH="/user/${MAPR_USER}/hiveserver2webui.jceks"
 KEYSTORE_PERMS="644"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
@@ -176,6 +178,9 @@ isSecure="$2"
 
 if [ "$isSecure" = "true" ];  then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl"
+  KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS})
+  create_keystore_credential "$HIVE_SERVER2_WEBUI_KEYSTORE_PATH" "$HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS}
 fi
 }
 
