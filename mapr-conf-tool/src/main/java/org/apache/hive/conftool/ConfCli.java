@@ -53,6 +53,7 @@ public class ConfCli {
   private static final String WEB_UI_PAM_SSL = "webuipamssl";
   private static final String EXIST_PROPERTY = "existProperty";
   private static final String WEBHCAT_SSL = "webhcatssl";
+  private static final String HS2_SSL = "hs2ssl";
   private static final String ADD_PROPERTY = "addProperty";
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
@@ -102,6 +103,10 @@ public class ConfCli {
     OptionBuilder.hasArg(false);
     OptionBuilder.withDescription("Configures webhcat-site.xml for webHCat SSL encryption");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBHCAT_SSL));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Configures hive-site.xml for HS2 SSL encryption");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HS2_SSL));
 
 
     OptionBuilder.hasArg();
@@ -223,6 +228,10 @@ public class ConfCli {
         ConfTool.setWebHCatSsl(pathToXmlFile, getSecurity(line));
       }
 
+      if(isHs2SslConfig(line)){
+        ConfTool.setHs2Ssl(pathToXmlFile, getSecurity(line));
+      }
+
     } else {
       printHelp();
     }
@@ -302,6 +311,10 @@ public class ConfCli {
 
   private static boolean isWeHCatSslConfig(CommandLine line) {
     return line.hasOption(WEBHCAT_SSL);
+  }
+
+  private static boolean isHs2SslConfig(CommandLine line) {
+    return line.hasOption(HS2_SSL);
   }
 
   private static void printBool(boolean value){

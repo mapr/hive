@@ -320,5 +320,21 @@ public class ConfCliTest {
         (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToWebHCatSite, "templeton.keystore.password"));
   }
 
+  @Test
+  public void configureHs2SslTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-023.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[]{"--hs2ssl", "--path", pathToHiveSite});
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.keystore.path"));
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.keystore.password"));
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hadoop.security.credential.provider.path"));
+    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.use.SSL"));
+    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToHiveSite, "hive.server2.keystore.path"));
+    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2.jceks",
+        ConfTool.getProperty(pathToHiveSite, "hadoop.security.credential.provider.path"));
+    Assert.assertEquals(new String
+        (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToHiveSite, "hive.server2.keystore.password"));
+  }
 
 }
