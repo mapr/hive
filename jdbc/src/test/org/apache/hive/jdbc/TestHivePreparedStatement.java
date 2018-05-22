@@ -19,12 +19,16 @@ package org.apache.hive.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 
 import org.apache.hive.service.rpc.thrift.TCLIService.Iface;
+import org.apache.hive.service.rpc.thrift.TCloseOperationReq;
+import org.apache.hive.service.rpc.thrift.TCloseOperationResp;
 import org.apache.hive.service.rpc.thrift.TExecuteStatementReq;
 import org.apache.hive.service.rpc.thrift.TExecuteStatementResp;
 import org.apache.hive.service.rpc.thrift.TGetOperationStatusReq;
@@ -52,6 +56,8 @@ public class TestHivePreparedStatement {
 	TExecuteStatementResp tExecStatementResp;
 	@Mock
 	TGetOperationStatusResp tGetOperationStatusResp;
+	@Mock
+	private TCloseOperationResp tCloseOperationResp;
 	private TStatus tStatus_SUCCESS = new TStatus(TStatusCode.SUCCESS_STATUS);
 	@Mock
 	private TOperationHandle tOperationHandle;
@@ -67,7 +73,10 @@ public class TestHivePreparedStatement {
 		when(tGetOperationStatusResp.isSetOperationState()).thenReturn(true);
 		when(tGetOperationStatusResp.isSetOperationCompleted()).thenReturn(true);
 
+		when(tCloseOperationResp.getStatus()).thenReturn(tStatus_SUCCESS);
+
 		when(client.GetOperationStatus(any(TGetOperationStatusReq.class))).thenReturn(tGetOperationStatusResp);
+		when(client.CloseOperation(any(TCloseOperationReq.class))).thenReturn(tCloseOperationResp);
 		when(client.ExecuteStatement(any(TExecuteStatementReq.class))).thenReturn(tExecStatementResp);
 	}
 
@@ -151,5 +160,40 @@ public class TestHivePreparedStatement {
 		ArgumentCaptor<TExecuteStatementReq> argument = ArgumentCaptor.forClass(TExecuteStatementReq.class);
 		verify(client).ExecuteStatement(argument.capture());
 		assertEquals("select 1 from x where a='\\044e' || 'v'", argument.getValue().getStatement());
+	}
+
+	@Test
+	public void testSingleQuoteSetString() throws Exception {
+		String sql = "select * from table where value=?";
+		ArgumentCaptor<TExecuteStatementReq> argument = ArgumentCaptor.forClass(TExecuteStatementReq.class);
+		HivePreparedStatement ps = new HivePreparedStatement(connection, client, sessHandle, sql);
+
+		ps.setString(1, "anyValue\\' or 1=1 --");
+		ps.execute();
+		verify(client).ExecuteStatement(argument.capture());
+		assertEquals("select * from table where value='anyValue\\' or 1=1 --'", argument.getValue().getStatement());
+
+		ps.setString(1, "anyValue\\\\' or 1=1 --");
+		ps.execute();
+		verify(client, times(2)).ExecuteStatement(argument.capture());
+		assertEquals("select * from table where value='anyValue\\\\\\' or 1=1 --'", argument.getValue().getStatement());
+	}
+
+
+	@Test
+	public void testSingleQuoteSetBinaryStream() throws Exception {
+		String sql = "select * from table where value=?";
+		ArgumentCaptor<TExecuteStatementReq> argument = ArgumentCaptor.forClass(TExecuteStatementReq.class);
+		HivePreparedStatement ps = new HivePreparedStatement(connection, client, sessHandle, sql);
+
+		ps.setBinaryStream(1, new ByteArrayInputStream("'anyValue' or 1=1".getBytes()));
+		ps.execute();
+		verify(client).ExecuteStatement(argument.capture());
+		assertEquals("select * from table where value='\\'anyValue\\' or 1=1'", argument.getValue().getStatement());
+
+		ps.setBinaryStream(1, new ByteArrayInputStream("\\'anyValue\\' or 1=1".getBytes()));
+		ps.execute();
+		verify(client, times(2)).ExecuteStatement(argument.capture());
+		assertEquals("select * from table where value='\\'anyValue\\' or 1=1'", argument.getValue().getStatement());
 	}
 }
