@@ -285,6 +285,39 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
   }
 
+  @Test
+  public void setHs2SslTest() throws IOException, ParserConfigurationException, SAXException,
+      TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-023.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setHs2Ssl(pathToHiveSite, true);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
+    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH));
+    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2.jceks", ConfTool.getProperty(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
+    Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
+  }
+
+  @Test
+  public void disableHs2SslTest() throws IOException, ParserConfigurationException,
+      SAXException,
+      TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-023.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setHs2Ssl(pathToHiveSite, false);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_USE_SSL));
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH));
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
+    Assert.assertFalse(ConfTool.propertyExists(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
+  }
+
 
   @Test
   public void setMetaStoreUgiTest() throws IOException, ParserConfigurationException, SAXException,
