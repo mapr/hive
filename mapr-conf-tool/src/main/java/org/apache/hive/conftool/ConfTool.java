@@ -76,6 +76,7 @@ class ConfTool {
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
   private static final String WEBHCAT_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hivewebhcat.jceks";
+  private static final String HS2_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hiveserver2.jceks";
   private static final String EMPTY = "";
 
   /**
@@ -219,6 +220,37 @@ class ConfTool {
       remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToWebHCatSite);
+  }
+
+  /**
+   * Configures Ssl encryption for HiveServer2
+   *
+   * @param pathToHiveSite hive-site.xml location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  static void setHs2Ssl(String pathToHiveSite, boolean security) throws
+      TransformerException, IOException,
+      SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    if(security) {
+      LOG.info("Configuring HS2 for  SSL encryption");
+      set(doc, ConfVars.HIVE_SERVER2_USE_SSL, TRUE);
+      set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
+      set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, new String
+          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, HS2_CREDENTIAL_PROVIDER_PATH);
+    } else {
+      remove(doc, ConfVars.HIVE_SERVER2_USE_SSL);
+      remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
+      remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD);
+      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
+    }
+    saveToFile(doc, pathToHiveSite);
   }
 
   /**

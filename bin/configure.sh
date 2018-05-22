@@ -60,6 +60,8 @@ WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
 
 WEBHCAT_KEYSTORE_ALIAS="templeton.keystore.password"
 WEBHCAT_KEYSTORE_PATH="/user/${MAPR_USER}/hivewebhcat.jceks"
+HS2_KEYSTORE_ALIAS="hive.server2.keystore.password"
+HS2_KEYSTORE_PATH="/user/${MAPR_USER}/hiveserver2.jceks"
 KEYSTORE_PERMS="644"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
@@ -221,6 +223,21 @@ else
   return 1;
 fi
 }
+
+#
+# Set SSL encryption by default for HiveServer2 on MapR SASL cluster
+#
+configure_hs2_ssl(){
+HIVE_SITE="$1"
+isSecure="$2"
+if [ "$isSecure" = "true" ];  then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl"
+    KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HS2_KEYSTORE_ALIAS})
+    create_keystore_credential "$HS2_KEYSTORE_PATH" "$HS2_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
+    . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HS2_KEYSTORE_ALIAS}
+fi
+}
+
 #
 # Check that port is available
 #
@@ -688,6 +705,8 @@ configure_impersonation "$isSecure"
 configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$isSecure"
 
 configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
+
+configure_hs2_ssl "$HIVE_SITE" "$isSecure"
 
 init_derby_schema
 
