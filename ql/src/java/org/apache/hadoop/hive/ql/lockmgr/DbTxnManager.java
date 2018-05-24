@@ -19,6 +19,7 @@ package org.apache.hadoop.hive.ql.lockmgr;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hive.common.util.ShutdownHookManager;
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.LockComponentBuilder;
 import org.apache.hadoop.hive.metastore.LockRequestBuilder;
 import org.apache.hadoop.hive.metastore.api.*;
@@ -52,21 +52,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * An implementation of HiveTxnManager that stores the transactions in the
- * metastore database.
+ * An implementation of HiveTxnManager that stores the transactions in the metastore database.
+ * There should be 1 instance o {@link DbTxnManager} per {@link org.apache.hadoop.hive.ql.session.SessionState}
+ * with a single thread accessing it at a time, with the exception of {@link #heartbeat()} method.
+ * The later may (usually will) be called from a timer thread.
+ * See {@link #getMS()} for more important concurrency/metastore access notes.
  */
-public class DbTxnManager extends HiveTxnManagerImpl {
+public final class DbTxnManager extends HiveTxnManagerImpl {
 
   static final private String CLASS_NAME = DbTxnManager.class.getName();
   static final private Logger LOG = LoggerFactory.getLogger(CLASS_NAME);
 
-  private DbLockManager lockMgr = null;
-  private SynchronizedMetaStoreClient client = null;
+  private volatile DbLockManager lockMgr = null;
   /**
    * The Metastore NEXT_TXN_ID.NTXN_NEXT is initialized to 1; it contains the next available
    * transaction id.  Thus is 1 is first transaction id.
    */
-  private long txnId = 0;
+  private volatile long txnId = 0;
   /**
    * assigns a unique monotonically increasing ID to each statement
    * which is part of an open transaction.  This is used by storage
@@ -84,33 +86,31 @@ public class DbTxnManager extends HiveTxnManagerImpl {
   private ScheduledFuture<?> heartbeatTask = null;
   private Runnable shutdownRunner = null;
   private static final int SHUTDOWN_HOOK_PRIORITY = 0;
-
-  // SynchronizedMetaStoreClient object per heartbeater thread.
-  private static ThreadLocal<SynchronizedMetaStoreClient> threadLocalMSClient =
-      new ThreadLocal<SynchronizedMetaStoreClient>() {
-
-        @Override
-        protected SynchronizedMetaStoreClient initialValue() {
-          return null;
-        }
-
-        @Override
-        public synchronized void remove() {
-          SynchronizedMetaStoreClient client = this.get();
-          if (client != null) {
-            client.close();
-          }
-          super.remove();
-        }
-      };
-
-  private static AtomicInteger heartbeaterMSClientCount = new AtomicInteger(0);
-  private static int heartbeaterThreadPoolSize = 0;
-
-  private static SynchronizedMetaStoreClient getThreadLocalMSClient() {
-    return threadLocalMSClient.get();
+  /**
+   * We do this on every call to make sure TM uses same MS connection as is used by the caller (Driver,
+   * SemanticAnalyzer, etc).  {@code Hive} instances are cached using ThreadLocal and
+   * {@link IMetaStoreClient} is cached within {@code Hive} with additional logic.  Futhermore, this
+   * ensures that multiple threads are not sharing the same Thrift client (which could happen
+   * if we had cached {@link IMetaStoreClient} here.
+   *
+   * ThreadLocal gets cleaned up automatically when its thread goes away
+   * https://docs.oracle.com/javase/7/docs/api/java/lang/ThreadLocal.html.  This is especially
+   * important for threads created by {@link #heartbeatExecutorService} threads.
+   *
+   * Embedded {@link DbLockManager} follows the same logic.
+   * @return IMetaStoreClient
+   * @throws LockException on any errors
+   */
+  IMetaStoreClient getMS() throws LockException {
+    try {
+      return Hive.get(conf).getMSC();
+    }
+    catch(HiveException|MetaException e) {
+      String msg = "Unable to reach Hive Metastore: " + e.getMessage();
+      LOG.error(msg, e);
+      throw new LockException(e);
+    }
   }
-
   DbTxnManager() {
     shutdownRunner = new Runnable() {
       @Override
@@ -143,7 +143,7 @@ public class DbTxnManager extends HiveTxnManagerImpl {
       throw new LockException("Transaction already opened. " + JavaUtils.txnIdToString(txnId));
     }
     try {
-      txnId = client.openTxn(user);
+      txnId = getMS().openTxn(user);
       statementId = 0;
       LOG.debug("Opened " + JavaUtils.txnIdToString(txnId));
       return txnId;
@@ -152,11 +152,15 @@ public class DbTxnManager extends HiveTxnManagerImpl {
     }
   }
 
+  /**
+   * we don't expect multiple thread to call this method concurrently but {@link #lockMgr} will
+   * be read by a different threads that one writing it, thus it's {@code volatile}
+   */
   @Override
   public HiveLockManager getLockManager() throws LockException {
     init();
     if (lockMgr == null) {
-      lockMgr = new DbLockManager(client, conf);
+      lockMgr = new DbLockManager(conf, this);
     }
     return lockMgr;
   }
@@ -378,7 +382,7 @@ public class DbTxnManager extends HiveTxnManagerImpl {
       lockMgr.clearLocalLockRecords();
       stopHeartbeat();
       LOG.debug("Committing txn " + JavaUtils.txnIdToString(txnId));
-      client.commitTxn(txnId);
+      getMS().commitTxn(txnId);
     } catch (NoSuchTxnException e) {
       LOG.error("Metastore could not find " + JavaUtils.txnIdToString(txnId));
       throw new LockException(e, ErrorMsg.TXN_NO_SUCH_TRANSACTION, JavaUtils.txnIdToString(txnId));
@@ -404,7 +408,7 @@ public class DbTxnManager extends HiveTxnManagerImpl {
       lockMgr.clearLocalLockRecords();
       stopHeartbeat();
       LOG.debug("Rolling back " + JavaUtils.txnIdToString(txnId));
-      client.rollbackTxn(txnId);
+      getMS().rollbackTxn(txnId);
     } catch (NoSuchTxnException e) {
       LOG.error("Metastore could not find " + JavaUtils.txnIdToString(txnId));
       throw new LockException(e, ErrorMsg.TXN_NO_SUCH_TRANSACTION, JavaUtils.txnIdToString(txnId));
@@ -448,29 +452,11 @@ public class DbTxnManager extends HiveTxnManagerImpl {
     for (HiveLock lock : locks) {
       long lockId = ((DbLockManager.DbHiveLock)lock).lockId;
       try {
-        // Get the threadlocal metastore client for the heartbeat calls.
-        SynchronizedMetaStoreClient heartbeaterClient = getThreadLocalMSClient();
-        if (heartbeaterClient == null) {
-          Hive db;
-          try {
-            db = Hive.get(conf);
-            // Create a new threadlocal synchronized metastore client for use in hearbeater threads.
-            // This makes the concurrent use of heartbeat thread safe, and won't cause transaction
-            // abort due to a long metastore client call blocking the heartbeat call.
-            heartbeaterClient = new SynchronizedMetaStoreClient(db.getMSC());
-            threadLocalMSClient.set(heartbeaterClient);
-          } catch (HiveException e) {
-            LOG.error("Unable to create new metastore client for heartbeating", e);
-            throw new LockException(e);
-          }
-          // Increment the threadlocal metastore client count
-          if (heartbeaterMSClientCount.incrementAndGet() >= heartbeaterThreadPoolSize) {
-            LOG.warn("The number of hearbeater metastore clients - + "
-                + heartbeaterMSClientCount.get() + ", has exceeded the max limit - "
-                + heartbeaterThreadPoolSize);
-          }
-        }
-        heartbeaterClient.heartbeat(txnId, lockId);
+        /**
+         * This relies on the ThreadLocal caching, which implies that the same {@link IMetaStoreClient},
+         * in particular the Thrift connection it uses is never shared between threads
+         */
+        getMS().heartbeat(txnId, lockId);
       } catch (NoSuchLockException e) {
         LOG.error("Unable to find lock " + JavaUtils.lockIdToString(lockId));
         throw new LockException(e, ErrorMsg.LOCK_NO_SUCH_LOCK, JavaUtils.lockIdToString(lockId));
@@ -542,7 +528,7 @@ public class DbTxnManager extends HiveTxnManagerImpl {
   public ValidTxnList getValidTxns() throws LockException {
     init();
     try {
-      return client.getValidTxns(txnId);
+      return getMS().getValidTxns(txnId);
     } catch (TException e) {
       throw new LockException(ErrorMsg.METASTORE_COMMUNICATION_FAILED.getMsg(),
           e);
@@ -586,21 +572,10 @@ public class DbTxnManager extends HiveTxnManagerImpl {
   }
 
   private void init() throws LockException {
-    if (client == null) {
-      if (conf == null) {
-        throw new RuntimeException("Must call setHiveConf before any other " +
-            "methods.");
-      }
-      try {
-        Hive db = Hive.get(conf);
-        client = new SynchronizedMetaStoreClient(db.getMSC());
-        initHeartbeatExecutorService();
-      } catch (MetaException e) {
-        throw new LockException(ErrorMsg.METASTORE_COULD_NOT_INITIATE.getMsg(), e);
-      } catch (HiveException e) {
-        throw new LockException(ErrorMsg.METASTORE_COULD_NOT_INITIATE.getMsg(), e);
-      }
+    if (conf == null) {
+      throw new RuntimeException("Must call setHiveConf before any other methods.");
     }
+    initHeartbeatExecutorService();
   }
 
   private synchronized void initHeartbeatExecutorService() {
@@ -608,10 +583,9 @@ public class DbTxnManager extends HiveTxnManagerImpl {
         && !heartbeatExecutorService.isTerminated()) {
       return;
     }
-    heartbeaterThreadPoolSize =
-        conf.getIntVar(HiveConf.ConfVars.HIVE_TXN_HEARTBEAT_THREADPOOL_SIZE);
     heartbeatExecutorService =
-        Executors.newScheduledThreadPool(heartbeaterThreadPoolSize, new ThreadFactory() {
+        Executors.newScheduledThreadPool(
+          conf.getIntVar(HiveConf.ConfVars.HIVE_TXN_HEARTBEAT_THREADPOOL_SIZE), new ThreadFactory() {
           private final AtomicInteger threadCounter = new AtomicInteger();
 
           @Override
@@ -623,21 +597,9 @@ public class DbTxnManager extends HiveTxnManagerImpl {
   }
 
   public static class HeartbeaterThread extends Thread {
-    public HeartbeaterThread(Runnable target, String name) {
+    HeartbeaterThread(Runnable target, String name) {
       super(target, name);
       setDaemon(true);
-    }
-
-    @Override
-    /**
-     * We're overriding finalize so that we can do an orderly cleanup of resources held by
-     * the threadlocal metastore client.
-     */
-    protected void finalize() throws Throwable {
-      threadLocalMSClient.remove();
-      // Adjust the metastore client count
-      DbTxnManager.heartbeaterMSClientCount.decrementAndGet();
-      super.finalize();
     }
   }
 
@@ -710,56 +672,6 @@ public class DbTxnManager extends HiveTxnManagerImpl {
             new LockException("Failed trying to heartbeat queryId=" + queryId + ": "
                 + t.getMessage(), t);
       }
-    }
-  }
-
-  /**
-   * Synchronized MetaStoreClient wrapper
-   */
-  final class SynchronizedMetaStoreClient {
-    private final IMetaStoreClient client;
-    SynchronizedMetaStoreClient(IMetaStoreClient client) {
-      this.client = client;
-    }
-
-    synchronized long openTxn(String user) throws TException {
-      return client.openTxn(user);
-    }
-
-    synchronized void commitTxn(long txnid) throws TException {
-      client.commitTxn(txnid);
-    }
-
-    synchronized void rollbackTxn(long txnid) throws TException {
-      client.rollbackTxn(txnid);
-    }
-
-    synchronized void heartbeat(long txnid, long lockid) throws TException {
-      client.heartbeat(txnid, lockid);
-    }
-
-    synchronized ValidTxnList getValidTxns(long currentTxn) throws TException {
-      return client.getValidTxns(currentTxn);
-    }
-
-    synchronized LockResponse lock(LockRequest request) throws TException {
-      return client.lock(request);
-    }
-
-    synchronized LockResponse checkLock(long lockid) throws TException {
-      return client.checkLock(lockid);
-    }
-
-    synchronized void unlock(long lockid) throws TException {
-      client.unlock(lockid);
-    }
-
-    synchronized ShowLocksResponse showLocks(ShowLocksRequest showLocksRequest) throws TException {
-      return client.showLocks(showLocksRequest);
-    }
-
-    synchronized void close() {
-      client.close();
     }
   }
 }
