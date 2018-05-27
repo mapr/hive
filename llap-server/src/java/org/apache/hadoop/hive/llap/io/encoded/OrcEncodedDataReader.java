@@ -59,8 +59,6 @@ import org.apache.hadoop.hive.llap.io.decode.OrcEncodedDataConsumer;
 import org.apache.hadoop.hive.llap.io.metadata.OrcFileMetadata;
 import org.apache.hadoop.hive.llap.io.metadata.OrcMetadataCache;
 import org.apache.hadoop.hive.llap.io.metadata.OrcStripeMetadata;
-import org.apache.hadoop.hive.ql.exec.DDLTask;
-import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.HdfsUtils;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile.ReaderOptions;
@@ -694,7 +692,8 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
     if (sarg != null && rowIndexStride != 0) {
       sargApp = new RecordReaderImpl.SargApplier(sarg,
           rowIndexStride, evolution,
-          OrcFile.WriterVersion.from(fileMetadata.getWriterVersionNum()));
+          OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_JAVA, fileMetadata.getWriterVersionNum()),
+          false);
     }
     boolean hasAnyData = false;
     // readState should have been initialized by this time with an empty array.

@@ -23,14 +23,18 @@ import java.math.BigInteger;
 import com.google.code.tempusfugit.concurrency.annotations.*;
 import com.google.code.tempusfugit.concurrency.*;
 import org.junit.*;
+import org.junit.rules.ExpectedException;
+
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 
 public class TestHiveDecimal {
 
   @Rule public ConcurrentRule concurrentRule = new ConcurrentRule();
   @Rule public RepeatingRule repeatingRule = new RepeatingRule();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
-  @Test
+  @Test(expected = IllegalArgumentException.class)
   @Concurrent(count=4)
   @Repeating(repetition=100)
   public void testPrecisionScaleEnforcement() {
@@ -47,8 +51,8 @@ public class TestHiveDecimal {
     Assert.assertNull(bd1);
     bd1 = HiveDecimal.enforcePrecisionScale(bd, 35, 5);
     Assert.assertEquals("57847525803324040144343378.09799", bd1.toString());
-    bd1 = HiveDecimal.enforcePrecisionScale(bd, 45, 20);
-    Assert.assertNull(bd1);
+    HiveDecimal.enforcePrecisionScale(bd, 45, 20);
+    thrown.expectMessage(containsString("Decimal precision out of allowed range"));
 
     dec = HiveDecimal.create(new BigDecimal(decStr), false);
     Assert.assertNull(dec);

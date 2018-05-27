@@ -229,7 +229,7 @@ public class TestAvroSerializer {
     HiveDecimal dec = HiveDecimal.create("3.1415926");
     r = serializeAndDeserialize(field, "union1", AvroSerdeUtils.getBufferFromDecimal(dec, 4));
     HiveDecimal dec1 = AvroSerdeUtils.getHiveDecimalFromByteBuffer((ByteBuffer) r.get("union1"), 4);
-    assertEquals(dec.setScale(4), dec1);
+    assertEquals(dec.setScale(4).toString(), dec1.toString());
   }
 
   private enum enum1 {BLUE, RED , GREEN};

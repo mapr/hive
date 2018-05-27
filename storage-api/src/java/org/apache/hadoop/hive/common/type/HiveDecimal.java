@@ -635,7 +635,7 @@ public final class HiveDecimal extends FastHiveDecimal implements Comparable<Hiv
   public boolean serializationUtilsWrite(
       OutputStream outputStream,
       long[] scratchLongs)
-      throws IOException {
+          throws IOException {
     return
         fastSerializationUtilsWrite(
             outputStream,
@@ -1104,7 +1104,7 @@ public final class HiveDecimal extends FastHiveDecimal implements Comparable<Hiv
   @HiveDecimalVersionV1
   public float floatValue() {
     return fastFloatValue();
-  }
+   }
 
   /**
    * Return a double representing the decimal.  Due the limitations of double, some values will not
@@ -1475,15 +1475,15 @@ public final class HiveDecimal extends FastHiveDecimal implements Comparable<Hiv
     case OVERFLOW:
       return null;
     case UPDATE_SCALE_DOWN:
-    {
-      HiveDecimal result = new HiveDecimal();
-      if (!dec.fastUpdatePrecisionScale(
+      {
+        HiveDecimal result = new HiveDecimal();
+        if (!dec.fastUpdatePrecisionScale(
           maxPrecision, maxScale, status,
           result)) {
-        return null;
+          return null;
+        }
+        return result;
       }
-      return result;
-    }
     default:
       throw new RuntimeException("Unknown fast decimal check precision and scale status " + status);
     }

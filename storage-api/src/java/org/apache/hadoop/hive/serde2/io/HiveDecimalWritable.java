@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -388,7 +388,7 @@ public final class HiveDecimalWritable extends FastHiveDecimal
 
   /**
    * Standard Writable method that deserialize the fields of this object from a DataInput.
-   *
+   * 
    */
   @HiveDecimalWritableVersionV1
   @Override
@@ -405,7 +405,7 @@ public final class HiveDecimalWritable extends FastHiveDecimal
     isSet = true;
   }
 
-  /**OrcInputFormat
+  /**
    * Standard Writable method that serialize the fields of this object to a DataOutput.
    *
    */
@@ -461,7 +461,7 @@ public final class HiveDecimalWritable extends FastHiveDecimal
   public boolean serializationUtilsRead(
       InputStream inputStream, int scale,
       byte[] scratchBytes)
-      throws IOException {
+          throws IOException {
     fastReset();
     isSet =
         fastSerializationUtilsRead(
@@ -478,7 +478,7 @@ public final class HiveDecimalWritable extends FastHiveDecimal
   public boolean serializationUtilsWrite(
       OutputStream outputStream,
       long[] scratchLongs)
-      throws IOException {
+          throws IOException {
     if (!isSet()) {
       throw new RuntimeException("no value set");
     }
@@ -486,6 +486,64 @@ public final class HiveDecimalWritable extends FastHiveDecimal
         fastSerializationUtilsWrite(
             outputStream,
             scratchLongs);
+  }
+
+  /*
+   * Maximum number of decimal digits in a decimal64 long.
+   */
+  @HiveDecimalWritableVersionV2
+  public static final int DECIMAL64_DECIMAL_DIGITS = FastHiveDecimalImpl.DECIMAL64_DECIMAL_DIGITS;
+
+  /*
+   * Test whether a precision will fit within a decimal64 (64-bit signed long with <= 18 decimal
+   * digits).
+   */
+  @HiveDecimalWritableVersionV2
+  public static boolean isPrecisionDecimal64(int precision) {
+    return (precision <= DECIMAL64_DECIMAL_DIGITS);
+  }
+
+  /*
+   * Return the maximum absolute decimal64 value for a precision.
+   */
+  @HiveDecimalWritableVersionV2
+  public static long getDecimal64AbsMax(int precision) {
+    return FastHiveDecimalImpl.getDecimal64AbsMax(precision);
+  }
+
+  /*
+   * Deserializes 64-bit decimals up to the maximum 64-bit precision (18 decimal digits).
+   *
+   * NOTE: Major assumption: the input decimal64 has already been bounds checked and a least
+   * has a precision <= DECIMAL64_DECIMAL_DIGITS.  We do not bounds check here for better
+   * performance.  You can bounds check beforehand with:
+   *     Math.abs(decimal64Long) <= getDecimal64AbsMax(precision)
+   */
+  @HiveDecimalWritableVersionV2
+  public void deserialize64(
+      long decimal64Long, int scale) {
+    fastDeserialize64(decimal64Long, scale);
+    isSet = true;
+  }
+
+   /*
+    * Serializes decimal64 up to the maximum 64-bit precision (18 decimal digits).
+    *
+    * NOTE: Major assumption: the fast decimal has already been bounds checked and a least
+    * has a precision <= DECIMAL64_DECIMAL_DIGITS.  We do not bounds check here for better
+    * performance.
+    */
+  @HiveDecimalWritableVersionV2
+  public long serialize64(int scale) {
+    return fastSerialize64(scale);
+  }
+
+  @HiveDecimalWritableVersionV2
+  public boolean isValid() {
+    if (!isSet) {
+      return false;
+    }
+    return FastHiveDecimalImpl.fastIsValid(this);
   }
 
   /**
@@ -524,10 +582,10 @@ public final class HiveDecimalWritable extends FastHiveDecimal
   }
 
   /**
-   * Allocate scratchLongs with HiveDecimal.SCRATCH_LONGS_LEN longs.
-   * And, allocate scratch scratchBuffer with HiveDecimal.SCRATCH_BUFFER_LEN_BIG_INTEGER_BYTES bytes.
-   *
-   */
+  * Allocate scratchLongs with HiveDecimal.SCRATCH_LONGS_LEN longs.
+  * And, allocate scratch scratchBuffer with HiveDecimal.SCRATCH_BUFFER_LEN_BIG_INTEGER_BYTES bytes.
+  *
+  */
   @HiveDecimalWritableVersionV2
   public byte[] bigIntegerBytesCopy(
       long[] scratchLongs, byte[] scratchBuffer) {
@@ -659,7 +717,7 @@ public final class HiveDecimalWritable extends FastHiveDecimal
       throw new RuntimeException("no value set");
     }
     return fastFloatValue();
-  }
+   }
 
   @HiveDecimalWritableVersionV2
   public double doubleValue() {
@@ -701,6 +759,12 @@ public final class HiveDecimalWritable extends FastHiveDecimal
 
   @HiveDecimalWritableVersionV2
   public void mutateAdd(HiveDecimal dec) {
+    if (dec == null) {
+
+      // Can't add NULL.
+      isSet = false;
+      return;
+    }
     if (!isSet) {
       return;
     }
@@ -720,6 +784,12 @@ public final class HiveDecimalWritable extends FastHiveDecimal
 
   @HiveDecimalWritableVersionV2
   public void mutateSubtract(HiveDecimal dec) {
+    if (dec == null) {
+
+      // Can't subtract NULL.
+      isSet = false;
+      return;
+    }
     if (!isSet) {
       return;
     }
@@ -739,6 +809,12 @@ public final class HiveDecimalWritable extends FastHiveDecimal
 
   @HiveDecimalWritableVersionV2
   public void mutateMultiply(HiveDecimal dec) {
+    if (dec == null) {
+
+      // Can't multiply NULL.
+      isSet = false;
+      return;
+    }
     if (!isSet) {
       return;
     }
@@ -758,6 +834,12 @@ public final class HiveDecimalWritable extends FastHiveDecimal
 
   @HiveDecimalWritableVersionV2
   public void mutateDivide(HiveDecimal dec) {
+    if (dec == null) {
+
+      // Can't divide NULL.
+      isSet = false;
+      return;
+    }
     if (!isSet) {
       return;
     }
@@ -778,6 +860,12 @@ public final class HiveDecimalWritable extends FastHiveDecimal
 
   @HiveDecimalWritableVersionV2
   public void mutateRemainder(HiveDecimal dec) {
+    if (dec == null) {
+
+      // Can't do remainder on NULL.
+      isSet = false;
+      return;
+    }
     if (!isSet) {
       return;
     }
@@ -947,10 +1035,13 @@ public final class HiveDecimalWritable extends FastHiveDecimal
     return fastHashCode();
   }
 
+  private static final byte[] EMPTY_ARRAY = new byte[0];
+
   @HiveDecimalWritableVersionV1
   public byte[] getInternalStorage() {
     if (!isSet()) {
-      throw new RuntimeException("no value set");
+      // don't break old callers that are trying to reuse storages
+      return EMPTY_ARRAY;
     }
 
     if (internalScratchLongs == null) {

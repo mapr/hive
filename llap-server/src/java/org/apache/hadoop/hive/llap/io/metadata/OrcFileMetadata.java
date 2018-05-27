@@ -29,7 +29,14 @@ import org.apache.hadoop.hive.llap.cache.LlapCacheableBuffer;
 import org.apache.hadoop.hive.ql.io.SyntheticFileId;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
-import org.apache.orc.*;
+import org.apache.orc.CompressionKind;
+import org.apache.orc.FileFormatException;
+import org.apache.orc.FileMetadata;
+import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
+import org.apache.orc.OrcUtils;
+import org.apache.orc.StripeInformation;
+import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.ReaderImpl;
 
 /** ORC file metadata. Currently contains some duplicate info due to how different parts
@@ -205,6 +212,11 @@ public final class OrcFileMetadata extends LlapCacheableBuffer
   }
 
   @Override
+  public int getWriterImplementation() {
+    return OrcFile.WriterImplementation.ORC_JAVA.getId();
+  }
+
+  @Override
   public int getWriterVersionNum() {
     return writerVersionNum;
   }
@@ -227,5 +239,14 @@ public final class OrcFileMetadata extends LlapCacheableBuffer
   @Override
   public List<OrcProto.ColumnStatistics> getFileStats() {
     return fileStats;
+  }
+
+  @Override
+  public int getStripeCount() {
+    return stripes.size();
+  }
+
+  public TypeDescription getSchema() throws FileFormatException {
+    return OrcUtils.convertTypeFromProtobuf(this.types, 0);
   }
 }

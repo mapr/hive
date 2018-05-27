@@ -24,6 +24,7 @@
   </parent>
 
   <artifactId>hive-storage-api</artifactId>
+  <version>2.1.1-mapr</version>
   <packaging>jar</packaging>
   <name>Hive Storage API</name>
 

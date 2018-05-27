@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -265,12 +265,30 @@ public class FastHiveDecimal {
 
   protected boolean fastSerializationUtilsWrite(OutputStream outputStream,
       long[] scratchLongs)
-      throws IOException {
+          throws IOException {
     return
         FastHiveDecimalImpl.fastSerializationUtilsWrite(
             outputStream,
             fastSignum, fast0, fast1, fast2, fastIntegerDigitCount, fastScale,
             scratchLongs);
+  }
+
+  /*
+   * Deserializes 64-bit decimals up to the maximum 64-bit precision (18 decimal digits).
+   */
+  protected void fastDeserialize64(long decimalLong, int scale) {
+    FastHiveDecimalImpl.fastDeserialize64(
+        decimalLong, scale, this);
+  }
+
+  /*
+   * Serializes decimal64 up to the maximum 64-bit precision (18 decimal digits).
+   */
+  protected long fastSerialize64(int scale) {
+    return
+        FastHiveDecimalImpl.fastSerialize64(
+            scale,
+            fastSignum, fast1, fast0, fastScale);
   }
 
   // The fastBigIntegerBytes method returns 3 56 bit (7 byte) words and a possible sign byte.
@@ -403,13 +421,16 @@ public class FastHiveDecimal {
   protected boolean fastEquals(FastHiveDecimal that) {
     return
         FastHiveDecimalImpl.fastEquals(
-            fastSignum, fast0, fast1, fast2,
-            fastScale,
-            that.fastSignum, that.fast0, that.fast1, that.fast2,
-            that.fastScale);
+          fastSignum, fast0, fast1, fast2,
+          fastScale,
+          that.fastSignum, that.fast0, that.fast1, that.fast2,
+          that.fastScale);
   }
 
   protected void fastAbs() {
+    if (fastSignum == 0) {
+      return;
+    }
     fastSignum = 1;
   }
 
@@ -519,30 +540,30 @@ public class FastHiveDecimal {
     */
     FastCheckPrecisionScaleStatus status =
         FastHiveDecimalImpl.fastCheckPrecisionScale(
-            fastSignum, fast0, fast1, fast2,
-            fastIntegerDigitCount, fastScale,
-            maxPrecision, maxScale);
+          fastSignum, fast0, fast1, fast2,
+          fastIntegerDigitCount, fastScale,
+          maxPrecision, maxScale);
     switch (status) {
     case NO_CHANGE:
       return true;
     case OVERFLOW:
       return false;
     case UPDATE_SCALE_DOWN:
-    {
-      if (!FastHiveDecimalImpl.fastUpdatePrecisionScale(
+      {
+        if (!FastHiveDecimalImpl.fastUpdatePrecisionScale(
           fastSignum, fast0, fast1, fast2,
           fastIntegerDigitCount, fastScale,
           maxPrecision, maxScale, status,
           this)) {
-        return false;
-      }
+          return false;
+        }
         /*
         if (!fastIsValid()) {
           fastRaiseInvalidException();
         }
         */
-      return true;
-    }
+        return true;
+      }
     default:
       throw new RuntimeException("Unknown fast decimal check precision and scale status " + status);
     }
