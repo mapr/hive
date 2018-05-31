@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.hadoop.hive.llap.counters.LlapIOCounters;
+import org.apache.hadoop.hive.ql.exec.DDLTask;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.orc.OrcUtils;
 import org.apache.orc.*;
 import org.apache.orc.impl.DataReaderProperties;

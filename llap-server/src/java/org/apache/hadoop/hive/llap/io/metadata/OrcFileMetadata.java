@@ -153,7 +153,7 @@ public final class OrcFileMetadata extends LlapCacheableBuffer
     return types;
   }
 
-  @Override public TypeDescription getSchema() {
+  @Override public TypeDescription getSchema() throws FileFormatException {
     return OrcUtils.convertTypeFromProtobuf(this.types, 0);
   }
 
@@ -241,12 +241,4 @@ public final class OrcFileMetadata extends LlapCacheableBuffer
     return fileStats;
   }
 
-  @Override
-  public int getStripeCount() {
-    return stripes.size();
-  }
-
-  public TypeDescription getSchema() throws FileFormatException {
-    return OrcUtils.convertTypeFromProtobuf(this.types, 0);
-  }
 }

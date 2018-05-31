@@ -189,7 +189,7 @@ public class TimestampColumnVector extends ColumnVector {
 
   /**
    * Return a double representation of a Timestamp.
-   * @param elementNum
+   * @param timestamp
    * @return
    */
   public static double getDouble(Timestamp timestamp) {
@@ -444,5 +444,13 @@ public class TimestampColumnVector extends ColumnVector {
         System.arraycopy(oldNanos, 0, nanos, 0, oldNanos.length);
       }
     }
+  }
+
+  @Override
+  public void shallowCopyTo(ColumnVector otherCv) {
+    TimestampColumnVector other = (TimestampColumnVector)otherCv;
+    super.shallowCopyTo(other);
+    other.time = time;
+    other.nanos = nanos;
   }
 }
