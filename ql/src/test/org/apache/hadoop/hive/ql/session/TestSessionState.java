@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -309,5 +311,18 @@ public class TestSessionState {
     } catch (IOException e) {
       assertTrue(e.getMessage().contains("Failed to create directory noPermissions/child"));
     }
+  }
+
+  @Test
+  public void testGetUserName() throws IOException {
+    String userName = "test_user";
+    HiveConf conf = spy(new HiveConf());
+    when(conf.getUser()).thenReturn(userName);
+    SessionState ss = new SessionState(conf);
+    SessionState.start(ss);
+
+    ss = SessionState.get();
+
+    assertEquals(userName, ss.getUserName());
   }
 }
