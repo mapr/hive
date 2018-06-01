@@ -367,7 +367,7 @@ public class SessionState {
   }
 
   public SessionState(HiveConf conf) {
-    this(conf, null);
+    this(conf, retriveUserNameFromConf(conf));
   }
 
   public SessionState(HiveConf conf, String userName) {
@@ -395,6 +395,14 @@ public class SessionState {
     this.sessionConf.setClassLoader(currentLoader);
     resourceDownloader = new ResourceDownloader(conf,
         HiveConf.getVar(conf, ConfVars.DOWNLOADED_RESOURCES_DIR));
+  }
+
+  private static String retriveUserNameFromConf(HiveConf conf) {
+    try {
+      return conf.getUser();
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   public Map<String, String> getHiveVariables() {

@@ -19,17 +19,16 @@ package org.apache.hadoop.hive.ql.session;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -265,5 +264,19 @@ public class TestSessionState {
         LOG.error("Fail to close the created session: ", ioException);
       }
     }
+  }
+
+  @Test
+  public void testGetUserName() throws IOException {
+    String userName = "test_user";
+    HiveConf conf = spy(new HiveConf());
+    conf.set("fs.default.name", "file:///");
+    when(conf.getUser()).thenReturn(userName);
+    SessionState ss = new SessionState(conf);
+    SessionState.start(ss);
+
+    ss = SessionState.get();
+
+    assertEquals(userName, ss.getUserName());
   }
 }
