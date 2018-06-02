@@ -2200,7 +2200,12 @@ public class HiveConf extends Configuration {
         "Comma separated list of variables which are used internally and should not be configurable."),
     PART_STAT_TABLE_ID_COLUMN_VARCHAR_SIZE("hive.part.stat.table.id.varchar.size", 1024,
         "Size of ID column in PARTITION_STATS_V2 table. By default this value is 1024."),
-    READ_ALL_HBASE_COLUMN("hive.read.all.hbase.column", false,"If true then Hive will get all column from Hbase table");
+    READ_ALL_HBASE_COLUMN("hive.read.all.hbase.column", false,"If true then Hive will get all column from Hbase table"),
+
+    HIVE_EXEC_MOVE_FILES_FROM_SOURCE_DIR("hive.exec.move.files.from.source.dir", false,
+        "When moving/renaming a directory from source to destination, individually move each \n" +
+        "file in the source directory, rather than renaming the source directory. This may \n" +
+        "help protect against files written to temp directories by runaway task attempts.");
 
     public final String varname;
     private final String defaultExpr;
