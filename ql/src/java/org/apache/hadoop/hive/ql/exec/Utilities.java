@@ -1143,6 +1143,51 @@ public final class Utilities {
   }
 
   /**
+   * Moves files from src to dst if it is within the specified set of paths
+   * @param fs
+   * @param src
+   * @param dst
+   * @param filesToMove
+   * @throws IOException
+   * @throws HiveException
+   */
+  private static void moveSpecifiedFiles(FileSystem fs, Path src, Path dst, Set<Path> filesToMove)
+      throws IOException, HiveException {
+    if (!fs.exists(dst)) {
+      fs.mkdirs(dst);
+    }
+
+    FileStatus[] files = fs.listStatus(src);
+    for (FileStatus file : files) {
+      if (filesToMove.contains(file.getPath())) {
+        Utilities.moveFile(fs, file, dst);
+      }
+    }
+  }
+
+  private static void moveFile(FileSystem fs, FileStatus file, Path dst) throws IOException,
+      HiveException {
+    Path srcFilePath = file.getPath();
+    String fileName = srcFilePath.getName();
+    Path dstFilePath = new Path(dst, fileName);
+    if (file.isDir()) {
+      renameOrMoveFiles(fs, srcFilePath, dstFilePath);
+    } else {
+      if (fs.exists(dstFilePath)) {
+        int suffix = 0;
+        do {
+          suffix++;
+          dstFilePath = new Path(dst, fileName + "_" + suffix);
+        } while (fs.exists(dstFilePath));
+      }
+
+      if (!fs.rename(srcFilePath, dstFilePath)) {
+        throw new HiveException("Unable to move: " + srcFilePath + " to: " + dst);
+      }
+    }
+  }
+
+  /**
    * Rename src to dst, or in the case dst already exists, move files in src to dst. If there is an
    * existing file with the same name, the new file's name will be appended with "_1", "_2", etc.
    *
@@ -1164,26 +1209,7 @@ public final class Utilities {
       // move file by file
       FileStatus[] files = fs.listStatus(src);
       for (FileStatus file : files) {
-
-        Path srcFilePath = file.getPath();
-        String fileName = srcFilePath.getName();
-        Path dstFilePath = new Path(dst, fileName);
-        if (file.isDir()) {
-          renameOrMoveFiles(fs, srcFilePath, dstFilePath);
-        }
-        else {
-          if (fs.exists(dstFilePath)) {
-            int suffix = 0;
-            do {
-              suffix++;
-              dstFilePath = new Path(dst, fileName + "_" + suffix);
-            } while (fs.exists(dstFilePath));
-          }
-
-          if (!fs.rename(srcFilePath, dstFilePath)) {
-            throw new HiveException("Unable to move: " + src + " to: " + dst);
-          }
-        }
+        Utilities.moveFile(fs, file, dst);
       }
     }
   }
@@ -1412,21 +1438,29 @@ public final class Utilities {
     if (success) {
       if (fs.exists(tmpPath)) {
         PerfLogger perfLogger = SessionState.getPerfLogger();
+        Set<Path> filesKept = new HashSet<Path>();
         perfLogger.PerfLogBegin("FileSinkOperator", "RemoveTempOrDuplicateFiles");
         // remove any tmp file or double-committed output files
-        List<Path> emptyBuckets = Utilities.removeTempOrDuplicateFiles(fs, tmpPath, dpCtx, conf, hconf);
+        List<Path> emptyBuckets = Utilities.removeTempOrDuplicateFiles(fs, tmpPath, dpCtx, conf, hconf, filesKept);
         perfLogger.PerfLogEnd("FileSinkOperator", "RemoveTempOrDuplicateFiles");
         // create empty buckets if necessary
         if (emptyBuckets.size() > 0) {
           perfLogger.PerfLogBegin("FileSinkOperator", "CreateEmptyBuckets");
           createEmptyBuckets(hconf, emptyBuckets, conf, reporter);
+          filesKept.addAll(emptyBuckets);
           perfLogger.PerfLogEnd("FileSinkOperator", "CreateEmptyBuckets");
         }
 
         // move to the file destination
         log.info("Moving tmp dir: " + tmpPath + " to: " + specPath);
         perfLogger.PerfLogBegin("FileSinkOperator", "RenameOrMoveFiles");
-        Utilities.renameOrMoveFiles(fs, tmpPath, specPath);
+        if (HiveConf.getBoolVar(hconf, HiveConf.ConfVars.HIVE_EXEC_MOVE_FILES_FROM_SOURCE_DIR)) {
+          // HIVE-17113 - avoid copying files that may have been written to the temp dir by runaway tasks,
+          // by moving just the files we've tracked from removeTempOrDuplicateFiles().
+          Utilities.moveSpecifiedFiles(fs, tmpPath, specPath, filesKept);
+        } else {
+          Utilities.renameOrMoveFiles(fs, tmpPath, specPath);
+        }
         perfLogger.PerfLogEnd("FileSinkOperator", "RenameOrMoveFiles");
       }
     } else {
@@ -1483,6 +1517,12 @@ public final class Utilities {
     }
   }
 
+  private static void addFilesToPathSet(Collection<FileStatus> files, Set<Path> fileSet) {
+    for (FileStatus file : files) {
+      fileSet.add(file.getPath());
+    }
+  }
+
   /**
    * Remove all temporary files and duplicate (double-committed) files from a given directory.
    */
@@ -1492,12 +1532,22 @@ public final class Utilities {
 
   public static List<Path> removeTempOrDuplicateFiles(FileSystem fs, Path path,
       DynamicPartitionCtx dpCtx, FileSinkDesc conf, Configuration hconf) throws IOException {
+    return removeTempOrDuplicateFiles(fs, path, dpCtx, conf, hconf, null);
+  }
+
+  public static List<Path> removeTempOrDuplicateFiles(FileSystem fs, Path path,
+      DynamicPartitionCtx dpCtx, FileSinkDesc conf, Configuration hconf, Set<Path> filesKept) throws IOException {
     if (path  == null) {
       return null;
     }
     FileStatus[] stats = HiveStatsUtils.getFileStatusRecurse(path,
         ((dpCtx == null) ? 1 : dpCtx.getNumDPCols()), fs);
-    return removeTempOrDuplicateFiles(fs, stats, dpCtx, conf, hconf);
+    return removeTempOrDuplicateFiles(fs, stats, dpCtx, conf, hconf, filesKept);
+  }
+
+  public static List<Path> removeTempOrDuplicateFiles(FileSystem fs, FileStatus[] fileStats,
+      DynamicPartitionCtx dpCtx, FileSinkDesc conf, Configuration hconf) throws IOException {
+    return removeTempOrDuplicateFiles(fs, fileStats, dpCtx, conf, hconf, null);
   }
 
   /**
@@ -1506,7 +1556,7 @@ public final class Utilities {
    * @return a list of path names corresponding to should-be-created empty buckets.
    */
   public static List<Path> removeTempOrDuplicateFiles(FileSystem fs, FileStatus[] fileStats,
-      DynamicPartitionCtx dpCtx, FileSinkDesc conf, Configuration hconf) throws IOException {
+      DynamicPartitionCtx dpCtx, FileSinkDesc conf, Configuration hconf, Set<Path> filesKept) throws IOException {
     if (fileStats == null) {
       return null;
     }
@@ -1531,6 +1581,9 @@ public final class Utilities {
         }
 
         taskIDToFile = removeTempOrDuplicateFiles(items, fs);
+        if (filesKept != null && taskIDToFile != null) {
+          addFilesToPathSet(taskIDToFile.values(), filesKept);
+        }
         // if the table is bucketed and enforce bucketing, we should check and generate all buckets
         if (dpCtx.getNumBuckets() > 0 && taskIDToFile != null && !"tez".equalsIgnoreCase(hconf.get(ConfVars.HIVE_EXECUTION_ENGINE.varname))) {
           // refresh the file list
@@ -1555,6 +1608,9 @@ public final class Utilities {
         return result;
       }
       taskIDToFile = removeTempOrDuplicateFiles(items, fs);
+      if (filesKept != null && taskIDToFile != null) {
+        addFilesToPathSet(taskIDToFile.values(), filesKept);
+      }
       if(taskIDToFile != null && taskIDToFile.size() > 0 && conf != null && conf.getTable() != null
           && (conf.getTable().getNumBuckets() > taskIDToFile.size()) && !"tez".equalsIgnoreCase(hconf.get(ConfVars.HIVE_EXECUTION_ENGINE.varname))) {
           // get the missing buckets and generate empty buckets for non-dynamic partition
