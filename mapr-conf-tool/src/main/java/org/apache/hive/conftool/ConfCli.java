@@ -42,8 +42,8 @@ public class ConfCli {
   private static final Options CMD_LINE_OPTIONS = new Options();
   private static final HelpFormatter HELP_FORMATTER = new HelpFormatter();
   private static final String HELP = "help";
-  private static final String SECURE = "secure";
-  private static final String UNSECURE = "unsecure";
+  private static final String MAPR_SASL = "maprsasl";
+  private static final String SECURITY = "security";
   private static final String PATH = "path";
   private static final String TOOL_NAME = "conftool";
   private static final String HS2_HA = "hs2ha";
@@ -57,6 +57,8 @@ public class ConfCli {
   private static final String ADD_PROPERTY = "addProperty";
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
+  private static final String TRUE = "true";
+  private static final String FALSE = "false";
 
   static {
     OptionBuilder.hasArg(false);
@@ -65,11 +67,12 @@ public class ConfCli {
 
     OptionBuilder.hasArg(false);
     OptionBuilder.withDescription("Configures hive-site.xml for MapR-SASL security");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(SECURE));
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(MAPR_SASL));
 
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Disables MapR-SASL security in hive-site.xml");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(UNSECURE));
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("true or false for security");
+    OptionBuilder.withDescription("Shows current status of security");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(SECURITY));
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("path to xml file");
@@ -247,11 +250,15 @@ public class ConfCli {
 
 
   private static boolean isSecurityConfig(CommandLine line){
-    return line.hasOption(SECURE) || line.hasOption(UNSECURE);
+    return line.hasOption(MAPR_SASL);
   }
 
   private static boolean hasValidSecurityOptions(CommandLine line){
-    return !(line.hasOption(SECURE) && line.hasOption(UNSECURE));
+    return line.hasOption(MAPR_SASL) && line.hasOption(SECURITY) && isTrueOrFalse(line.getOptionValue(SECURITY));
+  }
+
+  private static boolean isTrueOrFalse(String value){
+    return TRUE.equalsIgnoreCase(value.trim()) || FALSE.equalsIgnoreCase(value.trim());
   }
 
   private static void configureSecurity(String pathToHiveSite, boolean security) throws IOException, ParserConfigurationException, SAXException, TransformerException {
@@ -261,10 +268,9 @@ public class ConfCli {
   }
 
   private static boolean getSecurity(CommandLine line){
-    if(line.hasOption(SECURE)){
-      return true;
-    } else if (line.hasOption(UNSECURE)){
-      return false;
+    if(line.hasOption(SECURITY)){
+    String security = line.getOptionValue(SECURITY);
+      return TRUE.equalsIgnoreCase(security);
     }
     return true; // never happens
   }

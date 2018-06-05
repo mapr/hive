@@ -155,17 +155,39 @@ else
 fi
 }
 
+#
+# Backup security flag to file "$HIVE_BIN"/isSecure.backup
+#
+backup_security_flag() {
+if [ -f "$HIVE_BIN"/isSecure ] ; then
+  cp "$HIVE_BIN"/isSecure "$HIVE_BIN"/isSecure.backup
+else
+  touch "$HIVE_BIN"/isSecure.backup
+fi
+}
+
+#
+# Returns true if security flag was changed comparing current and previous run of configure.sh.
+# E.g. user switches off the security (security ON --> security OFF) or
+# user turns on security (security OFF --> security ON) then method returns true
+# and false otherwise. This method is used for triggering security related configuration
+#
+is_security_changed(){
+security_backup=$(cat "$HIVE_BIN"/isSecure.backup)
+current_security=$(cat "$HIVE_BIN"/isSecure)
+if [ "$security_backup" = "$current_security" ] ; then
+  return 1; # 1 = false
+else
+  return 0; # 0 = true
+fi
+}
 
 configure_security(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-secure"
-fi
-
-if [ "$isSecure" = "false" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-unsecure"
+if is_security_changed || is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
 fi
 }
 
@@ -176,8 +198,8 @@ configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl"
+if is_security_changed || is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
   KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS})
   create_keystore_credential "$HIVE_SERVER2_WEBUI_KEYSTORE_PATH" "$HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS}
@@ -190,8 +212,8 @@ fi
 configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl"
+if is_security_changed || is_hive_not_configured_yet ;  then
+  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
   KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -getProperty ${WEBHCAT_KEYSTORE_ALIAS})
   create_keystore_credential "$WEBHCAT_KEYSTORE_PATH" "$WEBHCAT_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
   . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -delProperty ${WEBHCAT_KEYSTORE_ALIAS}
@@ -208,11 +230,11 @@ KEYSTORE_PATH="$1"
 ALIAS="$2"
 PASSWORD="$3"
 if is_hive_not_configured_yet ; then
-    ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD} -overwrite
+  ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD} -overwrite
 else
-    if ! keystore_alias_exists; then
-        ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD}
-    fi
+  if ! keystore_alias_exists; then
+    ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD}
+  fi
 fi
 su "$MAPR_USER" -c "hadoop fs -chmod $KEYSTORE_PERMS $KEYSTORE_PATH"
 }
@@ -223,9 +245,9 @@ su "$MAPR_USER" -c "hadoop fs -chmod $KEYSTORE_PERMS $KEYSTORE_PATH"
 keystore_alias_exists(){
 ALIAS_EXISTS=$(${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -aliasExists ${ALIAS})
 if [ "$ALIAS_EXISTS" = "true" ]; then
-    return 0; # 0 = true
+  return 0; # 0 = true
 else
-    return 1;
+  return 1;
 fi
 }
 
@@ -235,8 +257,8 @@ fi
 configure_hs2_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl"
+if is_security_changed || is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
     KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HS2_KEYSTORE_ALIAS})
     create_keystore_credential "$HS2_KEYSTORE_PATH" "$HS2_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
     . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HS2_KEYSTORE_ALIAS}
@@ -698,6 +720,8 @@ fi
 
 
 backup_configuration
+
+backup_security_flag
 
 find_mapr_user_and_group
 
