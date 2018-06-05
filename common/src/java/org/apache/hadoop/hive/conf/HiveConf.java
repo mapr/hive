@@ -3075,10 +3075,6 @@ public class HiveConf extends Configuration {
         "hive.added.files.path,hive.added.jars.path,hive.added.archives.path",
         "Comma separated list of variables which are used internally and should not be configurable."),
 
-    HIVE_EXEC_MOVE_FILES_FROM_SOURCE_DIR("hive.exec.move.files.from.source.dir", false,
-        "When moving/renaming a directory from source to destination, individually move each \n" +
-        "file in the source directory, rather than renaming the source directory. This may \n" +
-        "help protect against files written to temp directories by runaway task attempts."),
 
     /* BLOBSTORE section */
 
