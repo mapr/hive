@@ -34,7 +34,7 @@ public class BlobStorageUtils {
         return path != null && isBlobStorageScheme(conf, path.toUri().getScheme());
     }
 
-    static boolean isBlobStorageFileSystem(final Configuration conf, final FileSystem fs) {
+    public static boolean isBlobStorageFileSystem(final Configuration conf, final FileSystem fs) {
         return fs != null && fs.getUri() != null && isBlobStorageScheme(conf, fs.getUri().getScheme());
     }
 
