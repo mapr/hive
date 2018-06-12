@@ -19,9 +19,14 @@
 package org.apache.hadoop.hive.ql.io;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
+import org.apache.hadoop.hive.ql.metadata.HiveUtils;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +51,7 @@ public final class MapRDbJsonUtils {
   }
 
   /**
-   * Checks if a table is MapRDbJson table
+   * Checks if a table is MapRDbJson table.
    *
    * @param tree parse tree
    * @param conf Configuration
@@ -55,7 +60,17 @@ public final class MapRDbJsonUtils {
    */
 
   public static boolean isMapRDbJsonTable(ASTNode tree, HiveConf conf) throws SemanticException {
-    HiveStorageHandler hiveStorageHandler = TableUtils.findTable(tree, conf).getStorageHandler();
+    return isMapRDbJsonTable(TableUtils.findTable(tree, conf));
+  }
+
+  /**
+   * Checks if a table is MapRDbJson table.
+   * @param table table object
+   * @return true if a table is MapRDbJson table
+   */
+
+  public static boolean isMapRDbJsonTable(Table table) {
+    HiveStorageHandler hiveStorageHandler = table.getStorageHandler();
     return hiveStorageHandler != null && MAPR_DB_JSON_STORAGE_HANDLER
         .equals(hiveStorageHandler.getClass().getCanonicalName());
   }

@@ -134,7 +134,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
 
     List<FieldSchema> partCols = mTable.getPartCols();
     List<String> bucketingCols = mTable.getBucketCols();
-    String mapRDbColumnId = mTable.getMapRColumnId();
+    String mapRDbColumnId = mTable.getMapRDbColumnId();
 
     rewrittenQueryStr.append("insert into table ");
     rewrittenQueryStr.append(getDotName(new String[] { HiveUtils.unparseIdentifier(tableName[0], this.conf),

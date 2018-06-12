@@ -43,8 +43,11 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.mapr.db.MapRDB;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -1545,9 +1548,19 @@ public class SessionState {
       registry.closeCUDFLoaders();
       dropSessionPaths(sessionConf);
       unCacheDataNucleusClassLoaders();
+      dropTempMapRDbJsonTables();
     } finally {
       // removes the threadlocal variables, closes underlying HMS connection
       Hive.closeCurrent();
+    }
+  }
+
+  private void dropTempMapRDbJsonTables() throws IOException {
+    for(Map<String, Table> tables: getTempTables().values()){
+      for(Table table : tables.values())
+      if(MapRDbJsonUtils.isMapRDbJsonTable(table)){
+        MapRDB.newAdmin(sessionConf).deleteTable(table.getMapRDbTableName());
+      }
     }
   }
 
