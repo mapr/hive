@@ -42,6 +42,7 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.mapr.db.MapRDB;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -66,6 +67,7 @@ import org.apache.hadoop.hive.ql.exec.tez.TezSessionState;
 import org.apache.hadoop.hive.ql.history.HiveHistory;
 import org.apache.hadoop.hive.ql.history.HiveHistoryImpl;
 import org.apache.hadoop.hive.ql.history.HiveHistoryProxyHandler;
+import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.lockmgr.HiveTxnManager;
 import org.apache.hadoop.hive.ql.lockmgr.LockException;
 import org.apache.hadoop.hive.ql.lockmgr.TxnManagerFactory;
@@ -1591,11 +1593,21 @@ public class SessionState {
       registry.closeCUDFLoaders();
       dropSessionPaths(sessionConf);
       unCacheDataNucleusClassLoaders();
+      dropTempMapRDbJsonTables();
     } finally {
       // removes the threadlocal variables, closes underlying HMS connection
       Hive.closeCurrent();
     }
     progressMonitor = null;
+  }
+
+  private void dropTempMapRDbJsonTables() throws IOException {
+    for(Map<String, Table> tables: getTempTables().values()){
+      for(Table table : tables.values())
+      if(MapRDbJsonUtils.isMapRDbJsonTable(table)){
+        MapRDB.newAdmin(sessionConf).deleteTable(table.getMapRDbTableName());
+      }
+    }
   }
 
   private void unCacheDataNucleusClassLoaders() {
