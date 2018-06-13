@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.metadata;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,6 +85,7 @@ public class Table implements Serializable {
   private static final String MAPRDB_PFX = "maprdb.";
   //map '_id' to one of column names
   private static final String MAPRDB_COLUMN_ID = MAPRDB_PFX + "column.id";
+  private static final String MAPRDB_TABLE_NAME = MAPRDB_PFX + "table.name";
 
   private org.apache.hadoop.hive.metastore.api.Table tTable;
 
@@ -1020,18 +1022,32 @@ public class Table implements Serializable {
   }
 
   /**
-   * Returns mapr.column.id name from MapR Db JSON table
+   * Returns maprdb.column.id name from MapR Db JSON table
    *
-   * @return mapr.column.id name from MapR Db JSON table
+   * @return maprdb.column.id name from MapR Db JSON table
    */
 
 
-  public String getMapRColumnId() throws SemanticException {
+  public String getMapRDbColumnId() throws SemanticException {
     Map<String, String> tblParams = getParameters();
     if (tblParams == null || tblParams.isEmpty() || !tblParams.containsKey(MAPRDB_COLUMN_ID)) {
       throw new SemanticException(format("Column %s is not specified", MAPRDB_COLUMN_ID));
     }
     return tblParams.get(MAPRDB_COLUMN_ID).trim();
+  }
+
+  /**
+   * Returns maprdb.table.name from MapR Db JSON table
+   *
+   * @return maprdb.table.name from MapR Db JSON table
+   */
+
+  public String getMapRDbTableName() throws IOException {
+    Map<String, String> tblParams = getParameters();
+    if (tblParams == null || tblParams.isEmpty() || !tblParams.containsKey(MAPRDB_TABLE_NAME)) {
+      throw new IOException(format("Table %s is not specified", MAPRDB_TABLE_NAME));
+    }
+    return tblParams.get(MAPRDB_TABLE_NAME).trim();
   }
 
 };

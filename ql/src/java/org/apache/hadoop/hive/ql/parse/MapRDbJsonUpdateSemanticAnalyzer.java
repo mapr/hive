@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.ql.hooks.Entity;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
-import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -140,7 +139,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
    */
   private void checkValidSetClauseTarget(ASTNode colName, Table targetTable) throws SemanticException {
     String columnName = normalizeColName(colName.getText());
-    String mapRDbColumnId = targetTable.getMapRColumnId();
+    String mapRDbColumnId = targetTable.getMapRDbColumnId();
 
     // Make sure this isn't one of the partitioning columns, that's not supported.
     for (FieldSchema fschema : targetTable.getPartCols()) {
@@ -829,7 +828,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
     //this is a tmp table and thus Session scoped and acid requires SQL statement to be serial in a
     // given session, i.e. the name can be fixed across all invocations
     String tableName = "merge_tmp_table";
-    String mapRDbColumnId = targetTable.getMapRColumnId();
+    String mapRDbColumnId = targetTable.getMapRDbColumnId();
     rewrittenQueryStr.append("\nINSERT INTO ").append(tableName)
       .append("\n  SELECT cardinality_violation(")
       .append(getSimpleTableName(target)).append(".").append(mapRDbColumnId) ;
