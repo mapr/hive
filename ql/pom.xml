@@ -435,6 +435,11 @@
       <version>${gson.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>maprdb-json-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.tdunning</groupId>
       <artifactId>json</artifactId>
     </dependency>

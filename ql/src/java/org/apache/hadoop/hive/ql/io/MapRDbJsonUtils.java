@@ -47,9 +47,6 @@ public final class MapRDbJsonUtils {
   private static final String MAPR_DB_JSON_INPUT_FORMAT = "org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat";
   private static final String MAPR_DB_JSON_OUTPUT_FORMAT = "org.apache.hadoop.hive.maprdb.json.output.HiveMapRDBJsonOutputFormat";
 
-  private static final String MAPRDB_PFX = "maprdb.";
-  //map '_id' to one of column names
-  private static final String MAPRDB_COLUMN_ID = MAPRDB_PFX + "column.id";
 
   /**
    * List of operations available for MapRDbJson tables.

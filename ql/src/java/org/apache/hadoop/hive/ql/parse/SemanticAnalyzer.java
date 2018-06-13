@@ -800,7 +800,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         String rowId = "ROW__ID";
         String mapRColumnId = "";
         if (MapRDbJsonUtils.isMapRDbJsonTable(targetTable)) {
-          mapRColumnId = targetTable.getMapRColumnId();
+          mapRColumnId = targetTable.getMapRDbColumnId();
         }
 
         if (i == 0 && !(rowId.equals(firstChild) || mapRColumnId.equals(firstChild))) {
