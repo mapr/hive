@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive</artifactId>
+    <artifactId>hive-spark</artifactId>
     <version>1.2.0-mapr</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-packaging</artifactId>
+  <artifactId>hive-packaging-spark</artifactId>
   <packaging>pom</packaging>
   <name>Hive Packaging</name>
 
@@ -73,7 +73,7 @@
                   <artifactItems>
                     <artifactItem>
                       <groupId>${project.groupId}</groupId>
-                      <artifactId>hive-jdbc</artifactId>
+                      <artifactId>hive-jdbc-spark</artifactId>
                       <version>${project.version}</version>
                       <type>jar</type>
                       <classifier>${hive.jdbc.driver.classifier}</classifier>
@@ -96,108 +96,108 @@
     <!-- dependencies are always listed in sorted order by groupId, artifectId -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common</artifactId>
+      <artifactId>hive-common-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-serde</artifactId>
+      <artifactId>hive-serde-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-metastore</artifactId>
+      <artifactId>hive-metastore-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-testutils</artifactId>
+      <artifactId>hive-testutils-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
+      <artifactId>hive-exec-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-service</artifactId>
+      <artifactId>hive-service-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-shims</artifactId>
+      <artifactId>hive-shims-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-jdbc</artifactId>
+      <artifactId>hive-jdbc-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-jdbc</artifactId>
+      <artifactId>hive-jdbc-spark</artifactId>
       <version>${project.version}</version>
       <classifier>${hive.jdbc.driver.classifier}</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-beeline</artifactId>
+      <artifactId>hive-beeline-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-cli</artifactId>
+      <artifactId>hive-cli-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-contrib</artifactId>
+      <artifactId>hive-contrib-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-hbase-handler</artifactId>
+      <artifactId>hive-hbase-handler-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-hwi</artifactId>
+      <artifactId>hive-hwi-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-accumulo-handler</artifactId>
+      <artifactId>hive-accumulo-handler-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-streaming</artifactId>
+      <artifactId>hive-hcatalog-streaming-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-core</artifactId>
+      <artifactId>hive-hcatalog-core-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-pig-adapter</artifactId>
+      <artifactId>hive-hcatalog-pig-adapter-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-server-extensions</artifactId>
+      <artifactId>hive-hcatalog-server-extensions-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-webhcat</artifactId>
+      <artifactId>hive-webhcat-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-webhcat-java-client</artifactId>
+      <artifactId>hive-webhcat-java-client-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

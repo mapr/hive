@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive</artifactId>
+    <artifactId>hive-spark</artifactId>
     <version>1.2.0-mapr</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-accumulo-handler</artifactId>
+  <artifactId>hive-accumulo-handler-spark</artifactId>
   <packaging>jar</packaging>
   <name>Hive Accumulo Handler</name>
 
@@ -64,32 +64,32 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common</artifactId>
+      <artifactId>hive-common-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-metastore</artifactId>
+      <artifactId>hive-metastore-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-serde</artifactId>
+      <artifactId>hive-serde-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-service</artifactId>
+      <artifactId>hive-service-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
+      <artifactId>hive-exec-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-shims</artifactId>
+      <artifactId>hive-shims-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

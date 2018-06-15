@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive</artifactId>
+    <artifactId>hive-spark</artifactId>
     <version>1.2.0-mapr</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-hwi</artifactId>
+  <artifactId>hive-hwi-spark</artifactId>
   <packaging>jar</packaging>
   <name>Hive HWI</name>
 
@@ -36,22 +36,22 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-cli</artifactId>
+      <artifactId>hive-cli-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common</artifactId>
+      <artifactId>hive-common-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-shims</artifactId>
+      <artifactId>hive-shims-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
+      <artifactId>hive-exec-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- inter-project -->
@@ -68,7 +68,7 @@
     <!-- test intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
+      <artifactId>hive-exec-spark</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>

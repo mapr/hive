@@ -24,12 +24,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive.hcatalog</groupId>
-    <artifactId>hive-hcatalog</artifactId>
+    <artifactId>hive-hcatalog-spark</artifactId>
     <version>1.2.0-mapr</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-webhcat-java-client</artifactId>
+  <artifactId>hive-webhcat-java-client-spark</artifactId>
   <packaging>jar</packaging>
   <name>Hive HCatalog Webhcat Java Client</name>
 
@@ -42,30 +42,30 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-core</artifactId>
+      <artifactId>hive-hcatalog-core-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-server-extensions</artifactId>
+      <artifactId>hive-hcatalog-server-extensions-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
+      <artifactId>hive-exec-spark</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- test intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
+      <artifactId>hive-exec-spark</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-core</artifactId>
+      <artifactId>hive-hcatalog-core-spark</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
