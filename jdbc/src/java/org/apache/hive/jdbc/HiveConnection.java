@@ -443,7 +443,12 @@ public class HiveConnection implements java.sql.Connection {
         }
         saslProps.put(Sasl.SERVER_AUTH, "true");
         if (JdbcConnectionParams.AUTH_MAPRSASL.equalsIgnoreCase(sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
-          transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout), saslProps);
+          HiveConf hiveConf = new HiveConf();
+          if(hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_USE_SSL)){
+            transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getTrustAllSSLSocket(host, port, loginTimeout), saslProps);
+          } else {
+            transport = MapRSecSaslHelper.getTransport(HiveAuthFactory.getSocketTransport(host, port, loginTimeout), saslProps);
+          }
         }
         else if (sessConfMap.containsKey(JdbcConnectionParams.AUTH_PRINCIPAL)) {
           transport = KerberosSaslHelper.getKerberosTransport(
