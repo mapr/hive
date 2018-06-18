@@ -61,7 +61,9 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.servlet.http.HttpServletRequest;
-
+import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystoreLocation;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystorePassword;
 /**
  * The main executable that starts up and runs the Server.
  */
@@ -254,9 +256,7 @@ public class Main {
     if (conf.getBoolean(AppConfig.USE_SSL, false)) {
       LOG.info("Using SSL for templeton.");
       SslContextFactory sslContextFactory = new SslContextFactory();
-      sslContextFactory.setKeyStorePath(conf.get(AppConfig.KEY_STORE_PATH, DEFAULT_KEY_STORE_PATH));
-      sslContextFactory
-          .setKeyStorePassword(new String(conf.getPassword(AppConfig.KEY_STORE_PASSWORD)));
+      initializeMapRSll(sslContextFactory);
       Set<String> excludedSSLProtocols = Sets.newHashSet(
           Splitter.on(",").trimResults().omitEmptyStrings().split(Strings.nullToEmpty(
               conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
@@ -276,6 +276,20 @@ public class Main {
     return connector;
   }
 
+  private static void initializeMapRSll(SslContextFactory sslContextFactory) throws IOException {
+    if (isSecurityEnabled()) {
+      configureSsl(sslContextFactory);
+    }
+  }
+
+  private static void configureSsl(SslContextFactory sslContextFactory) throws IOException {
+    if (conf.get(AppConfig.KEY_STORE_PATH) == null || conf.get(AppConfig.KEY_STORE_PATH).isEmpty()) {
+      sslContextFactory.setKeyStorePath(getServerKeystoreLocation());
+    }
+    if (conf.getPassword(AppConfig.KEY_STORE_PASSWORD) == null) {
+      sslContextFactory.setKeyStorePassword(getServerKeystorePassword());
+    }
+  }
 
   public FilterHolder makeXSRFFilter() {
     String customHeader = null; // The header to look for. We use "X-XSRF-HEADER" if this is null.

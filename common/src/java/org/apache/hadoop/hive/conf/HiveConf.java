@@ -37,7 +37,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.util.Shell;
 import org.apache.hive.common.HiveCompat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystoreLocation;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystorePassword;
 /**
  * Hive Configuration.
  */
@@ -714,8 +715,7 @@ public class HiveConf extends Configuration {
         "hive-metastore/_HOST@EXAMPLE.COM",
         "The service principal for the metastore Thrift server. \n" +
         "The special string _HOST will be replaced automatically with the correct host name."),
-    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled",
-         System.getProperty("mapr_sec_enabled") == null ? false : System.getProperty("mapr_sec_enabled"),
+    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled", isSecurityEnabled(),
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos."),
     METASTORE_USE_THRIFT_FRAMED_TRANSPORT("hive.metastore.thrift.framed.transport.enabled", false,
         "If true, the metastore Thrift interface will use TFramedTransport. When false (default) a standard TTransport is used."),
@@ -4026,16 +4026,19 @@ public class HiveConf extends Configuration {
   public HiveConf() {
     super();
     initialize(this.getClass());
+    initializeMapRSll();
   }
 
   public HiveConf(Class<?> cls) {
     super();
     initialize(cls);
+    initializeMapRSll();
   }
 
   public HiveConf(Configuration other, Class<?> cls) {
     super(other);
     initialize(cls);
+    initializeMapRSll();
   }
 
   /**
@@ -4050,6 +4053,31 @@ public class HiveConf extends Configuration {
     restrictList.addAll(other.restrictList);
     hiddenSet.addAll(other.hiddenSet);
     modWhiteListPattern = other.modWhiteListPattern;
+    initializeMapRSll();
+  }
+
+  private void initializeMapRSll() {
+    if (isSecurityEnabled()) {
+      configureSsl();
+    }
+  }
+
+  private void configureSsl() {
+    if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
+    }
+
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
+    }
   }
 
   public Properties getAllProperties() {

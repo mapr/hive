@@ -60,6 +60,7 @@
     <module>testutils</module>
     <module>mapr-conf-tool</module>
     <module>mapr-encryption-tool</module>
+    <module>mapr-ssl-reader</module>
     <module>packaging</module>
   </modules>
 

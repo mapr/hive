@@ -50,10 +50,11 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hive.hcatalog.templeton.UgiFactory;
-import org.apache.hive.hcatalog.templeton.BadParam;
+
+import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityFlagSet;
+import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
 
 /**
  * General utility methods.
@@ -398,8 +399,8 @@ public class TempletonUtils {
       env.put("HADOOP_CLASSPATH", overrideClasspath);
     }
 
-    if (System.getProperty("mapr_sec_enabled") != null) {
-      env.put("MAPR_SEC_ENABLED", System.getProperty("mapr_sec_enabled"));
+    if (isSecurityFlagSet()) {
+      env.put("MAPR_SEC_ENABLED", Boolean.toString(isSecurityEnabled()));
     }
     return env;
   }

@@ -55,6 +55,11 @@
       <version>${commons-lang.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.hive.sslreader</groupId>
+      <artifactId>mapr-ssl-reader</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
        <groupId>org.apache.commons</groupId>
        <artifactId>commons-lang3</artifactId>
        <version>${commons-lang3.version}</version>

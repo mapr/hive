@@ -16,7 +16,6 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URL;
 
-import static org.apache.hadoop.hive.conf.Constants.HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG;
 
 public class ConfToolTest {
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
@@ -230,10 +229,6 @@ public class ConfToolTest {
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
-    Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
-    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2webui.jceks",
-        ConfTool.getProperty(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
   }
 
 
@@ -249,9 +244,6 @@ public class ConfToolTest {
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
-    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
-    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
-    Assert.assertFalse(ConfTool.propertyExists(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
   }
 
 
@@ -266,9 +258,6 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToWebHCatSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, AppConfig.USE_SSL));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PATH));
-    Assert.assertEquals("jceks://maprfs/user/mapr/hivewebhcat.jceks", ConfTool.getProperty(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
-    Assert.assertEquals("mapr123", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PASSWORD));
   }
 
   @Test
@@ -283,9 +272,6 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToWebHCatSite);
     Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.USE_SSL));
-    Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PATH));
-    Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PASSWORD));
-    Assert.assertFalse(ConfTool.propertyExists(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
   }
 
   @Test
@@ -299,9 +285,6 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH));
-    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2.jceks", ConfTool.getProperty(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
-    Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
   }
 
   @Test
@@ -316,9 +299,6 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_USE_SSL));
-    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH));
-    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
-    Assert.assertFalse(ConfTool.propertyExists(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG));
   }
 
 
