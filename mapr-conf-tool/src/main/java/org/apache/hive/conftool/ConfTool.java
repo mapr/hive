@@ -43,10 +43,8 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 
-import static org.apache.hadoop.hive.conf.Constants.HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
@@ -74,10 +72,6 @@ class ConfTool {
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
-  private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
-  private static final String WEBHCAT_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hivewebhcat.jceks";
-  private static final String HS2_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hiveserver2.jceks";
-  private static final String HIVE_SERVER2_WEBUI_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hiveserver2webui.jceks";
   private static final String EMPTY = "";
 
   /**
@@ -178,17 +172,11 @@ class ConfTool {
       LOG.info("Configuring Hive for HiveServer2 web UI PAM authentication and SSL encryption");
       set(doc, HIVE_SERVER2_WEBUI_USE_PAM, TRUE);
       set(doc, HIVE_SERVER2_WEBUI_USE_SSL, TRUE);
-      set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-      set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, new String
-          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
-      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, HIVE_SERVER2_WEBUI_CREDENTIAL_PROVIDER_PATH);
     } else {
       LOG.info("Disabling PAM authentication and SSL encryption for HiveServer2 web UI");
       remove(doc, HIVE_SERVER2_WEBUI_USE_PAM);
       remove(doc, HIVE_SERVER2_WEBUI_USE_SSL);
       remove(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
-      remove(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD);
-      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToHiveSite);
   }
@@ -212,15 +200,8 @@ class ConfTool {
     if(security) {
       LOG.info("Configuring webHCat for  SSL encryption");
       set(doc, AppConfig.USE_SSL, TRUE);
-      set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-      set(doc, AppConfig.KEY_STORE_PASSWORD, new String
-          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
-      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, WEBHCAT_CREDENTIAL_PROVIDER_PATH);
     } else {
       remove(doc, AppConfig.USE_SSL);
-      remove(doc, AppConfig.KEY_STORE_PATH);
-      remove(doc, AppConfig.KEY_STORE_PASSWORD);
-      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToWebHCatSite);
   }
@@ -243,15 +224,8 @@ class ConfTool {
     if(security) {
       LOG.info("Configuring HS2 for  SSL encryption");
       set(doc, ConfVars.HIVE_SERVER2_USE_SSL, TRUE);
-      set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-      set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, new String
-          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
-      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, HS2_CREDENTIAL_PROVIDER_PATH);
     } else {
       remove(doc, ConfVars.HIVE_SERVER2_USE_SSL);
-      remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
-      remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD);
-      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToHiveSite);
   }

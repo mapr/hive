@@ -293,15 +293,8 @@ public class ConfCliTest {
     ConfCli.main(new String[]{"--webuipamssl", "--path", pathToHiveSite});
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.ssl"));
-    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.keystore.path"));
-    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.keystore.password"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.use.ssl"));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.keystore.path"));
-    Assert.assertEquals(new String
-        (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.keystore.password"));
-    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2webui.jceks",
-        ConfTool.getProperty(pathToHiveSite, "hadoop.security.credential.provider.path"));
   }
 
 
@@ -311,15 +304,6 @@ public class ConfCliTest {
     String pathToWebHCatSite = url.getPath();
     ConfCli.main(new String[]{"--webhcatssl", "--path", pathToWebHCatSite});
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
-    Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.keystore.path"));
-    Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "hadoop.security.credential.provider.path"));
-    Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.keystore.password"));
-    Assert.assertEquals("true", ConfTool.getProperty(pathToWebHCatSite, "templeton.use.ssl"));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToWebHCatSite, "templeton.keystore.path"));
-    Assert.assertEquals("jceks://maprfs/user/mapr/hivewebhcat.jceks",
-        ConfTool.getProperty(pathToWebHCatSite, "hadoop.security.credential.provider.path"));
-    Assert.assertEquals(new String
-        (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToWebHCatSite, "templeton.keystore.password"));
   }
 
   @Test
@@ -328,15 +312,6 @@ public class ConfCliTest {
     String pathToHiveSite = url.getPath();
     ConfCli.main(new String[]{"--hs2ssl", "--path", pathToHiveSite});
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
-    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.keystore.path"));
-    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.keystore.password"));
-    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hadoop.security.credential.provider.path"));
-    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.use.SSL"));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToHiveSite, "hive.server2.keystore.path"));
-    Assert.assertEquals("jceks://maprfs/user/mapr/hiveserver2.jceks",
-        ConfTool.getProperty(pathToHiveSite, "hadoop.security.credential.provider.path"));
-    Assert.assertEquals(new String
-        (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToHiveSite, "hive.server2.keystore.password"));
   }
 
 }
