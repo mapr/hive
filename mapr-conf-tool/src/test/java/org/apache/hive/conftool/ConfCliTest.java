@@ -158,7 +158,7 @@ public class ConfCliTest {
   public void configureSecurityEnabledTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-020.xml");
     String pathToHiveSite = url.getPath();
-    ConfCli.main(new String[]{"--secure", "--path", pathToHiveSite});
+    ConfCli.main(new String[]{"--security", "true", "--maprsasl", "--path", pathToHiveSite});
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.sasl.enabled"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.thrift.sasl.qop"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.execute.setugi"));
@@ -171,7 +171,7 @@ public class ConfCliTest {
   public void configureSecurityDisabledTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
     String pathToHiveSite = url.getPath();
-    ConfCli.main(new String[]{"--unsecure", "--path", pathToHiveSite});
+    ConfCli.main(new String[]{"--security", "false", "--maprsasl", "--path", pathToHiveSite});
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.sasl.enabled"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.thrift.sasl.qop"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.execute.setugi"));
@@ -187,10 +187,24 @@ public class ConfCliTest {
     System.setOut(new PrintStream(baos));
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Incorrect security configuration options");
-    ConfCli.main(new String[]{"--unsecure", "--secure", "--path", pathToHiveSite});
+    ConfCli.main(new String[]{"--maprsasl", "--path", pathToHiveSite});
     String output = baos.toString();
     Assert.assertTrue(output.contains("Print help information"));
   }
+
+  @Test
+  public void configureSecurityIncorrectValueTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
+    String pathToHiveSite = url.getPath();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Incorrect security configuration options");
+    ConfCli.main(new String[]{"--maprsasl","--security", "akhkj", "--path", pathToHiveSite});
+    String output = baos.toString();
+    Assert.assertTrue(output.contains("Print help information"));
+  }
+
 
 
   @Test

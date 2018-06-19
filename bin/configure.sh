@@ -147,17 +147,39 @@ else
 fi
 }
 
+#
+# Backup security flag to file "$HIVE_BIN"/isSecure.backup
+#
+backup_security_flag() {
+if [ -f "$HIVE_BIN"/isSecure ] ; then
+  cp "$HIVE_BIN"/isSecure "$HIVE_BIN"/isSecure.backup
+else
+  touch "$HIVE_BIN"/isSecure.backup
+fi
+}
+
+#
+# Returns true if security flag was changed comparing current and previous run of configure.sh.
+# E.g. user switches off the security (security ON --> security OFF) or
+# user turns on security (security OFF --> security ON) then method returns true
+# and false otherwise. This method is used for triggering security related configuration
+#
+is_security_changed(){
+security_backup=$(cat "$HIVE_BIN"/isSecure.backup)
+current_security=$(cat "$HIVE_BIN"/isSecure)
+if [ "$security_backup" = "$current_security" ] ; then
+  return 1; # 1 = false
+else
+  return 0; # 0 = true
+fi
+}
 
 configure_security(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-secure"
-fi
-
-if [ "$isSecure" = "false" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-unsecure"
+if is_security_changed || is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
 fi
 }
 
@@ -168,8 +190,8 @@ configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl"
+if is_security_changed || is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
 fi
 }
 
@@ -179,8 +201,8 @@ fi
 configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl"
+if is_security_changed || is_hive_not_configured_yet ;  then
+  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
 fi
 }
 
@@ -202,8 +224,8 @@ fi
 configure_hs2_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
-if [ "$isSecure" = "true" ];  then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl"
+if is_security_changed || is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
 fi
 }
 
@@ -662,6 +684,8 @@ fi
 
 
 backup_configuration
+
+backup_security_flag
 
 find_mapr_user_and_group
 
