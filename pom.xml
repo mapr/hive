@@ -203,7 +203,7 @@
     <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
     <velocity.version>1.5</velocity.version>
     <xerces.version>2.9.1</xerces.version>
-    <zookeeper.version>3.4.6</zookeeper.version>
+    <zookeeper.version>3.4.11-mapr-SNAPSHOT</zookeeper.version> <!-- TODO: remove snapshot after 6.1.0 release -->
     <jpam.version>1.1</jpam.version>
     <felix.version>2.4.0</felix.version>
     <curator.version>2.7.1</curator.version>
