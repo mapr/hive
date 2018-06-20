@@ -57,7 +57,9 @@ import org.apache.hadoop.util.Shell;
 import org.apache.hive.common.HiveCompat;
 
 import com.google.common.base.Joiner;
-
+import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystoreLocation;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystorePassword;
 /**
  * Hive Configuration.
  */
@@ -2678,11 +2680,13 @@ public class HiveConf extends Configuration {
   public HiveConf(Class<?> cls) {
     super();
     initialize(cls);
+    initializeMapRSll();
   }
 
   public HiveConf(Configuration other, Class<?> cls) {
     super(other);
     initialize(cls);
+    initializeMapRSll();
   }
 
   /**
@@ -2696,6 +2700,23 @@ public class HiveConf extends Configuration {
     restrictList.addAll(other.restrictList);
     hiddenSet.addAll(other.hiddenSet);
     modWhiteListPattern = other.modWhiteListPattern;
+    initializeMapRSll();
+  }
+
+  private void initializeMapRSll() {
+    if (isSecurityEnabled()) {
+      configureSsl();
+    }
+  }
+
+  private void configureSsl() {
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
+    }
   }
 
   public Properties getAllProperties() {
