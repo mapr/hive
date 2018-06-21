@@ -477,7 +477,13 @@ class ConfTool {
       for (int j = 0; j <= childLength - 1; j++) {
         Node childNode = nameValueDesc.item(j);
         if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
-          configuration.removeChild(childNodes.item(i));
+          //Remove the new line text node that stands after node we need to remove.
+          //Without this step removing will produce empty line.
+          if (node.getNextSibling() != null && node.getNextSibling().getNodeType() == Node.TEXT_NODE &&
+              node.getNextSibling().getNodeValue().trim().isEmpty()) {
+            configuration.removeChild(node.getNextSibling());
+          }
+          configuration.removeChild(node);
           return;
         }
       }
