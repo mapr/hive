@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.hive</groupId>
     <artifactId>hive-it</artifactId>
-    <version>1.2.0-mapr</version>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -36,32 +36,32 @@
     <!-- intra-project --> 
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common-spark</artifactId>
+      <artifactId>hive-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-jdbc-spark</artifactId>
+      <artifactId>hive-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-service-spark</artifactId>
+      <artifactId>hive-service</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-core-spark</artifactId>
+      <artifactId>hive-hcatalog-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-streaming-spark</artifactId>
+      <artifactId>hive-hcatalog-streaming</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -69,13 +69,13 @@
     <!-- test intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-beeline-spark</artifactId>
+      <artifactId>hive-beeline</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-cli-spark</artifactId>
+      <artifactId>hive-cli</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -87,25 +87,25 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-metastore-spark</artifactId>
+      <artifactId>hive-metastore</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-serde-spark</artifactId>
+      <artifactId>hive-serde</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-service-spark</artifactId>
+      <artifactId>hive-service</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
     </dependency>
