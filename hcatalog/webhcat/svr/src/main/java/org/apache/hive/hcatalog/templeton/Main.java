@@ -62,8 +62,8 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystoreLocation;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystorePassword;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystorePassword;
 /**
  * The main executable that starts up and runs the Server.
  */
@@ -284,10 +284,10 @@ public class Main {
 
   private static void configureSsl(SslContextFactory sslContextFactory) throws IOException {
     if (conf.get(AppConfig.KEY_STORE_PATH) == null || conf.get(AppConfig.KEY_STORE_PATH).isEmpty()) {
-      sslContextFactory.setKeyStorePath(getServerKeystoreLocation());
+      sslContextFactory.setKeyStorePath(getClientKeystoreLocation());
     }
     if (conf.getPassword(AppConfig.KEY_STORE_PASSWORD) == null) {
-      sslContextFactory.setKeyStorePassword(getServerKeystorePassword());
+      sslContextFactory.setKeyStorePassword(getClientKeystorePassword());
     }
   }
 
