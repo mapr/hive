@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive-spark</artifactId>
-    <version>1.2.0-mapr</version>
+    <artifactId>hive</artifactId>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-shims-spark</artifactId>
+  <artifactId>hive-shims</artifactId>
   <packaging>jar</packaging>
   <name>Hive Shims</name>
 
@@ -35,25 +35,25 @@
     <!-- dependencies are always listed in sorted order by groupId, artifectId -->
     <dependency>
       <groupId>org.apache.hive.shims</groupId>
-      <artifactId>hive-shims-common-spark</artifactId>
+      <artifactId>hive-shims-common</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.shims</groupId>
-      <artifactId>hive-shims-0.20S-spark</artifactId>
+      <artifactId>hive-shims-0.20S</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.shims</groupId>
-      <artifactId>hive-shims-0.23-spark</artifactId>
+      <artifactId>hive-shims-0.23</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive.shims</groupId>
-      <artifactId>hive-shims-scheduler-spark</artifactId>
+      <artifactId>hive-shims-scheduler</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>

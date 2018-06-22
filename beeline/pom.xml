@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive-spark</artifactId>
-    <version>1.2.0-mapr</version>
+    <artifactId>hive</artifactId>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-beeline-spark</artifactId>
+  <artifactId>hive-beeline</artifactId>
   <packaging>jar</packaging>
   <name>Hive Beeline</name>
 
@@ -36,22 +36,22 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common-spark</artifactId>
+      <artifactId>hive-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-metastore-spark</artifactId>
+      <artifactId>hive-metastore</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-shims-spark</artifactId>
+      <artifactId>hive-shims</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-jdbc-spark</artifactId>
+      <artifactId>hive-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- inter-project -->
@@ -93,14 +93,14 @@
     <!-- test intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-service-spark</artifactId>
+      <artifactId>hive-service</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

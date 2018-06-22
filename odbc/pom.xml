@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive-spark</artifactId>
-    <version>1.2.0-mapr</version>
+    <artifactId>hive</artifactId>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-odbc-spark</artifactId>
+  <artifactId>hive-odbc</artifactId>
   <packaging>pom</packaging>
   <name>Hive ODBC</name>
 
@@ -38,17 +38,17 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-metastore-spark</artifactId>
+      <artifactId>hive-metastore</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-service-spark</artifactId>
+      <artifactId>hive-service</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

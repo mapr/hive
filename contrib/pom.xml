@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive-spark</artifactId>
-    <version>1.2.0-mapr</version>
+    <artifactId>hive</artifactId>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-contrib-spark</artifactId>
+  <artifactId>hive-contrib</artifactId>
   <packaging>jar</packaging>
   <name>Hive Contrib</name>
 
@@ -36,17 +36,17 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-serde-spark</artifactId>
+      <artifactId>hive-serde</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-shims-spark</artifactId>
+      <artifactId>hive-shims</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- inter-project -->

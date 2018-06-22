@@ -18,12 +18,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive</groupId>
-    <artifactId>hive-spark</artifactId>
-    <version>1.2.0-mapr</version>
+    <artifactId>hive</artifactId>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-ant-spark</artifactId>
+  <artifactId>hive-ant</artifactId>
   <packaging>jar</packaging>
   <name>Hive Ant Utilities</name>
 

@@ -50,10 +50,10 @@
       <useProjectArtifact>false</useProjectArtifact>
       <useStrictFiltering>true</useStrictFiltering>
       <includes>
-        <include>org.apache.hive.hcatalog:hive-hcatalog-core-spark</include>
-        <include>org.apache.hive.hcatalog:hive-hcatalog-pig-adapter-spark</include>
-        <include>org.apache.hive.hcatalog:hive-hcatalog-server-extensions-spark</include>
-        <include>org.apache.hive.hcatalog:hive-hcatalog-streaming-spark</include>
+        <include>org.apache.hive.hcatalog:hive-hcatalog-core</include>
+        <include>org.apache.hive.hcatalog:hive-hcatalog-pig-adapter</include>
+        <include>org.apache.hive.hcatalog:hive-hcatalog-server-extensions</include>
+        <include>org.apache.hive.hcatalog:hive-hcatalog-streaming</include>
       </includes>
     </dependencySet>
     <!-- TODO 0.12 release the webhcat server lib directory had all transitive jars
@@ -66,7 +66,7 @@
       <useStrictFiltering>true</useStrictFiltering>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <includes>
-        <include>org.apache.hive.hcatalog:hive-webhcat-spark:*</include>
+        <include>org.apache.hive.hcatalog:hive-webhcat:*</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -75,7 +75,7 @@
       <useProjectArtifact>false</useProjectArtifact>
       <useStrictFiltering>true</useStrictFiltering>
       <includes>
-        <include>org.apache.hive.hcatalog:hive-webhcat-java-client-spark</include>
+        <include>org.apache.hive.hcatalog:hive-webhcat-java-client</include>
       </includes>
     </dependencySet>
   </dependencySets>

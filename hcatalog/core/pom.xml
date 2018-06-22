@@ -24,12 +24,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.hive.hcatalog</groupId>
-    <artifactId>hive-hcatalog-spark</artifactId>
-    <version>1.2.0-mapr</version>
+    <artifactId>hive-hcatalog</artifactId>
+    <version>1.2.0-mapr-spark</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>hive-hcatalog-core-spark</artifactId>
+  <artifactId>hive-hcatalog-core</artifactId>
   <packaging>jar</packaging>
   <name>Hive HCatalog Core</name>
 
@@ -42,27 +42,27 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-cli-spark</artifactId>
+      <artifactId>hive-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common-spark</artifactId>
+      <artifactId>hive-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-metastore-spark</artifactId>
+      <artifactId>hive-metastore</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec-spark</artifactId>
+      <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
