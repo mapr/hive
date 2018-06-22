@@ -58,8 +58,8 @@ import org.apache.hive.common.HiveCompat;
 
 import com.google.common.base.Joiner;
 import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystoreLocation;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getServerKeystorePassword;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystorePassword;
 /**
  * Hive Configuration.
  */
@@ -2711,11 +2711,11 @@ public class HiveConf extends Configuration {
 
   private void configureSsl() {
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
-      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty()) {
-      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
     }
   }
 
