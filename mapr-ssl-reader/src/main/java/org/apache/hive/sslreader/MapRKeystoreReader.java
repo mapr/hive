@@ -18,6 +18,7 @@
 
 package org.apache.hive.sslreader;
 
+import com.mapr.web.security.SslConfig.SslConfigScope;
 import com.mapr.web.security.SslConfig;
 import com.mapr.web.security.WebSecurityManager;
 
@@ -36,7 +37,7 @@ public final class MapRKeystoreReader {
    */
 
   public static String getServerKeystoreLocation() {
-    try (SslConfig sslConfig = WebSecurityManager.getSslConfig()) {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
       return sslConfig.getServerKeystoreLocation();
     }
   }
@@ -46,7 +47,7 @@ public final class MapRKeystoreReader {
    * @return server password value as string
    */
   public static String getServerKeystorePassword() {
-    try (SslConfig sslConfig = WebSecurityManager.getSslConfig()) {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
       return new String(sslConfig.getServerKeystorePassword());
     }
   }
