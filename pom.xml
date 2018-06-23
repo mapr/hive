@@ -51,7 +51,6 @@
     <module>testutils</module>
     <module>packaging</module>
     <module>mapr-mini-cluster</module>
-    <module>mapr-ssl-reader</module>
   </modules>
 
   <properties>

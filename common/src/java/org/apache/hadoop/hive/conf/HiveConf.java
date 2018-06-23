@@ -57,9 +57,9 @@ import org.apache.hadoop.util.Shell;
 import org.apache.hive.common.HiveCompat;
 
 import com.google.common.base.Joiner;
-import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystoreLocation;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 /**
  * Hive Configuration.
  */
