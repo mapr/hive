@@ -61,9 +61,9 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.servlet.http.HttpServletRequest;
-import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystoreLocation;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 /**
  * The main executable that starts up and runs the Server.
  */

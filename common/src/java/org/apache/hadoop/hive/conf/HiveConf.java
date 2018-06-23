@@ -66,9 +66,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static org.apache.hive.sslreader.MapRKeystoreReader.isSecurityEnabled;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystoreLocation;
-import static org.apache.hive.sslreader.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 /**
  * Hive Configuration.
  */

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hive.sslreader;
+package org.apache.hadoop.hive.conf;
 
 import com.mapr.web.security.SslConfig.SslConfigScope;
 import com.mapr.web.security.SslConfig;
