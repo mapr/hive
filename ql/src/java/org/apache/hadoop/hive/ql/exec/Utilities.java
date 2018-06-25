@@ -1468,16 +1468,13 @@ public final class Utilities {
         Utilities.rename(fs, tmpPathOriginal, tmpPath);
       }
 
-      // Remove duplicates from tmpPath
-      FileStatus[] statuses = HiveStatsUtils.getFileStatusRecurse(
-          tmpPath, ((dpCtx == null) ? 1 : dpCtx.getNumDPCols()), fs);
-      if(statuses != null && statuses.length > 0) {
+      if(fs.exists(tmpPath)) {
         PerfLogger perfLogger = SessionState.getPerfLogger();
         Set<Path> filesKept = new HashSet<Path>();
         perfLogger.PerfLogBegin("FileSinkOperator", "RemoveTempOrDuplicateFiles");
         // remove any tmp file or double-committed output files
         List<Path> emptyBuckets = Utilities.removeTempOrDuplicateFiles(
-            fs, statuses, dpCtx, conf, hconf, filesKept);
+            fs, tmpPath, dpCtx, conf, hconf, filesKept);
         perfLogger.PerfLogEnd("FileSinkOperator", "RemoveTempOrDuplicateFiles");
         // create empty buckets if necessary
         if (!emptyBuckets.isEmpty()) {
