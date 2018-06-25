@@ -1007,6 +1007,12 @@ public class QBSubQuery implements ISubQueryJoinInfo {
         sqNewSearchCond = SubQueryUtils.constructTrueCond();
         subQueryDiagnostic.addWhereClauseRewrite("1 = 1");
       }
+      //Need to rewrite string tree of removed child because there might be incorrect indexes that refers to the
+      // previous unchanged tree.
+      ASTNode removedWhereClauseChild = (ASTNode) whereClause.getChild(0);
+      removedWhereClauseChild.setParent(null);
+      removedWhereClauseChild.toStringTree();
+
       whereClause.setChild(0, sqNewSearchCond);
     }
 
