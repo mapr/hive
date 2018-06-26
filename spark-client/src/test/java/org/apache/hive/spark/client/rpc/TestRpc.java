@@ -196,7 +196,7 @@ public class TestRpc {
 
     // Retry logic
     expectedPort = 65535;
-    config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname, String.valueOf(expectedPort) + ",21-23");
+    config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname, String.valueOf(expectedPort));
     RpcServer server3 = new RpcServer(config);
     assertTrue("Port should match configured one:" + server3.getPort(), server3.getPort() == expectedPort);
     IOUtils.closeQuietly(server3);
