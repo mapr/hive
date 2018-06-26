@@ -19,7 +19,6 @@ git:pullRequest:onCodeChange() {
     export pr=true
     rm -rf mapr-devops/surefire-report.html
     ./bin/hive-build
-    log:warn "git:pullRequest:onCodeChange in devops/hooks.sh has not been set up yet. It should perform the build and test steps for a Pull Request"
 }
 
 git:merge:onComplete() { local artifactoryCredentials=${artifactoryCredentials}
@@ -27,7 +26,7 @@ git:merge:onComplete() { local artifactoryCredentials=${artifactoryCredentials}
 }
 
 hive:setup() {
-    nvm:useNodeVersion "v8.1.4"
+    nvm:useNodeVersion "v9.11.1"
     cd devops/
     artifactory:credentials:prepareNpmRCFile
     mv ../.npmrc .

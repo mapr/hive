@@ -5,7 +5,7 @@ async function buildHive() {
     try {
         const frameworkInstance = frameworkForNodeJSInstance;
         const mesosEnv = "MesosDockerFarm";
-        const buildTemplateId = `buildImageCentOS6`;
+        const buildTemplateId = `buildImageCentOS7`;
         const createSSHDirCmd = 'mkdir -p /root/.ssh';
 
         const gitURL = frameworkForNodeJSInstance.process.environmentVariableNamed(`gitURL`);
@@ -28,11 +28,13 @@ async function buildHive() {
         const buildRunResult = await cluster.nodes.first.newSSHSession().then(sshClient => sshClient.executeCommand(`gitURL=${gitURL} gitBranch=${gitBranch} ${prValue} sh /root/run-pr-build.sh`).onProgress(p => console.log(p.stdOut || p.stdErr)));
         await cluster.nodes.first.download(`/root/mapr-hive/private-hive/target/site/surefire-report.html`, `./`);
         console.log(`Test Result Status : ${buildRunResult.processResult.processExitCode}`);
-        cluster.destroy();
+        await cluster.destroy();
     }
     catch (e) {
+        console.log(__dirname);
+        await cluster.nodes.first.download(`/root/mapr-hive/private-hive/target/site/surefire-report.html`, `./`);
         if (cluster)
-            cluster.destroy();
+            await cluster.destroy();
         console.log(`PR Build Failed !!!`);
         console.log(e);
         process.exit(1);

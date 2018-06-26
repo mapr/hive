@@ -2,7 +2,7 @@
   "dockerInfrastructure": {
     "dockerClusterTemplates": [
       {
-        "id": "buildImageCentOS7",
+        "id": "buildImageCentOS7Java7",
         "operatingSystem": "CentOS",
         "operatingSystemVersion": "7.2",
         "nodeTemplates": [
@@ -18,8 +18,8 @@
             ]
           }
         ],
-        "defaultCPUsPerContainer": 2,
-        "defaultMemoryPerContainer": 4096
+        "defaultCPUsPerContainer": 4,
+        "defaultMemoryPerContainer": 8192
       },
       {
         "id": "buildImageCentOS7",
@@ -38,8 +38,8 @@
             ]
           }
         ],
-        "defaultCPUsPerContainer": 2,
-        "defaultMemoryPerContainer": 4096
+        "defaultCPUsPerContainer": 4,
+        "defaultMemoryPerContainer": 16384
       },
       {
         "id": "buildImageCentOS6",
