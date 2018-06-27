@@ -100,7 +100,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hive.common.util.HiveStringUtils;
-import org.apache.hive.common.util.ShutdownHookManager;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -873,8 +872,9 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       } else {
         String dbLocationUri = db.getLocationUri();
         Path dBDirPath = new Path(dbLocationUri);
-        if(wh.exists(dBDirPath)){
-          throw new InvalidObjectException("Failed to create database. Database directory already exists: " + dbLocationUri);
+        if (wh.exists(dBDirPath) && !HiveConf.getBoolVar(hiveConf, ConfVars.METASTORE_ALLOW_NEW_DB_IN_EXISTING_DIRECTORY)) {
+          throw new InvalidObjectException(
+              "Failed to create database. Database directory already exists: " + dbLocationUri);
         } else {
           db.setLocationUri(wh.getDnsPath(dBDirPath).toString());
         }
