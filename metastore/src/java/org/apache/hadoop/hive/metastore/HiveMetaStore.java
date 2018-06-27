@@ -865,8 +865,9 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       } else {
         String dbLocationUri = db.getLocationUri();
         Path dBDirPath = new Path(dbLocationUri);
-        if(wh.exists(dBDirPath)){
-          throw new InvalidObjectException("Failed to create database. Database directory already exists: " + dbLocationUri);
+        if (wh.exists(dBDirPath) && !HiveConf.getBoolVar(hiveConf, ConfVars.METASTORE_ALLOW_NEW_DB_IN_EXISTING_DIRECTORY)) {
+          throw new InvalidObjectException(
+              "Failed to create database. Database directory already exists: " + dbLocationUri);
         } else {
           db.setLocationUri(wh.getDnsPath(dBDirPath).toString());
         }
