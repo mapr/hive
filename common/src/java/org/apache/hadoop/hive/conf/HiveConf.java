@@ -307,7 +307,8 @@ public class HiveConf extends Configuration {
       HiveConf.ConfVars.METASTORE_HBASE_AGGR_STATS_MEMORY_TTL,
       HiveConf.ConfVars.METASTORE_HBASE_AGGR_STATS_INVALIDATOR_FREQUENCY,
       HiveConf.ConfVars.METASTORE_HBASE_AGGR_STATS_HBASE_TTL,
-      HiveConf.ConfVars.METASTORE_HBASE_FILE_METADATA_THREADS
+      HiveConf.ConfVars.METASTORE_HBASE_FILE_METADATA_THREADS,
+      HiveConf.ConfVars.METASTORE_ALLOW_NEW_DB_IN_EXISTING_DIRECTORY
       };
 
   /**
@@ -1032,6 +1033,9 @@ public class HiveConf extends Configuration {
     HIVEADDEDARCHIVES("hive.added.archives.path", "", "This an internal parameter."),
 
     HIVE_CURRENT_DATABASE("hive.current.database", "", "Database name used by current session. Internal usage only.", true),
+
+    METASTORE_ALLOW_NEW_DB_IN_EXISTING_DIRECTORY("hive.metastore.allow.new.db.in.existing.directory", false, "Whether Hive allows to create "
+        + "new data base in existing directory"),
 
     // for hive script operator
     HIVES_AUTO_PROGRESS_TIMEOUT("hive.auto.progress.timeout", "0s",
