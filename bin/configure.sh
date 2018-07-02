@@ -182,6 +182,22 @@ else
 fi
 }
 
+#
+# Returns true if cluster is secure. Reads security flag from file "$HIVE_BIN"/isSecure.
+#
+is_secure_cluster(){
+if [ -f "$HIVE_BIN"/isSecure ] ; then
+  current_security=$(cat "$HIVE_BIN"/isSecure)
+  if [ "$current_security" = "true" ]; then
+    return 0; # 0 = true
+  else
+    return 1;
+  fi
+else
+  return 1;
+fi
+}
+
 configure_security(){
 HIVE_SITE="$1"
 isSecure="$2"
@@ -200,9 +216,11 @@ isSecure="$2"
 
 if is_security_changed || is_hive_not_configured_yet ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
-  KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS})
-  create_keystore_credential "$HIVE_SERVER2_WEBUI_KEYSTORE_PATH" "$HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
+  if is_secure_cluster ; then
+    KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS})
+    create_keystore_credential "$HIVE_SERVER2_WEBUI_KEYSTORE_PATH" "$HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS}
+  fi
 fi
 }
 
@@ -214,9 +232,11 @@ WEBHCAT_SITE="$1"
 isSecure="$2"
 if is_security_changed || is_hive_not_configured_yet ;  then
   . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
-  KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -getProperty ${WEBHCAT_KEYSTORE_ALIAS})
-  create_keystore_credential "$WEBHCAT_KEYSTORE_PATH" "$WEBHCAT_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
+  if is_secure_cluster ; then
+    KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -getProperty ${WEBHCAT_KEYSTORE_ALIAS})
+    create_keystore_credential "$WEBHCAT_KEYSTORE_PATH" "$WEBHCAT_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
   . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -delProperty ${WEBHCAT_KEYSTORE_ALIAS}
+  fi
 fi
 }
 
@@ -259,9 +279,11 @@ HIVE_SITE="$1"
 isSecure="$2"
 if is_security_changed || is_hive_not_configured_yet ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
+  if is_secure_cluster ; then
     KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HS2_KEYSTORE_ALIAS})
     create_keystore_credential "$HS2_KEYSTORE_PATH" "$HS2_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
-    . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HS2_KEYSTORE_ALIAS}
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HS2_KEYSTORE_ALIAS}
+  fi
 fi
 }
 
