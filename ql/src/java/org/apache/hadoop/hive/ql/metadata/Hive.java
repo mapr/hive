@@ -3248,7 +3248,18 @@ private void constructOneLBLocationMap(FileStatus fSta,
             //       Should this be reconciled?
             return true;
           } else {
-            if (destFs.rename(srcf, destf)) {
+            boolean success;
+            FileStatus srcFileStatus = destFs.getFileStatus(srcf);
+            FileStatus destFileStatus = null;
+            if (destFs.exists(destf)) {
+              destFileStatus = destFs.getFileStatus(destf);
+            }
+            if (srcFileStatus.isDirectory() && destFileStatus != null && destFileStatus.isDirectory()) {
+              success = moveResultFilesToDest(destFs, srcf, destf);
+            } else {
+              success = destFs.rename(srcf, destf);
+            }
+            if (success) {
               if (inheritPerms) {
                 FileUtils.inheritPerms(conf, destStatus, destFs, destf, true);
               }
