@@ -73,10 +73,6 @@ class ConfTool {
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
-  private static final String WEBHCAT_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hivewebhcat.jceks";
-  private static final String HS2_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hiveserver2.jceks";
-  private static final String HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG = "hadoop.security.credential.provider.path";
-  private static final String HIVE_SERVER2_WEBUI_CREDENTIAL_PROVIDER_PATH = "jceks://maprfs/user/mapr/hiveserver2webui.jceks";
   private static final String EMPTY = "";
 
   /**
@@ -180,14 +176,12 @@ class ConfTool {
       set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
       set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, new String
           (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
-      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, HIVE_SERVER2_WEBUI_CREDENTIAL_PROVIDER_PATH);
     } else {
       LOG.info("Disabling PAM authentication and SSL encryption for HiveServer2 web UI");
       remove(doc, HIVE_SERVER2_WEBUI_USE_PAM);
       remove(doc, HIVE_SERVER2_WEBUI_USE_SSL);
       remove(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
       remove(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD);
-      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToHiveSite);
   }
@@ -214,12 +208,10 @@ class ConfTool {
       set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
       set(doc, AppConfig.KEY_STORE_PASSWORD, new String
           (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
-      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, WEBHCAT_CREDENTIAL_PROVIDER_PATH);
     } else {
       remove(doc, AppConfig.USE_SSL);
       remove(doc, AppConfig.KEY_STORE_PATH);
       remove(doc, AppConfig.KEY_STORE_PASSWORD);
-      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToWebHCatSite);
   }
@@ -245,12 +237,10 @@ class ConfTool {
       set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
       set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, new String
           (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
-      appendPropertyValue(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG, HS2_CREDENTIAL_PROVIDER_PATH);
     } else {
       remove(doc, ConfVars.HIVE_SERVER2_USE_SSL);
       remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
       remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD);
-      remove(doc, HADOOP_CREDENTIAL_PROVIDER_PATH_CONFIG);
     }
     saveToFile(doc, pathToHiveSite);
   }

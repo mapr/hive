@@ -58,14 +58,6 @@ CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 HIVE_METASTORE_URIS_PROPERTY_NAME="hive.metastore.uris"
 WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
 
-WEBHCAT_KEYSTORE_ALIAS="templeton.keystore.password"
-WEBHCAT_KEYSTORE_PATH="/user/${MAPR_USER}/hivewebhcat.jceks"
-HS2_KEYSTORE_ALIAS="hive.server2.keystore.password"
-HS2_KEYSTORE_PATH="/user/${MAPR_USER}/hiveserver2.jceks"
-HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS="hive.server2.webui.keystore.password"
-HIVE_SERVER2_WEBUI_KEYSTORE_PATH="/user/${MAPR_USER}/hiveserver2webui.jceks"
-KEYSTORE_PERMS="644"
-
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
 isHS2HA=false
@@ -203,7 +195,7 @@ HIVE_SITE="$1"
 isSecure="$2"
 
 if is_security_changed || is_hive_not_configured_yet ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
 fi
 }
 
@@ -215,12 +207,7 @@ HIVE_SITE="$1"
 isSecure="$2"
 
 if is_security_changed || is_hive_not_configured_yet ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
-  if is_secure_cluster ; then
-    KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS})
-    create_keystore_credential "$HIVE_SERVER2_WEBUI_KEYSTORE_PATH" "$HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HIVE_SERVER2_WEBUI_KEYSTORE_ALIAS}
-  fi
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
 fi
 }
 
@@ -231,43 +218,7 @@ configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
 if is_security_changed || is_hive_not_configured_yet ;  then
-  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
-  if is_secure_cluster ; then
-    KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -getProperty ${WEBHCAT_KEYSTORE_ALIAS})
-    create_keystore_credential "$WEBHCAT_KEYSTORE_PATH" "$WEBHCAT_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
-  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" -delProperty ${WEBHCAT_KEYSTORE_ALIAS}
-  fi
-fi
-}
-
-#
-# Writes keystore credential to the '.jceks' file. If there is no such file, it will be created.
-# If hive is not configured yet and the credential with the same alias exists, it will be overwritten.
-# If keystore credential with the same alias already exists and hive is configured, it will not be overwritten.
-#
-create_keystore_credential(){
-KEYSTORE_PATH="$1"
-ALIAS="$2"
-PASSWORD="$3"
-if is_hive_not_configured_yet ; then
-  ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD} -overwrite
-else
-  if ! keystore_alias_exists; then
-    ${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -property ${ALIAS}=${PASSWORD}
-  fi
-fi
-su "$MAPR_USER" -c "hadoop fs -chmod $KEYSTORE_PERMS $KEYSTORE_PATH"
-}
-
-#
-# Check whether alias in the particular keystore exists. 'ALIAS' and 'KEYSTORE_PATH' variables have to be set.
-#
-keystore_alias_exists(){
-ALIAS_EXISTS=$(${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -aliasExists ${ALIAS})
-if [ "$ALIAS_EXISTS" = "true" ]; then
-  return 0; # 0 = true
-else
-  return 1;
+  . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
 fi
 }
 
@@ -278,12 +229,7 @@ configure_hs2_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
 if is_security_changed || is_hive_not_configured_yet ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
-  if is_secure_cluster ; then
-    KEYSTORE_PASSWORD=$(${HIVE_BIN}/conftool -path "$HIVE_SITE" -getProperty ${HS2_KEYSTORE_ALIAS})
-    create_keystore_credential "$HS2_KEYSTORE_PATH" "$HS2_KEYSTORE_ALIAS" "$KEYSTORE_PASSWORD"
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -delProperty ${HS2_KEYSTORE_ALIAS}
-  fi
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
 fi
 }
 
@@ -378,10 +324,10 @@ grant_write_permission_in_logs_dir() {
 #
 function copy_log4j_for_hadoop_common_classpath() {
   if has_webhcat ; then
-    LOG4J_API_JAR_PATH=$(ls ${HIVE_LIB}/log4j-api* | awk '{print $1}')
-    LOG4J_API_JAR_NAME=$(basename ${LOG4J_API_JAR_PATH})
-    HADOOP_VERSION=$(cat ${MAPR_HOME}/hadoop/hadoopversion | awk -F'=' '{print $1}')
-    HADOOP_SHARE_COMMON_PATH=${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/
+    LOG4J_API_JAR_PATH=$(ls "${HIVE_LIB}"/log4j-api* | awk '{print $1}')
+    LOG4J_API_JAR_NAME=$(basename "${LOG4J_API_JAR_PATH}")
+    HADOOP_VERSION=$(cat "${MAPR_HOME}"/hadoop/hadoopversion | awk -F'=' '{print $1}')
+    HADOOP_SHARE_COMMON_PATH="${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/"
     if [ -f "$LOG4J_API_JAR_PATH" ] && [ ! -L "$HADOOP_SHARE_COMMON_PATH/$LOG4J_API_JAR_NAME" ] ; then
       ln -s "$LOG4J_API_JAR_PATH" "$HADOOP_SHARE_COMMON_PATH"
     fi
@@ -481,7 +427,7 @@ if [ "$isHS2HA" = "true" ]; then
   if [ -f "$HIVE_CONF/zk_hosts" ]; then
     zk_hosts=$(cat "$HIVE_CONF/zk_hosts")
   fi
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
   set_num_h2_in_warden_file "$num_hs2"
 fi
 }
@@ -519,7 +465,7 @@ fi
 #
 
 is_connection_url_configured(){
-output=$(. ${HIVE_BIN}/conftool -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(. "${HIVE_BIN}"/conftool -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -531,7 +477,7 @@ fi
 # Check if metastore URIs are configured
 #
 is_metastore_uris_configured(){
-output=$(. ${HIVE_BIN}/conftool -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(. "${HIVE_BIN}"/conftool -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -548,12 +494,12 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
     rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
   fi
   if ! is_connection_url_configured ;  then
-    . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
+    . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
   fi
-  cd "$HIVE_BIN"
+  cd "$HIVE_BIN" || return
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
   if has_metastore && ! is_metastore_uris_configured; then
-    . ${HIVE_BIN}/conftool -initMetastoreUri -path "$HIVE_SITE"
+    . "${HIVE_BIN}"/conftool -initMetastoreUri -path "$HIVE_SITE"
   fi
 fi
 }
@@ -681,7 +627,7 @@ if [ $# -gt 0 ]; then
       --EC|-C)
         #Parse Common options
         #Ingore ones we don't care about
-        ecOpts=($2)
+        ecOpts=("$2")
         shift 2
         restOpts="$@"
         eval set -- "${ecOpts[@]} --"
