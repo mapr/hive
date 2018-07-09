@@ -18,7 +18,9 @@
 
 package org.apache.hadoop.hive.maprdb.json.shims;
 
+import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -29,7 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentWritable> {
+public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentWritable>,
+    FileSinkOperator.RecordWriter {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordWriterWrapper.class);
   private final org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter;
@@ -58,5 +61,15 @@ public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentW
     } catch (InterruptedException e) {
       throw new IOException("Error writing key/value pair", e);
     }
+  }
+
+  @Override
+  public void write(Writable w) throws IOException {
+    write(null, (DocumentWritable) w);
+  }
+
+  @Override
+  public void close(boolean abort) throws IOException {
+    close(null);
   }
 }
