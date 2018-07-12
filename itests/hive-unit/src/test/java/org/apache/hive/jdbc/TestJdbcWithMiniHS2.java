@@ -762,7 +762,7 @@ public class TestJdbcWithMiniHS2 {
     }
     if (nc != null) {
       try {
-        classLoaderResolverMap = NucleusContext.class.getDeclaredField("classLoaderResolverMap");
+        classLoaderResolverMap = AbstractNucleusContext.class.getDeclaredField("classLoaderResolverMap");
         if (classLoaderResolverMap != null) {
           classLoaderResolverMap.setAccessible(true);
           cMap = (Map<String, ClassLoaderResolver>) classLoaderResolverMap.get(nc);
