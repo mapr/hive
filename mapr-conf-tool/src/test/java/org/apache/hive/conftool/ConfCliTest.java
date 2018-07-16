@@ -178,7 +178,6 @@ public class ConfCliTest {
     Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.metastore.sasl.enabled"));
   }
 
-
   @Test
   public void configureSecurityIncorrectArgumentsTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
@@ -205,8 +204,6 @@ public class ConfCliTest {
     Assert.assertTrue(output.contains("Print help information"));
   }
 
-
-
   @Test
   public void configureHs2HaTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
@@ -231,7 +228,6 @@ public class ConfCliTest {
     String output = baos.toString();
     Assert.assertTrue(output.contains("Print help information"));
   }
-
 
   @Test
   public void configureMetastoreUriTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
@@ -304,7 +300,7 @@ public class ConfCliTest {
   public void configureWebUiHs2PamSslTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
     String pathToHiveSite = url.getPath();
-    ConfCli.main(new String[]{"--webuipamssl", "--path", pathToHiveSite});
+    ConfCli.main(new String[]{"--webuipamssl", "--path", pathToHiveSite, "--security", "true"});
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.ssl"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.keystore.path"));
@@ -316,12 +312,11 @@ public class ConfCliTest {
         (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.keystore.password"));
   }
 
-
   @Test
   public void configureWebHCatSslTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-002.xml");
     String pathToWebHCatSite = url.getPath();
-    ConfCli.main(new String[]{"--webhcatssl", "--path", pathToWebHCatSite});
+    ConfCli.main(new String[]{"--webhcatssl", "--path", pathToWebHCatSite, "--security", "true"});
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.keystore.path"));
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.keystore.password"));
@@ -335,7 +330,7 @@ public class ConfCliTest {
   public void configureHs2SslTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-023.xml");
     String pathToHiveSite = url.getPath();
-    ConfCli.main(new String[]{"--hs2ssl", "--path", pathToHiveSite});
+    ConfCli.main(new String[]{"--hs2ssl", "--path", pathToHiveSite, "--security", "true"});
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.keystore.path"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.keystore.password"));
@@ -343,6 +338,32 @@ public class ConfCliTest {
     Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(pathToHiveSite, "hive.server2.keystore.path"));
     Assert.assertEquals(new String
         (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}), ConfTool.getProperty(pathToHiveSite, "hive.server2.keystore.password"));
+  }
+
+  @Test
+  public void configureHs2SslWithoutSecurityArgsTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
+    String pathToHiveSite = url.getPath();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Incorrect security configuration options");
+    ConfCli.main(new String[]{"--hs2ssl", "--path", pathToHiveSite});
+    String output = baos.toString();
+    Assert.assertTrue(output.contains("Print help information"));
+  }
+
+  @Test
+  public void configureHs2SslMissingSecurityArgsTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-022.xml");
+    String pathToHiveSite = url.getPath();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Missing argument for option: security");
+    ConfCli.main(new String[]{"--hs2ssl", "--path", pathToHiveSite, "--security"});
+    String output = baos.toString();
+    Assert.assertTrue(output.contains("Print help information"));
   }
 
 }
