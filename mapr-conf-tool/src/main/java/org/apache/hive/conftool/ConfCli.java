@@ -156,13 +156,8 @@ public class ConfCli {
       printHelp();
     } else if(line.hasOption(PATH)){
       String pathToXmlFile = line.getOptionValue(PATH);
-      if(isSecurityConfig(line)){
-        if(hasValidSecurityOptions(line)){
-          configureSecurity(pathToXmlFile, getSecurity(line));
-        } else {
-          printHelp();
-          throw new IllegalArgumentException("Incorrect security configuration options");
-        }
+      if (isSecurityConfig(line)) {
+        configureSecurity(pathToXmlFile, getSecurity(line));
       }
 
       if(isHs2HaConfig(line)){
@@ -254,7 +249,7 @@ public class ConfCli {
   }
 
   private static boolean hasValidSecurityOptions(CommandLine line){
-    return line.hasOption(MAPR_SASL) && line.hasOption(SECURITY) && isTrueOrFalse(line.getOptionValue(SECURITY));
+    return line.hasOption(SECURITY) && isTrueOrFalse(line.getOptionValue(SECURITY));
   }
 
   private static boolean isTrueOrFalse(String value){
@@ -267,12 +262,14 @@ public class ConfCli {
     ConfTool.setMetaStoreUgi(pathToHiveSite, security);
   }
 
-  private static boolean getSecurity(CommandLine line){
-    if(line.hasOption(SECURITY)){
-    String security = line.getOptionValue(SECURITY);
+  private static boolean getSecurity(CommandLine line) {
+    if (hasValidSecurityOptions(line)) {
+      String security = line.getOptionValue(SECURITY);
       return TRUE.equalsIgnoreCase(security);
+    } else {
+      printHelp();
+      throw new IllegalArgumentException("Incorrect security configuration options");
     }
-    return true; // never happens
   }
 
   private static void printHelp(){
