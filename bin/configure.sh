@@ -175,11 +175,24 @@ else
 fi
 }
 
+#
+# Checks whether there is a need to configure security.
+# We have to configure security if security type was changed and it is not in custom format
+# or if hive was not configured yet.
+#
+is_security_have_to_be_configured(){
+if ( is_security_changed && [ "$isSecure" != "custom" ] ) || is_hive_not_configured_yet ; then
+  return 0; # 0 = true
+else
+  return 1; # 1 = false
+fi
+}
+
 configure_security(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if is_security_changed || is_hive_not_configured_yet ; then
+if is_security_have_to_be_configured ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
 fi
 }
@@ -191,7 +204,7 @@ configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if is_security_changed || is_hive_not_configured_yet ; then
+if is_security_have_to_be_configured ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
 fi
 }
@@ -202,7 +215,7 @@ fi
 configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
-if is_security_changed || is_hive_not_configured_yet ;  then
+if is_security_have_to_be_configured ;  then
   . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
 fi
 }
@@ -226,7 +239,7 @@ fi
 configure_hs2_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
-if is_security_changed || is_hive_not_configured_yet ; then
+if is_security_have_to_be_configured ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
 fi
 }
