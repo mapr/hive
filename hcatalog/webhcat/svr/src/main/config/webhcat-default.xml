@@ -45,7 +45,7 @@
 
   <property>
     <name>templeton.libjars</name>
-    <value>${env.TEMPLETON_HOME}/../lib/zookeeper-${zookeeper.version}.jar,${env.TEMPLETON_HOME}/../lib/hive-common-${project.version}.jar</value>
+    <value>${env.MAPR_HOME}/lib/zookeeper-${zookeeper.version}.jar,${env.TEMPLETON_HOME}/../lib/hive-common-${project.version}.jar</value>
     <description>Jars to add to the classpath.</description>
   </property>
 
@@ -93,7 +93,7 @@
 
   <property>
     <name>templeton.pig.path</name>
-    <value>pig-${pig.version}.tar.gz/pig-${pig.version}/bin/pig</value>
+    <value>${env.PIG_HOME}/bin/pig</value>
     <description>The path to the Pig executable.</description>
   </property>
 
@@ -111,7 +111,7 @@
 
   <property>
     <name>templeton.hive.path</name>
-    <value>hive-${project.version}.tar.gz/hive-${project.version}/bin/hive</value>
+    <value>${env.HIVE_HOME}/bin/hive</value>
     <description>The path to the Hive executable.  Applies only if templeton.hive.archive is defined.</description>
   </property>
 
@@ -131,7 +131,7 @@
 
   <property>
     <name>templeton.hive.home</name>
-    <value>hive-${project.version}-bin.tar.gz/hive-${project.version}-bin</value>
+    <value>${env.HIVE_HOME}</value>
     <description>
       The path to the Hive home within the tar.  This is needed if Hive is not installed on all
       nodes in the cluster and needs to be shipped to the target node in the cluster to execute Pig
@@ -140,7 +140,7 @@
   </property>
   <property>
     <name>templeton.hcat.home</name>
-    <value>hive-${project.version}-bin.tar.gz/hive-${project.version}-bin/hcatalog</value>
+    <value>${env.HIVE_HOME}/hcatalog</value>
     <description>
       The path to the HCat home within the tar.  This is needed if Hive is not installed on all
       nodes in the cluster and needs to be shipped to the target node in the cluster to execute Pig
@@ -150,7 +150,7 @@
 
   <property>
     <name>templeton.hive.properties</name>
-    <value>hive.metastore.uris=thrift://localhost:9933,hive.metastore.sasl.enabled=false</value>
+    <value>hive.metastore.uris=thrift://localhost:9083</value>
     <description>Properties to set when running hive (during job sumission).  This is expected to
         be a comma-separated prop=value list.  If some value is itself a comma-separated list the
         escape character is '\'</description>
@@ -217,32 +217,6 @@
     </description>
   </property>
 
-  <!--
-  <property>
-    <name>templeton.controller.mr.am.java.opts</name>
-    <value></value>
-    <description>Java options to be set for the templeton controller job's
-        MapReduce application master. When submitting the controller job,
-        Templeton will override yarn.app.mapreduce.am.command-opts with
-        this value.  If this is not specified, Templeton will not set the
-        property and therefore the value will be picked up from
-        mapred-site.xml.
-    </description>
-  </property>
-
-  <property>
-    <name>templeton.mr.am.memory.mb</name>
-    <value></value>
-    <description>Templeton controller job's Application Master's memory
-        limit in MB. When submitting controller job, Templeton will
-        overwrite yarn.app.mapreduce.am.resource.mb with this value. If
-        empty, Templeton will not set yarn.app.mapreduce.am.resource.mb
-        when submitting the controller job, therefore the configuration
-        in mapred-site.xml will be used.
-    </description>
-  </property>
-  -->
-
   <property>
     <name>templeton.exec.envs</name>
     <value>HADOOP_PREFIX,HADOOP_HOME,JAVA_HOME,HIVE_HOME</value>
@@ -251,7 +225,7 @@
 
   <property>
     <name>templeton.zookeeper.hosts</name>
-    <value>127.0.0.1:2181</value>
+    <value>127.0.0.1:5181</value>
     <description>ZooKeeper servers, as comma separated host:port pairs</description>
   </property>
 
@@ -344,52 +318,6 @@
     <description>The keytab file containing the credentials for the Kerberos principal.</description>
   </property>
 
-
-  <!--
-  <property>
-    <name>webhcat.proxyuser.#USER#.hosts</name>
-    <value>www.example.com,host2</value>
-    <description>
-      List of client hosts from which the '#USER#' user is allowed to perform 
-      'doAs' operations.
-
-      The '#USER#' must be replaced with the username of the user who is
-      allowed to perform 'doAs' operations.
-
-      The value can be the '*' wildcard, which means every host is allowed,
-      or a comma-separated list of hostnames.
-   
-      If value is a blank string or webhcat.proxyuser.#USER#.hosts is missing,
-      no hosts will be allowed.  
-
-      For multiple users copy this property and replace the user name
-      in the property name.
-    </description>
-  </property>
-  <property>
-    <name>webhcat.proxyuser.#USER#.groups</name>
-    <value>group1, group2</value>
-    <description>
-      List of groups the '#USER#' user is allowed to impersonate users
-      from to perform 'doAs' operations.
-
-      The '#USER#' must be replaced with the username of the user who is
-      allowed to perform 'doAs' operations.
-
-      The value can be the '*' wildcard, which means any doAs value is
-      allowed, or a comma-separated list of groups.
-
-      If value is an empty list or webhcat.proxyuser.#USER#.groups is missing,
-      every doAs call value will fail.
-
-      For multiple users copy this property and replace the user name
-      in the property name.
-      
-      The username->usergroup mapping is performed using Hadoop API which is 
-      controlled by hadoop.security.group.mapping property.
-    </description>
-  </property>
--->
   <property>
     <name>templeton.xsrf.filter.enabled</name>
     <value>false</value>
