@@ -108,7 +108,17 @@ elif [ -f ${DEFAULT_HIVE_HOME}/bin/hive ]; then
     echo "Setting HIVE_HOME $HIVE_HOME"
 fi
 
-
+# Find MAPR_HOME
+DEFAULT_MAPR_HOME="$HIVE_HOME"/../..
+if [ -n "$MAPR_HOME" ]; then
+    echo "Length of string is non zero"
+    if [ ! -d "$MAPR_HOME" ]; then
+        die "MAPR_HOME=${MAPR_HOME} is invalid";
+    fi
+elif [ -d "$DEFAULT_MAPR_HOME" ]; then
+    export MAPR_HOME="${DEFAULT_MAPR_HOME:-/opt/mapr}"
+    echo "Setting MAPR_HOME $MAPR_HOME"
+fi
 
 DEFAULT_TEMPLETON_HOME="${WEBHCAT_PREFIX}"
 export TEMPLETON_HOME="${TEMPLETON_HOME:-$DEFAULT_TEMPLETON_HOME}"

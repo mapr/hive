@@ -21,48 +21,5 @@
 <!-- install. -->
 
 <configuration>
-    <!--
-      <property>
-        <name>templeton.kerberos.secret</name>
-        <value>webhcat</value>
-      </property>
-      <property>
-        <name>templeton.kerberos.principal</name>
-        <value>HTTP/_HOST@REALM.COM</value>
-      </property>
-      <property>
-        <name>templeton.kerberos.keytab</name>
-        <value>/opt/http.keytab</value>
-      </property>
-      <property>
-        <name>templeton.storage.class</name>
-        <value>org.apache.hive.hcatalog.templeton.tool.HDFSStorage</value>
-      </property>
-      <property>
-        <name>templeton.storage.root</name>
-        <value>/user/mapr/webhcat</value>
-        <description>The path to the directory to use for storage</description>
-      </property>
-      <property>
-        <name>templeton.pig.archive</name>
-        <value>maprfs:///user/mapr/webhcat/pig-0.15.tar.gz</value>
-      </property>
-      <property>
-        <name>templeton.pig.path</name>
-        <value>pig-0.15.tar.gz/pig-0.15/bin/pig</value>
-      </property>
-      <property>
-        <name>templeton.hive.archive</name>
-        <value>maprfs:///user/mapr/webhcat/hive-2.1.tar.gz</value>
-      </property>
-      <property>
-        <name>templeton.hive.path</name>
-        <value>hive-2.0.tar.gz/hive-2.0/bin/hive</value>
-      </property>
-      <property>
-        <name>templeton.streaming.jar</name>
-        <value>maprfs:///user/mapr/webhcat/hadoop-0.20.2-dev-streaming.jar</value>
-      </property>
-    -->
 
 </configuration>
