@@ -19,6 +19,8 @@
 package org.apache.hadoop.hive.ql.exec;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -787,9 +790,21 @@ public final class FunctionRegistry {
     if (a.equals(b)) {
       return a;
     }
+
     if (a.getCategory() != Category.PRIMITIVE || b.getCategory() != Category.PRIMITIVE) {
+      // It is not primitive; check if it is a struct and we can infer a common class
+      if (a.getCategory() == Category.STRUCT && b.getCategory() == Category.STRUCT) {
+        return getCommonClassForStruct((StructTypeInfo)a, (StructTypeInfo)b,
+            new FunctionRegistry.BiFunction<TypeInfo, TypeInfo, TypeInfo>() {
+              @Override
+              public TypeInfo apply(TypeInfo type1, TypeInfo type2) {
+                return getCommonClassForComparison(type1, type2);
+              }
+            });
+      }
       return null;
     }
+
     PrimitiveCategory pcA = ((PrimitiveTypeInfo)a).getPrimitiveCategory();
     PrimitiveCategory pcB = ((PrimitiveTypeInfo)b).getPrimitiveCategory();
 
@@ -879,6 +894,19 @@ public final class FunctionRegistry {
    *
    * @return null if no common class could be found.
    */
+
+  private interface BiFunction<T, U, R> {
+
+    /**
+     * Applies this function to the given arguments.
+     *
+     * @param t the first function argument
+     * @param u the second function argument
+     * @return the function result
+     */
+    R apply(T t, U u);
+  }
+
   public static TypeInfo getCommonClass(TypeInfo a, TypeInfo b) {
     if (a.equals(b)) {
       return a;
@@ -891,7 +919,13 @@ public final class FunctionRegistry {
     }
     // It is not primitive; check if it is a struct and we can infer a common class
     if (a.getCategory() == Category.STRUCT && b.getCategory() == Category.STRUCT) {
-      return getCommonClassForStruct((StructTypeInfo)a, (StructTypeInfo)b);
+      return getCommonClassForStruct((StructTypeInfo)a, (StructTypeInfo)b,
+          new FunctionRegistry.BiFunction<TypeInfo, TypeInfo, TypeInfo>() {
+            @Override
+            public TypeInfo apply(TypeInfo type1, TypeInfo type2) {
+              return getCommonClass(type1, type2);
+            }
+          });
     }
     return null;
   }
@@ -902,7 +936,8 @@ public final class FunctionRegistry {
    *
    * @return null if no common class could be found.
    */
-  public static TypeInfo getCommonClassForStruct(StructTypeInfo a, StructTypeInfo b) {
+  public static TypeInfo getCommonClassForStruct(StructTypeInfo a, StructTypeInfo b,
+      BiFunction<TypeInfo, TypeInfo, TypeInfo> commonClassFunction) {
     if (a == b || a.equals(b)) {
       return a;
     }
@@ -931,7 +966,7 @@ public final class FunctionRegistry {
     ArrayList<TypeInfo> fromTypes = a.getAllStructFieldTypeInfos();
     ArrayList<TypeInfo> toTypes = b.getAllStructFieldTypeInfos();
     for (int i = 0; i < fromTypes.size(); i++) {
-      TypeInfo commonType = getCommonClass(fromTypes.get(i), toTypes.get(i));
+      TypeInfo commonType = commonClassFunction.apply(fromTypes.get(i), toTypes.get(i));
       if (commonType == null) {
         return null;
       }
