@@ -117,7 +117,7 @@ final class Security {
       //set to empty "Text" if hive.metastore.token.signature property is set to null
       Token<? extends TokenIdentifier> hiveToken = hiveTokenSelector.selectToken(
         new Text(), ugi.getTokens());
-      if (hiveToken == null) {
+      if (hiveToken == null && !client.isLocalMetaStore()) {
         // we did not get token set up by oozie, let's get them ourselves here.
         // we essentially get a token per unique Output HCatTableInfo - this is
         // done because through Pig, setOutput() method is called multiple times
