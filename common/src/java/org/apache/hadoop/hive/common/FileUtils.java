@@ -28,6 +28,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -890,6 +891,44 @@ public final class FileUtils {
     }
     return false;
   }
+  /**
+   * Checks whenever path is inside the given subtree
+   *
+   * return true iff
+   *  * path = subtree
+   *  * subtreeContains(path,d) for any descendant of the subtree node
+   * @param path    the path in question
+   * @param subtree
+   *
+   * @return
+   */
+  public static boolean isPathWithinSubtree(Path path, Path subtree) {
+    return isPathWithinSubtree(path, subtree, subtree.depth());
+  }
+
+  private static boolean isPathWithinSubtree(Path path, Path subtree, int subtreeDepth) {
+    while(path != null){
+      if (subtreeDepth > path.depth()) {
+        return false;
+      }
+      if(subtree.equals(path)){
+        return true;
+      }
+      path = path.getParent();
+    }
+    return false;
+  }
+
+  public static void populateParentPaths(Set<Path> parents, Path path) {
+    if (parents == null) {
+      return;
+    }
+    while(path != null) {
+      parents.add(path);
+      path = path.getParent();
+    }
+  }
+
   public static boolean shouldInheritPerms(Configuration conf, FileSystem fs) {
     return HiveConf.getBoolVar(conf,
         HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS) && StorageUtils.shouldSetPerms(conf, fs);
