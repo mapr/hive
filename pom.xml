@@ -212,11 +212,10 @@
   </properties>
 
   <repositories>
-    <!-- TODO: Remove after 6.1.0 release -->
+    <!-- Temporary repo -->
     <repository>
-      <id>repository_cv</id>
-      <name>Private MapR repo for CyberVision</name>
-      <url>http://repository_cv.mapr.com/nexus/content/groups/mapr-public</url>
+      <id>mapr.release</id>
+      <url>${env.MAPR_MAVEN_REPO}</url>
       <releases>
         <enabled>true</enabled>
       </releases>
