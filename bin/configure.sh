@@ -175,12 +175,33 @@ fi
 }
 
 #
+# Returns boolean 'true' if security is custom.
+#
+is_custom_security(){
+# isSecure is set in server/configure.sh
+if [ -n "$isSecure" ]; then
+  if [ "$isSecure" = "custom" ]; then
+    return 0; # 0 = true
+  else
+    return 1; # 1 = false
+  fi
+else
+# if there is no value in $isSecure, then let's get it from MapR build-in function
+  if isCustomSecurityEnabled 2>/dev/null; then
+    return 0; # 0 = true
+  else
+    return 1; # 1 = false
+  fi
+fi
+}
+
+#
 # Checks whether there is a need to configure security.
 # We have to configure security if security type was changed and it is not in custom format
 # or if hive was not configured yet.
 #
 is_security_have_to_be_configured(){
-if ( is_security_changed && [ "$isSecure" != "custom" ] ) || is_hive_not_configured_yet ; then
+if ( is_security_changed || is_hive_not_configured_yet ) && ! is_custom_security ; then
   return 0; # 0 = true
 else
   return 1; # 1 = false
@@ -192,7 +213,7 @@ HIVE_SITE="$1"
 isSecure="$2"
 
 if is_security_have_to_be_configured ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
 fi
 }
 
@@ -204,7 +225,7 @@ HIVE_SITE="$1"
 isSecure="$2"
 
 if is_security_have_to_be_configured ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
 fi
 }
 
@@ -215,21 +236,10 @@ configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
 if is_security_have_to_be_configured ;  then
-  . ${HIVE_BIN}/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
 fi
 }
 
-#
-# Check whether alias in the particular keystore exists. 'ALIAS' and 'KEYSTORE_PATH' variables have to be set.
-#
-keystore_alias_exists(){
-ALIAS_EXISTS=$(${HIVE_BIN}/encryptconf -keyStorePath ${KEYSTORE_PATH} -aliasExists ${ALIAS})
-if [ "$ALIAS_EXISTS" = "true" ]; then
-  return 0; # 0 = true
-else
-  return 1;
-fi
-}
 
 #
 # Set SSL encryption by default for HiveServer2 on MapR SASL cluster
@@ -238,7 +248,7 @@ configure_hs2_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
 if is_security_have_to_be_configured ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
 fi
 }
 
@@ -333,10 +343,10 @@ grant_write_permission_in_logs_dir() {
 #
 function copy_log4j_for_hadoop_common_classpath() {
   if has_webhcat ; then
-    LOG4J_API_JAR_PATH=$(ls ${HIVE_LIB}/log4j-api* | awk '{print $1}')
-    LOG4J_API_JAR_NAME=$(basename ${LOG4J_API_JAR_PATH})
-    HADOOP_VERSION=$(cat ${MAPR_HOME}/hadoop/hadoopversion | awk -F'=' '{print $1}')
-    HADOOP_SHARE_COMMON_PATH=${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/
+    LOG4J_API_JAR_PATH=$(ls "${HIVE_LIB}"/log4j-api* | awk '{print $1}')
+    LOG4J_API_JAR_NAME=$(basename "${LOG4J_API_JAR_PATH}")
+    HADOOP_VERSION=$(cat "${MAPR_HOME}"/hadoop/hadoopversion | awk -F'=' '{print $1}')
+    HADOOP_SHARE_COMMON_PATH="${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/"
     if [ -f "$LOG4J_API_JAR_PATH" ] && [ ! -L "$HADOOP_SHARE_COMMON_PATH/$LOG4J_API_JAR_NAME" ] ; then
       ln -s "$LOG4J_API_JAR_PATH" "$HADOOP_SHARE_COMMON_PATH"
     fi
@@ -436,7 +446,7 @@ if [ "$isHS2HA" = "true" ]; then
   if [ -f "$HIVE_CONF/zk_hosts" ]; then
     zk_hosts=$(cat "$HIVE_CONF/zk_hosts")
   fi
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
   set_num_h2_in_warden_file "$num_hs2"
 fi
 }
@@ -474,7 +484,7 @@ fi
 #
 
 is_connection_url_configured(){
-output=$(. ${HIVE_BIN}/conftool -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(. "${HIVE_BIN}"/conftool -existProperty "$CONNECTION_URL_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -486,7 +496,7 @@ fi
 # Check if metastore URIs are configured
 #
 is_metastore_uris_configured(){
-output=$(. ${HIVE_BIN}/conftool -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
+output=$(. "${HIVE_BIN}"/conftool -existProperty "$HIVE_METASTORE_URIS_PROPERTY_NAME" -path "$HIVE_SITE")
 if [ "$output" = "true" ] ; then
   return 0; # 0 = true
 else
@@ -503,12 +513,12 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
     rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
   fi
   if ! is_connection_url_configured ;  then
-    . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
+    . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
   fi
-  cd "$HIVE_BIN"
+  cd "$HIVE_BIN" || return
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
   if has_metastore && ! is_metastore_uris_configured; then
-    . ${HIVE_BIN}/conftool -initMetastoreUri -path "$HIVE_SITE"
+    . "${HIVE_BIN}"/conftool -initMetastoreUri -path "$HIVE_SITE"
   fi
 fi
 }
@@ -636,7 +646,7 @@ if [ $# -gt 0 ]; then
       --EC|-C)
         #Parse Common options
         #Ingore ones we don't care about
-        ecOpts=($2)
+        ecOpts=("$2")
         shift 2
         restOpts="$@"
         eval set -- "${ecOpts[@]} --"
