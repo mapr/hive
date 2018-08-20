@@ -175,18 +175,23 @@ fi
 }
 
 #
-# Returns true if cluster is secure. Reads security flag from file "$HIVE_BIN"/isSecure.
+# Returns boolean 'true' if security is custom.
 #
-is_secure_cluster(){
-if [ -f "$HIVE_BIN"/isSecure ] ; then
-  current_security=$(cat "$HIVE_BIN"/isSecure)
-  if [ "$current_security" = "true" ]; then
+is_custom_security(){
+# isSecure is set in server/configure.sh
+if [ -n "$isSecure" ]; then
+  if [ "$isSecure" = "custom" ]; then
     return 0; # 0 = true
   else
-    return 1;
+    return 1; # 1 = false
   fi
 else
-  return 1;
+# if there is no value in $isSecure, then let's get it from MapR build-in function
+  if isCustomSecurityEnabled 2>/dev/null; then
+    return 0; # 0 = true
+  else
+    return 1; # 1 = false
+  fi
 fi
 }
 
@@ -196,7 +201,7 @@ fi
 # or if hive was not configured yet.
 #
 is_security_have_to_be_configured(){
-if ( is_security_changed && [ "$isSecure" != "custom" ] ) || is_hive_not_configured_yet ; then
+if ( is_security_changed || is_hive_not_configured_yet ) && ! is_custom_security ; then
   return 0; # 0 = true
 else
   return 1; # 1 = false
