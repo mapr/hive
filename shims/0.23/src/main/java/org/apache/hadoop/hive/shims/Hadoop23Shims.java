@@ -707,10 +707,10 @@ public class Hadoop23Shims extends HadoopShimsSecure {
     }
 
     @Override
-    public boolean isFileInHDFS(FileSystem fs, Path path) throws IOException {
+    public boolean isFileInMapRFS(FileSystem fs, Path path) throws IOException {
       // In case of viewfs we need to lookup where the actual file is to know the filesystem in use.
       // resolvePath is a sure shot way of knowing which file system the file is.
-      return "hdfs".equals(fs.resolvePath(path).toUri().getScheme());
+      return "maprfs".equals(fs.resolvePath(path).toUri().getScheme());
     }
   }
   @Override

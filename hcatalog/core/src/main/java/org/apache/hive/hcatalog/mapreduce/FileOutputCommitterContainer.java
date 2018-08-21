@@ -381,7 +381,7 @@ class FileOutputCommitterContainer extends OutputCommitterContainer {
     // Apply the group and permissions to the leaf partition and files.
     // Need not bother in case of HDFS as permission is taken care of by setting UMask
     fs.mkdirs(partPath); // Attempt to make the path in case it does not exist before we check
-    if (!ShimLoader.getHadoopShims().getHCatShim().isFileInHDFS(fs, partPath)) {
+    if (!ShimLoader.getHadoopShims().getHCatShim().isFileInMapRFS(fs, partPath)) {
       applyGroupAndPerms(fs, partPath, perms, grpName, true);
     }
 

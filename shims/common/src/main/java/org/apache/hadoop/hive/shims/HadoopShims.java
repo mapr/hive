@@ -310,13 +310,13 @@ public interface HadoopShims {
     public String getPropertyName(PropertyName name);
 
     /**
-     * Checks if file is in HDFS filesystem.
+     * Checks if file is in MapRF filesystem.
      *
      * @param fs
      * @param path
-     * @return true if the file is in HDFS, false if the file is in other file systems.
+     * @return true if the file is in MapRF, false if the file is in other file systems.
      */
-    public boolean isFileInHDFS(FileSystem fs, Path path) throws IOException;
+    public boolean isFileInMapRFS(FileSystem fs, Path path) throws IOException;
   }
   /**
    * Provides a Hadoop JobTracker shim.

@@ -216,7 +216,7 @@ public class TestFileUtils {
     conf.set(HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS.varname, "false");
 
     FileSystem mockFs = mock(FileSystem.class);
-    when(mockFs.getUri()).thenReturn(URI.create("hdfs:///"));
+    when(mockFs.getUri()).thenReturn(URI.create("maprfs:///"));
 
     ContentSummary mockContentSummary = mock(ContentSummary.class);
     when(mockContentSummary.getFileCount()).thenReturn(Long.MAX_VALUE);

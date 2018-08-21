@@ -86,13 +86,13 @@ public class SparkUtilities {
     return fullPath.toUri();
   }
 
-  // checks if a resource has to be uploaded to HDFS for yarn-cluster mode
+  // checks if a resource has to be uploaded to MapRFS for yarn-cluster mode
   public static boolean needUploadToHDFS(URI source, SparkConf sparkConf) {
     String master = sparkConf.get("spark.master");
     String deployMode = sparkConf.contains("spark.submit.deployMode") ?
         sparkConf.get("spark.submit.deployMode") : null;
     return SparkClientUtilities.isYarnClusterMode(master, deployMode) &&
-        !source.getScheme().equals("hdfs");
+        !source.getScheme().equals("maprfs");
   }
 
   private static String getFileName(URI uri) {
