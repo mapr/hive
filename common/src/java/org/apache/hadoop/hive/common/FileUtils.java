@@ -611,7 +611,7 @@ public final class FileUtils {
     boolean triedDistcp = false;
 
     /* Run distcp if source file/dir is too big */
-    if (srcFS.getUri().getScheme().equals("hdfs")) {
+    if (srcFS.getUri().getScheme().equals("maprfs")) {
       ContentSummary srcContentSummary = srcFS.getContentSummary(src);
       if (srcContentSummary.getFileCount() > conf.getLongVar(HiveConf.ConfVars.HIVE_EXEC_COPYFILE_MAXNUMFILES)
               && srcContentSummary.getLength() > conf.getLongVar(HiveConf.ConfVars.HIVE_EXEC_COPYFILE_MAXSIZE)) {
