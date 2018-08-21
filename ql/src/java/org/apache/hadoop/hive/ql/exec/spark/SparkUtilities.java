@@ -102,7 +102,7 @@ public class SparkUtilities {
   // checks if a resource has to be uploaded to HDFS for yarn-cluster mode
   public static boolean needUploadToHDFS(URI source, SparkConf sparkConf) {
     return sparkConf.get("spark.master").equals("yarn-cluster") &&
-        !source.getScheme().equals("hdfs");
+        !source.getScheme().equals("maprfs");
   }
 
   private static String getFileName(URI uri) {

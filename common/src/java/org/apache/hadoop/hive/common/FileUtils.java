@@ -584,7 +584,7 @@ public final class FileUtils {
     boolean copied;
 
     /* Run distcp if source file/dir is too big */
-    if (srcFS.getUri().getScheme().equals("hdfs") &&
+    if (srcFS.getUri().getScheme().equals("maprfs") &&
         srcFS.getFileStatus(src).getLen() > conf.getLongVar(HiveConf.ConfVars.HIVE_EXEC_COPYFILE_MAXSIZE)) {
       LOG.info("Source is " + srcFS.getFileStatus(src).getLen() + " bytes. (MAX: " + conf.getLongVar(HiveConf.ConfVars.HIVE_EXEC_COPYFILE_MAXSIZE) + ")");
       LOG.info("Launch distributed copy (distcp) job.");
