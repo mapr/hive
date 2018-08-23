@@ -4348,14 +4348,16 @@ public class TestVectorStringExpressions {
 
     // verify that a multi byte LIKE expression matches a matching string
     batch = makeStringBatchMixedCharSize();
-    expr = new FilterStringColLikeStringScalar(0, ('%' + new String(multiByte) + '%').getBytes(StandardCharsets.UTF_8));
+    expr = new FilterStringColLikeStringScalar(0,
+        ('%' + new String(multiByte, StandardCharsets.UTF_8) + '%').getBytes(StandardCharsets.UTF_8));
     expr.transientInit();
     expr.evaluate(batch);
     Assert.assertEquals(1, batch.size);
 
     // verify that a multi byte LIKE expression doesn't match a non-matching string
     batch = makeStringBatchMixedCharSize();
-    expr = new FilterStringColLikeStringScalar(0, ('%' + new String(multiByte) + 'x').getBytes(StandardCharsets.UTF_8));
+    expr = new FilterStringColLikeStringScalar(0,
+        ('%' + new String(multiByte, StandardCharsets.UTF_8) + 'x').getBytes(StandardCharsets.UTF_8));
     expr.transientInit();
     expr.evaluate(batch);
     Assert.assertEquals(0, batch.size);
