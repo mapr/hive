@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.udf.generic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentLengthException;
@@ -28,7 +29,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.serde2.objectinspector.ConstantObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 
 @Description(name = "named_struct",
     value = "_FUNC_(name1, val1, name2, val2, ...) - Creates a struct with the given " +
@@ -49,19 +49,32 @@ public class GenericUDFNamedStruct extends GenericUDF {
 
     ArrayList<String> fname = new ArrayList<String>(numFields / 2);
     ArrayList<ObjectInspector> retOIs = new ArrayList<ObjectInspector>(numFields / 2);
-    for (int f = 0; f < numFields; f+=2) {
+    boolean constantStruct = true;
+    for (int f = 0; f < numFields; f += 2) {
       if (!(arguments[f] instanceof ConstantObjectInspector)) {
         throw new UDFArgumentTypeException(f, "Even arguments" +
             " to NAMED_STRUCT must be a constant STRING." + arguments[f].toString());
       }
       ConstantObjectInspector constantOI =
-        (ConstantObjectInspector)arguments[f];
+          (ConstantObjectInspector)arguments[f];
       fname.add(constantOI.getWritableConstantValue().toString());
-      retOIs.add(arguments[f + 1]);
+
+      int valueIndex = f + 1;
+      ObjectInspector valueOI = arguments[valueIndex];
+      retOIs.add(valueOI);
+      constantStruct &= (valueOI.getCategory() == ObjectInspector.Category.PRIMITIVE)
+          && (valueOI instanceof ConstantObjectInspector);
+      if (constantStruct) {
+        // nested complex types trigger Kryo issue #216 in plan deserialization
+        ret[f / 2] = ((ConstantObjectInspector) valueOI).getWritableConstantValue();
+      }
     }
-    StructObjectInspector soi =
-      ObjectInspectorFactory.getStandardStructObjectInspector(fname, retOIs);
-    return soi;
+    if (constantStruct) {
+      return ObjectInspectorFactory.getStandardConstantStructObjectInspector(fname,
+          retOIs, Arrays.asList(ret));
+    } else {
+      return ObjectInspectorFactory.getStandardStructObjectInspector(fname, retOIs);
+    }
   }
 
   @Override

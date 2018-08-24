@@ -150,20 +150,56 @@ public class ExprNodeConstantDesc extends ExprNodeDesc implements Serializable {
     if (typeInfo.getCategory() == Category.PRIMITIVE) {
       return getFormatted(typeInfo, value);
     } else if (typeInfo.getCategory() == Category.STRUCT) {
-      StringBuilder sb = new StringBuilder();
-      sb.append("const struct(");
-      List<?> items = (List<?>) getWritableObjectInspector().getWritableConstantValue();
-      List<TypeInfo> structTypes = ((StructTypeInfo) typeInfo).getAllStructFieldTypeInfos();
-      for (int i = 0; i < structTypes.size(); i++) {
-        final Object o = (i < items.size()) ? items.get(i) : null;
-        sb.append(getFormatted(structTypes.get(i), o)).append(",");
+      //We should process named_struct in different way
+      if (isNamedStruct()) {
+        return getNamedStructExprString();
+      } else {
+        return getStructExprString();
       }
-      sb.setCharAt(sb.length() - 1, ')');
-      return sb.toString();
     } else {
       // unknown type
       return toString();
     }
+  }
+
+  private boolean isNamedStruct() {
+    List<String> columnNames = ((StructTypeInfo) typeInfo).getAllStructFieldNames();
+    for (int i = 0; i < columnNames.size(); i++) {
+      // Simple struct column names always named the same with index incremented, e.g col1, col2, col3...
+      if (!columnNames.get(i).equals("col" + (i + 1))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private String getNamedStructExprString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("const named_struct(");
+    List<String> names = ((StructTypeInfo) typeInfo).getAllStructFieldNames();
+    List<?> items = (List<?>) getWritableObjectInspector().getWritableConstantValue();
+    List<TypeInfo> structTypes = ((StructTypeInfo) typeInfo).getAllStructFieldTypeInfos();
+    for (int i = 0; i < structTypes.size(); i++) {
+      Object o = (i < items.size()) ? items.get(i) : null;
+      String name = (i < names.size()) ? names.get(i) : null;
+      sb.append(getFormatted(TypeInfoFactory.stringTypeInfo, name)).append(",")
+          .append(getFormatted(structTypes.get(i), o)).append(",");
+    }
+    sb.setCharAt(sb.length() - 1, ')');
+    return sb.toString();
+  }
+
+  private String getStructExprString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("const struct(");
+    List<?> items = (List<?>) getWritableObjectInspector().getWritableConstantValue();
+    List<TypeInfo> structTypes = ((StructTypeInfo) typeInfo).getAllStructFieldTypeInfos();
+    for (int i = 0; i < structTypes.size(); i++) {
+      final Object o = (i < items.size()) ? items.get(i) : null;
+      sb.append(getFormatted(structTypes.get(i), o)).append(",");
+    }
+    sb.setCharAt(sb.length() - 1, ')');
+    return sb.toString();
   }
 
   @Override
