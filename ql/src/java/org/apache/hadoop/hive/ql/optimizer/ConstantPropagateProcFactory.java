@@ -69,6 +69,7 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDF.DeferredJavaObject;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBaseCompare;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCase;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDFNamedStruct;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFNvl;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPAnd;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqual;
@@ -961,7 +962,7 @@ public final class ConstantPropagateProcFactory {
             || typeInfo.getTypeName().contains(serdeConstants.CHAR_TYPE_NAME)) {
           return new ExprNodeConstantDesc(typeInfo, o);
         }
-      } else if (udf instanceof GenericUDFStruct
+      } else if ((udf instanceof GenericUDFStruct || udf instanceof GenericUDFNamedStruct)
           && oi instanceof StandardConstantStructObjectInspector) {
         // do not fold named_struct, only struct()
         ConstantObjectInspector coi = (ConstantObjectInspector) oi;
