@@ -8310,10 +8310,24 @@ public class ObjectStore implements RawStore, Configurable {
     }
   }
 
-  protected List<SQLForeignKey> getForeignKeysInternal(final String parent_db_name,
-    final String parent_tbl_name, final String foreign_db_name, final String foreign_tbl_name,
-    boolean allowSql, boolean allowJdo) throws MetaException, NoSuchObjectException {
-    return new GetListHelper<SQLForeignKey>(foreign_db_name, foreign_tbl_name, allowSql, allowJdo) {
+  protected List<SQLForeignKey> getForeignKeysInternal(final String parent_db_name_input,
+    final String parent_tbl_name_input, final String foreign_db_name_input,
+    final String foreign_tbl_name_input, boolean allowSql, boolean allowJdo) throws MetaException, NoSuchObjectException {
+    final String parent_db_name = parent_db_name_input;
+    final String parent_tbl_name = parent_tbl_name_input;
+    final String foreign_db_name = foreign_db_name_input;
+    final String foreign_tbl_name = foreign_tbl_name_input;
+    final String db_name;
+    final String tbl_name;
+    if (foreign_tbl_name == null) {
+      // The FK table name might be null if we are retrieving the constraint from the PK side
+      db_name = parent_db_name_input;
+      tbl_name = parent_tbl_name_input;
+    } else {
+      db_name = foreign_db_name_input;
+      tbl_name = foreign_tbl_name_input;
+    }
+    return new GetListHelper<SQLForeignKey>(db_name, tbl_name, allowSql, allowJdo) {
 
       @Override
       protected List<SQLForeignKey> getSqlResult(GetHelper<List<SQLForeignKey>> ctx) throws MetaException {
