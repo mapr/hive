@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 
@@ -40,6 +41,8 @@ public class ExplainWork implements Serializable {
   private ArrayList<Task<? extends Serializable>> rootTasks;
   private Task<? extends Serializable> fetchTask;
   private HashSet<ReadEntity> inputs;
+  private ASTNode astTree;
+  private String astStringTree;
   private ParseContext pCtx;
 
   boolean extended;
@@ -50,6 +53,7 @@ public class ExplainWork implements Serializable {
   boolean appendTaskType;
 
   boolean authorize;
+  boolean explainAst;
   boolean userLevelExplain;
   String cboInfo;
 
@@ -62,17 +66,22 @@ public class ExplainWork implements Serializable {
       ParseContext pCtx,
       List<Task<? extends Serializable>> rootTasks,
       Task<? extends Serializable> fetchTask,
+      ASTNode astTree,
       BaseSemanticAnalyzer analyzer,
       boolean extended,
       boolean formatted,
       boolean dependency,
       boolean logical,
       boolean authorize,
+      boolean explainAst,
       boolean userLevelExplain,
       String cboInfo) {
     this.resFile = resFile;
     this.rootTasks = new ArrayList<Task<? extends Serializable>>(rootTasks);
     this.fetchTask = fetchTask;
+    if(astTree != null) {
+      this.astTree = astTree;
+    }
     this.analyzer = analyzer;
     if (analyzer != null) {
       this.inputs = analyzer.getInputs();
@@ -83,6 +92,7 @@ public class ExplainWork implements Serializable {
     this.logical = logical;
     this.pCtx = pCtx;
     this.authorize = authorize;
+    this.explainAst = explainAst;
     this.userLevelExplain = userLevelExplain;
     this.cboInfo = cboInfo;
   }
@@ -117,6 +127,17 @@ public class ExplainWork implements Serializable {
 
   public void setInputs(HashSet<ReadEntity> inputs) {
     this.inputs = inputs;
+  }
+
+  public ASTNode getAstTree() {
+    return astTree;
+  }
+
+  public String getAstStringTree() {
+    if (astStringTree == null) {
+      astStringTree = astTree.dump();
+    }
+    return astStringTree;
   }
 
   public boolean getExtended() {
@@ -173,6 +194,14 @@ public class ExplainWork implements Serializable {
 
   public void setAuthorize(boolean authorize) {
     this.authorize = authorize;
+  }
+
+  public boolean isExplainAst() {
+    return explainAst;
+  }
+
+  public void setExplainAst(boolean explainAst) {
+    this.explainAst = explainAst;
   }
 
   public BaseSemanticAnalyzer getAnalyzer() {

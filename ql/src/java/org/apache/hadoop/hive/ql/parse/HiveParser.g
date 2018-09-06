@@ -537,6 +537,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
     xlateMap.put("KW_NORELY", "NORELY");
     xlateMap.put("KW_ABORT", "ABORT");
     xlateMap.put("KW_TRANSACTIONS", "TRANSACTIONS");
+    xlateMap.put("KW_AST", "AST");
 
     // Operators
     xlateMap.put("DOT", ".");
@@ -719,7 +720,7 @@ explainStatement
 explainOption
 @init { msgs.push("explain option"); }
 @after { msgs.pop(); }
-    : KW_EXTENDED|KW_FORMATTED|KW_DEPENDENCY|KW_LOGICAL|KW_AUTHORIZATION
+    : KW_EXTENDED|KW_FORMATTED|KW_DEPENDENCY|KW_LOGICAL|KW_AUTHORIZATION|KW_AST
     ;
 
 execStatement

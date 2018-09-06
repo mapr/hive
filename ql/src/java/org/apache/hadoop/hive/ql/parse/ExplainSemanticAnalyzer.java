@@ -51,6 +51,7 @@ public class ExplainSemanticAnalyzer extends BaseSemanticAnalyzer {
     boolean dependency = false;
     boolean logical = false;
     boolean authorize = false;
+    boolean explainAst = false;
     for (int i = 1; i < ast.getChildCount(); i++) {
       int explainOptions = ast.getChild(i).getType();
       if (explainOptions == HiveParser.KW_FORMATTED) {
@@ -63,6 +64,8 @@ public class ExplainSemanticAnalyzer extends BaseSemanticAnalyzer {
         logical = true;
       } else if (explainOptions == HiveParser.KW_AUTHORIZATION) {
         authorize = true;
+      } else if (explainOptions == HiveParser.KW_AST) {
+        explainAst = true;
       }
     }
 
@@ -103,12 +106,14 @@ public class ExplainSemanticAnalyzer extends BaseSemanticAnalyzer {
         pCtx,
         tasks,
         fetchTask,
+        input,
         sem,
         extended,
         formatted,
         dependency,
         logical,
         authorize,
+        explainAst,
         userLevelExplain,
         ctx.getCboInfo());
 

@@ -125,12 +125,14 @@ public class ATSHook implements ExecuteWithHookContext {
                 null,// pCtx
                 plan.getRootTasks(),// RootTasks
                 plan.getFetchTask(),// FetchTask
+                null,
                 null,// analyzer
                 false,// extended
                 true,// formatted
                 false,// dependency
                 false,// logical
                 false,// authorize
+                false,//explainAst
                 false,// userLevelExplain
                 null// cboInfo
             );
