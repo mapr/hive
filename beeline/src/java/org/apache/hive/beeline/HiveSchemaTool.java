@@ -1218,7 +1218,7 @@ public class HiveSchemaTool {
       // we always add a line separator at the end while calling dbCommandParser.buildCommand.
       beeLine.getOpts().setEntireLineAsCommand(true);
       LOG.debug("Going to run command <" + builder.buildToLog() + ">");
-      int status = beeLine.begin(builder.buildToRun(), null);
+      int status = beeLine.begin(builder.buildToRun(), null, false);
       if (status != 0) {
         throw new IOException("Schema script failed, errorcode " + status);
       }
