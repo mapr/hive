@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.maprdb.json.serde;
 
+import com.mapr.db.rowcol.DBDocumentImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -28,6 +29,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.*;
 import org.apache.hadoop.hive.serde2.typeinfo.*;
 import org.apache.hadoop.io.Writable;
 import org.ojai.Document;
+import org.ojai.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +71,8 @@ public class MapRDBSerDe extends AbstractSerDe {
       columnNames = Arrays.asList(columnNameProperty.split(","));
     }
 
+    columnNames = normalizeColNames(columnNames);
+
     List<TypeInfo> columnTypes;
     // all column types
     if (columnTypeProperty.length() == 0) {
@@ -81,6 +85,14 @@ public class MapRDBSerDe extends AbstractSerDe {
     // Create row related objects
     rowTypeInfo = (StructTypeInfo) TypeInfoFactory.getStructTypeInfo(columnNames, columnTypes);
     objectInspector = (StructObjectInspector) TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(rowTypeInfo);
+  }
+
+  private static List<String> normalizeColNames(List<String> columnNames) {
+    List<String> normalizedColNames = new ArrayList<>();
+    for (String columnName : columnNames) {
+      normalizedColNames.add(columnName.toLowerCase());
+    }
+    return normalizedColNames;
   }
 
   @Override
@@ -104,7 +116,7 @@ public class MapRDBSerDe extends AbstractSerDe {
     row.clear();
 
     Object value;
-    Document doc = ((DocumentWritable) blob).getDocument();
+    Document doc = normalizeKeys(((DocumentWritable) blob).getDocument());
 
     List<String> structFieldNames = rowTypeInfo.getAllStructFieldNames();
     for (String fieldName : structFieldNames) {
@@ -125,6 +137,14 @@ public class MapRDBSerDe extends AbstractSerDe {
     return row;
   }
 
+  private static Document normalizeKeys(Document doc) {
+    Document normalizedDoc = new DBDocumentImpl();
+    for (Map.Entry<String, Value> entry : doc) {
+      normalizedDoc.set(entry.getKey().toLowerCase(), entry.getValue());
+    }
+    return normalizedDoc;
+  }
+
   @Override
   public ObjectInspector getObjectInspector() throws SerDeException {
     return objectInspector;
@@ -140,5 +160,4 @@ public class MapRDBSerDe extends AbstractSerDe {
     // no support for statistics
     return null;
   }
-
 }
