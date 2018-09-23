@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.hive</groupId>
     <artifactId>hive</artifactId>
-    <version>1.2.0-mapr-spark-MEP-6.0.0</version>
+    <version>1.2.0-mapr-spark-MEP-6.0.0-1808</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -119,7 +119,7 @@
     <dependency>
       <groupId>com.mapr.security</groupId>
       <artifactId>mapr-security-web</artifactId>
-      <version>6.1.0-mapr-SNAPSHOT</version> <!-- TODO: remove snapshot after release -->
+      <version>6.1.0-mapr</version> <!-- TODO: remove snapshot after release -->
       <exclusions>
         <exclusion>
           <groupId>com.mapr.hadoop</groupId>
