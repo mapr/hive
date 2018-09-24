@@ -43,16 +43,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
 
 /**
  *  Helper for configuring Hive
@@ -72,6 +63,8 @@ class ConfTool {
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
+  private static final String METASTORE_SECURE_AUTH_MANAGER =
+          "org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider";
   private static final String EMPTY = "";
 
   /**
@@ -148,6 +141,30 @@ class ConfTool {
       LOG.info("Configuring metastore to use UGI. Default is true, so removing property from "
           + "hive-site.xml to enable it");
       remove(doc, METASTORE_EXECUTE_SET_UGI);
+    }
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures hive.security.metastore.authorization.manager property to use StorageBasedAuthorizationProvider if secure
+   * or remove this property if not secure.
+   * @param pathToHiveSite hive-site location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  static void setMetaStoreAuthManager(String pathToHiveSite, boolean security) throws TransformerException,
+          IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    if (security) {
+      LOG.info("Configuring metastore authorization manager to StorageBasedAuthorizationProvider");
+      set(doc, HIVE_METASTORE_AUTHORIZATION_MANAGER, METASTORE_SECURE_AUTH_MANAGER);
+    } else {
+      LOG.info("Configuring metastore authorization manager to default. Removing property from hive-site.xml");
+      remove(doc, HIVE_METASTORE_AUTHORIZATION_MANAGER);
     }
     saveToFile(doc, pathToHiveSite);
   }

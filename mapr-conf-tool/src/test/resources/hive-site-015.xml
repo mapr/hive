@@ -47,4 +47,8 @@
     <name>hive.metastore.execute.setugi</name>
     <value>false</value>
   </property>
+  <property>
+    <name>hive.security.metastore.authorization.manager</name>
+    <value>org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider</value>
+  </property>
 </configuration>
