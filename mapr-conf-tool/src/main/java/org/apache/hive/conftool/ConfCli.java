@@ -260,6 +260,7 @@ public class ConfCli {
     ConfTool.setMaprSasl(pathToHiveSite, security);
     ConfTool.setEncryption(pathToHiveSite, security);
     ConfTool.setMetaStoreUgi(pathToHiveSite, security);
+    ConfTool.setMetaStoreAuthManager(pathToHiveSite, security);
   }
 
   private static boolean getSecurity(CommandLine line) {

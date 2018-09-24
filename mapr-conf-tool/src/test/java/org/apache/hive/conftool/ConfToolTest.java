@@ -330,6 +330,33 @@ public class ConfToolTest {
   }
 
   @Test
+  public void setMetaStoreAuthManagerTest() throws IOException, ParserConfigurationException, SAXException,
+          TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-014.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setMetaStoreAuthManager(pathToWebHCatSite, true);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider",
+            ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_AUTHORIZATION_MANAGER));
+  }
+
+  @Test
+  public void disableMetaStoreAuthManagerTest() throws IOException, ParserConfigurationException,
+          SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-015.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setMetaStoreAuthManager(pathToWebHCatSite, false);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_METASTORE_AUTHORIZATION_MANAGER));
+  }
+
+  @Test
   public void delPropertyTest()
       throws SAXException, TransformerException, ParserConfigurationException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-016.xml");
