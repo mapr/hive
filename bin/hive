@@ -505,6 +505,11 @@ fi
 # include the log4j jar that is used for hive into the classpath
 CLASSPATH="${CLASSPATH}:${LOG_JAR_CLASSPATH}"
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${LOG_JAR_CLASSPATH}"
+
+if [ "$SERVICE" = "hiveserver2" -o "$SERVICE" = "metastore" ] ; then
+  export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dfs.cache.lru.enable=true"
+fi
+
 declare -A IS_SERVICE_CMD=(["metastore_start"]=1 ["metastore_stop"]=1 ["metastore_status"]=1 ["hiveserver2_start"]=1 ["hiveserver2_stop"]=1 ["hiveserver2_status"]=1)
 
 if [ "$TORUN" = "" ] ; then
