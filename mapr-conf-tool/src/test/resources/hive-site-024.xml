@@ -18,4 +18,10 @@
         <description>Test appending the existing value</description>
     </property>
 
+    <property>
+        <name>hive.users</name>
+        <value>mapruser</value>
+        <description>Test appending the similar value</description>
+    </property>
+
 </configuration>

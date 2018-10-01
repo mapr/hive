@@ -54,6 +54,7 @@ public class ConfCli {
   private static final String EXIST_PROPERTY = "existProperty";
   private static final String WEBHCAT_SSL = "webhcatssl";
   private static final String HS2_SSL = "hs2ssl";
+  private static final String ADMIN_USER = "adminUser";
   private static final String ADD_PROPERTY = "addProperty";
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
@@ -111,6 +112,12 @@ public class ConfCli {
     OptionBuilder.withDescription("Configures hive-site.xml for HS2 SSL encryption");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HS2_SSL));
 
+    OptionBuilder.withValueSeparator();
+    OptionBuilder.hasArgs(1);
+    OptionBuilder.withArgName("user name");
+    OptionBuilder.withDescription("Admin user will be appended to existing property(hive.user.in.admin.role) "
+        + "using coma separator. In case it does not exist, it will be added as a new value.");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ADMIN_USER));
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("property to check");
@@ -230,6 +237,11 @@ public class ConfCli {
         ConfTool.setHs2Ssl(pathToXmlFile, getSecurity(line));
       }
 
+      if (isAdminUser(line)) {
+        String adminUser = line.getOptionValue(ADMIN_USER);
+        ConfTool.setAdminUser(pathToXmlFile, adminUser, getSecurity(line));
+      }
+
     } else {
       printHelp();
     }
@@ -318,6 +330,10 @@ public class ConfCli {
 
   private static boolean isHs2SslConfig(CommandLine line) {
     return line.hasOption(HS2_SSL);
+  }
+
+  private static boolean isAdminUser(CommandLine line) {
+    return line.hasOption(ADMIN_USER);
   }
 
   private static void printBool(boolean value){

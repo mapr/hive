@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
+
 public class ConfCliTest {
 
   @Rule
@@ -97,7 +99,33 @@ public class ConfCliTest {
     Assert.assertTrue(output.contains("Print help information"));
   }
 
+  @Test
+  public void adminUserSecurityOnTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+    String adminUser = "mapr";
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    ConfCli.main(new String[]{"--adminUser", adminUser, "--path", pathToHiveSite, "--security", "true"});
+    String output = baos.toString();
+    Assert.assertEquals("mapr", ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
+    Assert.assertFalse(output.contains("Print help information"));
+  }
 
+  @Test
+  public void adminUserSecurityOffTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-025.xml");
+    String pathToHiveSite = url.getPath();
+    String adminUser = "mapr";
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    ConfCli.main(new String[]{"--adminUser", adminUser, "--path", pathToHiveSite, "--security", "false"});
+    String output = baos.toString();
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
+    Assert.assertFalse(output.contains("Print help information"));
+  }
 
   @Test
   public void delPropertyTest()
