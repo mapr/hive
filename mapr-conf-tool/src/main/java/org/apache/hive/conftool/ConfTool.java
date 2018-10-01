@@ -42,8 +42,21 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHORIZATION_MANAGER;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
 
 /**
  *  Helper for configuring Hive
@@ -248,6 +261,25 @@ class ConfTool {
   }
 
   /**
+   * Configures hive.users.in.admin role for secure cluster. If cluster is not secure the property will be removed.
+   * @param pathToHiveSite hive-site location
+   * @param adminUser admin user to add
+   * @param secure true if MapR Sasl security is enabled on the cluster
+   * @throws SAXException
+   * @throws TransformerException
+   * @throws ParserConfigurationException
+   * @throws IOException
+   */
+  static void setAdminUser(String pathToHiveSite, String adminUser, boolean secure)
+      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    if (secure) {
+      appendProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname, adminUser);
+    } else {
+      delProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname);
+    }
+  }
+
+  /**
    * Configures Ssl encryption for HiveServer2
    *
    * @param pathToHiveSite hive-site location
@@ -341,7 +373,29 @@ class ConfTool {
   static void addProperty(String pathToHiveSite, String property, String value)
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
-    addProperty(doc, property, value);
+    if (propertyExists(doc, property)) {
+      setProperty(doc, property, value);
+    } else {
+      addProperty(doc, property, value);
+    }
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Adds property value joined by coma separator to xml file. If property does not exist, it adds a new one.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param property name of the property
+   * @param value value of the property to append
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   * @throws TransformerException
+   */
+  static void appendProperty(String pathToHiveSite, String property, String value)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    appendPropertyValue(doc, property, value);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -415,7 +469,7 @@ class ConfTool {
     if (propertyExists(doc, property)) {
       LOG.info("Property {} exists in xml file. Append value: {}", property, value);
       String oldPropertyValue = getProperty(doc, property);
-      if (!oldPropertyValue.contains(value)) {
+      if (!new HashSet<>(Arrays.asList(oldPropertyValue.split(","))).contains(value)) {
         if (!oldPropertyValue.isEmpty()) {
           value = Joiner.on(",").join(oldPropertyValue, value);
         }

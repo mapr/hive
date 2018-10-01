@@ -16,6 +16,7 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URL;
 
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
 
 public class ConfToolTest {
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
@@ -146,7 +147,7 @@ public class ConfToolTest {
   }
 
   @Test
-  public void AddPropertyTest() throws ParserConfigurationException, IOException, SAXException {
+  public void addPropertyTest() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-002.xml");
     String pathToHiveSite = url.getPath();
 
@@ -158,12 +159,23 @@ public class ConfToolTest {
 
     String testValue = "AAbbbCCC";
     ConfTool.addProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL, testValue);
-    LOG.info(ConfTool.toString(doc));
 
-    Assert.assertTrue(ConfTool.propertyExists(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
     Assert.assertEquals(testValue, ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
+  @Test
+  public void addPropertyAlreadyExistsTest()
+      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-017.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "test.property.to.add";
+    String oldValue = "old.value";
+    String newValue = "test.value.to.add";
+
+    Assert.assertEquals(oldValue, ConfTool.getProperty(pathToHiveSite, property));
+    ConfTool.addProperty(pathToHiveSite, property, newValue);
+    Assert.assertEquals(newValue, ConfTool.getProperty(pathToHiveSite, property));
+  }
 
   @Test
   public void getConfigurationNodeTest() throws ParserConfigurationException, IOException, SAXException {
@@ -371,21 +383,6 @@ public class ConfToolTest {
   }
 
   @Test
-  public void addPropertyTest()
-      throws SAXException, TransformerException, ParserConfigurationException, IOException {
-    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-017.xml");
-    String pathToHiveSite = url.getPath();
-    String property = "test.property.to.add";
-    String value = "test.value.to.add";
-    ConfTool.addProperty(pathToHiveSite, property, value);
-
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
-    Assert.assertTrue(ConfTool.propertyExists(doc, property));
-  }
-
-  @Test
   public void getPropertyFromFileTest()
       throws SAXException, ParserConfigurationException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-021.xml");
@@ -398,54 +395,76 @@ public class ConfToolTest {
   }
 
   @Test
-  public void appendPropertyValueToExistingTest() throws ParserConfigurationException, IOException, SAXException {
+  public void appendPropertyToExistingTest()
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
 
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
-
-    ConfTool.appendPropertyValue(doc, "append.to.existing.property", "newValue");
-    Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(doc, "append.to.existing.property"));
+    ConfTool.appendProperty(pathToHiveSite, "append.to.existing.property", "newValue");
+    Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(pathToHiveSite, "append.to.existing.property"));
   }
 
   @Test
-  public void appendPropertyValueNonExistingTest() throws ParserConfigurationException, IOException, SAXException {
+  public void appendPropertyToNonExistingTest()
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
 
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
-
-    ConfTool.appendPropertyValue(doc, "append.non.existing", "newValue");
-    Assert.assertEquals("newValue", ConfTool.getProperty(doc, "append.non.existing"));
+    ConfTool.appendProperty(pathToHiveSite, "append.non.existing", "newValue");
+    Assert.assertEquals("newValue", ConfTool.getProperty(pathToHiveSite, "append.non.existing"));
   }
 
   @Test
-  public void appendPropertyValueToEmptyTest() throws ParserConfigurationException, IOException, SAXException {
+  public void appendPropertyToEmptyTest()
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
 
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
-
-    ConfTool.appendPropertyValue(doc, "append.to.empty.property", "newValue");
-    Assert.assertEquals("newValue", ConfTool.getProperty(doc, "append.to.empty.property"));
+    ConfTool.appendProperty(pathToHiveSite, "append.to.empty.property", "newValue");
+    Assert.assertEquals("newValue", ConfTool.getProperty(pathToHiveSite, "append.to.empty.property"));
   }
 
   @Test
-  public void appendPropertyValueTheSameTest() throws ParserConfigurationException, IOException, SAXException {
+  public void appendPropertyValueTheSameTest()
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
 
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    Document doc = docBuilder.parse(pathToHiveSite);
+    ConfTool.appendProperty(pathToHiveSite, "append.the.existing.value", "newValue");
+    Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(pathToHiveSite, "append.the.existing.value"));
+  }
 
-    ConfTool.appendPropertyValue(doc, "append.the.existing.value", "newValue");
-    Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(doc, "append.the.existing.value"));
+  @Test
+  public void appendPropertyValueSimilarValueTest()
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+
+    ConfTool.appendProperty(pathToHiveSite, "hive.users", "mapr");
+    Assert.assertEquals("mapruser,mapr", ConfTool.getProperty(pathToHiveSite, "hive.users"));
+  }
+
+  @Test
+  public void adminUserSecurityOnTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    String pathToHiveSite = url.getPath();
+    String adminUser = "mapr";
+
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
+    ConfTool.setAdminUser(pathToHiveSite, adminUser, true);
+    Assert.assertEquals(adminUser, ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
+  }
+
+  @Test
+  public void adminUserSecurityOffTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-025.xml");
+    String pathToHiveSite = url.getPath();
+    String adminUser = "mapr";
+
+    Assert.assertEquals(adminUser, ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
+    ConfTool.setAdminUser(pathToHiveSite, adminUser, false);
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
   }
 }
