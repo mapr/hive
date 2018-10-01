@@ -618,6 +618,17 @@ grant_permissions_to_hive_site
 grant_write_permission_in_logs_dir
 }
 
+#Adds mapr user to the property "hive.users.in.admin.role" in hive-site.xml.
+#This is required to access hiveserver logs from web ui.
+configure_users_in_admin_role(){
+  HIVE_SITE="$1"
+  ADMIN_USER="$2"
+  isSecure="$3"
+  if is_security_have_to_be_configured ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -adminUser "$ADMIN_USER" -security "$isSecure"
+  fi
+}
+
 #
 # main
 #
@@ -723,6 +734,8 @@ configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$isSecure"
 configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
 
 configure_hs2_ssl "$HIVE_SITE" "$isSecure"
+
+configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$isSecure"
 
 init_derby_schema
 

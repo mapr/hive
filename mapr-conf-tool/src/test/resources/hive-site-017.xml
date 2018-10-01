@@ -52,9 +52,9 @@
     <value>test.value</value>
   </property>
 
-  <!--<property>-->
-    <!--<name>test.property.to.delete</name>-->
-    <!--<value>test.value</value>-->
-  <!--</property>-->
+  <property>
+    <name>test.property.to.add</name>
+    <value>old.value</value>
+  </property>
 
 </configuration>

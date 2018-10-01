@@ -1,0 +1,9 @@
+<configuration>
+
+    <property>
+        <name>hive.users.in.admin.role</name>
+        <value>mapr</value>
+        <description>Test appending the similar value</description>
+    </property>
+
+</configuration>
