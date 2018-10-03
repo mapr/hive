@@ -118,6 +118,8 @@ public class ExplainSemanticAnalyzer extends BaseSemanticAnalyzer {
             i++;
           }
         }
+      } else if (explainOptions == HiveParser.KW_AST){
+        config.setAst(true);
       } else {
         // UNDONE: UNKNOWN OPTION?
       }
@@ -194,6 +196,7 @@ public class ExplainSemanticAnalyzer extends BaseSemanticAnalyzer {
         pCtx,
         tasks,
         fetchTask,
+        input,
         sem,
         config,
         ctx.getCboInfo());

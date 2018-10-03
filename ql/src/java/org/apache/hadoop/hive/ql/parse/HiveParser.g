@@ -563,6 +563,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
     xlateMap.put("KW_COMPACTIONS", "COMPACTIONS");
     xlateMap.put("KW_COMPACT", "COMPACT");
     xlateMap.put("KW_WAIT", "WAIT");
+    xlateMap.put("KW_AST", "AST");
 
     // Operators
     xlateMap.put("DOT", ".");
@@ -739,7 +740,7 @@ explainStatement
 explainOption
 @init { msgs.push("explain option"); }
 @after { msgs.pop(); }
-    : KW_EXTENDED|KW_FORMATTED|KW_DEPENDENCY|KW_LOGICAL|KW_AUTHORIZATION|KW_ANALYZE|
+    : KW_EXTENDED|KW_FORMATTED|KW_DEPENDENCY|KW_LOGICAL|KW_AUTHORIZATION|KW_ANALYZE|KW_AST|
       (KW_VECTORIZATION vectorizationOnly? vectorizatonDetail?)
     ;
 

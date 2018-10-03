@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.ExplainConfiguration;
 import org.apache.hadoop.hive.ql.parse.ExplainConfiguration.VectorizationDetailLevel;
@@ -41,6 +42,8 @@ public class ExplainWork implements Serializable {
   private Path resFile;
   private ArrayList<Task<? extends Serializable>> rootTasks;
   private Task<? extends Serializable> fetchTask;
+  private ASTNode astTree;
+  private String astStringTree;
   private HashSet<ReadEntity> inputs;
   private ParseContext pCtx;
 
@@ -59,12 +62,16 @@ public class ExplainWork implements Serializable {
       ParseContext pCtx,
       List<Task<? extends Serializable>> rootTasks,
       Task<? extends Serializable> fetchTask,
+      ASTNode astTree,
       BaseSemanticAnalyzer analyzer,
       ExplainConfiguration config,
       String cboInfo) {
     this.resFile = resFile;
     this.rootTasks = new ArrayList<Task<? extends Serializable>>(rootTasks);
     this.fetchTask = fetchTask;
+    if(astTree != null) {
+      this.astTree = astTree;
+    }
     this.analyzer = analyzer;
     if (analyzer != null) {
       this.inputs = analyzer.getInputs();
@@ -104,6 +111,17 @@ public class ExplainWork implements Serializable {
 
   public void setInputs(HashSet<ReadEntity> inputs) {
     this.inputs = inputs;
+  }
+
+  public ASTNode getAstTree() {
+    return astTree;
+  }
+
+  public String getAstStringTree() {
+    if (astStringTree == null) {
+      astStringTree = astTree.dump();
+    }
+    return astStringTree;
   }
 
   public boolean getExtended() {
@@ -176,6 +194,10 @@ public class ExplainWork implements Serializable {
 
   public void setConfig(ExplainConfiguration config) {
     this.config = config;
+  }
+
+  public boolean isAst() {
+    return config.isAst();
   }
 
 }
