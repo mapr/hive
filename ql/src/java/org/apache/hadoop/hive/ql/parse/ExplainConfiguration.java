@@ -46,6 +46,7 @@ public class ExplainConfiguration {
   private boolean userLevelExplain = false;
   private boolean vectorization = false;
   private boolean vectorizationOnly = false;
+  private boolean ast = false;
   private VectorizationDetailLevel vectorizationDetailLevel = VectorizationDetailLevel.SUMMARY;
 
   private Path explainRootPath;
@@ -127,6 +128,14 @@ public class ExplainConfiguration {
 
   public void setVectorizationOnly(boolean vectorizationOnly) {
     this.vectorizationOnly = vectorizationOnly;
+  }
+
+  public boolean isAst() {
+    return ast;
+  }
+
+  public void setAst(boolean ast) {
+    this.ast = ast;
   }
 
   public VectorizationDetailLevel getVectorizationDetailLevel() {

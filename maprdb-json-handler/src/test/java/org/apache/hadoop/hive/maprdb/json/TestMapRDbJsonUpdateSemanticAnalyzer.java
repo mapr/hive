@@ -175,7 +175,7 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
     ExplainConfiguration config = new ExplainConfiguration();
     config.setExtended(true);
     ExplainWork work =
-        new ExplainWork(tmp, sem.getParseContext(), sem.getRootTasks(), sem.getFetchTask(), sem, config, null);
+        new ExplainWork(tmp, sem.getParseContext(), sem.getRootTasks(), sem.getFetchTask(), null, sem, config, null);
     ExplainTask task = new ExplainTask();
     task.setWork(work);
     task.initialize(queryState, plan, null, null);

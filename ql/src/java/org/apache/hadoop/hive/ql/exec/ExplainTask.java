@@ -344,6 +344,11 @@ public class ExplainTask extends Task<ExplainWork> implements Serializable {
       } else if (work.getDependency()) {
         JSONObject jsonDependencies = getJSONDependencies(work);
         out.print(jsonDependencies);
+      } else if (work.isAst()) {
+        // Print out the parse AST
+        if (work.getAstStringTree() != null) {
+          outputAST(work.getAstStringTree(), out, work.isFormatted(), 0);
+        }
       } else {
         if (work.isUserLevelExplain()) {
           // Because of the implementation of the JsonParserFactory, we are sure

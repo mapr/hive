@@ -299,7 +299,7 @@ public class TestUpdateDeleteSemanticAnalyzer {
     ExplainConfiguration config = new ExplainConfiguration();
     config.setExtended(true);
     ExplainWork work = new ExplainWork(tmp, sem.getParseContext(), sem.getRootTasks(),
-        sem.getFetchTask(), sem, config, null);
+        sem.getFetchTask(), null, sem, config, null);
     ExplainTask task = new ExplainTask();
     task.setWork(work);
     task.initialize(queryState, plan, null, null);

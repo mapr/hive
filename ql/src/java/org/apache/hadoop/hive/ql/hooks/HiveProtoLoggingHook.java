@@ -458,6 +458,7 @@ public class HiveProtoLoggingHook implements ExecuteWithHookContext {
           null, // pCtx
           plan.getRootTasks(), // RootTasks
           plan.getFetchTask(), // FetchTask
+          null, // ast tree
           null, // analyzer
           config, // explainConfig
           null // cboInfo
