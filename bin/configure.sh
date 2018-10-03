@@ -178,20 +178,11 @@ fi
 # Returns boolean 'true' if security is custom.
 #
 is_custom_security(){
-# isSecure is set in server/configure.sh
-if [ -n "$isSecure" ]; then
-  if [ "$isSecure" = "custom" ]; then
-    return 0; # 0 = true
-  else
-    return 1; # 1 = false
-  fi
+# Let's get custom security from MapR build-in function
+if isCustomSecurityEnabled 2>/dev/null; then
+  return 0; # 0 = true
 else
-# if there is no value in $isSecure, then let's get it from MapR build-in function
-  if isCustomSecurityEnabled 2>/dev/null; then
-    return 0; # 0 = true
-  else
-    return 1; # 1 = false
-  fi
+  return 1; # 1 = false
 fi
 }
 
@@ -200,7 +191,7 @@ fi
 # We have to configure security if security type was changed and it is not in custom format
 # or if hive was not configured yet.
 #
-is_security_have_to_be_configured(){
+security_has_to_be_configured(){
 if ( is_security_changed || is_hive_not_configured_yet ) && ! is_custom_security ; then
   return 0; # 0 = true
 else
@@ -212,7 +203,7 @@ configure_security(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if is_security_have_to_be_configured ; then
+if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
 fi
 }
@@ -224,7 +215,7 @@ configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
 
-if is_security_have_to_be_configured ; then
+if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
 fi
 }
@@ -235,7 +226,7 @@ fi
 configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
 isSecure="$2"
-if is_security_have_to_be_configured ;  then
+if security_has_to_be_configured ;  then
   . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
 fi
 }
@@ -246,7 +237,7 @@ fi
 configure_hs2_ssl(){
 HIVE_SITE="$1"
 isSecure="$2"
-if is_security_have_to_be_configured ; then
+if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
 fi
 }
@@ -623,7 +614,7 @@ configure_users_in_admin_role(){
   HIVE_SITE="$1"
   ADMIN_USER="$2"
   isSecure="$3"
-  if is_security_have_to_be_configured ; then
+  if security_has_to_be_configured ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -adminUser "$ADMIN_USER" -security "$isSecure"
   fi
 }
