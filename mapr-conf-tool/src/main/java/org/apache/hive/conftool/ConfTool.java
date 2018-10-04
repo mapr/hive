@@ -21,6 +21,7 @@ package org.apache.hive.conftool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.hcatalog.templeton.AppConfig;
 import org.slf4j.Logger;
@@ -58,6 +59,11 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_CONF_RESTRICTED_LIST;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.PREEXECHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.POSTEXECHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.ONFAILUREHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.QUERYREDACTORHOOKS;
 
 /**
  *  Helper for configuring Hive
@@ -66,7 +72,6 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
 class ConfTool {
   private ConfTool() {
   }
-
 
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
   private static final String NAME = "name";
@@ -78,16 +83,19 @@ class ConfTool {
   private static final String AUTH_CONF = "auth-conf";
   private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String MAPR_DEFAULT_SSL_KEYSTORE_PATH = "/opt/mapr/conf/ssl_keystore";
+  private static final HiveConf.ConfVars[] IMMUTABLE_OPTIONS =
+      { PREEXECHOOKS, POSTEXECHOOKS, ONFAILUREHOOKS, QUERYREDACTORHOOKS };
+  private static final String OPTIONS_AS_LIST = getDefaultList() + "," + buildMapRList(IMMUTABLE_OPTIONS);
   private static final String EMPTY = "";
 
   /**
    * Converts xml doc to String
    *
-    * @param doc Document to print
+   * @param doc Document to print
    * @return xml document as String
    */
 
-  static String toString(Document doc){
+  static String toString(Document doc) {
 
     Node configuration = doc.getFirstChild();
     NodeList properties = configuration.getChildNodes();
@@ -118,7 +126,8 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static void setMaprSasl(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
+  static void setMaprSasl(String pathToHiveSite, boolean secure)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (secure) {
@@ -143,8 +152,8 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static void setMetaStoreUgi(String pathToHiveSite, boolean security) throws TransformerException,
-      IOException, SAXException, ParserConfigurationException {
+  static void setMetaStoreUgi(String pathToHiveSite, boolean security)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (security) {
@@ -169,18 +178,16 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static void setHs2WebUiPamSsl(String pathToHiveSite, boolean security) throws
-      TransformerException, IOException,
-      SAXException, ParserConfigurationException {
+  static void setHs2WebUiPamSsl(String pathToHiveSite, boolean security)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    if(security) {
+    if (security) {
       LOG.info("Configuring Hive for HiveServer2 web UI PAM authentication and SSL encryption");
       set(doc, HIVE_SERVER2_WEBUI_USE_PAM, TRUE);
       set(doc, HIVE_SERVER2_WEBUI_USE_SSL, TRUE);
       set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-      set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, new String
-          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+      set(doc, HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, new String(new char[] { 'm', 'a', 'p', 'r', '1', '2', '3' }));
     } else {
       LOG.info("Disabling PAM authentication and SSL encryption for HiveServer2 web UI");
       remove(doc, HIVE_SERVER2_WEBUI_USE_PAM);
@@ -202,17 +209,15 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static void setWebHCatSsl(String pathToWebHCatSite, boolean security) throws
-      TransformerException, IOException,
-      SAXException, ParserConfigurationException {
+  static void setWebHCatSsl(String pathToWebHCatSite, boolean security)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToWebHCatSite);
     LOG.info("Reading webhcat-site.xml from path : {}", pathToWebHCatSite);
-    if(security) {
+    if (security) {
       LOG.info("Configuring webHCat for  SSL encryption");
       set(doc, AppConfig.USE_SSL, TRUE);
       set(doc, AppConfig.KEY_STORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-      set(doc, AppConfig.KEY_STORE_PASSWORD, new String
-          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+      set(doc, AppConfig.KEY_STORE_PASSWORD, new String(new char[] { 'm', 'a', 'p', 'r', '1', '2', '3' }));
     } else {
       remove(doc, AppConfig.USE_SSL);
       remove(doc, AppConfig.KEY_STORE_PATH);
@@ -231,17 +236,16 @@ class ConfTool {
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setHs2Ssl(String pathToHiveSite, boolean security) throws
-      TransformerException, IOException,
-      SAXException, ParserConfigurationException {
+  static void setHs2Ssl(String pathToHiveSite, boolean security)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    if(security) {
+    if (security) {
       LOG.info("Configuring HS2 for  SSL encryption");
       set(doc, ConfVars.HIVE_SERVER2_USE_SSL, TRUE);
       set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, MAPR_DEFAULT_SSL_KEYSTORE_PATH);
-      set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, new String
-          (new char[]{'m', 'a', 'p', 'r', '1', '2', '3'}));
+      set(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD,
+          new String(new char[] { 'm', 'a', 'p', 'r', '1', '2', '3' }));
     } else {
       remove(doc, ConfVars.HIVE_SERVER2_USE_SSL);
       remove(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
@@ -280,7 +284,8 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static void setEncryption(String pathToHiveSite, boolean secure) throws TransformerException, IOException, SAXException, ParserConfigurationException {
+  static void setEncryption(String pathToHiveSite, boolean secure)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     if (secure) {
@@ -302,8 +307,8 @@ class ConfTool {
    * @throws TransformerException
    */
 
-
-  static void enableHs2Ha(String pathToHiveSite, String zookeeperQuorum) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+  static void enableHs2Ha(String pathToHiveSite, String zookeeperQuorum)
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     set(doc, HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY, TRUE);
@@ -322,7 +327,8 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static boolean exists(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
+  static boolean exists(String pathToHiveSite, String property)
+      throws IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     return propertyExists(doc, property);
   }
@@ -335,12 +341,44 @@ class ConfTool {
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void delProperty(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException, TransformerException {
+  static void delProperty(String pathToHiveSite, String property)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading xml from path : {}", pathToHiveSite);
     LOG.info("Removing {} property from {}", property, pathToHiveSite);
     remove(doc, property);
     saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures restricted list of options that are immutable at runtime.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param secure true if MapR Sasl security is enabled on the cluster
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setRestrictedList(String pathToHiveSite, boolean secure)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    setRestrictedList(doc, secure);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures restricted list of options that are immutable at runtime.
+   * @param doc xml document
+   * @param secure true if MapR Sasl security is enabled on the cluster
+   */
+
+  static void setRestrictedList(Document doc, boolean secure) {
+    if (secure) {
+      set(doc, HIVE_CONF_RESTRICTED_LIST, OPTIONS_AS_LIST);
+    } else {
+      remove(doc, HIVE_CONF_RESTRICTED_LIST);
+    }
   }
 
   /**
@@ -399,11 +437,11 @@ class ConfTool {
    * @throws ParserConfigurationException
    */
 
-  static String getProperty(String pathToHiveSite, String property) throws IOException, SAXException, ParserConfigurationException {
+  static String getProperty(String pathToHiveSite, String property)
+      throws IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     return getProperty(doc, property);
   }
-
 
   /**
    * Adds hive.metastore.uris=localhost in hive-site.xml
@@ -415,7 +453,8 @@ class ConfTool {
    * @throws TransformerException
    */
 
-  static void initMetaStoreUri(String pathToHiveSite) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+  static void initMetaStoreUri(String pathToHiveSite)
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     set(doc, METASTOREURIS, THRIFT_LOCAL_HOST);
@@ -433,15 +472,16 @@ class ConfTool {
    * @throws TransformerException
    */
 
-  static void setConnectionUrl(String pathToHiveSite, String connectionUrl) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+  static void setConnectionUrl(String pathToHiveSite, String connectionUrl)
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     set(doc, METASTORECONNECTURLKEY, connectionUrl);
     saveToFile(doc, pathToHiveSite);
   }
 
-
-  private static Document readDocument(String pathToHiveSite) throws ParserConfigurationException, IOException, SAXException {
+  private static Document readDocument(String pathToHiveSite)
+      throws ParserConfigurationException, IOException, SAXException {
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     return docBuilder.parse(pathToHiveSite);
@@ -454,8 +494,7 @@ class ConfTool {
    * @param property property name
    * @param value value to append
    */
-  @VisibleForTesting
-  static void appendPropertyValue(Document doc, String property, String value){
+  @VisibleForTesting static void appendPropertyValue(Document doc, String property, String value) {
     if (propertyExists(doc, property)) {
       LOG.info("Property {} exists in xml file. Append value: {}", property, value);
       String oldPropertyValue = getProperty(doc, property);
@@ -471,7 +510,7 @@ class ConfTool {
     }
   }
 
-  private static void set(Document doc, String property, String value){
+  private static void set(Document doc, String property, String value) {
     if (propertyExists(doc, property)) {
       LOG.info("Property {} exists in xml file", property);
       setProperty(doc, property, value);
@@ -481,16 +520,15 @@ class ConfTool {
     }
   }
 
-
-  private static void set(Document doc, ConfVars confVars, String value){
+  private static void set(Document doc, ConfVars confVars, String value) {
     set(doc, confVars.varname, value);
   }
 
-  private static void remove(Document doc, ConfVars confVars){
+  private static void remove(Document doc, ConfVars confVars) {
     remove(doc, confVars.varname);
   }
 
-  private static void remove(Document doc, String property){
+  private static void remove(Document doc, String property) {
     if (propertyExists(doc, property)) {
       LOG.info("Property {} exists in hive-site.xml", property);
       removeProperty(doc, property);
@@ -507,26 +545,23 @@ class ConfTool {
     transformer.transform(source, result);
   }
 
-  @VisibleForTesting
-  static void addProperty(Document doc, ConfVars confVars, String value) {
+  @VisibleForTesting static void addProperty(Document doc, ConfVars confVars, String value) {
     addProperty(doc, confVars.varname, value);
   }
 
   private static void addProperty(Document doc, String property, String value) {
-    LOG.info("Adding property to hive-site.xml: {} = {}", property, isPassword(property) ?
-        hidePassword(value) : value);
+    LOG.info("Adding property to hive-site.xml: {} = {}", property, isPassword(property) ? hidePassword(value) : value);
     Element element = doc.createElement(PROPERTY);
     addName(doc, element, property);
     addValue(doc, element, value);
     getConfigurationNode(doc).appendChild(element);
   }
 
-  @VisibleForTesting
-  static void removeProperty(Document doc, ConfVars confVars){
+  @VisibleForTesting static void removeProperty(Document doc, ConfVars confVars) {
     removeProperty(doc, confVars.varname);
   }
 
-  private static void removeProperty(Document doc, String property){
+  private static void removeProperty(Document doc, String property) {
     LOG.info("Removing property from hive-site.xml: {} = {}", property);
     Node configuration = getConfigurationNode(doc);
     NodeList childNodes = configuration.getChildNodes();
@@ -540,8 +575,8 @@ class ConfTool {
         if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
           //Remove the new line text node that stands after node we need to remove.
           //Without this step removing will produce empty line.
-          if (node.getNextSibling() != null && node.getNextSibling().getNodeType() == Node.TEXT_NODE &&
-              node.getNextSibling().getNodeValue().trim().isEmpty()) {
+          if (node.getNextSibling() != null && node.getNextSibling().getNodeType() == Node.TEXT_NODE && node
+              .getNextSibling().getNodeValue().trim().isEmpty()) {
             configuration.removeChild(node.getNextSibling());
           }
           configuration.removeChild(node);
@@ -551,19 +586,17 @@ class ConfTool {
     }
   }
 
-  @VisibleForTesting
-  static Node getConfigurationNode(Document doc){
+  @VisibleForTesting static Node getConfigurationNode(Document doc) {
     NodeList nodes = doc.getChildNodes();
     int length = nodes.getLength();
-    for(int i = 0; i <= length - 1; i++){
+    for (int i = 0; i <= length - 1; i++) {
       Node node = nodes.item(i);
-      if(CONFIGURATION.equals(node.getNodeName())){
+      if (CONFIGURATION.equals(node.getNodeName())) {
         return node;
       }
     }
     throw new IllegalArgumentException("No <configuration> tag");
   }
-
 
   private static void addName(Document doc, Node node, String property) {
     Element element = doc.createElement(NAME);
@@ -577,14 +610,11 @@ class ConfTool {
     property.appendChild(name);
   }
 
-  @VisibleForTesting
-  static boolean propertyExists(Document doc, ConfVars confVars) {
+  @VisibleForTesting static boolean propertyExists(Document doc, ConfVars confVars) {
     return propertyExists(doc, confVars.varname);
   }
 
-
-  @VisibleForTesting
-  static boolean propertyExists(Document doc, String property) {
+  @VisibleForTesting static boolean propertyExists(Document doc, String property) {
     LOG.info("Checking that property exists in hive-site.xml : {}", property);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
@@ -603,23 +633,22 @@ class ConfTool {
     return false;
   }
 
-  private static boolean isPassword(String property){
+  private static boolean isPassword(String property) {
     String propertyLowCase = property.toLowerCase();
     return propertyLowCase.contains("password") || propertyLowCase.contains("passwd");
   }
 
-  private static String hidePassword(String password){
+  private static String hidePassword(String password) {
     return StringUtils.repeat("*", password.length());
   }
 
-  @VisibleForTesting
-  static void setProperty(Document doc, ConfVars confVars, String value) {
+  @VisibleForTesting static void setProperty(Document doc, ConfVars confVars, String value) {
     set(doc, confVars.varname, value);
   }
 
   private static void setProperty(Document doc, String property, String value) {
-    LOG.info("Setting value to existing property in xml file: {} = {}", property, isPassword(property) ?
-        hidePassword(value) : value);
+    LOG.info("Setting value to existing property in xml file: {} = {}", property,
+        isPassword(property) ? hidePassword(value) : value);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();
@@ -636,13 +665,11 @@ class ConfTool {
     }
   }
 
-  @VisibleForTesting
-  static String getProperty(Document doc, ConfVars confVars) {
+  @VisibleForTesting static String getProperty(Document doc, ConfVars confVars) {
     return getProperty(doc, confVars.varname);
   }
 
-  @VisibleForTesting
-  static String getProperty(Document doc, String property) {
+  @VisibleForTesting static String getProperty(Document doc, String property) {
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();
@@ -679,5 +706,24 @@ class ConfTool {
       }
     }
     return EMPTY;
+  }
+
+  private static String buildMapRList(HiveConf.ConfVars[] options) {
+    StringBuilder sb = new StringBuilder();
+    boolean first = true;
+    for (HiveConf.ConfVars option : options) {
+      if (first) {
+        sb.append(option.varname);
+        first = false;
+      } else {
+        sb.append(",");
+        sb.append(option.varname);
+      }
+    }
+    return sb.toString();
+  }
+
+  private static String getDefaultList() {
+    return ConfVars.HIVE_CONF_RESTRICTED_LIST.getDefaultValue();
   }
 }

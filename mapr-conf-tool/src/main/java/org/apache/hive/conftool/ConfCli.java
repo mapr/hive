@@ -1,19 +1,19 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one or more
-* contributor license agreements.  See the NOTICE file distributed with
-* this work for additional information regarding copyright ownership.
-* The ASF licenses this file to you under the Apache License, Version 2.0
-* (the "License"); you may not use this file except in compliance with
-* the License.  You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hive.conftool;
 
 import org.apache.commons.cli.CommandLine;
@@ -35,8 +35,8 @@ import java.io.IOException;
  CLI manager to configure Hive components
  */
 public class ConfCli {
-  private ConfCli(){}
-
+  private ConfCli() {
+  }
 
   private static final Logger LOG = LoggerFactory.getLogger(ConfCli.class.getName());
   private static final Options CMD_LINE_OPTIONS = new Options();
@@ -56,6 +56,8 @@ public class ConfCli {
   private static final String HS2_SSL = "hs2ssl";
   private static final String ADMIN_USER = "adminUser";
   private static final String ADD_PROPERTY = "addProperty";
+  private static final String APPEND_PROPERTY = "appendProperty";
+  private static final String RESTRICTED_LIST = "restrictedList";
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
   private static final String TRUE = "true";
@@ -77,8 +79,7 @@ public class ConfCli {
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("path to xml file");
-    OptionBuilder.withDescription("Path to xml file to configure (hive-site.xml, webhcat-site"
-        + ".xml etc).");
+    OptionBuilder.withDescription("Path to xml file to configure (hive-site.xml, webhcat-site" + ".xml etc).");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(PATH));
 
     OptionBuilder.hasArg(false);
@@ -99,9 +100,9 @@ public class ConfCli {
     OptionBuilder.withDescription("Metastore DB connection URL");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(CONNECTION_URL));
 
-
     OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
+    OptionBuilder
+        .withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEB_UI_PAM_SSL));
 
     OptionBuilder.hasArg(false);
@@ -128,12 +129,21 @@ public class ConfCli {
     OptionBuilder.hasArgs(2);
     OptionBuilder.withArgName("property=value");
     OptionBuilder.withDescription("Key, value of property that should be written to xml file. In "
-        + "case it already exists, it is replaced with new value. Property is added like: \n"
-        + "<property>\n"
-        + "  <name>property-name<\\name>\n"
-        + "  <value>property-value<\\value>\n"
-        + "<\\property>");
+        + "case it already exists, it is replaced with new value. Property is added like: \n" + "<property>\n"
+        + "  <name>property-name<\\name>\n" + "  <value>property-value<\\value>\n" + "<\\property>");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ADD_PROPERTY));
+
+    OptionBuilder.withValueSeparator();
+    OptionBuilder.hasArgs(2);
+    OptionBuilder.withArgName("property=appendedValue");
+    OptionBuilder.withDescription("Value will be appended to existing property using coma separator. In "
+        + "case it does not exist, it will be added as a new value.");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(APPEND_PROPERTY));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withArgName("property to check");
+    OptionBuilder.withDescription("Configures restricted list of options that " + "are immutable at runtime");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(RESTRICTED_LIST));
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("property-name");
@@ -146,29 +156,29 @@ public class ConfCli {
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_PROPERTY));
   }
 
-  public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  public static void main(String[] args)
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     CommandLineParser cmdParser = new GnuParser();
     CommandLine line = null;
     try {
       line = cmdParser.parse(CMD_LINE_OPTIONS, args);
     } catch (ParseException e) {
       printHelp();
-      throw new IllegalArgumentException(TOOL_NAME + ": Parsing failed.  Reason: " + e
-          .getLocalizedMessage());
+      throw new IllegalArgumentException(TOOL_NAME + ": Parsing failed.  Reason: " + e.getLocalizedMessage());
     }
-    if(line == null){
+    if (line == null) {
       throw new IllegalArgumentException(TOOL_NAME + ": parsing failed.  Reason: unknown");
     }
     if (line.hasOption(HELP)) {
       printHelp();
-    } else if(line.hasOption(PATH)){
+    } else if (line.hasOption(PATH)) {
       String pathToXmlFile = line.getOptionValue(PATH);
       if (isSecurityConfig(line)) {
         configureSecurity(pathToXmlFile, getSecurity(line));
       }
 
-      if(isHs2HaConfig(line)){
-        if(hasValidHs2HaOptions(line)){
+      if (isHs2HaConfig(line)) {
+        if (hasValidHs2HaOptions(line)) {
           String zookeeperQuorum = line.getOptionValue(ZK_QUORUM);
           ConfTool.enableHs2Ha(pathToXmlFile, zookeeperQuorum);
         } else {
@@ -177,11 +187,11 @@ public class ConfCli {
         }
       }
 
-      if(isMetaStoreUriConfig(line)){
+      if (isMetaStoreUriConfig(line)) {
         ConfTool.initMetaStoreUri(pathToXmlFile);
       }
 
-      if(isExistVerification(line)){
+      if (isExistVerification(line)) {
         if (hasValidExistPropertyOptions(line)) {
           String property = line.getOptionValue(EXIST_PROPERTY);
           printBool(ConfTool.exists(pathToXmlFile, property));
@@ -191,8 +201,8 @@ public class ConfCli {
         }
       }
 
-      if(isConnectionUrlConfig(line)){
-        if(hasValidConnectionUrlOptions(line)){
+      if (isConnectionUrlConfig(line)) {
+        if (hasValidConnectionUrlOptions(line)) {
           String connectionUrl = line.getOptionValue(CONNECTION_URL);
           ConfTool.setConnectionUrl(pathToXmlFile, connectionUrl);
         } else {
@@ -208,11 +218,24 @@ public class ConfCli {
 
       if (isAddProperty(line)) {
         String[] optionValues = line.getOptionValues(ADD_PROPERTY);
-        if (optionValues.length == 2){
+        if (optionValues.length == 2) {
           String property = optionValues[0];
           String value = optionValues[1];
           ConfTool.addProperty(pathToXmlFile, property, value);
         }
+      }
+
+      if (isAppendProperty(line)) {
+        String[] optionValues = line.getOptionValues(APPEND_PROPERTY);
+        if (optionValues.length == 2) {
+          String property = optionValues[0];
+          String value = optionValues[1];
+          ConfTool.appendProperty(pathToXmlFile, property, value);
+        }
+      }
+
+      if (isRestrictedList(line)) {
+        ConfTool.setRestrictedList(pathToXmlFile, getSecurity(line));
       }
 
       if (isGetProperty(line)) {
@@ -225,15 +248,15 @@ public class ConfCli {
         }
       }
 
-      if(isWebUiHs2PamSslConfig(line)){
+      if (isWebUiHs2PamSslConfig(line)) {
         ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getSecurity(line));
       }
 
-      if(isWeHCatSslConfig(line)){
+      if (isWeHCatSslConfig(line)) {
         ConfTool.setWebHCatSsl(pathToXmlFile, getSecurity(line));
       }
 
-      if(isHs2SslConfig(line)){
+      if (isHs2SslConfig(line)) {
         ConfTool.setHs2Ssl(pathToXmlFile, getSecurity(line));
       }
 
@@ -247,28 +270,28 @@ public class ConfCli {
     }
   }
 
-  private static boolean isConnectionUrlConfig(CommandLine line){
+  private static boolean isConnectionUrlConfig(CommandLine line) {
     return line.hasOption(CONNECTION_URL);
   }
 
-  private static boolean hasValidConnectionUrlOptions(CommandLine line){
+  private static boolean hasValidConnectionUrlOptions(CommandLine line) {
     return line.getOptionValue(CONNECTION_URL) != null && !line.getOptionValue(CONNECTION_URL).isEmpty();
   }
 
-
-  private static boolean isSecurityConfig(CommandLine line){
+  private static boolean isSecurityConfig(CommandLine line) {
     return line.hasOption(MAPR_SASL);
   }
 
-  private static boolean hasValidSecurityOptions(CommandLine line){
+  private static boolean hasValidSecurityOptions(CommandLine line) {
     return line.hasOption(SECURITY) && isTrueOrFalse(line.getOptionValue(SECURITY));
   }
 
-  private static boolean isTrueOrFalse(String value){
+  private static boolean isTrueOrFalse(String value) {
     return TRUE.equalsIgnoreCase(value.trim()) || FALSE.equalsIgnoreCase(value.trim());
   }
 
-  private static void configureSecurity(String pathToHiveSite, boolean security) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  private static void configureSecurity(String pathToHiveSite, boolean security)
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     ConfTool.setMaprSasl(pathToHiveSite, security);
     ConfTool.setEncryption(pathToHiveSite, security);
     ConfTool.setMetaStoreUgi(pathToHiveSite, security);
@@ -284,20 +307,21 @@ public class ConfCli {
     }
   }
 
-  private static void printHelp(){
+  private static void printHelp() {
     HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
   }
 
-  private static boolean isHs2HaConfig(CommandLine line){
+  private static boolean isHs2HaConfig(CommandLine line) {
     return line.hasOption(HS2_HA);
   }
 
-  private static boolean isMetaStoreUriConfig(CommandLine line){
+  private static boolean isMetaStoreUriConfig(CommandLine line) {
     return line.hasOption(INIT_META_STORE_URI);
   }
 
-  private static boolean hasValidHs2HaOptions(CommandLine line){
-    return line.hasOption(HS2_HA) && line.getOptionValue(ZK_QUORUM) != null && !line.getOptionValue(ZK_QUORUM).isEmpty();
+  private static boolean hasValidHs2HaOptions(CommandLine line) {
+    return line.hasOption(HS2_HA) && line.getOptionValue(ZK_QUORUM) != null && !line.getOptionValue(ZK_QUORUM)
+        .isEmpty();
   }
 
   private static boolean isDelProperty(CommandLine line) {
@@ -306,6 +330,14 @@ public class ConfCli {
 
   private static boolean isAddProperty(CommandLine line) {
     return line.hasOption(ADD_PROPERTY);
+  }
+
+  private static boolean isAppendProperty(CommandLine line) {
+    return line.hasOption(APPEND_PROPERTY);
+  }
+
+  private static boolean isRestrictedList(CommandLine line) {
+    return line.hasOption(RESTRICTED_LIST);
   }
 
   private static boolean isGetProperty(CommandLine line) {
@@ -321,7 +353,8 @@ public class ConfCli {
   }
 
   private static boolean hasValidExistPropertyOptions(CommandLine line) {
-    return line.hasOption(EXIST_PROPERTY) && line.getOptionValue(EXIST_PROPERTY) != null && !line.getOptionValue(EXIST_PROPERTY).isEmpty();
+    return line.hasOption(EXIST_PROPERTY) && line.getOptionValue(EXIST_PROPERTY) != null && !line
+        .getOptionValue(EXIST_PROPERTY).isEmpty();
   }
 
   private static boolean isWeHCatSslConfig(CommandLine line) {
@@ -336,7 +369,7 @@ public class ConfCli {
     return line.hasOption(ADMIN_USER);
   }
 
-  private static void printBool(boolean value){
+  private static void printBool(boolean value) {
     System.out.print(Boolean.toString(value));
   }
 }
