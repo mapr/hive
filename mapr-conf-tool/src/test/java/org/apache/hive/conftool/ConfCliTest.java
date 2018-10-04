@@ -128,6 +128,66 @@ public class ConfCliTest {
   }
 
   @Test
+  public void appendPropertyTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-028.xml");
+    String pathToHiveSite = url.getPath();
+    String property = "cli.test";
+    String value = "mapr";
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    ConfCli.main(new String[]{"--appendProperty", property + "=" + value, "--path", pathToHiveSite});
+    String output = baos.toString();
+    Assert.assertEquals("mapruser,mapr", ConfTool.getProperty(pathToHiveSite, property));
+    Assert.assertFalse(output.contains("Print help information"));
+  }
+
+  @Test
+  public void restrictedListSecurityOnTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-026.xml");
+    String pathToHiveSite = url.getPath();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    ConfCli.main(new String[] { "--restrictedList", "--security", "true", "--path", pathToHiveSite });
+    String output = baos.toString();
+    Assert.assertEquals("hive.security.authenticator.manager,hive.security.authorization.manager," +
+            "hive.security.metastore.authorization.manager,hive.security.metastore.authenticator.manager," +
+            "hive.users.in.admin.role,hive.server2.xsrf.filter.enabled,hive.security.authorization.enabled," +
+            "hive.server2.authentication.ldap.baseDN," +
+            "hive.server2.authentication.ldap.url," +
+            "hive.server2.authentication.ldap.Domain," +
+            "hive.server2.authentication.ldap.groupDNPattern," +
+            "hive.server2.authentication.ldap.groupFilter," +
+            "hive.server2.authentication.ldap.userDNPattern," +
+            "hive.server2.authentication.ldap.userFilter," +
+            "hive.server2.authentication.ldap.groupMembershipKey," +
+            "hive.server2.authentication.ldap.userMembershipKey," +
+            "hive.server2.authentication.ldap.groupClassKey," +
+            "hive.server2.authentication.ldap.customLDAPQuery," +
+            "hive.metastore.use.case.sensitive.column.names," +
+            "hive.exec.pre.hooks,hive.exec.post.hooks," +
+            "hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+        ConfTool.getProperty(pathToHiveSite, "hive.conf.restricted.list"));
+    Assert.assertFalse(output.contains("Print help information"));
+  }
+
+
+  @Test
+  public void restrictedListSecurityOffTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-027.xml");
+    String pathToHiveSite = url.getPath();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(baos));
+    ConfCli.main(new String[] { "--restrictedList", "--security", "false", "--path", pathToHiveSite });
+    String output = baos.toString();
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.conf.restricted.list"));
+    Assert.assertFalse(output.contains("Print help information"));
+  }
+
+
+  @Test
   public void delPropertyTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-019.xml");

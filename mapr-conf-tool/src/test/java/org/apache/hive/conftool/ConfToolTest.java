@@ -447,7 +447,7 @@ public class ConfToolTest {
   @Test
   public void adminUserSecurityOnTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
-    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-029.xml");
     String pathToHiveSite = url.getPath();
     String adminUser = "mapr";
 
@@ -459,12 +459,55 @@ public class ConfToolTest {
   @Test
   public void adminUserSecurityOffTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
-    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-025.xml");
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-030.xml");
     String pathToHiveSite = url.getPath();
     String adminUser = "mapr";
 
     Assert.assertEquals(adminUser, ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
     ConfTool.setAdminUser(pathToHiveSite, adminUser, false);
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
+  }
+
+  @Test
+  public void restrictedListSecurityOn() throws IOException, SAXException, ParserConfigurationException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-026.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.setRestrictedList(doc, true);
+    Assert.assertEquals("hive.security.authenticator.manager,hive.security.authorization.manager," +
+            "hive.security.metastore.authorization.manager,hive.security.metastore.authenticator.manager," +
+            "hive.users.in.admin.role,hive.server2.xsrf.filter.enabled,hive.security.authorization.enabled," +
+            "hive.server2.authentication.ldap.baseDN," +
+            "hive.server2.authentication.ldap.url," +
+            "hive.server2.authentication.ldap.Domain," +
+            "hive.server2.authentication.ldap.groupDNPattern," +
+            "hive.server2.authentication.ldap.groupFilter," +
+            "hive.server2.authentication.ldap.userDNPattern," +
+            "hive.server2.authentication.ldap.userFilter," +
+            "hive.server2.authentication.ldap.groupMembershipKey," +
+            "hive.server2.authentication.ldap.userMembershipKey," +
+            "hive.server2.authentication.ldap.groupClassKey," +
+            "hive.server2.authentication.ldap.customLDAPQuery," +
+            "hive.metastore.use.case.sensitive.column.names," +
+            "hive.exec.pre.hooks,hive.exec.post.hooks," +
+            "hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+        ConfTool.getProperty(doc, "hive.conf.restricted.list"));
+  }
+
+  @Test
+  public void restrictedListSecurityOff() throws IOException, SAXException, ParserConfigurationException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-027.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.setRestrictedList(doc, false);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.conf.restricted.list"));
   }
 }
