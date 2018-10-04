@@ -552,6 +552,19 @@ chmod 0644 "$HIVE_SITE"
 }
 
 #
+# Configures hive.conf.restricted.list which contains comma separated list of
+# configuration options which are immutable at runtime
+#
+
+configure_restricted_list(){
+HIVE_SITE="$1"
+isSecure="$2"
+if is_security_have_to_be_configured ; then
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -restrictedList -security "$isSecure"
+fi
+}
+
+#
 # Grant owners
 #
 set_admin_user_group_to(){
@@ -727,6 +740,8 @@ configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
 configure_hs2_ssl "$HIVE_SITE" "$isSecure"
 
 configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$isSecure"
+
+configure_restricted_list "$HIVE_SITE" "$isSecure"
 
 init_derby_schema
 
