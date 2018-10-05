@@ -43,6 +43,18 @@
     <name>hive.server2.thrift.sasl.qop</name>
     <value>test</value>
   </property>
+  <property>
+    <name>hive.metastore.execute.setugi</name>
+    <value>false</value>
+  </property>
+  <!--<property>-->
+    <!--<name>test.property.to.get</name>-->
+    <!--<value>test.value.error</value>-->
+  <!--</property>-->
+  <property>
+    <name>test.property.to.get</name>
+    <value>test.value</value>
+  </property>
 
   <property>
     <name>hive.server2.webui.use.pam</name>
@@ -51,6 +63,6 @@
 
   <property>
     <name>hive.server2.webui.use.ssl</name>
-    <value>true</value>
+    <value>false</value>
   </property>
 </configuration>

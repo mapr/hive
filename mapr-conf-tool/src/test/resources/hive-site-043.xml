@@ -43,14 +43,12 @@
     <name>hive.server2.thrift.sasl.qop</name>
     <value>test</value>
   </property>
-
   <property>
-    <name>hive.server2.webui.use.pam</name>
-    <value>true</value>
+    <name>hive.metastore.execute.setugi</name>
+    <value>false</value>
   </property>
-
   <property>
-    <name>hive.server2.webui.use.ssl</name>
-    <value>true</value>
+    <name>hive.security.metastore.authorization.manager</name>
+    <value>MyCustomValue</value>
   </property>
 </configuration>

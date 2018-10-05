@@ -1,12 +1,13 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,9 +33,9 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
 /**
- CLI manager to configure Hive components
+ CLI manager to configure Hive components.
  */
-public class ConfCli {
+public final class ConfCli {
   private ConfCli() {
   }
 
@@ -283,14 +284,19 @@ public class ConfCli {
   }
 
   private static boolean hasValidSecurityOptions(CommandLine line) {
-    return line.hasOption(SECURITY) && isTrueOrFalse(line.getOptionValue(SECURITY));
+    return line.hasOption(SECURITY) && isTrueOrFalseOrCustom(line.getOptionValue(SECURITY));
   }
 
-  private static boolean isTrueOrFalse(String value) {
-    return TRUE.equalsIgnoreCase(value.trim()) || FALSE.equalsIgnoreCase(value.trim());
+  private static boolean isTrueOrFalseOrCustom(String value) {
+    for (Security security : Security.values()) {
+      if (security.value().equalsIgnoreCase(value.trim())) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  private static void configureSecurity(String pathToHiveSite, boolean security)
+  private static void configureSecurity(String pathToHiveSite, Security security)
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
     ConfTool.setMaprSasl(pathToHiveSite, security);
     ConfTool.setEncryption(pathToHiveSite, security);
@@ -298,10 +304,9 @@ public class ConfCli {
     ConfTool.setMetaStoreAuthManager(pathToHiveSite, security);
   }
 
-  private static boolean getSecurity(CommandLine line) {
+  private static Security getSecurity(CommandLine line) {
     if (hasValidSecurityOptions(line)) {
-      String security = line.getOptionValue(SECURITY);
-      return TRUE.equalsIgnoreCase(security);
+      return Security.parse(line.getOptionValue(SECURITY));
     } else {
       printHelp();
       throw new IllegalArgumentException("Incorrect security configuration options");

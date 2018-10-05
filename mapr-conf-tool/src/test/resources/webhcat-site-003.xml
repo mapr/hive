@@ -64,5 +64,8 @@
         <value>maprfs:///user/mapr/webhcat/hadoop-0.20.2-dev-streaming.jar</value>
       </property>
     -->
-
+    <property>
+        <name>templeton.use.ssl</name>
+        <value>true</value>
+    </property>
 </configuration>

@@ -3,18 +3,18 @@
 
   <property>
     <name>hive.metastore.sasl.enabled</name>
-    <value>true</value>
+    <value>MyCustomValue</value>
     <description>Test desc</description>
   </property>
 
   <property>
     <name>hive.server2.authentication</name>
-    <value>MAPRSASL</value>
+    <value>test</value>
   </property>
 
   <property>
     <name>hive.server2.thrift.sasl.qop</name>
-    <value>auth</value>
+    <value>test</value>
   </property>
 
   <property>
