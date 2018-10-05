@@ -1,11 +1,6 @@
 <configuration>
   <!-- MaprSals -->
 
-  <property>
-    <name>hive.metastore.sasl.enabled</name>
-    <value>true</value>
-    <description>Test desc</description>
-  </property>
 
   <property>
     <name>hive.server2.authentication</name>
@@ -18,8 +13,8 @@
   </property>
 
   <property>
-    <name>hive.metastore.execute.setugi</name>
+    <name>hive.server2.use.SSL</name>
     <value>true</value>
-
   </property>
+
 </configuration>

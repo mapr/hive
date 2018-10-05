@@ -41,16 +41,7 @@
   </property>
   <property>
     <name>hive.server2.thrift.sasl.qop</name>
-    <value>test</value>
+    <value>MyCustomValue</value>
   </property>
 
-  <property>
-    <name>hive.server2.webui.use.pam</name>
-    <value>true</value>
-  </property>
-
-  <property>
-    <name>hive.server2.webui.use.ssl</name>
-    <value>true</value>
-  </property>
 </configuration>

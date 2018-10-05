@@ -16,6 +16,7 @@
     under the License.
 -->
 
+
 <!-- The default settings for Templeton. -->
 <!-- Edit templeton-site.xml to change settings for your local -->
 <!-- install. -->
@@ -64,5 +65,9 @@
         <value>maprfs:///user/mapr/webhcat/hadoop-0.20.2-dev-streaming.jar</value>
       </property>
     -->
+    <property>
+        <name>templeton.use.ssl</name>
+        <value>MyCustomValue</value>
+    </property>
 
 </configuration>

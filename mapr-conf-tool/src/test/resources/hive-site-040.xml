@@ -46,11 +46,12 @@
 
   <property>
     <name>hive.server2.webui.use.pam</name>
-    <value>true</value>
+    <value>MyCustomValue</value>
   </property>
 
   <property>
     <name>hive.server2.webui.use.ssl</name>
-    <value>true</value>
+    <value>MyCustomValue</value>
   </property>
+
 </configuration>

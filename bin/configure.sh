@@ -559,7 +559,7 @@ chmod 0644 "$HIVE_SITE"
 configure_restricted_list(){
 HIVE_SITE="$1"
 isSecure="$2"
-if is_security_have_to_be_configured ; then
+if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -restrictedList -security "$isSecure"
 fi
 }
@@ -599,12 +599,12 @@ fi
 set_all_dirs_owner_group(){
 # list of exception where not to change owner/group
 declare -A is_exception=(["$HIVE_LOGS"]=1 ["$HIVE_PIDS"]=1)
-for dir in $(ls "$HIVE_HOME") ; do
+for dir in "$HIVE_HOME"/* ; do
   # folder is not in exception list
-  if [ ! -n "${is_exception[$HIVE_HOME/$dir]}" ] ; then
-    set_admin_user_group_to "$HIVE_HOME/$dir" recursive
+  if [ ! -n "${is_exception[$dir]}" ] ; then
+    set_admin_user_group_to "$dir" recursive
   else
-    set_admin_user_group_to "$HIVE_HOME/$dir"
+    set_admin_user_group_to "$dir"
   fi
 done
 }
