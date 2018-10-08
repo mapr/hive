@@ -1,0 +1,25 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>hive.metastore.sasl.enabled</name>
+    <value>MyCustomValue</value>
+    <description>Test desc</description>
+  </property>
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>test</value>
+  </property>
+
+  <property>
+    <name>hive.server2.thrift.sasl.qop</name>
+    <value>test</value>
+  </property>
+
+  <property>
+    <name>hive.metastore.execute.setugi</name>
+    <value>true</value>
+
+  </property>
+</configuration>

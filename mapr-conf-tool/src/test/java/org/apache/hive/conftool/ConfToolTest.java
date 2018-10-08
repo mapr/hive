@@ -17,15 +17,18 @@ import java.io.IOException;
 import java.net.URL;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
+import static org.apache.hive.conftool.Security.NONE;
+import static org.apache.hive.conftool.Security.MAPRSASL;
+import static org.apache.hive.conftool.Security.CUSTOM;
 
 public class ConfToolTest {
   private static final Logger LOG = LoggerFactory.getLogger(ConfTool.class.getName());
 
-  @Test
-  public void setMaprSaslTrueTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void setMaprSaslTrueTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-003.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setMaprSasl(pathToHiveSite, true);
+    ConfTool.setMaprSasl(pathToHiveSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -33,8 +36,8 @@ public class ConfToolTest {
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-  @Test
-  public void enableHs2HaTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void enableHs2HaTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-010.xml");
     String pathToHiveSite = url.getPath();
     ConfTool.enableHs2Ha(pathToHiveSite, "node1,node2");
@@ -46,11 +49,11 @@ public class ConfToolTest {
     Assert.assertEquals("node1,node2", ConfTool.getProperty(doc, ConfVars.HIVE_ZOOKEEPER_QUORUM));
   }
 
-  @Test
-  public void setMaprSaslTrueTest2() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void setMaprSaslTrueTest2()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-005.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setMaprSasl(pathToHiveSite, true);
+    ConfTool.setMaprSasl(pathToHiveSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -58,11 +61,11 @@ public class ConfToolTest {
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-  @Test
-  public void setMaprSaslFalseTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void setMaprSaslFalseTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-004.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setMaprSasl(pathToHiveSite, false);
+    ConfTool.setMaprSasl(pathToHiveSite, NONE);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -70,12 +73,23 @@ public class ConfToolTest {
     Assert.assertEquals("false", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
+  @Test public void setMaprSaslCustomTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-038.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setMaprSasl(pathToHiveSite, CUSTOM);
 
-  @Test
-  public void enableEncryptionTrueTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
+  }
+
+  @Test public void enableEncryptionTrueTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-008.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setEncryption(pathToHiveSite, true);
+    ConfTool.setEncryption(pathToHiveSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -83,11 +97,11 @@ public class ConfToolTest {
     Assert.assertEquals("auth-conf", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
   }
 
-  @Test
-  public void enableEncryptionFalseTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void enableEncryptionFalseTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-008.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setEncryption(pathToHiveSite, false);
+    ConfTool.setEncryption(pathToHiveSite, NONE);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -95,9 +109,20 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
   }
 
+  @Test public void enableEncryptionCustomTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-039.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setEncryption(pathToHiveSite, CUSTOM);
 
-  @Test
-  public void hiveMetaStoreSaslEnabledExistsTestTrue() throws ParserConfigurationException, IOException, SAXException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
+  }
+
+  @Test public void hiveMetaStoreSaslEnabledExistsTestTrue()
+      throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-001.xml");
     String pathToHiveSite = url.getPath();
 
@@ -107,9 +132,7 @@ public class ConfToolTest {
     Assert.assertTrue(ConfTool.propertyExists(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-
-  @Test
-  public void propertyExistsTestFalse() throws ParserConfigurationException, IOException, SAXException {
+  @Test public void propertyExistsTestFalse() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-002.xml");
     String pathToHiveSite = url.getPath();
 
@@ -119,8 +142,7 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-  @Test
-  public void getPropertyTest() throws ParserConfigurationException, IOException, SAXException {
+  @Test public void getPropertyTest() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-001.xml");
     String pathToHiveSite = url.getPath();
 
@@ -132,8 +154,7 @@ public class ConfToolTest {
     Assert.assertEquals("MAPRSASL", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_AUTHENTICATION));
   }
 
-  @Test
-  public void setPropertyTest() throws ParserConfigurationException, IOException, SAXException {
+  @Test public void setPropertyTest() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-001.xml");
     String pathToHiveSite = url.getPath();
 
@@ -146,8 +167,7 @@ public class ConfToolTest {
     Assert.assertEquals(testValue, ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-  @Test
-  public void addPropertyTest() throws ParserConfigurationException, IOException, SAXException {
+  @Test public void addPropertyTest() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-002.xml");
     String pathToHiveSite = url.getPath();
 
@@ -163,8 +183,7 @@ public class ConfToolTest {
     Assert.assertEquals(testValue, ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-  @Test
-  public void addPropertyAlreadyExistsTest()
+  @Test public void addPropertyAlreadyExistsTest()
       throws SAXException, TransformerException, ParserConfigurationException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-017.xml");
     String pathToHiveSite = url.getPath();
@@ -177,8 +196,7 @@ public class ConfToolTest {
     Assert.assertEquals(newValue, ConfTool.getProperty(pathToHiveSite, property));
   }
 
-  @Test
-  public void getConfigurationNodeTest() throws ParserConfigurationException, IOException, SAXException {
+  @Test public void getConfigurationNodeTest() throws ParserConfigurationException, IOException, SAXException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-006.xml");
     String pathToHiveSite = url.getPath();
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -187,11 +205,11 @@ public class ConfToolTest {
     Assert.assertNotNull(ConfTool.getConfigurationNode(doc));
   }
 
-  @Test
-  public void setMaprSaslTrueComplexTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void setMaprSaslTrueComplexTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-006.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setMaprSasl(pathToHiveSite, true);
+    ConfTool.setMaprSasl(pathToHiveSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -199,9 +217,7 @@ public class ConfToolTest {
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
-
-  @Test
-  public void removePropertyTest() throws IOException, SAXException, ParserConfigurationException {
+  @Test public void removePropertyTest() throws IOException, SAXException, ParserConfigurationException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-011.xml");
     String pathToHiveSite = url.getPath();
 
@@ -215,9 +231,8 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
   }
 
-
-  @Test
-  public void setConnectionUrlTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void setConnectionUrlTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-012.xml");
     String pathToHiveSite = url.getPath();
     String connectionUrl = "jdbc:derby:;databaseName=/opt/mapr/hive/hive-2.1/bin/metastore_db;create=true";
@@ -229,29 +244,27 @@ public class ConfToolTest {
     Assert.assertEquals(connectionUrl, ConfTool.getProperty(doc, ConfVars.METASTORECONNECTURLKEY));
   }
 
-
-  @Test
-  public void setHs2WebUiPamSslTest() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+  @Test public void hs2WebUiPamSslSecurityOnTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-013.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, true);
+    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
+    Assert.assertEquals("/opt/mapr/conf/ssl_keystore",
+        ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH));
     Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
   }
 
-
-  @Test
-  public void disableHs2WebUiPamSslTest() throws IOException, ParserConfigurationException,
-      SAXException, TransformerException {
+  @Test public void hs2WebUiPamSslSecurityOffTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-013.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, false);
+    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, NONE);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -262,13 +275,24 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD));
   }
 
+  @Test public void hs2WebUiPamSslSecurityCustomTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-040.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setHs2WebUiPamSsl(pathToHiveSite, CUSTOM);
 
-  @Test
-  public void setWebHCatSslTest() throws IOException, ParserConfigurationException, SAXException,
-      TransformerException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
+  }
+
+  @Test public void webHCatSslSecurityOnTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-001.xml");
     String pathToWebHCatSite = url.getPath();
-    ConfTool.setWebHCatSsl(pathToWebHCatSite, true);
+    ConfTool.setWebHCatSsl(pathToWebHCatSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -278,13 +302,11 @@ public class ConfToolTest {
     Assert.assertEquals("mapr123", ConfTool.getProperty(doc, AppConfig.KEY_STORE_PASSWORD));
   }
 
-  @Test
-  public void disableWebHCatSslTest() throws IOException, ParserConfigurationException,
-      SAXException,
-      TransformerException {
+  @Test public void webHCatSslSecurityOffTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-001.xml");
     String pathToWebHCatSite = url.getPath();
-    ConfTool.setWebHCatSsl(pathToWebHCatSite, false);
+    ConfTool.setWebHCatSsl(pathToWebHCatSite, NONE);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -294,28 +316,38 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, AppConfig.KEY_STORE_PASSWORD));
   }
 
-  @Test
-  public void setHs2SslTest() throws IOException, ParserConfigurationException, SAXException,
-      TransformerException {
+  @Test public void webHCatSslSecurityCustomTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("webhcat-site-005.xml");
+    String pathToWebHCatSite = url.getPath();
+    ConfTool.setWebHCatSsl(pathToWebHCatSite, CUSTOM);
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToWebHCatSite);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, AppConfig.USE_SSL));
+  }
+
+  @Test public void hs2SslSecurityOnTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-023.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setHs2Ssl(pathToHiveSite, true);
+    ConfTool.setHs2Ssl(pathToHiveSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
-    Assert.assertEquals("/opt/mapr/conf/ssl_keystore", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH));
+    Assert.assertEquals("/opt/mapr/conf/ssl_keystore",
+        ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH));
     Assert.assertEquals("mapr123", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
   }
 
-  @Test
-  public void disableHs2SslTest() throws IOException, ParserConfigurationException,
-      SAXException,
-      TransformerException {
+  @Test public void hs2SslSecurityOffTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-023.xml");
     String pathToHiveSite = url.getPath();
-    ConfTool.setHs2Ssl(pathToHiveSite, false);
+    ConfTool.setHs2Ssl(pathToHiveSite, NONE);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -325,13 +357,23 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD));
   }
 
+  @Test public void hs2SslSecurityCustomTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-041.xml");
+    String pathToHiveSite = url.getPath();
+    ConfTool.setHs2Ssl(pathToHiveSite, CUSTOM);
 
-  @Test
-  public void setMetaStoreUgiTest() throws IOException, ParserConfigurationException, SAXException,
-      TransformerException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
+  }
+
+  @Test public void metaStoreUgiSecurityOnTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-014.xml");
     String pathToWebHCatSite = url.getPath();
-    ConfTool.setMetaStoreUgi(pathToWebHCatSite, true);
+    ConfTool.setMetaStoreUgi(pathToWebHCatSite, MAPRSASL);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -339,13 +381,11 @@ public class ConfToolTest {
     Assert.assertEquals("false", ConfTool.getProperty(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
   }
 
-  @Test
-  public void disableMetaStoreUgiTest() throws IOException, ParserConfigurationException,
-      SAXException,
-      TransformerException {
+  @Test public void metaStoreUgiSecurityOffTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-015.xml");
     String pathToWebHCatSite = url.getPath();
-    ConfTool.setMetaStoreUgi(pathToWebHCatSite, false);
+    ConfTool.setMetaStoreUgi(pathToWebHCatSite, NONE);
 
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -353,8 +393,7 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
   }
 
-  @Test
-  public void delPropertyTest()
+  @Test public void delPropertyTest()
       throws SAXException, TransformerException, ParserConfigurationException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-016.xml");
     String pathToHiveSite = url.getPath();
@@ -367,9 +406,7 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, property));
   }
 
-  @Test
-  public void getPropertyFromFileTest()
-      throws SAXException, ParserConfigurationException, IOException {
+  @Test public void getPropertyFromFileTest() throws SAXException, ParserConfigurationException, IOException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-021.xml");
     String pathToHiveSite = url.getPath();
     String property = "test.property.to.get";
@@ -379,8 +416,7 @@ public class ConfToolTest {
     Assert.assertEquals("test.value", ConfTool.getProperty(pathToHiveSite, property));
   }
 
-  @Test
-  public void appendPropertyToExistingTest()
+  @Test public void appendPropertyToExistingTest()
       throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
@@ -389,8 +425,7 @@ public class ConfToolTest {
     Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(pathToHiveSite, "append.to.existing.property"));
   }
 
-  @Test
-  public void appendPropertyToNonExistingTest()
+  @Test public void appendPropertyToNonExistingTest()
       throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
@@ -399,8 +434,7 @@ public class ConfToolTest {
     Assert.assertEquals("newValue", ConfTool.getProperty(pathToHiveSite, "append.non.existing"));
   }
 
-  @Test
-  public void appendPropertyToEmptyTest()
+  @Test public void appendPropertyToEmptyTest()
       throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
@@ -409,8 +443,7 @@ public class ConfToolTest {
     Assert.assertEquals("newValue", ConfTool.getProperty(pathToHiveSite, "append.to.empty.property"));
   }
 
-  @Test
-  public void appendPropertyValueTheSameTest()
+  @Test public void appendPropertyValueTheSameTest()
       throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
@@ -419,8 +452,7 @@ public class ConfToolTest {
     Assert.assertEquals("oldValue,newValue", ConfTool.getProperty(pathToHiveSite, "append.the.existing.value"));
   }
 
-  @Test
-  public void appendPropertyValueSimilarValueTest()
+  @Test public void appendPropertyValueSimilarValueTest()
       throws ParserConfigurationException, IOException, SAXException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-024.xml");
     String pathToHiveSite = url.getPath();
@@ -429,32 +461,30 @@ public class ConfToolTest {
     Assert.assertEquals("mapruser,mapr", ConfTool.getProperty(pathToHiveSite, "hive.users"));
   }
 
-  @Test
-  public void adminUserSecurityOnTest()
+  @Test public void adminUserSecurityOnTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-029.xml");
     String pathToHiveSite = url.getPath();
     String adminUser = "mapr";
 
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
-    ConfTool.setAdminUser(pathToHiveSite, adminUser, true);
+    ConfTool.setAdminUser(pathToHiveSite, adminUser, MAPRSASL);
     Assert.assertEquals(adminUser, ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
   }
 
-  @Test
-  public void adminUserSecurityOffTest()
+  @Test public void adminUserSecurityOffTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-030.xml");
     String pathToHiveSite = url.getPath();
     String adminUser = "mapr";
 
     Assert.assertEquals(adminUser, ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
-    ConfTool.setAdminUser(pathToHiveSite, adminUser, false);
+    ConfTool.setAdminUser(pathToHiveSite, adminUser, NONE);
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
   }
 
-  @Test
-  public void restrictedListSecurityOn() throws IOException, SAXException, ParserConfigurationException {
+  @Test public void restrictedListSecurityOn()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-026.xml");
     String pathToHiveSite = url.getPath();
 
@@ -462,17 +492,16 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
 
-    ConfTool.setRestrictedList(doc, true);
-    Assert.assertEquals("hive.security.authenticator.manager,hive.security.authorization.manager," +
-            "hive.users.in.admin.role," +
-            "hive.server2.xsrf.filter.enabled," +
-            "hive.exec.pre.hooks,hive.exec.post.hooks," +
-            "hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+    ConfTool.setRestrictedList(doc, MAPRSASL);
+    Assert.assertEquals(
+        "hive.security.authenticator.manager,hive.security.authorization.manager,hive.users.in.admin.role,"
+            + "hive.server2.xsrf.filter.enabled,hive.exec.pre.hooks,hive.exec.post.hooks,"
+            + "hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
         ConfTool.getProperty(doc, "hive.conf.restricted.list"));
   }
 
-  @Test
-  public void restrictedListSecurityOff() throws IOException, SAXException, ParserConfigurationException {
+  @Test public void restrictedListSecurityOff()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-027.xml");
     String pathToHiveSite = url.getPath();
 
@@ -480,7 +509,7 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
 
-    ConfTool.setRestrictedList(doc, false);
+    ConfTool.setRestrictedList(pathToHiveSite, NONE);
     Assert.assertFalse(ConfTool.propertyExists(doc, "hive.conf.restricted.list"));
   }
 }
