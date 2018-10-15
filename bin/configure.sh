@@ -387,7 +387,11 @@ ROLES=(hivemetastore hiveserver2 hivewebhcat)
 for ROLE in "${ROLES[@]}"; do
   if hasRole "${ROLE}"; then
     check_port "${ROLE}"
-    copy_warden_files "${ROLE}"
+    # copy warden files only if there is fresh install and Hive is not configured yet,
+    # in order not to overwrite existing custom Warden configuration (e.g. HA configuration)
+    if is_hive_not_configured_yet ; then
+      copy_warden_files "${ROLE}"
+    fi
     # only create restart files when required
     if is_hive_site_changed && ! is_hive_not_configured_yet ; then
       create_restart_file "${ROLE}"
