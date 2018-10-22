@@ -19,6 +19,7 @@ package org.apache.hadoop.hive.common;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import java.util.Collection;
@@ -27,6 +28,9 @@ import java.util.Collection;
  * Utilities for different blob (object) storage systems
  */
 public class BlobStorageUtils {
+    public static boolean isBlobStoragePath(final Configuration conf, final Path path) {
+        return path != null && isBlobStorageScheme(conf, path.toUri().getScheme());
+    }
 
     public static boolean isBlobStorageFileSystem(final Configuration conf, final FileSystem fs) {
         return fs != null && isBlobStorageScheme(conf, fs.getScheme());
