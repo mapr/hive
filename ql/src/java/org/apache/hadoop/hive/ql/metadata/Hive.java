@@ -30,7 +30,6 @@ import static org.apache.hadoop.hive.serde.serdeConstants.STRING_TYPE_NAME;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,10 +50,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.jdo.JDODataStoreException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.BlobStorageUtils;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.common.HiveStatsUtils;
 import org.apache.hadoop.hive.common.ObjectPair;
@@ -2548,44 +2549,46 @@ private void constructOneLBLocationMap(FileStatus fSta,
         files = new FileStatus[] {src};
       }
 
-      for (FileStatus srcFile : files) {
-
+      final SessionState parentSession = SessionState.get();
+      for (final FileStatus srcFile : files) {
         final Path srcP = srcFile.getPath();
         final boolean needToCopy = needToCopy(srcP, destf, srcFs, destFs);
-        // Strip off the file type, if any so we don't make:
-        // 000000_0.gz -> 000000_0.gz_copy_1
-        final String name;
-        final String filetype;
-        String itemName = srcP.getName();
-        int index = itemName.lastIndexOf('.');
-        if (index >= 0) {
-          filetype = itemName.substring(index);
-          name = itemName.substring(0, index);
-        } else {
-          name = itemName;
-          filetype = "";
-        }
-        futures.add(pool.submit(new Callable<ObjectPair<Path, Path>>() {
-          @Override
-          public ObjectPair<Path, Path> call() throws Exception {
-            Path destPath = new Path(destf, srcP.getName());
-            if (!needToCopy && !isSrcLocal && !destFs.exists(destf)) {
-              for (int counter = 1; !destFs.rename(srcP,destPath); counter++) {
-                destPath = new Path(destf, name + ("_copy_" + counter) + filetype);
-              }
-            } else {
-              destPath = mvFile(conf, srcP, destPath, isSrcLocal, srcFs, destFs, name, filetype);
-            }
 
-            if (inheritPerms) {
-              ShimLoader.getHadoopShims().setFullFileStatus(conf, fullDestStatus, destFs, destf);
-            }
+        final boolean isRenameAllowed = !needToCopy && !isSrcLocal;
+        // If we do a rename for a non-local file, we will be transfering the original
+        // file permissions from source to the destination. Else, in case of mvFile() where we
+        // copy from source to destination, we will inherit the destination's parent group ownership.
+        final String srcGroup = isRenameAllowed ? srcFile.getGroup() :
+          fullDestStatus.getFileStatus().getGroup();
+        if (null == pool) {
+          try {
+            Path destPath = mvFile(conf, srcFs, srcP, destFs, destf, isSrcLocal, isRenameAllowed);
+
             if (null != newFiles) {
               newFiles.add(destPath);
             }
-            return ObjectPair.create(srcP, destPath);
+          } catch (IOException ioe) {
+            LOG.error("Failed to move: {}", ioe);
+            throw new HiveException(ioe.getCause());
           }
-        }));
+        } else {
+          futures.add(pool.submit(new Callable<ObjectPair<Path, Path>>() {
+            @Override
+            public ObjectPair<Path, Path> call() throws Exception {
+              SessionState.setCurrentSessionState(parentSession);
+
+              Path destPath = mvFile(conf, srcFs, srcP, destFs, destf, isSrcLocal, isRenameAllowed);
+
+              if (inheritPerms) {
+                ShimLoader.getHadoopShims().setFullFileStatus(conf, fullDestStatus, destFs, destf);
+              }
+              if (null != newFiles) {
+                newFiles.add(destPath);
+              }
+              return ObjectPair.create(srcP, destPath);
+            }
+          }));
+        }
       }
     }
     pool.shutdown();
@@ -2655,24 +2658,51 @@ private void constructOneLBLocationMap(FileStatus fSta,
     return ShimLoader.getHadoopShims().getPathWithoutSchemeAndAuthority(path).toString();
   }
 
-  private static Path mvFile(HiveConf conf, Path srcf, Path destf, boolean isSrcLocal,
-      FileSystem srcFs, FileSystem destFs, String srcName, String filetype) throws IOException {
+  private static Path mvFile(HiveConf conf, FileSystem sourceFs, Path sourcePath, FileSystem destFs, Path destDirPath,
+                             boolean isSrcLocal, boolean isRenameAllowed) throws IOException {
 
-    for (int counter = 1; destFs.exists(destf); counter++) {
-      destf = new Path(destf.getParent(), srcName + ("_copy_" + counter) + filetype);
+    boolean isBlobStoragePath = BlobStorageUtils.isBlobStoragePath(conf, destDirPath);
+
+    // Strip off the file type, if any so we don't make:
+    // 000000_0.gz -> 000000_0.gz_copy_1
+    final String fullname = sourcePath.getName();
+    final String name = FilenameUtils.getBaseName(sourcePath.getName());
+    final String type = FilenameUtils.getExtension(sourcePath.getName());
+
+    Path destFilePath = new Path(destDirPath, fullname);
+
+    /*
+       * The below loop may perform bad when the destination file already exists and it has too many _copy_
+       * files as well. A desired approach was to call listFiles() and get a complete list of files from
+       * the destination, and check whether the file exists or not on that list. However, millions of files
+       * could live on the destination directory, and on concurrent situations, this can cause OOM problems.
+       *
+       * I'll leave the below loop for now until a better approach is found.
+       */
+
+    int counter = 1;
+    if (!isRenameAllowed || isBlobStoragePath) {
+      while (destFs.exists(destFilePath)) {
+        destFilePath =  new Path(destDirPath, name + ("_copy_" + counter) + type);
+        counter++;
+      }
     }
-    if (isSrcLocal) {
-      // For local src file, copy to hdfs
-      destFs.copyFromLocalFile(srcf, destf);
+
+    if (isRenameAllowed) {
+      while (!destFs.rename(sourcePath, destFilePath)) {
+        destFilePath =  new Path(destDirPath, name + ("_copy_" + counter) + type);
+        counter++;
+      }
+    } else if (isSrcLocal) {
+      destFs.copyFromLocalFile(sourcePath, destFilePath);
     } else {
-      //copy if across file system or encryption zones.
-      LOG.info("Copying source " + srcf + " to " + destf + " because HDFS encryption zones are different.");
-      FileUtils.copy(srcFs, srcf, destFs, destf,
-          true,    // delete source
-          false, // overwrite destination
+      FileUtils.copy(sourceFs, sourcePath, destFs, destFilePath,
+          true,   // delete source
+          false,  // overwrite destination
           conf);
     }
-    return destf;
+
+    return destFilePath;
   }
 
   //it is assumed that parent directory of the destf should already exist when this
