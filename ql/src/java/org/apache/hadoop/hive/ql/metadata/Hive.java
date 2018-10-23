@@ -3408,7 +3408,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         final Path srcP = srcFile.getPath();
         final boolean needToCopy = needToCopy(srcP, destf, srcFs, destFs, configuredOwner, isManaged);
 
-        final boolean isRenameAllowed = !needToCopy && !isSrcLocal && !destExists(srcP, destFs, destf);
+        final boolean isRenameAllowed = !needToCopy && !isSrcLocal;
 
         final String msg = "Unable to move source " + srcP + " to destination " + destf;
 
@@ -3460,16 +3460,6 @@ private void constructOneLBLocationMap(FileStatus fSta,
           throw handlePoolException(pool, e);
         }
       }
-    }
-  }
-
-  private static boolean destExists(Path sourcePath, FileSystem destFs, Path destDirPath) throws HiveException {
-    final String fullName = sourcePath.getName();
-    Path destFilePath = new Path(destDirPath, fullName);
-    try {
-      return destFs.exists(destFilePath);
-    } catch (IOException e) {
-      throw new HiveException(e);
     }
   }
 
@@ -3572,24 +3562,55 @@ private void constructOneLBLocationMap(FileStatus fSta,
     *
     * I'll leave the below loop for now until a better approach is found.
     */
-    for (int counter = 1; destFs.exists(destFilePath); counter++) {
-      if (isOverwrite) {
-        destFs.delete(destFilePath, false);
-        break;
-      }
-      destFilePath =  new Path(destDirPath, name + (Utilities.COPY_KEYWORD + counter) +
-              ((taskId == -1 && !type.isEmpty()) ? "." + type : ""));
+
+    if (isOverwrite) {
+      destFs.delete(destFilePath, false);
+    } else {
+      destFilePath = findAvailableDestPath(destFs, destDirPath, destFilePath, name, type, taskId);
     }
 
     if (isRenameAllowed) {
       destFs.rename(sourcePath, destFilePath);
+      LOG.info(String.format("Renamed %s to %s", sourcePath, destFilePath));
     } else if (isSrcLocal) {
       destFs.copyFromLocalFile(sourcePath, destFilePath);
+      LOG.info(String.format("Copied from local FS %s to %s", sourcePath, destFilePath));
     } else {
       FileUtils.copy(sourceFs, sourcePath, destFs, destFilePath,
           true,   // delete source
           false,  // overwrite destination
           conf);
+      LOG.info(String.format("Copied from %s to %s", sourcePath, destFilePath));
+    }
+    return destFilePath;
+  }
+
+  /**
+   * Build next available destination path.
+   * See pattern:
+   *
+   * /user/hive/warehouse/mytbl/000000_0
+   * /user/hive/warehouse/mytbl/000000_0_copy_1
+   * /user/hive/warehouse/mytbl/000000_0_copy_2
+   *
+   * and so on.
+   *
+   * @param destFs destination file system
+   * @param destDirPath destination folder
+   * @param destFilePath destination file that is needed to check
+   * @param name name of the file
+   * @param type extension of the file
+   * @param taskId Id of the task
+   * @return available destination path
+   * @throws IOException when can't find next destination path
+   */
+  private static Path findAvailableDestPath(FileSystem destFs, Path destDirPath, Path destFilePath, String name, String type, int taskId)
+      throws IOException {
+    int counter = 1;
+    while (destFs.exists(destFilePath)) {
+      destFilePath = new Path(destDirPath, name + (Utilities.COPY_KEYWORD + counter) +
+          ((taskId == -1 && !type.isEmpty()) ? "." + type : ""));
+      counter++;
     }
     return destFilePath;
   }
