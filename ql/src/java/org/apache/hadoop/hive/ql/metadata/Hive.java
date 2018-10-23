@@ -2937,7 +2937,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         final Path srcP = srcFile.getPath();
         final boolean needToCopy = needToCopy(srcP, destf, srcFs, destFs);
 
-        final boolean isRenameAllowed = !needToCopy && !isSrcLocal && !destExists(srcP, destFs, destf);
+        final boolean isRenameAllowed = !needToCopy && !isSrcLocal;
         // If we do a rename for a non-local file, we will be transfering the original
         // file permissions from source to the destination. Else, in case of mvFile() where we
         // copy from source to destination, we will inherit the destination's parent group ownership.
@@ -2994,16 +2994,6 @@ private void constructOneLBLocationMap(FileStatus fSta,
           throw new HiveException(e.getCause());
         }
       }
-    }
-  }
-
-  private static boolean destExists(Path sourcePath, FileSystem destFs, Path destDirPath) throws HiveException {
-    final String fullname = sourcePath.getName();
-    Path destFilePath = new Path(destDirPath, fullname);
-    try {
-      return destFs.exists(destFilePath);
-    } catch (IOException e) {
-      throw new HiveException(e);
     }
   }
 
@@ -3072,28 +3062,53 @@ private void constructOneLBLocationMap(FileStatus fSta,
        * I'll leave the below loop for now until a better approach is found.
        */
 
-    int counter = 1;
     if (!isRenameAllowed || isBlobStoragePath) {
-      while (destFs.exists(destFilePath)) {
-        destFilePath =  new Path(destDirPath, name + ("_copy_" + counter) + (!type.isEmpty() ? "." + type : ""));
-        counter++;
-      }
+      destFilePath = findAvailableDestPath(destFs, destDirPath, destFilePath, name, type);
     }
 
     if (isRenameAllowed) {
-      while (!destFs.rename(sourcePath, destFilePath)) {
-        destFilePath =  new Path(destDirPath, name + ("_copy_" + counter) + (!type.isEmpty() ? "." + type : ""));
-        counter++;
-      }
+      destFilePath = findAvailableDestPath(destFs, destDirPath, destFilePath, name, type);
+      destFs.rename(sourcePath, destFilePath);
+      LOG.info(String.format("Renamed %s to %s", sourcePath, destFilePath));
     } else if (isSrcLocal) {
       destFs.copyFromLocalFile(sourcePath, destFilePath);
+      LOG.info(String.format("Copied from local FS %s to %s", sourcePath, destFilePath));
     } else {
       FileUtils.copy(sourceFs, sourcePath, destFs, destFilePath,
           true,   // delete source
           false,  // overwrite destination
           conf);
+      LOG.info(String.format("Copied from %s to %s", sourcePath, destFilePath));
     }
 
+    return destFilePath;
+  }
+
+  /**
+   * Build next available destination path.
+   * See pattern:
+   *
+   * /user/hive/warehouse/mytbl/000000_0
+   * /user/hive/warehouse/mytbl/000000_0_copy_1
+   * /user/hive/warehouse/mytbl/000000_0_copy_2
+   *
+   * and so on.
+   *
+   * @param destFs destination file system
+   * @param destDirPath destination folder
+   * @param destFilePath destination file that is needed to check
+   * @param name nape of the file
+   * @param type extension of the file
+   * @return available destination path
+   * @throws IOException when can't find next destination path
+   */
+  private static Path findAvailableDestPath(FileSystem destFs, Path destDirPath, Path destFilePath, String name, String type)
+      throws IOException {
+    int counter = 1;
+    while (destFs.exists(destFilePath)) {
+      destFilePath = new Path(destDirPath, name + ("_copy_" + counter) + (!type.isEmpty() ? "." + type : ""));
+      counter++;
+    }
     return destFilePath;
   }
 
