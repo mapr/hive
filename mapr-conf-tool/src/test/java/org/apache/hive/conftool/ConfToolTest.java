@@ -496,7 +496,9 @@ public class ConfToolTest {
     Assert.assertEquals(
         "hive.security.authenticator.manager,hive.security.authorization.manager,hive.users.in.admin.role,"
             + "hive.server2.xsrf.filter.enabled,hive.exec.pre.hooks,hive.exec.post.hooks,"
-            + "hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+            + "hive.exec.failure.hooks,hive.exec.query.redactor.hooks,"
+            + "hive.semantic.analyzer.hook,hive.exec.driver.run.hooks,"
+            + "hive.server2.session.hook",
         ConfTool.getProperty(doc, "hive.conf.restricted.list"));
   }
 

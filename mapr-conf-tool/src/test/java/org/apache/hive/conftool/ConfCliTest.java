@@ -161,7 +161,9 @@ public class ConfCliTest {
             "hive.users.in.admin.role," +
             "hive.server2.xsrf.filter.enabled," +
             "hive.exec.pre.hooks,hive.exec.post.hooks," +
-            "hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+            "hive.exec.failure.hooks,hive.exec.query.redactor.hooks," +
+            "hive.semantic.analyzer.hook,hive.exec.driver.run.hooks," +
+            "hive.server2.session.hook",
         ConfTool.getProperty(pathToHiveSite, "hive.conf.restricted.list"));
     Assert.assertFalse(output.contains("Print help information"));
   }
