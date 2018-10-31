@@ -570,16 +570,26 @@ public class ConfToolTest {
     Document doc = docBuilder.parse(pathToHiveSite);
 
     ConfTool.setRestrictedList(doc, MAPRSASL);
-    Assert.assertEquals("hive.security.authenticator.manager,hive.security.authorization.manager,"
+    
+    Assert.assertEquals(
+        "hive.security.authenticator.manager,hive.security.authorization.manager,"
             + "hive.security.metastore.authorization.manager,hive.security.metastore.authenticator.manager,"
             + "hive.users.in.admin.role,hive.server2.xsrf.filter.enabled,hive.security.authorization.enabled,"
-            + "hive.server2.authentication.ldap.baseDN,hive.server2.authentication.ldap.url,"
+            + "hive.distcp.privileged.doAs,hive.server2.authentication.ldap.baseDN,hive.server2.authentication.ldap.url,"
             + "hive.server2.authentication.ldap.Domain,hive.server2.authentication.ldap.groupDNPattern,"
             + "hive.server2.authentication.ldap.groupFilter,hive.server2.authentication.ldap.userDNPattern,"
             + "hive.server2.authentication.ldap.userFilter,hive.server2.authentication.ldap.groupMembershipKey,"
             + "hive.server2.authentication.ldap.userMembershipKey,hive.server2.authentication.ldap.groupClassKey,"
-            + "hive.server2.authentication.ldap.customLDAPQuery,"
-            + "hive.exec.pre.hooks,hive.exec.post.hooks,hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+            + "hive.server2.authentication.ldap.customLDAPQuery,hive.privilege.synchronizer,"
+            + "hive.privilege.synchronizer.interval,hive.spark.client.connect.timeout,"
+            + "hive.spark.client.server.connect.timeout,hive.spark.client.channel.log.level,"
+            + "hive.spark.client.rpc.max.size,hive.spark.client.rpc.threads,hive.spark.client.secret.bits,"
+            + "hive.spark.client.rpc.server.address,hive.spark.client.rpc.server.port,"
+            + "hive.spark.client.rpc.sasl.mechanisms,bonecp.,hive.druid.broker.address.default,"
+            + "hive.druid.coordinator.address.default,hikari.,hadoop.bin.path,yarn.bin.path,spark.home,"
+            + "hive.exec.pre.hooks,hive.exec.post.hooks,hive.exec.failure.hooks,hive.exec.query.redactor.hooks,"
+            + "hive.semantic.analyzer.hook,hive.query.lifetime.hooks,hive.exec.driver.run.hooks,"
+            + "hive.server2.session.hook",
         ConfTool.getProperty(doc, "hive.conf.restricted.list"));
   }
 
