@@ -166,7 +166,9 @@ public class ConfCliTest {
             + "hive.server2.authentication.ldap.userFilter,hive.server2.authentication.ldap.groupMembershipKey,"
             + "hive.server2.authentication.ldap.userMembershipKey,hive.server2.authentication.ldap.groupClassKey,"
             + "hive.server2.authentication.ldap.customLDAPQuery,"
-            + "hive.exec.pre.hooks,hive.exec.post.hooks,hive.exec.failure.hooks,hive.exec.query.redactor.hooks",
+            + "hive.exec.pre.hooks,hive.exec.post.hooks,hive.exec.failure.hooks,hive.exec.query.redactor.hooks,"
+            + "hive.semantic.analyzer.hook,hive.query.lifetime.hooks,hive.exec.driver.run.hooks,"
+            + "hive.server2.session.hook",
         ConfTool.getProperty(pathToHiveSite, "hive.conf.restricted.list"));
     Assert.assertFalse(output.contains("Print help information"));
   }

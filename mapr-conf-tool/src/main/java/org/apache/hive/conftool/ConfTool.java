@@ -63,6 +63,10 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.PREEXECHOOKS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.POSTEXECHOOKS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.ONFAILUREHOOKS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.QUERYREDACTORHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_QUERY_LIFETIME_HOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_DRIVER_RUN_HOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SESSION_HOOK;
 
 /**
  *  Helper for configuring Hive.
@@ -84,7 +88,8 @@ final class ConfTool {
   private static final String METASTORE_SECURE_AUTH_MANAGER =
       "org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider";
   private static final HiveConf.ConfVars[] IMMUTABLE_OPTIONS =
-      {PREEXECHOOKS, POSTEXECHOOKS, ONFAILUREHOOKS, QUERYREDACTORHOOKS };
+      { PREEXECHOOKS, POSTEXECHOOKS, ONFAILUREHOOKS, QUERYREDACTORHOOKS, SEMANTIC_ANALYZER_HOOK,
+          HIVE_QUERY_LIFETIME_HOOKS, HIVE_DRIVER_RUN_HOOKS, HIVE_SERVER2_SESSION_HOOK };
   private static final String OPTIONS_AS_LIST = getDefaultList() + "," + buildMapRList(IMMUTABLE_OPTIONS);
   private static final String EMPTY = "";
 
