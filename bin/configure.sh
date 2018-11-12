@@ -245,7 +245,7 @@ fi
 #
 # Check that port is available
 #
-check_port(){
+check_port_for(){
 ROLE="$1"
 if checkNetworkPortAvailability "${PORTS[$ROLE]}" 2>/dev/null; then
   configure_logging
@@ -293,7 +293,7 @@ fi
 #
 # Copy warden file depending on the role
 #
-copy_warden_files(){
+copy_warden_files_for(){
 ROLE=$1
 mkdir -p "$MAPR_HOME"/conf/conf.d
 if [ -f "$HIVE_HOME/conf/warden.${MAPRCLI[$ROLE]}.conf" ]; then
@@ -304,7 +304,7 @@ fi
 #
 # Create restart file for role
 #
-create_restart_file(){
+create_restart_file_for(){
 ROLE=$1
 mkdir -p "$RESTART_DIR"
 cat <<EOF > "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
@@ -379,21 +379,51 @@ fi
 }
 
 #
+# Sets admin permissions for warden configuration file according to role
+#
+grant_owner_group_for(){
+ROLE=$1
+path_to_warden_conf="$MAPR_HOME/conf/conf.d/warden.${MAPRCLI[$ROLE]}.conf"
+if [ -f "$path_to_warden_conf" ]; then
+  if [ ! -z "$MAPR_USER" ]; then
+    chown "$MAPR_USER" "$path_to_warden_conf"
+  fi
+  if [ ! -z "$MAPR_GROUP" ]; then
+    chgrp "$MAPR_GROUP" "$path_to_warden_conf"
+  fi
+fi
+}
+
+#
+# Check if warden configuration file is present for role
+#
+is_warden_file_available_for() {
+ROLE=$1
+path_to_warden_conf="$MAPR_HOME/conf/conf.d/warden.${MAPRCLI[$ROLE]}.conf"
+if [ -f "$path_to_warden_conf" ]; then
+  return 0; # 0 = true
+else
+  return 1; # 1 = false
+fi
+}
+
+#
 # Configure Hive roles
 #
 configure_roles(){
 ROLES=(hivemetastore hiveserver2 hivewebhcat)
 for ROLE in "${ROLES[@]}"; do
   if hasRole "${ROLE}"; then
-    check_port "${ROLE}"
+    check_port_for "${ROLE}"
     # copy warden files only if there is fresh install and Hive is not configured yet,
     # in order not to overwrite existing custom Warden configuration (e.g. HA configuration)
-    if is_hive_not_configured_yet ; then
-      copy_warden_files "${ROLE}"
+    if is_hive_not_configured_yet || ! is_warden_file_available_for "${ROLE}"; then
+      copy_warden_files_for "${ROLE}"
+      grant_owner_group_for "${ROLE}"
     fi
     # only create restart files when required
     if is_hive_site_changed && ! is_hive_not_configured_yet ; then
-      create_restart_file "${ROLE}"
+      create_restart_file_for "${ROLE}"
     fi
     # we do want to restart RM/TL the first time we configure hive too
     if is_hive_site_changed || is_hive_not_configured_yet ; then
