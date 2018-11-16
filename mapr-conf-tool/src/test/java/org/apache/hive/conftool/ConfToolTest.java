@@ -483,7 +483,7 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
   }
 
-  @Test public void restrictedListSecurityOn()
+  @Test public void restrictedListSecurityOnTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-026.xml");
     String pathToHiveSite = url.getPath();
@@ -502,7 +502,7 @@ public class ConfToolTest {
         ConfTool.getProperty(doc, "hive.conf.restricted.list"));
   }
 
-  @Test public void restrictedListSecurityOff()
+  @Test public void restrictedListSecurityOffTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-027.xml");
     String pathToHiveSite = url.getPath();
@@ -513,5 +513,62 @@ public class ConfToolTest {
 
     ConfTool.setRestrictedList(pathToHiveSite, NONE);
     Assert.assertFalse(ConfTool.propertyExists(doc, "hive.conf.restricted.list"));
+  }
+
+  @Test public void restrictedListSecurityCustomTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-045.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.setRestrictedList(doc, CUSTOM);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, "hive.conf.restricted.list"));
+  }
+
+  @Test public void setFallbackAuthorizerSecurityOnTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-047.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.setFallbackAuthorizer(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, "hive.security.authorization.enabled"));
+    Assert
+        .assertEquals("org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory",
+            ConfTool.getProperty(doc, "hive.security.authorization.manager"));
+  }
+
+  @Test public void setFallbackAuthorizerSecurityOffTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-048.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.setFallbackAuthorizer(doc, NONE);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.security.authorization.enabled"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.security.authorization.manager"));
+  }
+
+  @Test public void setFallbackAuthorizerSecurityCustomTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-049.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.setFallbackAuthorizer(doc, CUSTOM);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, "hive.security.authorization.enabled"));
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, "hive.security.authorization.manager"));
   }
 }

@@ -1,0 +1,35 @@
+<configuration>
+    <property>
+        <name>append.to.existing.property</name>
+        <value>oldValue</value>
+        <description>Test appending new value to the old one</description>
+    </property>
+    <property>
+        <name>append.to.empty.property</name>
+        <value></value>
+        <description>Test appending new value to the empty value</description>
+    </property>
+    <property>
+        <name>append.the.existing.value</name>
+        <value>oldValue,newValue</value>
+        <description>Test appending the existing value</description>
+    </property>
+    <property>
+        <name>hive.users.in.admin.role</name>
+        <value>mapruser</value>
+        <description>Test appending the similar value</description>
+    </property>
+    <property>
+        <name>cli.test</name>
+        <value>mapruser</value>
+        <description>Test appending the similar value</description>
+    </property>
+    <property>
+        <name>hive.security.authorization.enabled</name>
+        <value>MyCustomValue</value>
+    </property>
+    <property>
+        <name>hive.security.authorization.manager</name>
+        <value>MyCustomValue</value>
+    </property>
+</configuration>

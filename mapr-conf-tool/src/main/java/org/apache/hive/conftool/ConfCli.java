@@ -61,8 +61,7 @@ public final class ConfCli {
   private static final String RESTRICTED_LIST = "restrictedList";
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
-  private static final String TRUE = "true";
-  private static final String FALSE = "false";
+  private static final String FALLBACK_AUTHORIZER = "fallBackAuthorizer";
 
   static {
     OptionBuilder.hasArg(false);
@@ -142,9 +141,12 @@ public final class ConfCli {
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(APPEND_PROPERTY));
 
     OptionBuilder.hasArg(false);
-    OptionBuilder.withArgName("property to check");
-    OptionBuilder.withDescription("Configures restricted list of options that " + "are immutable at runtime");
+    OptionBuilder.withDescription("Configures restricted list of options that are immutable at runtime");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(RESTRICTED_LIST));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Configures FallbackHiveAuthorizerFactory by default on MapR SASL cluster");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(FALLBACK_AUTHORIZER));
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("property-name");
@@ -266,6 +268,9 @@ public final class ConfCli {
         ConfTool.setAdminUser(pathToXmlFile, adminUser, getSecurity(line));
       }
 
+      if (isFallbackAuthorizer(line)) {
+        ConfTool.setFallbackAuthorizer(pathToXmlFile, getSecurity(line));
+      }
     } else {
       printHelp();
     }
@@ -310,10 +315,6 @@ public final class ConfCli {
       printHelp();
       throw new IllegalArgumentException("Incorrect security configuration options");
     }
-  }
-
-  private static void printHelp() {
-    HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
   }
 
   private static boolean isHs2HaConfig(CommandLine line) {
@@ -374,7 +375,15 @@ public final class ConfCli {
     return line.hasOption(ADMIN_USER);
   }
 
+  private static boolean isFallbackAuthorizer(CommandLine line){
+   return line.hasOption(FALLBACK_AUTHORIZER);
+  }
+
   private static void printBool(boolean value) {
     System.out.print(Boolean.toString(value));
+  }
+
+  private static void printHelp() {
+    HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
   }
 }
