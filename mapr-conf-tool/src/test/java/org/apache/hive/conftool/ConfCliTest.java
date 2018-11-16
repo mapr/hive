@@ -509,4 +509,35 @@ public class ConfCliTest {
     String output = baos.toString();
     Assert.assertTrue(output.contains("Print help information"));
   }
+
+  @Test public void setFallbackAuthorizerSecurityOnTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-047.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--security", "true" });
+    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.enabled"));
+    Assert
+        .assertEquals("org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory",
+            ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.manager"));
+  }
+
+  @Test public void setFallbackAuthorizerSecurityOffTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-048.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--security", "false" });
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.security.authorization.enabled"));
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.security.authorization.manager"));
+  }
+
+  @Test public void setFallbackAuthorizerSecurityCustomTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-049.xml");
+    String pathToHiveSite = url.getPath();
+
+    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--security", "custom" });
+
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.enabled"));
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.manager"));
+  }
 }
