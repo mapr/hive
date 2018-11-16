@@ -636,6 +636,9 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
 fi
 }
 
+#
+# Sets default 0644 permissions to hive-site.xml
+#
 grant_permissions_to_hive_site(){
 chmod 0644 "$HIVE_SITE"
 }
@@ -650,6 +653,18 @@ HIVE_SITE="$1"
 isSecure="$2"
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -restrictedList -security "$isSecure"
+fi
+}
+
+#
+# Configures FallbackHiveAuthorizerFactory and enables Hive security authorization. See CVE-2018-11777.
+#
+
+configure_fallback_authorizer(){
+HIVE_SITE="$1"
+isSecure="$2"
+if security_has_to_be_configured ; then
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -fallBackAuthorizer -security "$isSecure"
 fi
 }
 
@@ -831,6 +846,8 @@ configure_hs2_ssl "$HIVE_SITE" "$isSecure"
 configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$isSecure"
 
 configure_restricted_list "$HIVE_SITE" "$isSecure"
+
+configure_fallback_authorizer "$HIVE_SITE" "$isSecure"
 
 init_derby_schema
 

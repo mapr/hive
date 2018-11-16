@@ -67,6 +67,8 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.SEMANTIC_ANALYZER_HO
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_QUERY_LIFETIME_HOOKS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_DRIVER_RUN_HOOKS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SESSION_HOOK;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER;
 
 /**
  *  Helper for configuring Hive.
@@ -91,6 +93,8 @@ final class ConfTool {
       { PREEXECHOOKS, POSTEXECHOOKS, ONFAILUREHOOKS, QUERYREDACTORHOOKS, SEMANTIC_ANALYZER_HOOK,
           HIVE_QUERY_LIFETIME_HOOKS, HIVE_DRIVER_RUN_HOOKS, HIVE_SERVER2_SESSION_HOOK };
   private static final String OPTIONS_AS_LIST = getDefaultList() + "," + buildMapRList(IMMUTABLE_OPTIONS);
+  private static final String FALLBACK_HIVE_AUTHORIZER_FACTORY =
+      "org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory";
   private static final String EMPTY = "";
 
   /**
@@ -341,8 +345,7 @@ final class ConfTool {
    * @throws ParserConfigurationException
    * @throws IOException
    */
-  static void setAdminUser(Document doc, String adminUser, Security security)
-      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+  static void setAdminUser(Document doc, String adminUser, Security security) {
     switch (security) {
     case CUSTOM:
       return;
@@ -354,8 +357,6 @@ final class ConfTool {
       break;
     }
   }
-
-
 
   /**
    * Configures Ssl encryption for HiveServer2.
@@ -387,6 +388,50 @@ final class ConfTool {
     saveToFile(doc, pathToHiveSite);
   }
 
+  /**
+   * Fixes CVE-2018-11777. Configures Hive for usage of FallbackHiveAuthorizerFactory.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   * @throws TransformerException
+   */
+  static void setFallbackAuthorizer(String pathToHiveSite, Security security)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    setFallbackAuthorizer(doc, security);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Fixes CVE-2018-11777. Configures Hive for usage of FallbackHiveAuthorizerFactory.
+   *
+   * @param doc hive-site document
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   * @throws TransformerException
+   */
+  static void setFallbackAuthorizer(Document doc, Security security) throws TransformerException {
+    switch (security) {
+    case CUSTOM:
+      return;
+    case MAPRSASL:
+      set(doc, HIVE_AUTHORIZATION_ENABLED, TRUE);
+      set(doc, HIVE_AUTHORIZATION_MANAGER, FALLBACK_HIVE_AUTHORIZER_FACTORY);
+      break;
+    case NONE:
+      remove(doc, HIVE_AUTHORIZATION_ENABLED);
+      remove(doc, HIVE_AUTHORIZATION_MANAGER);
+      break;
+    default:
+      return;
+    }
+  }
   /**
    * Enables HiveServer2 HA.
    *
