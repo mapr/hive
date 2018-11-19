@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.hive</groupId>
   <artifactId>hive</artifactId>
-  <version>3.1.1</version>
+  <version>3.1.1-mapr-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Hive</name>
@@ -65,7 +65,7 @@
   </modules>
 
   <properties>
-    <hive.version.shortname>3.1.0</hive.version.shortname>
+    <hive.version.shortname>3.1.0-mapr</hive.version.shortname>
 
     <!-- Build Properties -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -113,6 +113,7 @@
     <maven.build-helper.plugin.version>1.8</maven.build-helper.plugin.version>
 
     <!-- Library Dependency Versions -->
+    <mapr.release.version>6.0.0-mapr</mapr.release.version>
     <accumulo.version>1.7.3</accumulo.version>
     <activemq.version>5.5.0</activemq.version>
     <ant.version>1.9.1</ant.version>
@@ -147,7 +148,7 @@
     <guava.version>19.0</guava.version>
     <groovy.version>2.4.11</groovy.version>
     <h2database.version>1.3.166</h2database.version>
-    <hadoop.version>3.1.0</hadoop.version>
+    <hadoop.version>3.2.0.0-mapr-SNAPSHOT</hadoop.version>
     <hadoop.bin.path>${basedir}/${hive.path.to.root}/testutils/hadoop</hadoop.bin.path>
     <hamcrest.version>1.3</hamcrest.version>
     <hbase.version>2.0.0-alpha4</hbase.version>
@@ -216,7 +217,41 @@
   </properties>
 
   <repositories>
+    <!-- Temporary repo -->
+    <repository>
+      <id>mapr.release</id>
+      <url>${env.MAPR_MAVEN_REPO}</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <!-- MapR Maven Repository -->
+    <repository>
+      <id>mapr.maven</id>
+      <url>http://maven.corp.maprtech.com/nexus/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
    <!-- This needs to be removed before checking in-->
+    <repository>
+      <id>mapr</id>
+      <name>MapR Maven repository</name>
+      <url>http://repository.mapr.com/nexus/content/repositories/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>datanucleus</id>
       <name>datanucleus maven repository</name>
@@ -568,6 +603,7 @@
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
+        <scope>provided</scope>
         <exclusions>
             <exclusion>
             <groupId>org.slf4j</groupId>

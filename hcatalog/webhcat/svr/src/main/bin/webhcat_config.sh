@@ -29,11 +29,12 @@ function die() {
 #====================================
 
 # The directory,file containing the running pid
-PID_DIR=${WEBHCAT_PID_DIR:-.}
+PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-3.1.1/pids/webhcat}
 PID_FILE=${PID_DIR}/webhcat.pid
+mkdir -p $PID_DIR 2>/dev/null
 
 #default log directory
-WEBHCAT_LOG_DIR=${WEBHCAT_LOG_DIR:-.}
+WEBHCAT_LOG_DIR=${WEBHCAT_LOG_DIR:-/opt/mapr/hive/hive-3.1.1/logs/`id -u -n`/webhcat}
 
 # The console error log
 ERROR_LOG=${WEBHCAT_LOG_DIR}/webhcat-console-error.log
@@ -54,6 +55,10 @@ SLEEP_TIME_AFTER_START=10
 #These parameters can be overriden by webhcat-env.sh
 # the root of the WEBHCAT installation  ('this' is defined in webhcat_server.sh)
 export WEBHCAT_PREFIX=`dirname "$this"`/..
+export HCAT_PREFIX=${WEBHCAT_PREFIX}
+export HIVE_DIR=${HCAT_PREFIX}"/.."
+export HIVE_HOME="${HIVE_HOME:-$HIVE_DIR}"
+export HIVE_CONF_DIR="${HIVE_HOME}/conf"
 
 #check to see if the conf dir is given as an optional argument
 if [ $# -gt 1 ]
@@ -128,4 +133,23 @@ elif [ -f ${WEBHCAT_PREFIX}/bin/hadoop ]; then
 elif [ ! -f ${HADOOP_PREFIX}/bin/hadoop ]; then
   echo "${this}: Hadoop not found."
   exit 1
+fi
+
+#get the yarn version
+if [ -f $BASEMAPR/conf/hadoop_version ];then
+   MAPR_YARN_VERSION=`cat $BASEMAPR/conf/hadoop_version | grep yarn_version | awk -F'=' '{print $2}'`
+   export HADOOP_PREFIX=$BASEMAPR/hadoop/hadoop-$MAPR_YARN_VERSION
+   export HADOOP_CONFIG_DIR=$HADOOP_PREFIX/etc/hadoop
+else
+   export HADOOP_PREFIX=$HADOOP_HOME
+   export HADOOP_CONFIG_DIR=$HADOOP_PREFIX/conf
+fi
+
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
+if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
+  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
+else
+  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false"
 fi

@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience;
 import org.apache.hadoop.hive.common.classification.InterfaceStability;
-import org.apache.hadoop.hdfs.web.AuthFilter;
+import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
@@ -139,7 +139,7 @@ public class Main {
       LOG.info("Templeton listening on port " + port);
     } catch (Exception e) {
       System.err.println("templeton: Server failed to start: " + e.getMessage());
-      LOG.error("Server failed to start: " , e);
+      LOG.error("Server failed to start: " + e, e);
       System.exit(1);
     }
   }
@@ -254,20 +254,21 @@ public class Main {
 
   // Configure the AuthFilter with the Kerberos params iff security
   // is enabled.
-  public FilterHolder makeAuthFilter() throws IOException {
-    FilterHolder authFilter = new FilterHolder(AuthFilter.class);
+  public FilterHolder makeAuthFilter() {
+    FilterHolder authFilter = new FilterHolder(AuthenticationFilter.class);
+    authFilter.setInitParameter("config.prefix", "hadoop.http.authentication");
     UserNameHandler.allowAnonymous(authFilter);
     if (UserGroupInformation.isSecurityEnabled()) {
-      //http://hadoop.apache.org/docs/r1.1.1/api/org/apache/hadoop/security/authentication/server/AuthenticationFilter.html
-      authFilter.setInitParameter("dfs.web.authentication.signature.secret",
-        conf.kerberosSecret());
-      //https://svn.apache.org/repos/asf/hadoop/common/branches/branch-1.2/src/packages/templates/conf/hdfs-site.xml
-      String serverPrincipal = SecurityUtil.getServerPrincipal(conf.kerberosPrincipal(), "0.0.0.0");
-      authFilter.setInitParameter("dfs.web.authentication.kerberos.principal",
-        serverPrincipal);
-      //http://https://svn.apache.org/repos/asf/hadoop/common/branches/branch-1.2/src/packages/templates/conf/hdfs-site.xml
-      authFilter.setInitParameter("dfs.web.authentication.kerberos.keytab",
-        conf.kerberosKeytab());
+      authFilter.setInitParameter("hadoop.http.authentication.type", "org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler");
+      authFilter.setInitParameter("hadoop.http.authentication.signature.secret", "com.mapr.security.maprauth.MaprSignatureSecretFactory");
+      if (conf.kerberosPrincipal() != null) {
+        authFilter.setInitParameter("hadoop.http.authentication.kerberos.principal", conf.kerberosPrincipal());
+      }
+      if (conf.kerberosKeytab() != null) {
+        authFilter.setInitParameter("hadoop.http.authentication.kerberos.keytab", conf.kerberosKeytab());
+      }
+    } else {
+      authFilter.setInitParameter("hadoop.http.authentication.type", "simple");
     }
     return authFilter;
   }
@@ -359,7 +360,7 @@ public class Main {
       /*note that will throw if Anonymous mode is not allowed & user.name is not in query string of the request;
       * this ensures that in the context of WebHCat, PseudoAuthenticationHandler allows Anonymous even though
       * WebHCat itself will throw if it can't figure out user.name*/
-      authFilter.setInitParameter("dfs.web.authentication." + PseudoAuthenticationHandler.ANONYMOUS_ALLOWED, "true");
+      authFilter.setInitParameter("hadoop.http.authentication." + PseudoAuthenticationHandler.ANONYMOUS_ALLOWED, "true");
     }
     static String getUserName(HttpServletRequest request) {
       if(!UserGroupInformation.isSecurityEnabled() && "POST".equalsIgnoreCase(request.getMethod())) {

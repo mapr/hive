@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <!--this module is added to parent pom so that it builds and releases with the reset of Hive-->
     <groupId>org.apache.hive</groupId>
-    <version>3.1.1</version>
+    <version>3.1.1-mapr-SNAPSHOT</version>
     <artifactId>hive-upgrade-acid</artifactId>
     <name>Hive Upgrade Acid</name>
     <packaging>jar</packaging>
@@ -58,6 +58,20 @@
         <test.forkcount>1</test.forkcount>
         <skipITests>true</skipITests>
     </properties>
+    <repositories>
+        <repository>
+            <id>mapr</id>
+            <name>MapR Maven repository</name>
+            <url>http://repository.mapr.com/nexus/content/repositories/releases/</url>
+            <releases>
+               <enabled>true</enabled>
+               <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <!--scope is 'provided' for all.  The UpgradeTool is provided as part of Hive 3.x and
         supports 2 modes - preUpgrade which runs with 2.x jars on the classpath and postUpgrade
@@ -72,19 +86,19 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-metastore</artifactId>
-            <version>2.3.3</version>
+            <version>2.3.3-mapr-1808</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <version>2.3.3</version>
+            <version>2.3.3-mapr-1808</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.7.2</version>
+            <version>2.7.0-mapr-1808</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -111,7 +125,7 @@ java.io.IOException: Cannot initialize Cluster. Please check your configuration 
             -->
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-common</artifactId>
-            <version>2.7.2</version>
+            <version>2.7.0-mapr-1808</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

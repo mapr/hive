@@ -20,13 +20,61 @@ case "`uname`" in
    CYGWIN*) cygwin=true;;
 esac
 
-bin=`dirname "$0"`
+function get_canonical_dir() {
+  target="$1"
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
+
+bin=$(get_canonical_dir "$0")
+
 bin=`cd "$bin"; pwd`
 
 . "$bin"/hive-config.sh
 
+#BASEMAPR should be set by hive-config.sh
+HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
+HADOOP_DIR=`dirname $HADOOP_DIR`
+export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
+if [ -f $BASEMAPR/hbase/hbaseversion ]; then
+  MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion 2>/dev/null`
+  MAPR_HBASE_HOME=${MAPR_HBASE_HOME:-"${BASEMAPR}/hbase/hbase-${MAPR_HBASE_VERSION}"}
+  MAPR_HBASE_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}-.*[^s]\.jar" -print 2> /dev/null)
+  MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\/hbase-${MAPR_HBASE_VERSION}.*tests\.jar" -print 2> /dev/null)
+  MAPR_HBASE_CONF="${MAPR_HBASE_HOME}/conf"
+fi
+MAPR_ZK_HOME=${MAPR_ZK_HOME:-${BASEMAPR}/lib}
+export MAPR_IMPERSONATION_ENABLED=true
+
+
+TMP_USER_DIR="/tmp/${USER}"
+STDERR="${TMP_USER_DIR}/stderr"
 SERVICE=""
 HELP=""
+START=""
+STOP=""
+STATUS=""
+FINAL_OPT=""
+count=0
 SKIP_HBASECP=false
 SKIP_HADOOPVERSION=false
 
@@ -68,6 +116,26 @@ while [ $# -gt 0 ]; do
       ;;
     --debug*)
       DEBUG=$1
+      FINAL_OPT=$HELP
+      ((count++))
+      shift
+      ;;
+    --start)
+      START=_start
+      FINAL_OPT=$START
+      ((count++))
+      shift
+      ;;
+    --stop)
+      STOP=_stop
+      FINAL_OPT=$STOP
+      ((count++))
+      shift
+      ;;
+    --status)
+      STATUS=_status
+      FINAL_OPT=$STATUS
+      ((count++))
       shift
       ;;
     *)
@@ -147,6 +215,27 @@ for f in ${HIVE_LIB}/*.jar; do
     CLASSPATH=${CLASSPATH}:$f;
   fi
 done
+
+
+# Add hbase conf, hbase jars and zookeeper jar to classpath
+if [ ! -z "${MAPR_HBASE_CONF}" ]; then
+  CLASSPATH="${CLASSPATH}:${MAPR_HBASE_CONF}"
+fi
+if [ ! -z "${MAPR_HBASE_JAR}" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_JAR};
+fi
+if [ ! -z "${MAPR_HBASE_TEST_JAR}" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_HBASE_TEST_JAR};
+fi
+if [ -f "${MAPR_ZK_HOME}/zookeeper-*.jar" ] ; then
+  CLASSPATH=${CLASSPATH}:${MAPR_ZK_HOME}/zookeeper-*.jar;
+fi
+if [[ -n $SENTRY_HOME ]] ; then
+  for f in $SENTRY_HOME/lib/*.jar; do
+    CLASSPATH=${CLASSPATH}:${f}
+  done
+fi
+
 
 # add the auxillary jars such as serdes
 if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
@@ -309,6 +398,19 @@ if [ "${AUX_PARAM}" != "" ]; then
   AUX_JARS_CMD_LINE="-libjars ${AUX_PARAM}"
 fi
 
+# add default hiveserver2 authentication depending upon security in the cluster
+if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
+  if [ "$MAPR_HIVE_LOGIN_OPTS" = "" ]; then
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=PAM"
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.authentication.pam.services=login"
+  else
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=MAPRSASL"
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
+  fi
+else
+  HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=NONE"
+fi
+
 SERVICE_LIST=""
 
 for i in "$bin"/ext/*.sh ; do
@@ -329,10 +431,21 @@ if [ "$DEBUG" ]; then
   fi
 fi
 
+if [ "$HIVE_IDENT_STRING" = "" ]; then
+  export HIVE_IDENT_STRING=`id -nu`
+fi
+# get log directory
+if [ "$HIVE_LOG_DIR" = "" ]; then
+  export HIVE_LOG_DIR="$HIVE_HOME/logs"
+fi
+if [ "$HIVE_PID_DIR" = "" ]; then
+  export HIVE_PID_DIR="$HIVE_HOME/pids"
+fi
+
 TORUN=""
 for j in $SERVICE_LIST ; do
   if [ "$j" = "$SERVICE" ] ; then
-    TORUN=${j}$HELP
+    TORUN=${j}$FINAL_OPT
   fi
 done
 

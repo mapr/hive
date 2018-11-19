@@ -130,8 +130,7 @@ public class LoadSemanticAnalyzer extends SemanticAnalyzer {
           throw new SemanticException("URL Decode failed", de);
         }
       } else {
-        path = new Path(new Path("/user/" + System.getProperty("user.name")),
-          path).toString();
+        path = new Path(FileSystem.get(conf).getHomeDirectory(), path).toString();
       }
     }
 
@@ -149,7 +148,7 @@ public class LoadSemanticAnalyzer extends SemanticAnalyzer {
     }
 
     // if scheme is specified but not authority then use the default authority
-    if ((!fromScheme.equals("file")) && StringUtils.isEmpty(fromAuthority)) {
+    if ((fromScheme.equals("maprfs") || fromScheme.equals("hdfs")) && StringUtils.isEmpty(fromAuthority)) {
       URI defaultURI = FileSystem.get(conf).getUri();
       fromAuthority = defaultURI.getAuthority();
     }

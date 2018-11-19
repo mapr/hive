@@ -918,7 +918,7 @@ public class TestJdbcWithMiniHS2 {
     Connection conn = getConnection(miniHS2.getJdbcURL(testDbName), userName, "password");
     // FS
     FileSystem fs = miniHS2.getLocalFS();
-    FsPermission expectedFSPermission = new FsPermission((short)00733);
+    FsPermission expectedFSPermission = new FsPermission((short)00777);
     // Verify scratch dir paths and permission
     // HDFS scratch dir
     scratchDirPath = new Path(HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIR));
