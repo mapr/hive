@@ -62,6 +62,10 @@ public final class ConfCli {
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
   private static final String FALLBACK_AUTHORIZER = "fallBackAuthorizer";
+  private static final String TRUE = "true";
+  private static final String FALSE = "false";
+  private static final String HIVE_SERVER2_METRICS_ENABLED = "hiveserver2_metrics_enabled";
+  private static final String METASTORE_METRICS_ENABLED = "metastore_metrics_enabled";
 
   static {
     OptionBuilder.hasArg(false);
@@ -157,6 +161,16 @@ public final class ConfCli {
     OptionBuilder.withArgName("property-name");
     OptionBuilder.withDescription("Retrieves the property value.");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_PROPERTY));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("true/false value");
+    OptionBuilder.withDescription("Enables/disables Hiveserver2 for collecting metrics");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HIVE_SERVER2_METRICS_ENABLED));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("true/false value");
+    OptionBuilder.withDescription("Enables/disables Hive Metastore for collecting metrics");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METASTORE_METRICS_ENABLED));
   }
 
   public static void main(String[] args)
@@ -271,6 +285,15 @@ public final class ConfCli {
       if (isFallbackAuthorizer(line)) {
         ConfTool.setFallbackAuthorizer(pathToXmlFile, getSecurity(line));
       }
+      if(isHiveServer2Metrics(line)) {
+        boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
+        ConfTool.configureHs2Metrics(pathToXmlFile, isMetricsEnabled);
+      }
+
+      if(isMetasoreMetrics(line)) {
+        boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(METASTORE_METRICS_ENABLED));
+        ConfTool.configureMetastoreMetrics(pathToXmlFile, isMetricsEnabled);
+      }
     } else {
       printHelp();
     }
@@ -379,6 +402,19 @@ public final class ConfCli {
   private static boolean isFallbackAuthorizer(CommandLine line){
    return line.hasOption(FALLBACK_AUTHORIZER);
   }
+
+  private static boolean isHiveServer2Metrics(CommandLine line) {
+    return line.hasOption(HIVE_SERVER2_METRICS_ENABLED) && isTrueOrFalse(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
+  }
+
+  private static boolean isMetasoreMetrics(CommandLine line) {
+    return line.hasOption(METASTORE_METRICS_ENABLED) && isTrueOrFalse(line.getOptionValue(METASTORE_METRICS_ENABLED));
+  }
+
+  private static boolean isTrueOrFalse(String value) {
+    return TRUE.equalsIgnoreCase(value) || FALSE.equalsIgnoreCase(value);
+  }
+
 
   private static void printBool(boolean value) {
     System.out.print(Boolean.toString(value));

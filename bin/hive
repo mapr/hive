@@ -512,6 +512,31 @@ fi
 
 declare -A IS_SERVICE_CMD=(["metastore_start"]=1 ["metastore_stop"]=1 ["metastore_status"]=1 ["hiveserver2_start"]=1 ["hiveserver2_stop"]=1 ["hiveserver2_status"]=1)
 
+MAPR_HOME="${BASEMAPR:-/opt/mapr}"
+MAPR_CONF="$MAPR_HOME"/conf
+
+source "$MAPR_HOME"/server/common-ecosystem.sh 2>/dev/null
+
+# Set different properties depending on the security of the a cluster
+if isSecurityEnabled 2>/dev/null; then
+read -r -d '' JMX_OPTS  << EOM
+-Dcom.sun.management.jmxremote
+-Dcom.sun.management.jmxremote.authenticate=true
+-Dcom.sun.management.jmxremote.password.file=${MAPR_CONF}/jmxremote.password
+-Dcom.sun.management.jmxremote.access.file=${MAPR_CONF}/jmxremote.access
+-Dcom.sun.management.jmxremote.ssl=false
+EOM
+else
+read -r -d '' JMX_OPTS  << EOM
+-Dcom.sun.management.jmxremote
+-Dcom.sun.management.jmxremote.authenticate=false
+-Dcom.sun.management.jmxremote.ssl=false
+EOM
+fi
+
+HIVE_META_JMX_OPTS="$JMX_OPTS -Dcom.sun.management.jmxremote.port=9011"
+HIVE_SERVER2_JMX_OPTS="$JMX_OPTS -Dcom.sun.management.jmxremote.port=9012"
+
 if [ "$TORUN" = "" ] ; then
   echo "Service $SERVICE not found"
   echo "Available Services: $SERVICE_LIST"
@@ -521,5 +546,16 @@ else
   if [ -f "$HIVE_HOME/bin"/sync-pid.sh ] ; then
     [ -n "${IS_SERVICE_CMD[$TORUN]}" ] && source "$HIVE_HOME/bin"/sync-pid.sh
   fi
+
+  # Configure metastore for collecting metrics
+  if [ "$TORUN" = "metastore_start" ] ; then
+    export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS $HIVE_META_JMX_OPTS"
+  fi
+
+  # Configure hiveserver2 for collecting metrics
+  if [ "$TORUN" = "hiveserver2_start" ] ; then
+    export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS $HIVE_SERVER2_JMX_OPTS"
+  fi
+
   $TORUN "$@"
 fi

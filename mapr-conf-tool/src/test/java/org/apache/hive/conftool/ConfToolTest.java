@@ -662,4 +662,59 @@ public class ConfToolTest {
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, "hive.security.authorization.enabled"));
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, "hive.security.authorization.manager"));
   }
+
+  @Test public void configureHs2MetricsEnabled()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-050.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.configureHs2Metrics(doc, true);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, "hive.server2.metrics.enabled"));
+  }
+
+
+  @Test public void configureHs2MetricsDisabled()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-051.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.configureHs2Metrics(doc, false);
+    Assert.assertEquals("false", ConfTool.getProperty(doc, "hive.server2.metrics.enabled"));
+  }
+
+
+  @Test public void configureMetastoreMetricsEnabled()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-052.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.configureMetastoreMetrics(doc, true);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, "hive.metastore.metrics.enabled"));
+  }
+
+
+  @Test public void configureMetastoreMetricsDisabled()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-053.xml");
+    String pathToHiveSite = url.getPath();
+
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(pathToHiveSite);
+
+    ConfTool.configureMetastoreMetrics(doc, false);
+    Assert.assertEquals("false", ConfTool.getProperty(doc, "hive.metastore.metrics.enabled"));
+  }
 }
