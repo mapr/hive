@@ -540,4 +540,40 @@ public class ConfCliTest {
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.enabled"));
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.manager"));
   }
+
+  @Test public void configureHs2MetricsEnabledTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-050.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[] { "--hiveserver2_metrics_enabled", "true", "--path", pathToHiveSite});
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.metrics.enabled"));
+    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.metrics.enabled"));
+  }
+
+  @Test public void configureHs2MetricsDisabledTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-051.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[] { "--hiveserver2_metrics_enabled", "false", "--path", pathToHiveSite});
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.metrics.enabled"));
+    Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.server2.metrics.enabled"));
+  }
+
+  @Test public void configureMetastoreMetricsEnabledTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-052.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[] { "--metastore_metrics_enabled", "true", "--path", pathToHiveSite});
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.metrics.enabled"));
+    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.enabled"));
+  }
+
+  @Test public void configureMetastoreMetricsDisabledTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource("hive-site-053.xml");
+    String pathToHiveSite = url.getPath();
+    ConfCli.main(new String[] { "--metastore_metrics_enabled", "false", "--path", pathToHiveSite});
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.metrics.enabled"));
+    Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.enabled"));
+  }
 }

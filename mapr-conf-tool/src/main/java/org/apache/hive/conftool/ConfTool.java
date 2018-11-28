@@ -69,6 +69,8 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_DRIVER_RUN_HOOK
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SESSION_HOOK;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_METRICS_ENABLED;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_METRICS;
 
 /**
  *  Helper for configuring Hive.
@@ -544,6 +546,75 @@ final class ConfTool {
     }
   }
 
+  /**
+   * Wrapper for method configureHs2Metrics()
+   *
+   * @param pathToHiveSite hive-site location
+   * @param isMetricsEnabled true if metrics should be enabled
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   * @throws TransformerException
+   */
+  static void configureHs2Metrics(String pathToHiveSite, boolean isMetricsEnabled)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    configureHs2Metrics(doc, isMetricsEnabled);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures HiveServer2 for connecting metrics. JVM parameters should be added in HIVE_HOME/bin/hive file.
+   * Security does not play role here.
+   *
+   * @param doc xml document
+   * @param isMetricsEnabled true if metrics should be enabled
+   */
+  static void configureHs2Metrics(Document doc, boolean isMetricsEnabled){
+    if (isMetricsEnabled) {
+      LOG.info("Enabling metrics for HiveServer2");
+      set(doc, HIVE_SERVER2_METRICS_ENABLED, TRUE);
+    } else {
+      LOG.info("Disabling metrics for HiveServer2");
+      set(doc, HIVE_SERVER2_METRICS_ENABLED, FALSE);
+    }
+  }
+
+  /**
+   * Wrapper for method configureMetastoreMetrics
+   *
+   * @param pathToHiveSite hive-site location
+   * @param isMetricsEnabled true if metrics should be enabled
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   * @throws TransformerException
+   */
+  static void configureMetastoreMetrics(String pathToHiveSite, boolean isMetricsEnabled)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    configureMetastoreMetrics(doc, isMetricsEnabled);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures Metastore for connecting metrics. JVM parameters should be added in HIVE_HOME/bin/hive file.
+   * Security does not play role here.
+   *
+   * @param doc xml document
+   * @param isMetricsEnabled true if metrics should be enabled
+   */
+  static void configureMetastoreMetrics(Document doc, boolean isMetricsEnabled){
+    if (isMetricsEnabled) {
+      LOG.info("Enabling metrics for Metastore");
+      set(doc, METASTORE_METRICS, TRUE);
+    } else {
+      LOG.info("Disabling metrics for Metastore");
+      set(doc, METASTORE_METRICS, FALSE);
+    }
+  }
 
 
   /**

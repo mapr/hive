@@ -682,6 +682,25 @@ configure_users_in_admin_role(){
 }
 
 #
+# Configures HiveServer2 for collecting metrics in hive-site.xml.
+# Property com.sun.management.jmxremote is configured in $HIVE_BIN/hive
+#
+configure_hs2_metrics() {
+HIVE_SITE="$1"
+. ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hiveserver2_metrics_enabled true
+}
+
+#
+# Configures Metastore for collecting metrics in hive-site.xml.
+# Property com.sun.management.jmxremote is configured in $HIVE_BIN/hive
+#
+configure_metastore_metrics() {
+HIVE_SITE="$1"
+. ${HIVE_BIN}/conftool -path "$HIVE_SITE" -metastore_metrics_enabled true
+}
+
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -796,6 +815,10 @@ configure_fallback_authorizer "$HIVE_SITE" "$isSecure"
 init_derby_schema
 
 configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
+
+configure_hs2_metrics "$HIVE_SITE"
+
+configure_metastore_metrics "$HIVE_SITE"
 
 configure_roles
 
