@@ -346,7 +346,7 @@ class EncodedReaderImpl implements EncodedReader {
         ColumnReadContext ctx = colCtxs[colIxMod];
         OrcProto.RowIndexEntry index = ctx.rowIndex.getEntry(rgIx),
             nextIndex = isLastRg ? null : ctx.rowIndex.getEntry(rgIx + 1);
-        ecb.initColumn(colIxMod, ctx.colIx, OrcEncodedColumnBatch.MAX_DATA_STREAMS);
+        ecb.initOrcColumn(ctx.colIx);
         for (int streamIx = 0; streamIx < ctx.streamCount; ++streamIx) {
           StreamContext sctx = ctx.streams[streamIx];
           ColumnStreamData cb = null;

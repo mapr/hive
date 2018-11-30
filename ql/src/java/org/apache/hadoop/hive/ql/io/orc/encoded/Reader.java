@@ -57,6 +57,10 @@ public interface Reader extends org.apache.hadoop.hive.ql.io.orc.Reader {
       }
       resetColumnArrays(columnCount);
     }
+
+    public void initOrcColumn(int colIx) {
+      super.initColumn(colIx, MAX_DATA_STREAMS);
+    }
   }
 
   /**

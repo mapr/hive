@@ -167,9 +167,9 @@ public class LlapInputFormat implements InputFormat<NullWritable, VectorizedRowB
     private long firstReturnTime;
 
     private final JobConf jobConf;
-    private final TypeDescription fileSchema;
     private final boolean[] includedColumns;
     private final ReadPipeline rp;
+    private SchemaEvolution evolution;
 
     public LlapRecordReader(JobConf job, FileSplit split, List<Integer> includedCols,
         String hostName) throws IOException, HiveException {
@@ -207,11 +207,14 @@ public class LlapInputFormat implements InputFormat<NullWritable, VectorizedRowB
       } else {
         partitionValues = null;
       }
+      boolean isAcidScan = HiveConf.getBoolVar(jobConf, ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN);
+      TypeDescription schema = OrcInputFormat.getDesiredRowTypeDescr(
+          job, isAcidScan, Integer.MAX_VALUE);
 
       // Create the consumer of encoded data; it will coordinate decoding to CVBs.
-      rp = cvp.createReadPipeline(this, split, columnIds, sarg, columnNames, counters);
+      rp = cvp.createReadPipeline(this, split, columnIds, sarg, columnNames, counters, schema);
       feedback = rp;
-      fileSchema = rp.getFileSchema();
+      evolution = rp.getSchemaEvolution();
       includedColumns = rp.getIncludedColumns();
     }
 
@@ -222,10 +225,8 @@ public class LlapInputFormat implements InputFormat<NullWritable, VectorizedRowB
       boolean isAcidScan = HiveConf.getBoolVar(jobConf, ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN);
       TypeDescription readerSchema = OrcInputFormat.getDesiredRowTypeDescr(jobConf, isAcidScan,
           Integer.MAX_VALUE);
-      SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, readerSchema,
-          includedColumns);
       for (Integer colId : columnIds) {
-        if (!schemaEvolution.isPPDSafeConversion(colId)) {
+        if (!evolution.isPPDSafeConversion(colId)) {
           LlapIoImpl.LOG.warn("Unsupported schema evolution! Disabling Llap IO for {}", split);
           return false;
         }

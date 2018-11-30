@@ -29,17 +29,15 @@ import org.apache.hadoop.hive.llap.cache.LlapCacheableBuffer;
 import org.apache.hadoop.hive.ql.io.SyntheticFileId;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.FileMetadata;
-import org.apache.orc.OrcProto;
-import org.apache.orc.StripeInformation;
+import org.apache.orc.*;
 import org.apache.orc.impl.ReaderImpl;
 
 /** ORC file metadata. Currently contains some duplicate info due to how different parts
  * of ORC use different info. Ideally we would get rid of protobuf structs in code beyond reading,
  * or instead use protobuf structs everywhere instead of the mix of things like now.
  */
-public final class OrcFileMetadata extends LlapCacheableBuffer implements FileMetadata {
+public final class OrcFileMetadata extends LlapCacheableBuffer
+    implements FileMetadata, ConsumerFileMetadata {
   private final List<StripeInformation> stripes;
   private final List<Integer> versionList;
   private final List<OrcProto.StripeStatistics> stripeStats;
@@ -148,6 +146,10 @@ public final class OrcFileMetadata extends LlapCacheableBuffer implements FileMe
     return types;
   }
 
+  @Override public TypeDescription getSchema() {
+    return OrcUtils.convertTypeFromProtobuf(this.types, 0);
+  }
+
   @Override
   public boolean isOriginalFormat() {
     return isOriginalFormat;
@@ -156,6 +158,10 @@ public final class OrcFileMetadata extends LlapCacheableBuffer implements FileMe
   @Override
   public List<StripeInformation> getStripes() {
     return stripes;
+  }
+
+  @Override public int getStripeCount() {
+    return stripes.size();
   }
 
   @Override

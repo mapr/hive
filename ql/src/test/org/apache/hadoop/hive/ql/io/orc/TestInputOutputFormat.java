@@ -114,7 +114,9 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
+import org.apache.orc.TypeDescription;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1982,6 +1984,26 @@ public class TestInputOutputFormat {
   }
 
   /**
+   * Set the mockblocks for a file after it has been written
+   * @param path the path to modify
+   * @param conf the configuration
+   * @param blocks the blocks to uses
+   * @throws IOException
+   */
+  static void setBlocks(Path path, Configuration conf,
+                        MockBlock... blocks) throws IOException {
+    FileSystem mockFs = path.getFileSystem(conf);
+    MockOutputStream stream = (MockOutputStream) mockFs.create(path);
+    stream.setBlocks(blocks);
+  }
+
+  static int getLength(Path path, Configuration conf) throws IOException {
+    FileSystem mockFs = path.getFileSystem(conf);
+    FileStatus stat = mockFs.getFileStatus(path);
+    return (int) stat.getLen();
+  }
+
+  /**
    * Test vectorization, non-acid, non-combine.
    * @throws Exception
    */
@@ -1998,16 +2020,16 @@ public class TestInputOutputFormat {
         "vectorization", inspector, true, 1);
 
     // write the orc file to the mock file system
+    Path path = new Path(conf.get("mapred.input.dir") + "/0_0");
     Writer writer =
-        OrcFile.createWriter(new Path(conf.get("mapred.input.dir") + "/0_0"),
+        OrcFile.createWriter(path,
            OrcFile.writerOptions(conf).blockPadding(false)
                   .bufferSize(1024).inspector(inspector));
     for(int i=0; i < 10; ++i) {
       writer.addRow(new MyRow(i, 2*i));
     }
     writer.close();
-    ((MockOutputStream) ((WriterImpl) writer).getStream())
-        .setBlocks(new MockBlock("host0", "host1"));
+    setBlocks(path, conf, new MockBlock("host0", "host1"));
 
     // call getsplits
     HiveInputFormat<?,?> inputFormat =
@@ -2045,16 +2067,16 @@ public class TestInputOutputFormat {
         "vectorBuckets", inspector, true, 1);
 
     // write the orc file to the mock file system
+    Path path = new Path(conf.get("mapred.input.dir") + "/0_0");
     Writer writer =
-        OrcFile.createWriter(new Path(conf.get("mapred.input.dir") + "/0_0"),
+        OrcFile.createWriter(path,
             OrcFile.writerOptions(conf).blockPadding(false)
                 .bufferSize(1024).inspector(inspector));
     for(int i=0; i < 10; ++i) {
       writer.addRow(new MyRow(i, 2*i));
     }
     writer.close();
-    ((MockOutputStream) ((WriterImpl) writer).getStream())
-        .setBlocks(new MockBlock("host0", "host1"));
+    setBlocks(path, conf, new MockBlock("host0", "host1"));
 
     // call getsplits
     conf.setInt(hive_metastoreConstants.BUCKET_COUNT, 3);
@@ -2092,10 +2114,9 @@ public class TestInputOutputFormat {
       BigRow row = new BigRow(i);
       writer.insert(10, row);
     }
-    WriterImpl baseWriter = (WriterImpl) writer.getWriter();
     writer.close(false);
-    ((MockOutputStream) baseWriter.getStream())
-        .setBlocks(new MockBlock("host0", "host1"));
+    Path path = new Path("mock:/vectorizationAcid/p=0/base_0000010/bucket_00000");
+    setBlocks(path, conf, new MockBlock("host0", "host1"));
 
     // call getsplits
     HiveInputFormat<?,?> inputFormat =
@@ -2173,9 +2194,10 @@ public class TestInputOutputFormat {
       writer.addRow(new MyRow(i, 2*i));
     }
     writer.close();
-    MockOutputStream outputStream = (MockOutputStream) ((WriterImpl) writer).getStream();
-    outputStream.setBlocks(new MockBlock("host0", "host1"));
-    int length0 = outputStream.file.length;
+    Path path = new Path("mock:/combination/p=0/0_0");
+    setBlocks(path, conf, new MockBlock("host0", "host1"));
+    MockFileSystem mockFs = (MockFileSystem) partDir.getFileSystem(conf);
+    int length0 = getLength(path, conf);
     writer =
         OrcFile.createWriter(new Path(partDir, "1_0"),
             OrcFile.writerOptions(conf).blockPadding(false)
@@ -2184,8 +2206,8 @@ public class TestInputOutputFormat {
       writer.addRow(new MyRow(i, 2*i));
     }
     writer.close();
-    outputStream = (MockOutputStream) ((WriterImpl) writer).getStream();
-    outputStream.setBlocks(new MockBlock("host1", "host2"));
+    Path path1 = new Path("mock:/combination/p=0/1_0");
+    setBlocks(path1, conf, new MockBlock("host1", "host2"));
 
     // call getsplits
     HiveInputFormat<?,?> inputFormat =
@@ -2200,7 +2222,7 @@ public class TestInputOutputFormat {
     assertEquals(partDir.toString() + "/0_0", split.getPath(0).toString());
     assertEquals(partDir.toString() + "/1_0", split.getPath(1).toString());
     assertEquals(length0, split.getLength(0));
-    assertEquals(outputStream.file.length, split.getLength(1));
+    assertEquals(getLength(path1, conf), split.getLength(1));
     assertEquals(0, split.getOffset(0));
     assertEquals(0, split.getOffset(1));
     // hadoop-1 gets 3 and hadoop-2 gets 0. *sigh*
@@ -2248,11 +2270,11 @@ public class TestInputOutputFormat {
     for(int i=0; i < 10; ++i) {
       writer.insert(10, new MyRow(i, 2 * i));
     }
-    WriterImpl baseWriter = (WriterImpl) writer.getWriter();
     writer.close(false);
 
-    MockOutputStream outputStream = (MockOutputStream) baseWriter.getStream();
-    outputStream.setBlocks(new MockBlock("host1", "host2"));
+    // base file
+    Path base0 = new Path("mock:/combinationAcid/p=0/base_0000010/bucket_00000");
+    setBlocks(base0, conf, new MockBlock("host1", "host2"));
 
     // write a delta file in partition 0
     writer = new OrcRecordUpdater(partDir[0],
@@ -2261,23 +2283,22 @@ public class TestInputOutputFormat {
     for(int i=10; i < 20; ++i) {
       writer.insert(10, new MyRow(i, 2*i));
     }
-    WriterImpl deltaWriter = (WriterImpl) writer.getWriter();
-    outputStream = (MockOutputStream) deltaWriter.getStream();
     writer.close(false);
-    outputStream.setBlocks(new MockBlock("host1", "host2"));
+    Path base1 = new Path("mock:/combinationAcid/p=0/base_0000010/bucket_00001");
+    setBlocks(base1, conf, new MockBlock("host1", "host2"));
 
     // write three files in partition 1
     for(int bucket=0; bucket < BUCKETS; ++bucket) {
+      Path path = new Path(partDir[1], "00000" + bucket + "_0");
       Writer orc = OrcFile.createWriter(
-          new Path(partDir[1], "00000" + bucket + "_0"),
+          path,
           OrcFile.writerOptions(conf)
               .blockPadding(false)
               .bufferSize(1024)
               .inspector(inspector));
       orc.addRow(new MyRow(1, 2));
-      outputStream = (MockOutputStream) ((WriterImpl) orc).getStream();
       orc.close();
-      outputStream.setBlocks(new MockBlock("host3", "host4"));
+      setBlocks(path, conf, new MockBlock("host3", "host4"));
     }
 
     // call getsplits
@@ -3497,13 +3518,13 @@ public class TestInputOutputFormat {
     }
 
     // Save the conf variable values so that they can be restored later.
-    long oldDefaultStripeSize = conf.getLong(HiveConf.ConfVars.HIVE_ORC_DEFAULT_STRIPE_SIZE.varname, -1L);
+    long oldDefaultStripeSize = conf.getLong(OrcConf.STRIPE_SIZE.getHiveConfName(), -1L);
     long oldMaxSplitSize = conf.getLong(HiveConf.ConfVars.MAPREDMAXSPLITSIZE.varname, -1L);
 
     // Set the conf variable values for this test.
     long newStripeSize = 10000L; // 10000 bytes per stripe
     long newMaxSplitSize = 100L; // 1024 bytes per split
-    conf.setLong(HiveConf.ConfVars.HIVE_ORC_DEFAULT_STRIPE_SIZE.varname, newStripeSize);
+    conf.setLong(OrcConf.STRIPE_SIZE.getHiveConfName(), newStripeSize);
     conf.setLong(HiveConf.ConfVars.MAPREDMAXSPLITSIZE.varname, newMaxSplitSize);
 
     SerDe serde = new OrcSerde();
@@ -3545,10 +3566,10 @@ public class TestInputOutputFormat {
 
     // Reset the conf variable values that we changed for this test.
     if (oldDefaultStripeSize != -1L) {
-      conf.setLong(HiveConf.ConfVars.HIVE_ORC_DEFAULT_STRIPE_SIZE.varname, oldDefaultStripeSize);
+      conf.setLong(OrcConf.STRIPE_SIZE.getHiveConfName(), oldDefaultStripeSize);
     } else {
       // this means that nothing was set for default stripe size previously, so we should unset it.
-      conf.unset(HiveConf.ConfVars.HIVE_ORC_DEFAULT_STRIPE_SIZE.varname);
+      conf.unset(OrcConf.STRIPE_SIZE.getHiveConfName());
     }
     if (oldMaxSplitSize != -1L) {
       conf.setLong(HiveConf.ConfVars.MAPREDMAXSPLITSIZE.varname, oldMaxSplitSize);

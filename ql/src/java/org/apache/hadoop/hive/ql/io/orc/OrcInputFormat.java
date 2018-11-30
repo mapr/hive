@@ -276,7 +276,7 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
    * @param isOriginal is the file in the original format?
    * @return the column number for the root of row.
    */
-  static int getRootColumn(boolean isOriginal) {
+  public static int getRootColumn(boolean isOriginal) {
     return isOriginal ? 0 : (OrcRecordUpdater.ROW + 1);
   }
 
@@ -291,9 +291,9 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
   }
 
   public static RecordReader createReaderFromFile(Reader file,
-                                                  Configuration conf,
-                                                  long offset, long length
-                                                  ) throws IOException {
+      Configuration conf,
+      long offset, long length
+  ) throws IOException {
 
     boolean isTransactionalTableScan = HiveConf.getBoolVar(conf, ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN);
     if (isTransactionalTableScan) {
@@ -308,10 +308,13 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
     Reader.Options options = new Reader.Options().range(offset, length);
     options.schema(schema);
     boolean isOriginal = isOriginal(file);
-    List<OrcProto.Type> types = file.getTypes();
-    options.include(genIncludedColumns(types, conf, isOriginal));
+    if (schema == null) {
+      schema = file.getSchema();
+    }
+    List<OrcProto.Type> types = OrcUtils.getOrcTypes(schema);
+    options.include(genIncludedColumns(schema, conf));
     setSearchArgument(options, types, conf, isOriginal);
-    return (RecordReader) file.rowsOptions(options);
+    return file.rowsOptions(options);
   }
 
   public static boolean isOriginal(Reader file) {
@@ -337,16 +340,22 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
     }
   }
 
-  public static boolean[] genIncludedColumns(
-      List<OrcProto.Type> types, List<Integer> included, boolean isOriginal) {
-    int rootColumn = getRootColumn(isOriginal);
-    int numColumns = types.size() - rootColumn;
-    boolean[] result = new boolean[numColumns];
+  public static boolean[] genIncludedColumns(TypeDescription readerSchema,
+      List<Integer> included) {
+
+    boolean[] result = new boolean[readerSchema.getMaximumId() + 1];
+    if (included == null) {
+      Arrays.fill(result, true);
+      return result;
+    }
     result[0] = true;
-    OrcProto.Type root = types.get(rootColumn);
-    for (int i = 0; i < root.getSubtypesCount(); ++i) {
-      if (included.contains(i)) {
-        includeColumnRecursive(types, result, root.getSubtypes(i), rootColumn);
+    List<TypeDescription> children = readerSchema.getChildren();
+    for (int columnNumber = 0; columnNumber < children.size(); ++columnNumber) {
+      if (included.contains(columnNumber)) {
+        TypeDescription child = children.get(columnNumber);
+        for(int col = child.getId(); col <= child.getMaximumId(); ++col) {
+          result[col] = true;
+        }
       }
     }
     return result;
@@ -354,15 +363,14 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
 
   /**
    * Take the configuration and figure out which columns we need to include.
-   * @param types the types for the file
+   * @param readerSchema the types for the reader
    * @param conf the configuration
-   * @param isOriginal is the file in the original format?
    */
-  public static boolean[] genIncludedColumns(
-      List<OrcProto.Type> types, Configuration conf, boolean isOriginal) {
-     if (!ColumnProjectionUtils.isReadAllColumns(conf)) {
+  public static boolean[] genIncludedColumns(TypeDescription readerSchema,
+      Configuration conf) {
+    if (!ColumnProjectionUtils.isReadAllColumns(conf)) {
       List<Integer> included = ColumnProjectionUtils.getReadColumnIDs(conf);
-      return genIncludedColumns(types, included, isOriginal);
+      return genIncludedColumns(readerSchema, included);
     } else {
       return null;
     }
@@ -1269,7 +1277,7 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
         if ((deltas == null || deltas.isEmpty()) && context.sarg != null) {
           String[] colNames =
               extractNeededColNames((readerTypes == null ? fileTypes : readerTypes),
-                  context.conf, included, isOriginal);
+                  context.conf, readerIncluded, isOriginal);
           if (colNames == null) {
             LOG.warn("Skipping split elimination for {} as column names is null", file.getPath());
           } else {
@@ -1390,22 +1398,15 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
       stripeStats = orcTail.getStripeStatistics();
       fileTypes = orcTail.getTypes();
       TypeDescription fileSchema = OrcUtils.convertTypeFromProtobuf(fileTypes, 0);
+      Reader.Options readerOptions = new Reader.Options(context.conf);
       if (readerTypes == null) {
-        included = genIncludedColumns(fileTypes, context.conf, isOriginal);
-        evolution = new SchemaEvolution(fileSchema, included);
-        readerIncluded = included;
+        readerIncluded = genIncludedColumns(fileSchema, context.conf);
+        evolution = new SchemaEvolution(fileSchema, readerOptions.include(readerIncluded));
       } else {
         // The reader schema always comes in without ACID columns.
-        included = genIncludedColumns(readerTypes, context.conf, /* isOriginal */ true);
-        if (included != null && !isOriginal) {
-          // We shift the include columns here because the SchemaEvolution constructor will
-          // add the ACID event metadata the readerSchema...
-          readerIncluded = shiftReaderIncludedForAcid(included);
-        } else {
-          readerIncluded = included;
-        }
         TypeDescription readerSchema = OrcUtils.convertTypeFromProtobuf(readerTypes, 0);
-        evolution = new SchemaEvolution(fileSchema, readerSchema, readerIncluded);
+        readerIncluded = genIncludedColumns(readerSchema, context.conf);
+        evolution = new SchemaEvolution(fileSchema, readerSchema, readerOptions.include(readerIncluded));
         if (!isOriginal) {
           // The SchemaEvolution class has added the ACID metadata columns.  Let's update our
           // readerTypes so PPD code will work correctly.
@@ -1766,11 +1767,12 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
 
   @Override
   public RowReader<OrcStruct> getReader(InputSplit inputSplit,
-                                        Options options)
-                                            throws IOException {
+      Options options)
+      throws IOException {
 
     final OrcSplit split = (OrcSplit) inputSplit;
     final Path path = split.getPath();
+
     Path root;
     if (split.hasBase()) {
       if (split.isOriginal()) {
@@ -1797,7 +1799,7 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
 
     // TODO: Convert genIncludedColumns and setSearchArgument to use TypeDescription.
     final List<OrcProto.Type> schemaTypes = OrcUtils.getOrcTypes(schema);
-    readOptions.include(genIncludedColumns(schemaTypes, conf, SCHEMA_TYPES_IS_ORIGINAL));
+    readOptions.include(OrcInputFormat.genIncludedColumns(schema, conf));
     setSearchArgument(readOptions, schemaTypes, conf, SCHEMA_TYPES_IS_ORIGINAL);
 
     if (split.hasBase()) {
@@ -1911,7 +1913,7 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
     // eliminate stripes that doesn't satisfy the predicate condition
     List<PredicateLeaf> sargLeaves = sarg.getLeaves();
     int[] filterColumns = RecordReaderImpl.mapSargColumnsToOrcInternalColIdx(sargLeaves,
-        sargColNames, getRootColumn(isOriginal));
+        evolution);
     return pickStripesInternal(sarg, filterColumns, stripeStats, stripeCount, filePath, evolution);
   }
 

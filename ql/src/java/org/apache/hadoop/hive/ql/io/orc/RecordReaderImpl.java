@@ -129,6 +129,7 @@ public class RecordReaderImpl extends org.apache.orc.impl.RecordReaderImpl
     return previous;
   }
 
+  @Override
   public boolean nextBatch(VectorizedRowBatch theirBatch) throws IOException {
     // If the user hasn't been reading by row, use the fast path.
     if (rowInBatch >= batch.size) {

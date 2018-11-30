@@ -15,17 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hive.llap.io.decode;
 
-import java.util.concurrent.Callable;
+package org.apache.hadoop.hive.common.type;
 
-import org.apache.hadoop.hive.llap.ConsumerFeedback;
-import org.apache.hadoop.hive.llap.io.api.impl.ColumnVectorBatch;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.SchemaEvolution;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public interface ReadPipeline extends ConsumerFeedback<ColumnVectorBatch> {
-  public Callable<Void> getReadCallable();
-  SchemaEvolution getSchemaEvolution();
-  boolean[] getIncludedColumns();
+/**
+ * Marks methods including static methods and fields as being part of version 1 HiveDecimal.
+ *
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+public @interface HiveDecimalVersionV1 {
+
 }

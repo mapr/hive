@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.llap.io.api.impl.ColumnVectorBatch;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Consumer;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.orc.TypeDescription;
 
 /**
  * Entry point used by LlapInputFormat to create read pipeline to get data.
@@ -33,5 +34,5 @@ import org.apache.hadoop.mapred.FileSplit;
 public interface ColumnVectorProducer {
   ReadPipeline createReadPipeline(Consumer<ColumnVectorBatch> consumer, FileSplit split,
       List<Integer> columnIds, SearchArgument sarg, String[] columnNames,
-      QueryFragmentCounters counters) throws IOException;
+      QueryFragmentCounters counters, TypeDescription readerSchema) throws IOException;
 }

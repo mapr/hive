@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.llap.cache.BufferUsageManager;
 import org.apache.hadoop.hive.llap.cache.LowLevelCache;
 import org.apache.hadoop.hive.llap.counters.QueryFragmentCounters;
@@ -35,6 +34,9 @@ import org.apache.hadoop.hive.llap.metrics.LlapDaemonIOMetrics;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Consumer;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.mapred.FileSplit;
+
+import org.apache.orc.TypeDescription;
+import org.apache.orc.OrcConf;
 
 public class OrcColumnVectorProducer implements ColumnVectorProducer {
 
@@ -55,7 +57,7 @@ public class OrcColumnVectorProducer implements ColumnVectorProducer {
     this.lowLevelCache = lowLevelCache;
     this.bufferManager = bufferManager;
     this.conf = conf;
-    this._skipCorrupt = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_ORC_SKIP_CORRUPT_DATA);
+    this._skipCorrupt = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
     this.cacheMetrics = cacheMetrics;
     this.ioMetrics = ioMetrics;
   }
@@ -64,12 +66,12 @@ public class OrcColumnVectorProducer implements ColumnVectorProducer {
   public ReadPipeline createReadPipeline(
       Consumer<ColumnVectorBatch> consumer, FileSplit split,
       List<Integer> columnIds, SearchArgument sarg, String[] columnNames,
-      QueryFragmentCounters counters) throws IOException {
+      QueryFragmentCounters counters, TypeDescription readerSchema) throws IOException {
     cacheMetrics.incrCacheReadRequests();
     OrcEncodedDataConsumer edc = new OrcEncodedDataConsumer(consumer, columnIds.size(),
         _skipCorrupt, counters, ioMetrics);
     OrcEncodedDataReader reader = new OrcEncodedDataReader(lowLevelCache, bufferManager,
-        metadataCache, conf, split, columnIds, sarg, columnNames, edc, counters);
+        metadataCache, conf, split, columnIds, sarg, columnNames, edc, counters, readerSchema);
     edc.init(reader, reader);
     return edc;
   }

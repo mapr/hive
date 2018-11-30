@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.io.sarg;
 
+import org.apache.hadoop.conf.Configuration;
 import java.sql.Timestamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -58,6 +59,14 @@ public final class SearchArgumentImpl implements SearchArgument {
                              String columnName,
                              Object literal,
                              List<Object> literalList) {
+      this(operator, type, columnName, literal, literalList, null);
+    }
+
+    public PredicateLeafImpl(Operator operator,
+                             Type type,
+                             String columnName,
+                             Object literal,
+                             List<Object> literalList, Configuration conf) {
       this.operator = operator;
       this.type = type;
       this.columnName = columnName;

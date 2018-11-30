@@ -61,6 +61,9 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.TimestampObjectIn
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.orc.PhysicalWriter;
+
 /**
  * An ORC file writer. The file is divided into stripes, which is the natural
  * unit of work when reading. Each stripe is buffered in memory until the
@@ -90,14 +93,19 @@ public class WriterImpl extends org.apache.orc.impl.WriterImpl implements Writer
              OrcFile.WriterOptions opts) throws IOException {
     super(fs, path, opts);
     this.inspector = opts.getInspector();
-    internalBatch = opts.getSchema().createRowBatch(opts.getBatchSize());
+    this.internalBatch = opts.getSchema().createRowBatch(opts.getBatchSize());
+    this.fields = initializeFieldsFromOi(inspector);
+  }
+
+  private static StructField[] initializeFieldsFromOi(ObjectInspector inspector) {
     if (inspector instanceof StructObjectInspector) {
       List<? extends StructField> fieldList =
           ((StructObjectInspector) inspector).getAllStructFieldRefs();
-      fields = new StructField[fieldList.size()];
+      StructField[] fields = new StructField[fieldList.size()];
       fieldList.toArray(fields);
+      return fields;
     } else {
-      fields = null;
+      return null;
     }
   }
 
