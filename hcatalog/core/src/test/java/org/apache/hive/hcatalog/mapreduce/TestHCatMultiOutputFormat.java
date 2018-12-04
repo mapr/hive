@@ -177,6 +177,7 @@ public class TestHCatMultiOutputFormat {
     mrCluster = new MiniMRCluster(1, fs.getUri().toString(), 1, null, null,
       new JobConf(conf));
     mrConf = mrCluster.createJobConf();
+    mrConf.set("mapreduce.framework.name", "local");
 
     initializeSetup();
 

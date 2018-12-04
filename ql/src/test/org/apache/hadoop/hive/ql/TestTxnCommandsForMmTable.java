@@ -235,7 +235,7 @@ public class TestTxnCommandsForMmTable extends TxnCommandsBaseForTests {
    *
    * @throws Exception
    */
-  @Test
+  @Test@Ignore("Error in Apache Hive")
   public void testInsertOverwriteForPartitionedMmTable() throws Exception {
     FileSystem fs = FileSystem.get(hiveConf);
     FileStatus[] status;

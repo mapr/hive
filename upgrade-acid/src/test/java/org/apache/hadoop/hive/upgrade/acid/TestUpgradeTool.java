@@ -262,6 +262,7 @@ ALTER TABLE default.tacidpart PARTITION(p=10Y) COMPACT 'major';
             "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
     hiveConf.setBoolVar(HiveConf.ConfVars.MERGE_CARDINALITY_VIOLATION_CHECK, true);
     hiveConf.setBoolVar(HiveConf.ConfVars.HIVESTATSCOLAUTOGATHER, false);
+    hiveConf.set("fs.defaultFS", "file:///");
     TxnDbUtil.setConfValues(hiveConf);
     TxnDbUtil.prepDb();//todo: api changed in 3.0
     File f = new File(getWarehouseDir());
