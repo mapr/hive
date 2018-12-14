@@ -92,6 +92,7 @@ import org.apache.hadoop.hive.ql.udf.UDFSign;
 import org.apache.hadoop.hive.ql.udf.UDFSin;
 import org.apache.hadoop.hive.ql.udf.UDFSpace;
 import org.apache.hadoop.hive.ql.udf.UDFSqrt;
+import org.apache.hadoop.hive.ql.udf.UDFStringFromHBaseBytes;
 import org.apache.hadoop.hive.ql.udf.UDFSubstr;
 import org.apache.hadoop.hive.ql.udf.UDFTan;
 import org.apache.hadoop.hive.ql.udf.UDFToBoolean;
@@ -239,6 +240,7 @@ public final class FunctionRegistry {
     system.registerUDF("sha", UDFSha1.class, false);
     system.registerGenericUDF("aes_encrypt", GenericUDFAesEncrypt.class);
     system.registerGenericUDF("aes_decrypt", GenericUDFAesDecrypt.class);
+    system.registerUDF("hbasedecimal", UDFStringFromHBaseBytes.class, false);
 
     system.registerGenericUDF("encode", GenericUDFEncode.class);
     system.registerGenericUDF("decode", GenericUDFDecode.class);
