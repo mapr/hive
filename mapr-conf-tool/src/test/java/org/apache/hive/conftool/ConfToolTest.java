@@ -511,7 +511,7 @@ public class ConfToolTest {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(pathToHiveSite);
 
-    ConfTool.setRestrictedList(pathToHiveSite, NONE);
+    ConfTool.setRestrictedList(doc, NONE);
     Assert.assertFalse(ConfTool.propertyExists(doc, "hive.conf.restricted.list"));
   }
 
