@@ -57,6 +57,8 @@ DERBY_CONNECTION_URL="jdbc:derby:;databaseName=$HIVE_BIN/metastore_db;create=tru
 CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 HIVE_METASTORE_URIS_PROPERTY_NAME="hive.metastore.uris"
 WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
+REPORTER_TYPE="JSON_FILE,JMX"
+REPORTER_FILE_LOCATION="/tmp/hive_report.json"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -699,6 +701,17 @@ HIVE_SITE="$1"
 . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -metastore_metrics_enabled true
 }
 
+#
+# Reporter type for metric class org.apache.hadoop.hive.common.metrics.metrics2.CodahaleMetrics.
+# Comma separated list of JMX, CONSOLE, JSON_FILE, HADOOP2.
+#
+# For metric class org.apache.hadoop.hive.common.metrics.metrics2.CodahaleMetrics JSON_FILE reporter,
+# the location of local JSON metrics file.This file will get overwritten at every interval.
+#
+configure_reporter_type_and_file_location() {
+HIVE_SITE="$1"
+. ${HIVE_BIN}/conftool -path "$HIVE_SITE" -reporter_type "$REPORTER_TYPE" -reporter_file "$REPORTER_FILE_LOCATION" -reporter_enabled true
+}
 
 #
 # main
@@ -819,6 +832,8 @@ configure_hs2_ha "$HIVE_SITE" "$isHS2HA"
 configure_hs2_metrics "$HIVE_SITE"
 
 configure_metastore_metrics "$HIVE_SITE"
+
+configure_reporter_type_and_file_location "$HIVE_SITE"
 
 configure_roles
 

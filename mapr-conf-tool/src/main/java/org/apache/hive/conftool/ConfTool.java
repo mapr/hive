@@ -663,6 +663,66 @@ final class ConfTool {
   }
 
   /**
+   * Configures metrics reported type.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param reporterType reporter type for metric class
+   */
+  static void configureMetricsReporterType(String pathToHiveSite, boolean isReporterEnabled, String reporterType)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    configureMetricsReporterType(doc, isReporterEnabled, reporterType);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures metrics reported type.
+   *
+   * @param doc xml document
+   * @param reporterType reporter type for metric class
+   */
+  static void configureMetricsReporterType(Document doc, boolean isReporterEnabled, String reporterType) {
+    if (isReporterEnabled) {
+      LOG.info("Configuring metrics reporter : {}", reporterType);
+      set(doc, HIVE_METRICS_REPORTER, reporterType);
+    } else {
+      LOG.info("Removing metrics reporter");
+      remove(doc, HIVE_METRICS_REPORTER);
+    }
+  }
+
+  /**
+   * Configures metrics file location.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param fileLocation the location of local JSON metrics file
+   */
+  static void configureMetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled, String fileLocation)
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    configureMetricsFileLocation(doc, isReporterEnabled, fileLocation);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures metrics reported type.
+   *
+   * @param doc xml document
+   * @param fileLocation the location of local JSON metrics file
+   */
+  static void configureMetricsFileLocation(Document doc, boolean isReporterEnabled, String fileLocation) {
+    if (isReporterEnabled) {
+      LOG.info("Configuring metrics file location : {}", fileLocation);
+      set(doc, HIVE_METRICS_JSON_FILE_LOCATION, fileLocation);
+    } else {
+      LOG.info("Removing metrics file location");
+      remove(doc, HIVE_METRICS_JSON_FILE_LOCATION);
+    }
+  }
+
+  /**
    * Wrapper for method configureMetastoreMetrics
    *
    * @param pathToHiveSite hive-site location
