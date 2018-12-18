@@ -32,6 +32,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
+import static org.apache.hive.conftool.ConfToolUtil.*;
+
 /**
  CLI manager to configure Hive components.
  */
@@ -292,15 +294,6 @@ public final class ConfCli {
     return line.hasOption(SECURITY) && isTrueOrFalseOrCustom(line.getOptionValue(SECURITY));
   }
 
-  private static boolean isTrueOrFalseOrCustom(String value) {
-    for (Security security : Security.values()) {
-      if (security.value().equalsIgnoreCase(value.trim())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private static void configureSecurity(String pathToHiveSite, Security security)
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
     ConfTool.setMaprSasl(pathToHiveSite, security);
@@ -375,8 +368,8 @@ public final class ConfCli {
     return line.hasOption(ADMIN_USER);
   }
 
-  private static boolean isFallbackAuthorizer(CommandLine line){
-   return line.hasOption(FALLBACK_AUTHORIZER);
+  private static boolean isFallbackAuthorizer(CommandLine line) {
+    return line.hasOption(FALLBACK_AUTHORIZER);
   }
 
   private static void printBool(boolean value) {
