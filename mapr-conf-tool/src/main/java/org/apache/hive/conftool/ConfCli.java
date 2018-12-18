@@ -32,6 +32,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
+import static org.apache.hive.conftool.ConfToolUtil.*;
+
 /**
  CLI manager to configure Hive components.
  */
@@ -62,8 +64,6 @@ public final class ConfCli {
   private static final String DEL_PROPERTY = "delProperty";
   private static final String GET_PROPERTY = "getProperty";
   private static final String FALLBACK_AUTHORIZER = "fallBackAuthorizer";
-  private static final String TRUE = "true";
-  private static final String FALSE = "false";
   private static final String HIVE_SERVER2_METRICS_ENABLED = "hiveserver2_metrics_enabled";
   private static final String METASTORE_METRICS_ENABLED = "metastore_metrics_enabled";
 
@@ -285,12 +285,12 @@ public final class ConfCli {
       if (isFallbackAuthorizer(line)) {
         ConfTool.setFallbackAuthorizer(pathToXmlFile, getSecurity(line));
       }
-      if(isHiveServer2Metrics(line)) {
+      if (isHiveServer2Metrics(line)) {
         boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
         ConfTool.configureHs2Metrics(pathToXmlFile, isMetricsEnabled);
       }
 
-      if(isMetasoreMetrics(line)) {
+      if (isMetasoreMetrics(line)) {
         boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(METASTORE_METRICS_ENABLED));
         ConfTool.configureMetastoreMetrics(pathToXmlFile, isMetricsEnabled);
       }
@@ -313,15 +313,6 @@ public final class ConfCli {
 
   private static boolean hasValidSecurityOptions(CommandLine line) {
     return line.hasOption(SECURITY) && isTrueOrFalseOrCustom(line.getOptionValue(SECURITY));
-  }
-
-  private static boolean isTrueOrFalseOrCustom(String value) {
-    for (Security security : Security.values()) {
-      if (security.value().equalsIgnoreCase(value.trim())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private static void configureSecurity(String pathToHiveSite, Security security)
@@ -399,25 +390,17 @@ public final class ConfCli {
     return line.hasOption(ADMIN_USER);
   }
 
-  private static boolean isFallbackAuthorizer(CommandLine line){
-   return line.hasOption(FALLBACK_AUTHORIZER);
+  private static boolean isFallbackAuthorizer(CommandLine line) {
+    return line.hasOption(FALLBACK_AUTHORIZER);
   }
 
   private static boolean isHiveServer2Metrics(CommandLine line) {
-    return line.hasOption(HIVE_SERVER2_METRICS_ENABLED) && isTrueOrFalse(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
+    return line.hasOption(HIVE_SERVER2_METRICS_ENABLED) && isTrueOrFalse(
+        line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
   }
 
   private static boolean isMetasoreMetrics(CommandLine line) {
     return line.hasOption(METASTORE_METRICS_ENABLED) && isTrueOrFalse(line.getOptionValue(METASTORE_METRICS_ENABLED));
-  }
-
-  private static boolean isTrueOrFalse(String value) {
-    return TRUE.equalsIgnoreCase(value) || FALSE.equalsIgnoreCase(value);
-  }
-
-
-  private static void printBool(boolean value) {
-    System.out.print(Boolean.toString(value));
   }
 
   private static void printHelp() {
