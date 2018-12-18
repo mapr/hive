@@ -414,4 +414,20 @@ public class ConfToolTest {
     ConfTool.configureMetastoreMetrics(doc, false);
     Assert.assertEquals("false", ConfTool.getProperty(doc, "hive.metastore.metrics.enabled"));
   }
+
+  @Test public void configureMetricsReportEnabled() throws IOException, SAXException, ParserConfigurationException {
+    Document doc = parseFrom("hive-site-054.xml");
+    ConfTool.configureMetricsReporterType(doc, true, "JSON_FILE,JMX");
+    ConfTool.configureMetricsFileLocation(doc, true, "/tmp/hive_report.json");
+    Assert.assertEquals("JSON_FILE,JMX", ConfTool.getProperty(doc, "hive.service.metrics.reporter"));
+    Assert.assertEquals("/tmp/hive_report.json", ConfTool.getProperty(doc, "hive.service.metrics.file.location"));
+  }
+
+  @Test public void configureMetricsReportDisabled() throws IOException, SAXException, ParserConfigurationException {
+    Document doc = parseFrom("hive-site-055.xml");
+    ConfTool.configureMetricsReporterType(doc, false, "JSON_FILE,JMX");
+    ConfTool.configureMetricsFileLocation(doc, false, "/tmp/hive_report.json");
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.service.metrics.reporter"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.service.metrics.file.location"));
+  }
 }

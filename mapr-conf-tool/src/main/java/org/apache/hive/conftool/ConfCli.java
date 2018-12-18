@@ -66,6 +66,9 @@ public final class ConfCli {
   private static final String FALLBACK_AUTHORIZER = "fallBackAuthorizer";
   private static final String HIVE_SERVER2_METRICS_ENABLED = "hiveserver2_metrics_enabled";
   private static final String METASTORE_METRICS_ENABLED = "metastore_metrics_enabled";
+  private static final String REPORTER_ENABLED = "reporter_enabled";
+  private static final String METRICS_REPORTER_TYPE = "reporter_type";
+  private static final String JSON_JMX_METRICS_FILE_LOCATION = "reporter_file";
 
   static {
     OptionBuilder.hasArg(false);
@@ -171,6 +174,21 @@ public final class ConfCli {
     OptionBuilder.withArgName("true/false value");
     OptionBuilder.withDescription("Enables/disables Hive Metastore for collecting metrics");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METASTORE_METRICS_ENABLED));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("true/false value");
+    OptionBuilder.withDescription("Enables/disables reporter for collecting metrics");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(REPORTER_ENABLED));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("Metrics reporter type");
+    OptionBuilder.withDescription("Configures metrics reporter type");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METRICS_REPORTER_TYPE));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("Metrics file location");
+    OptionBuilder.withDescription("Configures metrics output file location");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_METRICS_FILE_LOCATION));
   }
 
   public static void main(String[] args)
@@ -294,6 +312,28 @@ public final class ConfCli {
         boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(METASTORE_METRICS_ENABLED));
         ConfTool.configureMetastoreMetrics(pathToXmlFile, isMetricsEnabled);
       }
+
+      if (isReporterConfig(line)) {
+        boolean isReporterEnabled = Boolean.parseBoolean(line.getOptionValue(REPORTER_ENABLED));
+        if (isMetricsReporterType(line)) {
+          String reporterType = line.getOptionValue(METRICS_REPORTER_TYPE);
+          if (isNotNullNotEmpty(reporterType)) {
+            ConfTool.configureMetricsReporterType(pathToXmlFile, isReporterEnabled, reporterType);
+          } else {
+            throw new IllegalArgumentException("Incorrect metrics reporter type: empty string");
+          }
+        }
+
+        if (isMetricsReporterFileLocation(line)) {
+          String fileLocation = line.getOptionValue(JSON_JMX_METRICS_FILE_LOCATION);
+          if (isNotNullNotEmpty(fileLocation)) {
+            ConfTool.configureMetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
+          } else {
+            throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
+          }
+        }
+      }
+
     } else {
       printHelp();
     }
@@ -401,6 +441,18 @@ public final class ConfCli {
 
   private static boolean isMetasoreMetrics(CommandLine line) {
     return line.hasOption(METASTORE_METRICS_ENABLED) && isTrueOrFalse(line.getOptionValue(METASTORE_METRICS_ENABLED));
+  }
+
+  private static boolean isReporterConfig(CommandLine line) {
+    return line.hasOption(REPORTER_ENABLED) && isTrueOrFalse(line.getOptionValue(REPORTER_ENABLED));
+  }
+
+  private static boolean isMetricsReporterType(CommandLine line) {
+    return line.hasOption(METRICS_REPORTER_TYPE);
+  }
+
+  private static boolean isMetricsReporterFileLocation(CommandLine line) {
+    return line.hasOption(JSON_JMX_METRICS_FILE_LOCATION);
   }
 
   private static void printHelp() {
