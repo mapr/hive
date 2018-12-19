@@ -698,7 +698,9 @@ HIVE_SITE="$1"
 #
 configure_metastore_metrics() {
 HIVE_SITE="$1"
-. ${HIVE_BIN}/conftool -path "$HIVE_SITE" -metastore_metrics_enabled true
+if is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -metastore_metrics_enabled true
+fi
 }
 
 #
@@ -710,7 +712,9 @@ HIVE_SITE="$1"
 #
 configure_reporter_type_and_file_location() {
 HIVE_SITE="$1"
-. ${HIVE_BIN}/conftool -path "$HIVE_SITE" -reporter_type "$REPORTER_TYPE" -reporter_file "$REPORTER_FILE_LOCATION" -reporter_enabled true
+if is_hive_not_configured_yet ; then
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -reporter_type "$REPORTER_TYPE" -reporter_file "$REPORTER_FILE_LOCATION" -reporter_enabled true
+fi
 }
 
 #
