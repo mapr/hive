@@ -296,8 +296,8 @@ fi
 copy_warden_files_for(){
 ROLE=$1
 mkdir -p "$MAPR_HOME"/conf/conf.d
-if [ -f "$HIVE_HOME/conf/warden.${MAPRCLI[$ROLE]}.conf" ]; then
-  cp -Rp "$HIVE_HOME/conf/warden.${MAPRCLI[$ROLE]}.conf" "$MAPR_HOME"/conf/conf.d/.
+if [ -f "$HIVE_HOME/conf/warden.${MAPRCLI[$ROLE]}.conf.template" ]; then
+  cp -Rp "$HIVE_HOME/conf/warden.${MAPRCLI[$ROLE]}.conf.template" "$MAPR_HOME/conf/conf.d/warden.${MAPRCLI[$ROLE]}.conf"
 fi
 }
 
