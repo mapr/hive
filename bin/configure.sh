@@ -598,6 +598,7 @@ if ! is_meta_db_initialized && is_hive_not_configured_yet; then
     . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
   fi
   cd "$HIVE_BIN" || return
+  set_admin_user_group_to "$HIVE_BIN"
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
   if has_metastore && ! is_metastore_uris_configured; then
     . "${HIVE_BIN}"/conftool -initMetastoreUri -path "$HIVE_SITE"
