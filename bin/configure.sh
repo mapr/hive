@@ -180,8 +180,7 @@ fi
 # Returns boolean 'true' if security is custom.
 #
 is_custom_security(){
-# Let's get custom security from MapR build-in function
-if isCustomSecurityEnabled 2>/dev/null; then
+if [ -f "$MAPR_HOME/conf/.customSecure" ]; then
   return 0; # 0 = true
 else
   return 1; # 1 = false
