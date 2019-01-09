@@ -467,15 +467,11 @@ public class Context {
           if (isCTASQuery && isNonLocalScratchDirUsed && isHiveOptimizeInsertDestVolume) {
             // stage 1. Create table root dir with correct permissions from fs.permissions.umask-mode
             Path CTASTablePath = new Path(CTASTableLocation);
-            if (!fs.mkdirs(CTASTablePath)) {
+            // MAPR-19453 & MAPR-HIVE-395
+            // mkdir with permissions from parent dir, if hive.warehouse.subdir.inherit.perms = true
+            if (!FileUtils.mkdir(fs, CTASTablePath, isInheritPerms, conf)) {
               throw new RuntimeException("Cannot make directory: "
                       + CTASTablePath.toString());
-            }
-            // MAPR-19453
-            // copy permissions from parent dir, if hive.warehouse.subdir.inherit.perms = true
-            if(isInheritPerms){
-              Path parentCTASTablePath = CTASTablePath.getParent();
-              fs.setPermission(CTASTablePath, fs.getFileStatus(parentCTASTablePath).getPermission());
             }
           }
           // stage 2. Create scratch dir with  permissions from hive.scratch.dir.permission
