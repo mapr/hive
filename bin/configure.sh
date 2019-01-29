@@ -748,7 +748,7 @@ if [ $# -gt 0 ]; then
         ecOpts=("$2")
         shift 2
         restOpts="$@"
-        eval set -- "${ecOpts[@]} --"
+        eval set -- "${ecOpts[*]} --"
         while (( "$#" )); do
           case "$1" in
             --R|-R)
