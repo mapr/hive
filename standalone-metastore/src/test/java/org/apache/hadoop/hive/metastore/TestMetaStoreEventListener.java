@@ -101,6 +101,7 @@ public class TestMetaStoreEventListener {
     MetastoreConf.setVar(conf, ConfVars.PARTITION_NAME_WHITELIST_PATTERN, metaConfVal);
     MetastoreConf.setLongVar(conf, ConfVars.THRIFT_CONNECTION_RETRIES, 3);
     MetastoreConf.setBoolVar(conf, ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
+    MetastoreConf.setBoolVar(conf, ConfVars.DELETE_COLUMN_COMMENTS_FROM_PARTITION_OBJECT, false);
     MetaStoreTestUtils.setConfForStandloneMode(conf);
     MetaStoreTestUtils.startMetaStoreWithRetry(HadoopThriftAuthBridge.getBridge(), conf);
 

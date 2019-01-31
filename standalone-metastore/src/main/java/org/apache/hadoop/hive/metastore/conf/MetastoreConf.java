@@ -471,6 +471,11 @@ public class MetastoreConf {
             "not blocked.\n" +
             "\n" +
             "See HIVE-4409 for more details."),
+    DELETE_COLUMN_COMMENTS_FROM_PARTITION_OBJECT("delete.column.comments.from.partition.object",
+        "delete.column.comments.from.partition.object", true, "While trying to get information about partitions "
+        + "we are getting column comments from metastore and duplicating "
+        + "them in every partition while passing to Partition object FieldSchema object. In large amount of partitions "
+        + "it causes metastore crash"),
     DUMP_CONFIG_ON_CREATION("metastore.dump.config.on.creation", "metastore.dump.config.on.creation", true,
         "If true, a printout of the config file (minus sensitive values) will be dumped to the " +
             "log whenever newMetastoreConf() is called.  Can produce a lot of logs"),

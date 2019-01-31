@@ -2596,7 +2596,7 @@ public class ObjectStore implements RawStore, Configurable {
         mpart.getLastAccessTime(), convertToStorageDescriptor(mpart.getSd()),
         convertMap(mpart.getParameters()));
     p.setCatName(mpart.getTable().getDatabase().getCatalogName());
-    return p;
+    return isCommentsToDelete() ? deleteColumnComments(p) : p;
   }
 
   private Partition convertToPart(String catName, String dbName, String tblName, MPartition mpart)
@@ -2608,7 +2608,28 @@ public class ObjectStore implements RawStore, Configurable {
         mpart.getCreateTime(), mpart.getLastAccessTime(),
         convertToStorageDescriptor(mpart.getSd(), false), convertMap(mpart.getParameters()));
     p.setCatName(catName);
-    return p;
+    return isCommentsToDelete() ? deleteColumnComments(p) : p;
+  }
+
+  private boolean isCommentsToDelete(){
+    return MetastoreConf.getBoolVar(conf, ConfVars.DELETE_COLUMN_COMMENTS_FROM_PARTITION_OBJECT);
+  }
+
+  private static Partition deleteColumnComments(Partition part) throws MetaException {
+    StorageDescriptor storageDescriptor = part.getSd();
+
+    List<FieldSchema> cols = storageDescriptor.getCols();
+
+    if (cols != null && !cols.isEmpty()) {
+      for (FieldSchema fieldSchema : cols) {
+        fieldSchema.unsetComment();
+      }
+    }
+
+    storageDescriptor.setCols(cols);
+    part.setSd(storageDescriptor);
+
+    return part;
   }
 
   @Override
