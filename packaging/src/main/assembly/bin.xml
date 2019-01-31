@@ -417,11 +417,6 @@
       <destName>hive-log4j2.properties.template</destName>
     </file>
     <file>
-      <source>${project.parent.basedir}/common/src/main/resources/hive-log4j.properties</source>
-      <outputDirectory>conf</outputDirectory>
-      <destName>hive-log4j.properties</destName>
-    </file>
-    <file>
       <source>${project.parent.basedir}/ql/src/main/resources/hive-exec-log4j2.properties</source>
       <outputDirectory>conf</outputDirectory>
       <destName>hive-exec-log4j2.properties.template</destName>
