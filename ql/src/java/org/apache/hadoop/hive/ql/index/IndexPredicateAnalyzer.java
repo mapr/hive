@@ -51,6 +51,7 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToDate;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToDecimal;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToUnixTimeStamp;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToUtcTimestamp;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToUtcTimestampNew;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToVarchar;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBaseCompare;
@@ -193,7 +194,8 @@ public class IndexPredicateAnalyzer {
     if ((udf instanceof GenericUDFBridge || udf instanceof GenericUDFToBinary
         || udf instanceof GenericUDFToChar || udf instanceof GenericUDFToVarchar
         || udf instanceof GenericUDFToDecimal || udf instanceof GenericUDFToDate
-        || udf instanceof GenericUDFToUnixTimeStamp || udf instanceof GenericUDFToUtcTimestamp)
+        || udf instanceof GenericUDFToUnixTimeStamp || udf instanceof GenericUDFToUtcTimestamp
+        || udf instanceof GenericUDFToUtcTimestampNew)
         && funcDesc.getChildren().size() == 1
         && funcDesc.getChildren().get(0) instanceof ExprNodeColumnDesc) {
       return expr.getChildren().get(0);

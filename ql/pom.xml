@@ -863,6 +863,7 @@
                   <include>org.apache.orc:orc-shims</include>
                   <include>org.apache.orc:orc-tools</include>
                   <include>joda-time:joda-time</include>
+                  <include>org.threeten:threetenbp</include>
                 </includes>
               </artifactSet>
               <relocations>
