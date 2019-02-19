@@ -27,6 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/**
+ * Simple record reader wrapper.
+ */
 public class RecordReaderWrapper implements RecordReader<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordReaderWrapper.class);
@@ -36,8 +39,7 @@ public class RecordReaderWrapper implements RecordReader<NullWritable, DocumentW
     this.recordReader = recordReader;
   }
 
-  @Override
-  public boolean next(NullWritable key, DocumentWritable value) throws IOException {
+  @Override public boolean next(NullWritable key, DocumentWritable value) throws IOException {
     try {
       boolean next = recordReader.nextKeyValue();
       if (next) {
@@ -49,29 +51,24 @@ public class RecordReaderWrapper implements RecordReader<NullWritable, DocumentW
     }
   }
 
-  @Override
-  public NullWritable createKey() {
+  @Override public NullWritable createKey() {
     return NullWritable.get();
   }
 
-  @Override
-  public DocumentWritable createValue() {
+  @Override public DocumentWritable createValue() {
     return new DocumentWritable();
   }
 
-  @Override
-  public long getPos() throws IOException {
+  @Override public long getPos() throws IOException {
     return 0L;
   }
 
-  @Override
-  public void close() throws IOException {
+  @Override public void close() throws IOException {
     LOG.info("Closing Record Reader");
     recordReader.close();
   }
 
-  @Override
-  public float getProgress() throws IOException {
+  @Override public float getProgress() throws IOException {
     try {
       return recordReader.getProgress();
     } catch (InterruptedException e) {

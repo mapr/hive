@@ -51,7 +51,7 @@ public class MapRDBProxy {
               LOG.debug("init() => loaded MapR-DB class: {}, method: {}", mapRDBClass.getName(), mapRDMethod);
             }
           } catch (ClassNotFoundException | NoSuchMethodException e) {
-            throw new RuntimeException("Can't load class: " + MAPRDB_CLASS + " Check classpath.");
+            throw new MapRDbJsonException("Can't load class: " + MAPRDB_CLASS + " Check classpath.");
           }
         }
       }
@@ -63,7 +63,7 @@ public class MapRDBProxy {
       init();
       return (Document) mapRDMethod.invoke(null, jsonMap);
     } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+      throw new MapRDbJsonException(e);
     }
   }
 }

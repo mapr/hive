@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hadoop.hive.maprdb.json.shims.MapRDbJsonException;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -69,6 +70,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.lang.String.format;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_COLUMN_ID;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_TABLE_NAME;
 
 /**
  * A Hive Table: is a fundamental unit of data in Hive that shares a common schema/DDL.
@@ -82,10 +85,6 @@ public class Table implements Serializable {
   private static final long serialVersionUID = 1L;
 
   static final private Logger LOG = LoggerFactory.getLogger("hive.ql.metadata.Table");
-  private static final String MAPRDB_PFX = "maprdb.";
-  //map '_id' to one of column names
-  private static final String MAPRDB_COLUMN_ID = MAPRDB_PFX + "column.id";
-  private static final String MAPRDB_TABLE_NAME = MAPRDB_PFX + "table.name";
 
   private org.apache.hadoop.hive.metastore.api.Table tTable;
 
@@ -1042,12 +1041,11 @@ public class Table implements Serializable {
    * @return maprdb.table.name from MapR Db JSON table
    */
 
-  public String getMapRDbTableName() throws IOException {
+  public String getMapRDbTableName() {
     Map<String, String> tblParams = getParameters();
     if (tblParams == null || tblParams.isEmpty() || !tblParams.containsKey(MAPRDB_TABLE_NAME)) {
-      throw new IOException(format("Table %s is not specified", MAPRDB_TABLE_NAME));
+      throw new MapRDbJsonException(format("Table %s is not specified", MAPRDB_TABLE_NAME));
     }
     return tblParams.get(MAPRDB_TABLE_NAME).trim();
   }
-
-};
+}

@@ -2049,6 +2049,11 @@ public class HiveConf extends Configuration {
         "1. minimal : SELECT STAR, FILTER on partition columns, LIMIT only\n" +
         "2. more    : SELECT, FILTER, LIMIT only (support TABLESAMPLE and virtual columns)"
     ),
+
+    HIVE_MAPR_DB_JSON_FETCH_BY_ID_TASK_CONVERSION("hive.mapr.db.json.fetch.by.id.task.conversion", true, "Convert "
+        + "full scan operator with projection by _id to simple fetch from MapR DB JSON table "
+        + "using MapR DB JSON native methods."),
+
     HIVEFETCHTASKCONVERSIONTHRESHOLD("hive.fetch.task.conversion.threshold", 1073741824L,
         "Input threshold for applying hive.fetch.task.conversion. If target table is native, input length\n" +
         "is calculated by summation of file lengths. If it's not native, storage handler for the table\n" +

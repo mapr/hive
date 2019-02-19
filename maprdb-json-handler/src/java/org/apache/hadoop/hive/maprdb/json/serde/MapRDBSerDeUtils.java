@@ -1,19 +1,19 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one or more
-* contributor license agreements.  See the NOTICE file distributed with
-* this work for additional information regarding copyright ownership.
-* The ASF licenses this file to you under the Apache License, Version 2.0
-* (the "License"); you may not use this file except in compliance with
-* the License.  You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.hive.maprdb.json.serde;
 
 import org.apache.hadoop.hive.maprdb.json.shims.MapRDBProxy;
@@ -56,46 +56,53 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.lang.String.format;
 
+/**
+ * Utility class to work with primitives.
+ */
 public final class MapRDBSerDeUtils {
-  private MapRDBSerDeUtils(){}
+  private MapRDBSerDeUtils() {
+  }
 
   public static Object deserializeField(Object value, TypeInfo valueTypeInfo) {
     Object result = null;
 
     if (value != null) {
       switch (valueTypeInfo.getCategory()) {
-        case LIST: {
-          result = deserializeList(value, (ListTypeInfo) valueTypeInfo);
-          break;
-        }
-        case MAP: {
-          result = deserializeMap(value, (MapTypeInfo) valueTypeInfo);
-          break;
-        }
-        case PRIMITIVE: {
-          result = deserializePrimitive(value, (PrimitiveTypeInfo) valueTypeInfo);
-          break;
-        }
-        case STRUCT: {
-          result = deserializeStruct(value, (StructTypeInfo) valueTypeInfo);
-          break;
-        }
-        case UNION: {
-          result = deserializeUnion(value, (UnionTypeInfo) valueTypeInfo);
-          break;
-        }
-        default:
-          throw new IllegalArgumentException(format("Can't deserialize '%s'", value.getClass().getSimpleName()));
+      case LIST: {
+        result = deserializeList(value, (ListTypeInfo) valueTypeInfo);
+        break;
+      }
+      case MAP: {
+        result = deserializeMap(value, (MapTypeInfo) valueTypeInfo);
+        break;
+      }
+      case PRIMITIVE: {
+        result = deserializePrimitive(value, (PrimitiveTypeInfo) valueTypeInfo);
+        break;
+      }
+      case STRUCT: {
+        result = deserializeStruct(value, (StructTypeInfo) valueTypeInfo);
+        break;
+      }
+      case UNION: {
+        result = deserializeUnion(value, (UnionTypeInfo) valueTypeInfo);
+        break;
+      }
+      default:
+        throw new IllegalArgumentException(format("Can't deserialize '%s'", value.getClass().getSimpleName()));
       }
     }
     return result;
   }
 
-  public static Document serializeStruct(Object obj, StructObjectInspector soi, List<String> columnNames, Map<String, String> mappings) {
-    if (null == obj) return null;
+  public static Document serializeStruct(Object obj, StructObjectInspector soi, List<String> columnNames,
+      Map<String, String> mappings) {
+    if (null == obj)
+      return null;
 
     List<? extends StructField> fields = soi.getAllStructFieldRefs();
     Map<String, Object> jsonMap = new HashMap<>(fields.size());
@@ -105,9 +112,8 @@ public final class MapRDBSerDeUtils {
       Object data = soi.getStructFieldData(obj, sf);
 
       if (null != data) {
-        jsonMap.put(
-          getSerializedFieldName(columnNames, i, sf, mappings),
-          serializeField(data, sf.getFieldObjectInspector(), mappings));
+        jsonMap.put(getSerializedFieldName(columnNames, i, sf, mappings),
+            serializeField(data, sf.getFieldObjectInspector(), mappings));
       }
     }
     return MapRDBProxy.newDocument(jsonMap);
@@ -115,33 +121,32 @@ public final class MapRDBSerDeUtils {
 
   private static Object deserializePrimitive(Object value, PrimitiveTypeInfo valueTypeInfo) {
     switch (valueTypeInfo.getPrimitiveCategory()) {
-      case BINARY:
-        return ((Value) value).getBinary().array();
-      case BOOLEAN:
-        return ((Value) value).getBoolean();
-      case DOUBLE:
-        return ((Value) value).getDouble();
-      case FLOAT:
-        return ((Value) value).getFloat();
-      case INT:
-        return ((Value) value).getInt();
-      case STRING:
-        return ((Value) value).getString();
-      case DATE:
-        return Date.valueOf(((Value) value).getDate().toString());
-      case TIMESTAMP:
-        return new Timestamp(((Value) value).getTimestampAsLong());
-      case BYTE: // tinyint
-        return ((Value) value).getByte();
-      case SHORT: //smallint
-        return ((Value) value).getShort();
-      case LONG: //bigint
-        return ((Value) value).getLong();
-      default:
-        throw new IllegalArgumentException(format("Can't deserialize '%s'", value.getClass().getSimpleName()));
+    case BINARY:
+      return ((Value) value).getBinary().array();
+    case BOOLEAN:
+      return ((Value) value).getBoolean();
+    case DOUBLE:
+      return ((Value) value).getDouble();
+    case FLOAT:
+      return ((Value) value).getFloat();
+    case INT:
+      return ((Value) value).getInt();
+    case STRING:
+      return ((Value) value).getString();
+    case DATE:
+      return Date.valueOf(((Value) value).getDate().toString());
+    case TIMESTAMP:
+      return new Timestamp(((Value) value).getTimestampAsLong());
+    case BYTE: // tinyint
+      return ((Value) value).getByte();
+    case SHORT: //smallint
+      return ((Value) value).getShort();
+    case LONG: //bigint
+      return ((Value) value).getLong();
+    default:
+      throw new IllegalArgumentException(format("Can't deserialize '%s'", value.getClass().getSimpleName()));
     }
   }
-
 
   private static Object deserializeUnion(Object value, UnionTypeInfo valueTypeInfo) {
     return deserializeField(value, valueTypeInfo);
@@ -194,97 +199,99 @@ public final class MapRDBSerDeUtils {
     return results;
   }
 
-
-  private static String getSerializedFieldName(List<String> columnNames, int pos, StructField sf, Map<String, String> mappings) {
+  private static String getSerializedFieldName(List<String> columnNames, int pos, StructField sf,
+      Map<String, String> mappings) {
     String n = (columnNames == null ? sf.getFieldName() : columnNames.get(pos));
     return mappings.containsKey(n) ? mappings.get(n) : n;
   }
 
   private static Object serializeField(Object o, ObjectInspector oi, Map<String, String> mappings) {
-    if (o == null) return null;
+    if (o == null)
+      return null;
 
     Object result;
     switch (oi.getCategory()) {
-      case PRIMITIVE: {
-        PrimitiveObjectInspector poi = (PrimitiveObjectInspector) oi;
-        switch (poi.getPrimitiveCategory()) {
-          case BINARY: {
-            BytesWritable bw = ((BinaryObjectInspector) poi).getPrimitiveWritableObject(o);
-            result = ByteBuffer.wrap(bw.getBytes());
-            break;
-          }
-          case BOOLEAN: {
-            result = (((BooleanObjectInspector) poi).get(o) ? Boolean.TRUE : Boolean.FALSE);
-            break;
-          }
-          case INT: {
-            result = (((IntObjectInspector) poi).get(o));
-            break;
-          }
-          case BYTE: { // tinyint
-            result = (((ByteObjectInspector) poi).get(o));
-            break;
-          }
-          case SHORT: { // smallint
-            result = (((ShortObjectInspector) poi).get(o));
-            break;
-          }
-          case LONG: { // bigint
-            result = (((LongObjectInspector) poi).get(o));
-            break;
-          }
-          case FLOAT: {
-            result = ((FloatObjectInspector) poi).get(o);
-            break;
-          }
-          case DOUBLE: {
-            result = (((DoubleObjectInspector) poi).get(o));
-            break;
-          }
-          case STRING: {
-            result = (((StringObjectInspector) poi).getPrimitiveJavaObject(o));
-            break;
-          }
-          case DATE: {
-            DateWritable dw = ((DateObjectInspector) poi).getPrimitiveWritableObject(o);
-            result = new ODate(dw.get().getTime());
-            break;
-          }
-          case TIMESTAMP: {
-            TimestampWritable tsw = ((TimestampObjectInspector) poi).getPrimitiveWritableObject(o);
-            result = new OTimestamp(tsw.getTimestamp().getTime());
-            break;
-          }
-          default:
-            throw new IllegalArgumentException(format("Unknown primitive type: '%s'", poi.getPrimitiveCategory()));
-        }
-      }
-      break;
-
-      case LIST: {
-        result = serializeList(o, (ListObjectInspector) oi, mappings);
+    case PRIMITIVE: {
+      PrimitiveObjectInspector poi = (PrimitiveObjectInspector) oi;
+      switch (poi.getPrimitiveCategory()) {
+      case BINARY: {
+        BytesWritable bw = ((BinaryObjectInspector) poi).getPrimitiveWritableObject(o);
+        result = ByteBuffer.wrap(bw.getBytes());
         break;
       }
-      case MAP: {
-        result = serializeMap(o, (MapObjectInspector) oi, mappings);
+      case BOOLEAN: {
+        result = (((BooleanObjectInspector) poi).get(o) ? Boolean.TRUE : Boolean.FALSE);
         break;
       }
-      case STRUCT: {
-        result = serializeStruct(o, (StructObjectInspector) oi, null, mappings);
+      case INT: {
+        result = (((IntObjectInspector) poi).get(o));
         break;
       }
-      case UNION: {
-        result = serializeUnion(o, (UnionObjectInspector) oi, mappings);
+      case BYTE: { // tinyint
+        result = (((ByteObjectInspector) poi).get(o));
+        break;
+      }
+      case SHORT: { // smallint
+        result = (((ShortObjectInspector) poi).get(o));
+        break;
+      }
+      case LONG: { // bigint
+        result = (((LongObjectInspector) poi).get(o));
+        break;
+      }
+      case FLOAT: {
+        result = ((FloatObjectInspector) poi).get(o);
+        break;
+      }
+      case DOUBLE: {
+        result = (((DoubleObjectInspector) poi).get(o));
+        break;
+      }
+      case STRING: {
+        result = (((StringObjectInspector) poi).getPrimitiveJavaObject(o));
+        break;
+      }
+      case DATE: {
+        DateWritable dw = ((DateObjectInspector) poi).getPrimitiveWritableObject(o);
+        result = new ODate(dw.get().getTime());
+        break;
+      }
+      case TIMESTAMP: {
+        TimestampWritable tsw = ((TimestampObjectInspector) poi).getPrimitiveWritableObject(o);
+        result = new OTimestamp(tsw.getTimestamp().getTime());
         break;
       }
       default:
-        throw new IllegalArgumentException("Unknown type in ObjectInspector!");
+        throw new IllegalArgumentException(format("Unknown primitive type: '%s'", poi.getPrimitiveCategory()));
+      }
+    }
+    break;
+
+    case LIST: {
+      result = serializeList(o, (ListObjectInspector) oi, mappings);
+      break;
+    }
+    case MAP: {
+      result = serializeMap(o, (MapObjectInspector) oi, mappings);
+      break;
+    }
+    case STRUCT: {
+      result = serializeStruct(o, (StructObjectInspector) oi, null, mappings);
+      break;
+    }
+    case UNION: {
+      result = serializeUnion(o, (UnionObjectInspector) oi, mappings);
+      break;
+    }
+    default:
+      throw new IllegalArgumentException("Unknown type in ObjectInspector!");
     }
     return result;
   }
 
   private static Object serializeList(Object obj, ListObjectInspector loi, Map<String, String> mappings) {
-    if (obj == null) return null;
+    if (obj == null)
+      return null;
 
     List<?> field = loi.getList(obj);
     List<Object> ar = new ArrayList<>();
@@ -296,19 +303,22 @@ public final class MapRDBSerDeUtils {
   }
 
   private static Object serializeUnion(Object obj, UnionObjectInspector oi, Map<String, String> mappings) {
-    if (obj == null) return null;
+    if (obj == null)
+      return null;
     return serializeField(obj, oi.getObjectInspectors().get(oi.getTag(obj)), mappings);
   }
 
-  private static Object serializeMap(Object obj, MapObjectInspector moi, Map<String, String> mappings) {
-    if (obj == null) return null;
+  @SuppressWarnings("unchecked") private static Object serializeMap(Object obj, MapObjectInspector moi,
+      Map<String, String> mappings) {
+    if (obj == null)
+      return null;
 
     Map<String, Object> map = new HashMap<>();
     Map m = moi.getMap(obj);
 
-    for (Object k : m.keySet()) {
-      map.put(serializeField(k, moi.getMapKeyObjectInspector(), mappings).toString(),
-        serializeField(m.get(k), moi.getMapValueObjectInspector(), mappings));
+    for (Map.Entry<String, Object> entry : (Set<Map.Entry<String, Object>>) m.entrySet()) {
+      map.put(serializeField(entry.getKey(), moi.getMapKeyObjectInspector(), mappings).toString(),
+          serializeField(entry.getValue(), moi.getMapValueObjectInspector(), mappings));
     }
     return map;
   }

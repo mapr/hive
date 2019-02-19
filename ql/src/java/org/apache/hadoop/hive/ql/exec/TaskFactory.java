@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.ql.plan.ExplainSQRewriteWork;
 import org.apache.hadoop.hive.ql.plan.ExplainWork;
 import org.apache.hadoop.hive.ql.plan.FetchWork;
 import org.apache.hadoop.hive.ql.plan.FunctionWork;
+import org.apache.hadoop.hive.ql.plan.MapRDbJsonFetchByIdWork;
 import org.apache.hadoop.hive.ql.plan.MapredLocalWork;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
 import org.apache.hadoop.hive.ql.plan.MoveWork;
@@ -63,10 +64,10 @@ public final class TaskFactory {
    * @param <T>
    */
   public static final class TaskTuple<T extends Serializable> {
-    public Class<T> workClass;
-    public Class<? extends Task<T>> taskClass;
+    public Class workClass;
+    public Class<? extends Task> taskClass;
 
-    public TaskTuple(Class<T> workClass, Class<? extends Task<T>> taskClass) {
+    public TaskTuple(Class workClass, Class<? extends Task> taskClass) {
       this.workClass = workClass;
       this.taskClass = taskClass;
     }
@@ -77,6 +78,7 @@ public final class TaskFactory {
     taskvec = new ArrayList<TaskTuple<? extends Serializable>>();
     taskvec.add(new TaskTuple<MoveWork>(MoveWork.class, MoveTask.class));
     taskvec.add(new TaskTuple<FetchWork>(FetchWork.class, FetchTask.class));
+    taskvec.add(new TaskTuple<MapRDbJsonFetchByIdWork>(MapRDbJsonFetchByIdWork.class, MapRDbJsonFetchByIdTask.class));
     taskvec.add(new TaskTuple<CopyWork>(CopyWork.class, CopyTask.class));
     taskvec.add(new TaskTuple<ReplCopyWork>(ReplCopyWork.class, ReplCopyTask.class));
     taskvec.add(new TaskTuple<DDLWork>(DDLWork.class, DDLTask.class));

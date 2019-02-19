@@ -87,8 +87,8 @@ public class FetchOperator implements Serializable {
   public static final String FETCH_OPERATOR_DIRECTORY_LIST =
       "hive.complete.dir.list";
 
-  private FetchWork work;
-  private Operator<?> operator;    // operator tree for processing row further (optional)
+  FetchWork work;
+  Operator<?> operator;    // operator tree for processing row further (optional)
 
   private final boolean hasVC;
   private final boolean isStatReader;
@@ -98,7 +98,7 @@ public class FetchOperator implements Serializable {
   private final List<VirtualColumn> vcCols;
   private ExecMapperContext context;
 
-  private transient Deserializer tableSerDe;
+  transient Deserializer tableSerDe;
   private transient StructObjectInspector tableOI;
   private transient StructObjectInspector partKeyOI;
   private transient StructObjectInspector convertedOI;
@@ -109,7 +109,7 @@ public class FetchOperator implements Serializable {
 
   private transient Path currPath;
   private transient PartitionDesc currDesc;
-  private transient Deserializer currSerDe;
+  transient Deserializer currSerDe;
   private transient Converter ObjectConverter;
   private transient RecordReader<WritableComparable, Writable> currRecReader;
 
@@ -122,7 +122,7 @@ public class FetchOperator implements Serializable {
   private transient int footerCount;
   private transient FooterBuffer footerBuffer;
 
-  private transient StructObjectInspector outputOI;
+  protected transient StructObjectInspector outputOI;
   private transient Object[] row;
 
   public FetchOperator(FetchWork work, JobConf job) throws HiveException {
@@ -442,7 +442,7 @@ public class FetchOperator implements Serializable {
     operator.flush();
   }
 
-  private transient final InspectableObject inspectable = new InspectableObject();
+  transient final InspectableObject inspectable = new InspectableObject();
 
   /**
    * Get the next row. The fetch context is modified appropriately.

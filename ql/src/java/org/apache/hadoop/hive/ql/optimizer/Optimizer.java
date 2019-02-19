@@ -224,6 +224,10 @@ public class Optimizer {
       transformations.add(new AnnotateWithOpTraits());
     }
 
+    if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVE_MAPR_DB_JSON_FETCH_BY_ID_TASK_CONVERSION)) {
+      transformations.add(new MapRDbJsonFetchByIdOptimizer());
+    }
+
     if (!HiveConf.getVar(hiveConf, HiveConf.ConfVars.HIVEFETCHTASKCONVERSION).equals("none")) {
       transformations.add(new SimpleFetchOptimizer()); // must be called last
     }
