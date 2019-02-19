@@ -25,6 +25,12 @@
       <version>${mapr.release.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.mapr.db</groupId>
+      <artifactId>maprdb-mapreduce</artifactId>
+      <version>${mapr.release.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>

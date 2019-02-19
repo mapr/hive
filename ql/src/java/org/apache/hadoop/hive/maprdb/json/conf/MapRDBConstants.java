@@ -20,6 +20,9 @@ package org.apache.hadoop.hive.maprdb.json.conf;
 
 import org.ojai.DocumentConstants;
 
+/**
+ * All constants, related to MapR DB JSON.
+ */
 public final class MapRDBConstants {
 
   private MapRDBConstants() {

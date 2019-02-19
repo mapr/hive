@@ -47,9 +47,11 @@ import org.apache.hadoop.mapred.JobConf;
 public class FetchTask extends Task<FetchWork> implements Serializable {
   private static final long serialVersionUID = 1L;
   private int maxRows = 100;
-  private FetchOperator fetch;
-  private ListSinkOperator sink;
-  private int totalRows;
+  FetchOperator fetch;
+  JobConf job;
+  Operator<?> source;
+  ListSinkOperator sink;
+  int totalRows;
   private static transient final Logger LOG = LoggerFactory.getLogger(FetchTask.class);
 
   public FetchTask() {
@@ -68,9 +70,9 @@ public class FetchTask extends Task<FetchWork> implements Serializable {
 
     try {
       // Create a file system handle
-      JobConf job = new JobConf(conf);
+      job = new JobConf(conf);
 
-      Operator<?> source = work.getSource();
+      source = work.getSource();
       if (source instanceof TableScanOperator) {
         TableScanOperator ts = (TableScanOperator) source;
         // push down projections
@@ -83,7 +85,7 @@ public class FetchTask extends Task<FetchWork> implements Serializable {
             ts.getConf().getAcidOperationalProperties());
       }
       sink = work.getSink();
-      fetch = new FetchOperator(work, job, source, getVirtualColumns(source));
+      fetch = createFetchOperator();
       source.initialize(conf, new ObjectInspector[]{fetch.getOutputObjectInspector()});
       totalRows = 0;
       ExecMapper.setDone(false);
@@ -94,6 +96,16 @@ public class FetchTask extends Task<FetchWork> implements Serializable {
       LOG.error("Initialize failed", e);
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Creates fetch operator.
+   * It can be specific to storage handler of a table, e.g MapR DB Json
+   * @return fetch operator
+   * @throws HiveException
+   */
+  FetchOperator createFetchOperator() throws HiveException {
+    return new FetchOperator(work, job, source, getVirtualColumns(source));
   }
 
   private List<VirtualColumn> getVirtualColumns(Operator<?> ts) {

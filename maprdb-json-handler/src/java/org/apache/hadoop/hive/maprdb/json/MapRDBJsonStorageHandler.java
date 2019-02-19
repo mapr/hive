@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.maprdb.json;
 
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat;
 import org.apache.hadoop.hive.maprdb.json.output.HiveMapRDBJsonOutputFormat;
 import org.apache.hadoop.hive.maprdb.json.serde.MapRDBSerDe;
@@ -28,9 +29,16 @@ import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.index.IndexPredicateAnalyzer;
+import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler;
+import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
+import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
+import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqual;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
@@ -43,10 +51,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.*;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_COLUMN_ID;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_INPUT_TABLE_NAME;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_IS_IN_TEST_MODE;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_OUTPUT_TABLE_NAME;
+import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_TABLE_NAME;
 import static org.apache.hadoop.hive.serde.serdeConstants.BINARY_TYPE_NAME;
 import static org.apache.hadoop.hive.serde.serdeConstants.STRING_TYPE_NAME;
 
+/**
+ * Basic MapR DB Json storage Handler.
+ */
 public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements HiveMetaHook {
 
   private static final Logger LOG = LoggerFactory.getLogger(MapRDBJsonStorageHandler.class);
@@ -64,37 +79,35 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
     return tbl.getParameters().get(MAPRDB_TABLE_NAME);
   }
 
-  @Override
-  public Class<? extends InputFormat> getInputFormatClass() {
+  @Override public Class<? extends InputFormat> getInputFormatClass() {
     return HiveMapRDBJsonInputFormat.class;
   }
 
-  @Override
-  public Class<? extends OutputFormat> getOutputFormatClass() {
+  @Override public Class<? extends OutputFormat> getOutputFormatClass() {
     return HiveMapRDBJsonOutputFormat.class;
   }
 
-  @SuppressWarnings("deprecation")
-  @Override
-  public Class<? extends AbstractSerDe> getSerDeClass() {
+  @SuppressWarnings("deprecation") @Override public Class<? extends AbstractSerDe> getSerDeClass() {
     return MapRDBSerDe.class;
   }
 
-  @Override
-  public HiveMetaHook getMetaHook() {
+  @Override public HiveMetaHook getMetaHook() {
     return this;
   }
 
-  @Override
-  public void configureInputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
+  @Override public void configureInputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
     Properties tableProperties = tableDesc.getProperties();
 
-    getConf().set(MAPRDB_INPUT_TABLE_NAME, tableProperties.getProperty(MAPRDB_TABLE_NAME));
+    Configuration conf = getConf();
+
+    conf.set(MAPRDB_INPUT_TABLE_NAME, tableProperties.getProperty(MAPRDB_TABLE_NAME));
+    conf.set(MAPRDB_COLUMN_ID, tableProperties.getProperty(MAPRDB_COLUMN_ID));
+
     jobProperties.put(MAPRDB_INPUT_TABLE_NAME, tableProperties.getProperty(MAPRDB_TABLE_NAME));
+    jobProperties.put(MAPRDB_COLUMN_ID, tableProperties.getProperty(MAPRDB_COLUMN_ID));
   }
 
-  @Override
-  public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
+  @Override public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
     Properties tableProperties = tableDesc.getProperties();
 
     String property = tableProperties.getProperty(MAPRDB_OUTPUT_TABLE_NAME);
@@ -105,8 +118,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
     }
   }
 
-  @Override
-  public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
+  @Override public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
     try {
       Utils.addDependencyJars(jobConf, MapRDBJsonStorageHandler.class);
     } catch (IOException e) {
@@ -114,10 +126,9 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
     }
   }
 
-  @Override
-  public void preCreateTable(Table tbl) throws MetaException {
+  @Override public void preCreateTable(Table tbl) throws MetaException {
     checkPreConditions(tbl);
-    if(isInTestMode(tbl)) {
+    if (isInTestMode(tbl)) {
       return;
     }
     boolean isExternal = MetaStoreUtils.isExternalTable(tbl);
@@ -131,14 +142,14 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
           getMapRDBAdmin().createTable(tableName);
         } else {
           // an external table
-          throw new MetaException("MapRDB table " + tableName +
-            " doesn't exist while the table is declared as an external table.");
+          throw new MetaException(String
+              .format("MapRDB table %s doesn't exist while the table is declared as an external table.", tableName));
         }
 
       } else {
         if (!isExternal) {
-          throw new MetaException("Table " + tableName + " already exists; use CREATE EXTERNAL TABLE instead to"
-            + " register it in Hive.");
+          throw new MetaException(String
+              .format("Table %s already exists; use CREATE EXTERNAL TABLE instead to register it in Hive.", tableName));
         }
       }
     } catch (Exception se) {
@@ -162,17 +173,13 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
     Map<String, String> tblParams = tbl.getParameters();
 
     if (!(tblParams.containsKey(MAPRDB_TABLE_NAME))) {
-      throw new MetaException(
-        format("You must specify '%s' in TBLPROPERTIES", MAPRDB_TABLE_NAME));
+      throw new MetaException(format("You must specify '%s' in TBLPROPERTIES", MAPRDB_TABLE_NAME));
     }
-    if (!(tblParams.containsKey(MAPRDB_TABLE_NAME)) || !tblParams.get(MAPRDB_TABLE_NAME).startsWith("/")) {
-      throw new MetaException(
-        format("MapRDB should start with \"/\", actual table name '%s'", MAPRDB_TABLE_NAME));
+    if (!tblParams.get(MAPRDB_TABLE_NAME).startsWith("/")) {
+      throw new MetaException(format("MapRDB should start with \"/\", actual table name '%s'", MAPRDB_TABLE_NAME));
     }
-    if (!(tblParams.containsKey(MAPRDB_COLUMN_ID)) ||
-      tblParams.get(MAPRDB_COLUMN_ID).isEmpty()) {
-      throw new MetaException(
-        format("You must specify '%s' in TBLPROPERTIES", MAPRDB_COLUMN_ID));
+    if (!(tblParams.containsKey(MAPRDB_COLUMN_ID)) || tblParams.get(MAPRDB_COLUMN_ID).isEmpty()) {
+      throw new MetaException(format("You must specify '%s' in TBLPROPERTIES", MAPRDB_COLUMN_ID));
     }
 
     String bindedId = tblParams.get(MAPRDB_COLUMN_ID).trim();
@@ -183,9 +190,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
         String type = field.getType();
 
         if (!(type.equalsIgnoreCase(BINARY_TYPE_NAME) || type.equalsIgnoreCase(STRING_TYPE_NAME))) {
-          throw new MetaException(
-            format("'%s' must be STRING or BINARY type, actual: '%s'",
-              MAPRDB_COLUMN_ID,
+          throw new MetaException(format("'%s' must be STRING or BINARY type, actual: '%s'", MAPRDB_COLUMN_ID,
               field.getType().toUpperCase()));
         }
         match = true;
@@ -197,8 +202,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
     }
   }
 
-  @Override
-  public void rollbackCreateTable(Table table) throws MetaException {
+  @Override public void rollbackCreateTable(Table table) throws MetaException {
     boolean isExternal = MetaStoreUtils.isExternalTable(table);
     String tableName = getMapRDBTableName(table);
     if (!isExternal && getMapRDBAdmin().tableExists(tableName)) {
@@ -206,24 +210,20 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
     }
   }
 
-  @Override
-  public void commitCreateTable(Table table) throws MetaException {
+  @Override public void commitCreateTable(Table table) {
     //nothing to do
   }
 
-  @Override
-  public void preDropTable(Table table) throws MetaException {
+  @Override public void preDropTable(Table table) {
     //nothing to do
   }
 
-  @Override
-  public void rollbackDropTable(Table table) throws MetaException {
+  @Override public void rollbackDropTable(Table table) {
     //nothing to do
   }
 
-  @Override
-  public void commitDropTable(Table table, boolean deleteData) throws MetaException {
-    if(isInTestMode(table)) {
+  @Override public void commitDropTable(Table table, boolean deleteData) {
+    if (isInTestMode(table)) {
       return;
     }
     String tableName = getMapRDBTableName(table);

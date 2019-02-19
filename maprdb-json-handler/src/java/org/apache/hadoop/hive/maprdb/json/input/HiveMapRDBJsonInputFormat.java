@@ -37,13 +37,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class HiveMapRDBJsonInputFormat extends TableInputFormat
-  implements InputFormat<NullWritable, DocumentWritable> {
+/**
+ * Input format class, that gets splits and provides record reader for MapR Db Json document.
+ */
+public class HiveMapRDBJsonInputFormat extends TableInputFormat implements InputFormat<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(HiveMapRDBJsonInputFormat.class);
 
-  @Override
-  public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
+  @Override public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
     super.setConf(jobConf);
     List<org.apache.hadoop.mapreduce.InputSplit> splits;
     Job context = new Job(jobConf);
@@ -63,14 +64,14 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
       }
     }
 
-    if (LOG.isDebugEnabled()){
+    if (LOG.isDebugEnabled()) {
       if (inputSplits != null) {
         long[] splitSizes = new long[inputSplits.length];
         for (int i = 0; i < inputSplits.length; i++) {
           splitSizes[i] = inputSplits[i].getLength();
         }
         LOG.debug("getSplits() => split number: {}, split size: {}", inputSplits.length, Arrays.toString(splitSizes));
-      }else {
+      } else {
         LOG.debug("getSplits() => 0 splits");
       }
     }
@@ -78,18 +79,14 @@ public class HiveMapRDBJsonInputFormat extends TableInputFormat
     return inputSplits;
   }
 
-  @Override
-  public RecordReader<NullWritable, DocumentWritable>
-  getRecordReader(
-    InputSplit split,
-    JobConf jobConf,
-    Reporter reporter) throws IOException {
+  @Override public RecordReader<NullWritable, DocumentWritable> getRecordReader(InputSplit split, JobConf jobConf,
+      Reporter reporter) throws IOException {
 
     MapRDBJsonSplit fileSplit = (MapRDBJsonSplit) split;
     TableSplit tableSplit = fileSplit.getTableSplit();
 
     org.apache.hadoop.mapreduce.TaskAttemptContext tac =
-      ShimLoader.getHadoopShims().newTaskAttemptContext(jobConf, reporter);
+        ShimLoader.getHadoopShims().newTaskAttemptContext(jobConf, reporter);
 
     try {
       setConf(tac.getConfiguration());

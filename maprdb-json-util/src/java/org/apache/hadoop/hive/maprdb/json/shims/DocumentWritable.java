@@ -26,6 +26,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+/**
+ * Writable wrapper for MapR DB JSON document.
+ */
 public class DocumentWritable implements Writable {
   private Document document;
   private TableSplit inputFormat;
@@ -35,7 +38,7 @@ public class DocumentWritable implements Writable {
     inputFormat = new TableSplit();
   }
 
-  public DocumentWritable() {
+  DocumentWritable() {
   }
 
   public Document getDocument() {
@@ -46,34 +49,30 @@ public class DocumentWritable implements Writable {
     this.document = document;
   }
 
-  @Override
-  public void write(DataOutput out) throws IOException {
+  @Override public void write(DataOutput out) throws IOException {
     inputFormat.write(out);
   }
 
-  @Override
-  public void readFields(DataInput in) throws IOException {
+  @Override public void readFields(DataInput in) throws IOException {
     inputFormat.readFields(in);
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return "Document=" + document;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+  @Override public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
 
     DocumentWritable that = (DocumentWritable) o;
 
     return document != null ? document.equals(that.document) : that.document == null;
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return document != null ? document.hashCode() : 0;
   }
 }
-

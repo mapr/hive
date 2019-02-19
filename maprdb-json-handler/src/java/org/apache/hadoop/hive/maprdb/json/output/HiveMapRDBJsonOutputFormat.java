@@ -44,20 +44,21 @@ import java.util.Properties;
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_OUTPUT_TABLE_NAME;
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_TABLE_NAME;
 
+/**
+ * Provides record writer for MapR DB Json documents.
+ */
 public class HiveMapRDBJsonOutputFormat extends TableOutputFormat
-  implements HiveOutputFormat<NullWritable, DocumentWritable> {
+    implements HiveOutputFormat<NullWritable, DocumentWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(HiveMapRDBJsonOutputFormat.class);
 
-  @Override
-  public RecordWriter<NullWritable, DocumentWritable> getRecordWriter(
-    FileSystem ignored, JobConf jobConf, String name, Progressable progress) throws IOException {
+  @Override public RecordWriter<NullWritable, DocumentWritable> getRecordWriter(FileSystem ignored, JobConf jobConf,
+      String name, Progressable progress) throws IOException {
 
     return getRecordWriterWrapper(jobConf, progress);
   }
 
-  @Override
-  public void checkOutputSpecs(FileSystem ignored, JobConf jobConf) throws IOException {
+  @Override public void checkOutputSpecs(FileSystem ignored, JobConf jobConf) throws IOException {
     Job job = new Job(jobConf);
     JobContext jobContext = ShimLoader.getHadoopShims().newJobContext(job);
     try {
@@ -67,19 +68,17 @@ public class HiveMapRDBJsonOutputFormat extends TableOutputFormat
     }
   }
 
-  @Override
-  public FileSinkOperator.RecordWriter getHiveRecordWriter(JobConf jc, Path finalOutPath,
+  @Override public FileSinkOperator.RecordWriter getHiveRecordWriter(JobConf jc, Path finalOutPath,
       Class<? extends Writable> valueClass, boolean isCompressed, Properties tableProperties, Progressable progress)
       throws IOException {
 
     return getRecordWriterWrapper(jc, progress);
   }
 
-  private RecordWriterWrapper getRecordWriterWrapper(JobConf jobConf, Progressable progress)
-      throws IOException {
+  private RecordWriterWrapper getRecordWriterWrapper(JobConf jobConf, Progressable progress) throws IOException {
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug(MAPRDB_OUTPUT_TABLE_NAME + " = {}", jobConf.get(MAPRDB_TABLE_NAME));
+      LOG.debug(String.format("%s = %s", MAPRDB_OUTPUT_TABLE_NAME, jobConf.get(MAPRDB_TABLE_NAME)));
     }
 
     jobConf.set(MAPRDB_OUTPUT_TABLE_NAME, jobConf.get(MAPRDB_TABLE_NAME));

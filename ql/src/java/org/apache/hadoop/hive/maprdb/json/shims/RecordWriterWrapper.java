@@ -31,20 +31,23 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentWritable>,
-    FileSinkOperator.RecordWriter {
+/**
+ * Simple record writer wrapper.
+ */
+public class RecordWriterWrapper
+    implements RecordWriter<NullWritable, DocumentWritable>, FileSinkOperator.RecordWriter {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordWriterWrapper.class);
   private final org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter;
   private final TaskAttemptContext tac;
 
-  public RecordWriterWrapper(org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter, TaskAttemptContext tac) {
+  public RecordWriterWrapper(org.apache.hadoop.mapreduce.RecordWriter<Value, Document> recordWriter,
+      TaskAttemptContext tac) {
     this.recordWriter = recordWriter;
     this.tac = tac;
   }
 
-  @Override
-  public void write(NullWritable key, DocumentWritable value) throws IOException {
+  @Override public void write(NullWritable key, DocumentWritable value) throws IOException {
     Document document = value.getDocument();
     try {
       recordWriter.write(document.getId(), document);
@@ -53,8 +56,7 @@ public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentW
     }
   }
 
-  @Override
-  public void close(Reporter reporter) throws IOException {
+  @Override public void close(Reporter reporter) throws IOException {
     try {
       LOG.info("Closing Record Writer");
       recordWriter.close(tac);
@@ -63,13 +65,11 @@ public class RecordWriterWrapper implements RecordWriter<NullWritable, DocumentW
     }
   }
 
-  @Override
-  public void write(Writable w) throws IOException {
+  @Override public void write(Writable w) throws IOException {
     write(null, (DocumentWritable) w);
   }
 
-  @Override
-  public void close(boolean abort) throws IOException {
+  @Override public void close(boolean abort) throws IOException {
     close(null);
   }
 }

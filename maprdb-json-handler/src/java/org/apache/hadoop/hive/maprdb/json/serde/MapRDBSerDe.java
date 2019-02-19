@@ -39,6 +39,9 @@ import static java.lang.String.format;
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.*;
 import static org.apache.hadoop.hive.maprdb.json.serde.MapRDBSerDeUtils.*;
 
+/**
+ * Serialization / deserialization of MapR DB Json document.
+ */
 public class MapRDBSerDe extends AbstractSerDe {
   private static final Logger LOG = LoggerFactory.getLogger(MapRDBSerDe.class);
 
@@ -51,8 +54,7 @@ public class MapRDBSerDe extends AbstractSerDe {
 
   private Map<String, String> mappings;
 
-  @Override
-  public void initialize(Configuration conf, Properties tbl) throws SerDeException {
+  @Override public void initialize(Configuration conf, Properties tbl) throws SerDeException {
     LOG.info("Initializing SerDe");
     String columnNameProperty = tbl.getProperty(serdeConstants.LIST_COLUMNS);
     String columnTypeProperty = tbl.getProperty(serdeConstants.LIST_COLUMN_TYPES);
@@ -95,23 +97,19 @@ public class MapRDBSerDe extends AbstractSerDe {
     return normalizedColNames;
   }
 
-  @Override
-  public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
+  @Override public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
     if (objInspector.getCategory() != ObjectInspector.Category.STRUCT) {
-      throw new SerDeException(getClass().toString()
-        + " can only serialize struct types, but we got: "
-        + objInspector.getTypeName());
+      throw new SerDeException(
+          getClass().toString() + " can only serialize struct types, but we got: " + objInspector.getTypeName());
     }
 
     Document doc = serializeStruct(obj, (StructObjectInspector) objInspector, columnNames, mappings);
     return new DocumentWritable(doc);
   }
 
-  @Override
-  public Object deserialize(Writable blob) throws SerDeException {
+  @Override public Object deserialize(Writable blob) throws SerDeException {
     if (!(blob instanceof DocumentWritable)) {
-      throw new SerDeException(
-        format("%s requires a Writable object, not %s", getClass(), blob.getClass()));
+      throw new SerDeException(format("%s requires a Writable object, not %s", getClass(), blob.getClass()));
     }
     row.clear();
 
@@ -123,13 +121,11 @@ public class MapRDBSerDe extends AbstractSerDe {
       try {
         TypeInfo fieldTypeInfo = rowTypeInfo.getStructFieldTypeInfo(fieldName);
 
-        String mapRMapping = mappings.containsKey(fieldName)
-          ? mappings.get(fieldName)
-          : fieldName;
+        String mapRMapping = mappings.containsKey(fieldName) ? mappings.get(fieldName) : fieldName;
 
         value = deserializeField(doc.getValue(mapRMapping), fieldTypeInfo);
       } catch (Exception e) {
-        LOG.warn("Could not find the appropriate field for name " + fieldName);
+        LOG.warn(String.format("Could not find the appropriate field for name %s", fieldName));
         value = null;
       }
       row.add(value);
@@ -145,18 +141,15 @@ public class MapRDBSerDe extends AbstractSerDe {
     return normalizedDoc;
   }
 
-  @Override
-  public ObjectInspector getObjectInspector() throws SerDeException {
+  @Override public ObjectInspector getObjectInspector() throws SerDeException {
     return objectInspector;
   }
 
-  @Override
-  public Class<? extends Writable> getSerializedClass() {
+  @Override public Class<? extends Writable> getSerializedClass() {
     return DocumentWritable.class;
   }
 
-  @Override
-  public SerDeStats getSerDeStats() {
+  @Override public SerDeStats getSerDeStats() {
     // no support for statistics
     return null;
   }

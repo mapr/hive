@@ -27,6 +27,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+/**
+ * Wrapper for TableSplit.
+ */
 public class MapRDBJsonSplit extends FileSplit implements InputSplit {
 
   private TableSplit tableSplit;
@@ -45,25 +48,21 @@ public class MapRDBJsonSplit extends FileSplit implements InputSplit {
     return tableSplit;
   }
 
-  @Override
-  public void readFields(DataInput in) throws IOException {
+  @Override public void readFields(DataInput in) throws IOException {
     super.readFields(in);
     tableSplit.readFields(in);
   }
 
-  @Override
-  public void write(DataOutput out) throws IOException {
+  @Override public void write(DataOutput out) throws IOException {
     super.write(out);
     tableSplit.write(out);
   }
 
-  @Override
-  public long getLength() {
+  @Override public long getLength() {
     return tableSplit.getLength();
   }
 
-  @Override
-  public String[] getLocations() {
+  @Override public String[] getLocations() {
     return tableSplit.getLocations();
   }
 }

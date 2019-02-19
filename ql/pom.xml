@@ -729,6 +729,11 @@
      </exclusions>
    </dependency>
     <dependency>
+      <groupId>org.ojai</groupId>
+      <artifactId>ojai</artifactId>
+      <version>${ojai.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-servlet</artifactId>
       <scope>test</scope>
