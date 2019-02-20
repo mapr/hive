@@ -330,6 +330,7 @@ public class VectorizationContext {
     castExpressionUdfs.add(GenericUDFToDate.class);
     castExpressionUdfs.add(GenericUDFToUnixTimeStamp.class);
     castExpressionUdfs.add(GenericUDFToUtcTimestamp.class);
+    castExpressionUdfs.add(GenericUDFToUtcTimestampNew.class);
     castExpressionUdfs.add(GenericUDFToChar.class);
     castExpressionUdfs.add(GenericUDFToVarchar.class);
     castExpressionUdfs.add(GenericUDFTimestamp.class);

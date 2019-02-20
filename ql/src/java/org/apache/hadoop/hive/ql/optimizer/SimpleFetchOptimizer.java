@@ -88,6 +88,7 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToDate;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToDecimal;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToUnixTimeStamp;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToUtcTimestamp;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToUtcTimestampNew;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFToVarchar;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -283,7 +284,7 @@ public class SimpleFetchOptimizer extends Transform {
       if (udf instanceof GenericUDFToBinary || udf instanceof GenericUDFToChar
           || udf instanceof GenericUDFToDate || udf instanceof GenericUDFToDecimal
           || udf instanceof GenericUDFToUnixTimeStamp || udf instanceof GenericUDFToUtcTimestamp
-          || udf instanceof GenericUDFToVarchar) {
+          || udf instanceof GenericUDFToUtcTimestampNew || udf instanceof GenericUDFToVarchar) {
         return expr.getChildren().size() == 1 && checkExpression(expr.getChildren().get(0));
       }
     }
