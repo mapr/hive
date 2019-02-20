@@ -506,6 +506,8 @@ public final class FunctionRegistry {
 
     system.registerGenericUDF("from_utc_timestamp", GenericUDFFromUtcTimestamp.class);
     system.registerGenericUDF("to_utc_timestamp", GenericUDFToUtcTimestamp.class);
+    system.registerGenericUDF("from_utc_timestamp_new", GenericUDFFromUtcTimestampNew.class);
+    system.registerGenericUDF("to_utc_timestamp_new", GenericUDFToUtcTimestampNew.class);
 
     system.registerGenericUDF("unix_timestamp", GenericUDFUnixTimeStamp.class);
     system.registerGenericUDF("to_unix_timestamp", GenericUDFToUnixTimeStamp.class);
