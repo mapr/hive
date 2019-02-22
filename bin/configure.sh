@@ -267,7 +267,29 @@ fi
 }
 
 #
-#  Save off current configuration file
+# Checks if configuration_file_check_sum exists after upgradeSchema function was
+# used between Hive upgrade from one version to another
+#
+is_checksum_file_exist(){
+if [ -f ""$HIVE_CONF"/.configuration_file_check_sum" ]; then
+  return 0 # true
+else
+  return 1;
+fi
+}
+
+#
+# Checks if Hive has been already configured and save initial checksums after first launch
+#
+init_backup(){
+if is_hive_not_configured_yet || ! is_checksum_file_exist; then
+  save_all_checksums
+fi
+}
+
+
+#
+#  Save off current configuration files if any of the files was changed
 #
 backup_configuration(){
 for FILE in "${FILES[@]}" ; do
@@ -860,6 +882,7 @@ if [ $# -gt 0 ]; then
   done
 fi
 
+init_backup
 
 backup_configuration
 
