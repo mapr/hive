@@ -160,6 +160,7 @@ function start_webhcat() {
         nohup $start_cmd >>$CONSOLE_LOG 2>>$ERROR_LOG &
         local pid=$!
 
+        ln -sf $PID_FILE ${BASEMAPR}/pid
         if [[ -z "${pid}" ]] ; then # we failed right off
                 die "failed to start. Check logs in " `dirname $ERROR_LOG`
         fi
@@ -185,6 +186,7 @@ function stop_webhcat() {
                 fi
         fi
 
+        rm ${BASEMAPR}/pid/webhcat.pid
         if [[ -z "$pid" ]]; then
                 log "no running server found"
         else
