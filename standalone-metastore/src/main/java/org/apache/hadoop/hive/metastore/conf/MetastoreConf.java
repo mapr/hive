@@ -880,6 +880,10 @@ public class MetastoreConf {
         "The size of a default pool to create when creating an empty resource plan;\n" +
         "If not positive, no default pool will be created."),
 
+    METASTORE_ALLOW_NEW_DB_IN_EXISTING_DIRECTORY("hive.metastore.allow.new.db.in.existing.directory",
+        "hive.metastore.allow.new.db.in.existing.directory", true, "Whether Hive allows to create "
+        + "new data base in existing directory"),
+
     // Hive values we have copied and use as is
     // These two are used to indicate that we are running tests
     HIVE_IN_TEST("hive.in.test", "hive.in.test", false, "internal usage only, true in test mode"),

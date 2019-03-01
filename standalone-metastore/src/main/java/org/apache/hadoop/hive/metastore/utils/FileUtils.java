@@ -510,4 +510,21 @@ public class FileUtils {
 
     return new Path(scheme, authority, pathUri.getPath());
   }
+
+  /**
+   * Checks if path exists.
+   *
+   * @param path path to check. It must be not null no avoid NPE here
+   * @param conf contains filesystem where to check
+   * @return true if path exists
+   * @throws MetaException
+   */
+
+  public static boolean exists(Path path, Configuration conf) throws MetaException {
+    try {
+      return path.getFileSystem(conf).exists(path);
+    } catch (IOException e) {
+      throw new MetaException("Got exception: " + e);
+    }
+  }
 }
