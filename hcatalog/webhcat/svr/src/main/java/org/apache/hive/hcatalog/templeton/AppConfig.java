@@ -75,41 +75,44 @@ public class AppConfig extends Configuration {
     "core-default.xml", "core-site.xml", "mapred-default.xml", "mapred-site.xml", "yarn-site.xml"
   };
 
-  public static final String[] HADOOP_PREFIX_VARS = {
-    "HADOOP_PREFIX", "HADOOP_HOME"
-  };
+  public static final String[] HADOOP_PREFIX_VARS = { "HADOOP_PREFIX", "HADOOP_HOME" };
 
   public static final String TEMPLETON_HOME_VAR = "TEMPLETON_HOME";
   public static final String WEBHCAT_CONF_DIR = "WEBHCAT_CONF_DIR";
 
-  public static final String[] TEMPLETON_CONF_FILENAMES = {
-    "webhcat-default.xml",
-    "webhcat-site.xml"
-  };
+  public static final String[] TEMPLETON_CONF_FILENAMES = { "webhcat-default.xml", "webhcat-site.xml" };
+
+  /**
+   Contains alternatives for listing order.
+   */
 
   public enum JobsListOrder {
-    lexicographicalasc,
-    lexicographicaldesc,
+    lexicographicalasc, lexicographicaldesc,
   }
 
-  public static final String PORT                = "templeton.port";
+  public static final String PORT = "templeton.port";
   public static final String JETTY_CONFIGURATION = "templeton.jetty.configuration";
-  public static final String EXEC_ENCODING_NAME  = "templeton.exec.encoding";
-  public static final String EXEC_ENVS_NAME      = "templeton.exec.envs";
+  public static final String EXEC_ENCODING_NAME = "templeton.exec.encoding";
+  public static final String EXEC_ENVS_NAME = "templeton.exec.envs";
   public static final String EXEC_MAX_BYTES_NAME = "templeton.exec.max-output-bytes";
   public static final String EXEC_MAX_PROCS_NAME = "templeton.exec.max-procs";
-  public static final String EXEC_TIMEOUT_NAME   = "templeton.exec.timeout";
-  public static final String HADOOP_QUEUE_NAME   = "templeton.hadoop.queue.name";
+  public static final String EXEC_TIMEOUT_NAME = "templeton.exec.timeout";
+  public static final String HADOOP_QUEUE_NAME = "templeton.hadoop.queue.name";
   public static final String ENABLE_JOB_RECONNECT_DEFAULT = "templeton.enable.job.reconnect.default";
-  public static final String HADOOP_NAME         = "templeton.hadoop";
-  public static final String HADOOP_CONF_DIR     = "templeton.hadoop.conf.dir";
-  public static final String HCAT_NAME           = "templeton.hcat";
-  public static final String PYTHON_NAME         = "templeton.python";
-  public static final String HIVE_ARCHIVE_NAME   = "templeton.hive.archive";
-  public static final String HIVE_PATH_NAME      = "templeton.hive.path";
-  public static final String MAPPER_MEMORY_MB    = "templeton.mapper.memory.mb";
-  public static final String MR_AM_MEMORY_MB     = "templeton.mr.am.memory.mb";
+  public static final String HADOOP_NAME = "templeton.hadoop";
+  public static final String HADOOP_CONF_DIR = "templeton.hadoop.conf.dir";
+  public static final String HCAT_NAME = "templeton.hcat";
+  public static final String PYTHON_NAME = "templeton.python";
+  public static final String HIVE_ARCHIVE_NAME = "templeton.hive.archive";
+  public static final String HIVE_PATH_NAME = "templeton.hive.path";
+  public static final String MAPPER_MEMORY_MB = "templeton.mapper.memory.mb";
+  public static final String MR_AM_MEMORY_MB = "templeton.mr.am.memory.mb";
   public static final String TEMPLETON_JOBSLIST_ORDER = "templeton.jobs.listorder";
+  public static final String USE_SSL = "templeton.use.ssl";
+  public static final String KEY_STORE_PATH = "templeton.keystore.path";
+  public static final String KEY_STORE_PASSWORD = "templeton.keystore.password";
+  public static final String SSL_PROTOCOL_BLACKLIST = "templeton.ssl.protocol.blacklist";
+  public static final String HOST = "templeton.host";
 
   /*
    * These parameters controls the maximum number of concurrent job submit/status/list
@@ -136,9 +139,9 @@ public class AppConfig extends Configuration {
    * Time out configs should be configured in seconds.
    *
    */
-  public static final String JOB_SUBMIT_TIMEOUT   = "templeton.job.submit.timeout";
-  public static final String JOB_STATUS_TIMEOUT   = "templeton.job.status.timeout";
-  public static final String JOB_LIST_TIMEOUT   = "templeton.job.list.timeout";
+  public static final String JOB_SUBMIT_TIMEOUT = "templeton.job.submit.timeout";
+  public static final String JOB_STATUS_TIMEOUT = "templeton.job.status.timeout";
+  public static final String JOB_LIST_TIMEOUT = "templeton.job.list.timeout";
 
   /*
    * If task execution time out is configured for submit operation then job may need to
@@ -149,57 +152,52 @@ public class AppConfig extends Configuration {
   public static final String JOB_TIMEOUT_TASK_RETRY_INTERVAL = "templeton.job.timeout.task.retry.interval";
 
   /**
-   * see webhcat-default.xml
+   * see webhcat-default.xml.
    */
-  public static final String HIVE_HOME_PATH      = "templeton.hive.home";
+  public static final String HIVE_HOME_PATH = "templeton.hive.home";
   /**
-   * see webhcat-default.xml
+   * see webhcat-default.xml.
    */
-  public static final String HCAT_HOME_PATH      = "templeton.hcat.home";
+  public static final String HCAT_HOME_PATH = "templeton.hcat.home";
   /**
    * is a comma separated list of name=value pairs;
    * In case some value is itself a comma-separated list, the comma needs to
    * be escaped with {@link org.apache.hadoop.util.StringUtils#ESCAPE_CHAR}.  See other usage
    * of escape/unescape methods in {@link org.apache.hadoop.util.StringUtils} in webhcat.
    */
-  public static final String HIVE_PROPS_NAME     = "templeton.hive.properties";
-  public static final String SQOOP_ARCHIVE_NAME  = "templeton.sqoop.archive";
-  public static final String SQOOP_PATH_NAME     = "templeton.sqoop.path";
-  public static final String SQOOP_HOME_PATH     = "templeton.sqoop.home";
-  public static final String LIB_JARS_NAME       = "templeton.libjars";
-  public static final String PIG_ARCHIVE_NAME    = "templeton.pig.archive";
-  public static final String PIG_PATH_NAME       = "templeton.pig.path";
-  public static final String STREAMING_JAR_NAME  = "templeton.streaming.jar";
-  public static final String OVERRIDE_JARS_NAME  = "templeton.override.jars";
+  public static final String HIVE_PROPS_NAME = "templeton.hive.properties";
+  public static final String SQOOP_ARCHIVE_NAME = "templeton.sqoop.archive";
+  public static final String SQOOP_PATH_NAME = "templeton.sqoop.path";
+  public static final String SQOOP_HOME_PATH = "templeton.sqoop.home";
+  public static final String LIB_JARS_NAME = "templeton.libjars";
+  public static final String PIG_ARCHIVE_NAME = "templeton.pig.archive";
+  public static final String PIG_PATH_NAME = "templeton.pig.path";
+  public static final String STREAMING_JAR_NAME = "templeton.streaming.jar";
+  public static final String OVERRIDE_JARS_NAME = "templeton.override.jars";
   public static final String OVERRIDE_JARS_ENABLED = "templeton.override.enabled";
-  public static final String TEMPLETON_CONTROLLER_MR_CHILD_OPTS 
-    = "templeton.controller.mr.child.opts";
-  public static final String TEMPLETON_CONTROLLER_MR_AM_JAVA_OPTS
-    = "templeton.controller.mr.am.java.opts";
+  public static final String TEMPLETON_CONTROLLER_MR_CHILD_OPTS = "templeton.controller.mr.child.opts";
+  public static final String TEMPLETON_CONTROLLER_MR_AM_JAVA_OPTS = "templeton.controller.mr.am.java.opts";
 
-  public static final String KERBEROS_SECRET     = "templeton.kerberos.secret";
-  public static final String KERBEROS_PRINCIPAL  = "templeton.kerberos.principal";
-  public static final String KERBEROS_KEYTAB     = "templeton.kerberos.keytab";
+  public static final String KERBEROS_SECRET = "templeton.kerberos.secret";
+  public static final String KERBEROS_PRINCIPAL = "templeton.kerberos.principal";
+  public static final String KERBEROS_KEYTAB = "templeton.kerberos.keytab";
 
-  public static final String CALLBACK_INTERVAL_NAME
-    = "templeton.callback.retry.interval";
-  public static final String CALLBACK_RETRY_NAME
-    = "templeton.callback.retry.attempts";
+  public static final String CALLBACK_INTERVAL_NAME = "templeton.callback.retry.interval";
+  public static final String CALLBACK_RETRY_NAME = "templeton.callback.retry.attempts";
 
   //Hadoop property names (set by templeton logic)
   public static final String HADOOP_END_INTERVAL_NAME = "job.end.retry.interval";
-  public static final String HADOOP_END_RETRY_NAME    = "job.end.retry.attempts";
-  public static final String HADOOP_END_URL_NAME      = "job.end.notification.url";
-  public static final String HADOOP_SPECULATIVE_NAME
-    = "mapred.map.tasks.speculative.execution";
+  public static final String HADOOP_END_RETRY_NAME = "job.end.retry.attempts";
+  public static final String HADOOP_END_URL_NAME = "job.end.notification.url";
+  public static final String HADOOP_SPECULATIVE_NAME = "mapred.map.tasks.speculative.execution";
   public static final String HADOOP_CHILD_JAVA_OPTS = "mapred.child.java.opts";
   public static final String HADOOP_MAP_MEMORY_MB = "mapreduce.map.memory.mb";
   public static final String HADOOP_MR_AM_JAVA_OPTS = "yarn.app.mapreduce.am.command-opts";
   public static final String HADOOP_MR_AM_MEMORY_MB = "yarn.app.mapreduce.am.resource.mb";
-  public static final String UNIT_TEST_MODE     = "templeton.unit.test.mode";
+  public static final String UNIT_TEST_MODE = "templeton.unit.test.mode";
   /**
-   * comma-separated list of artifacts to add to HADOOP_CLASSPATH evn var in
-   * LaunchMapper before launching Hive command
+   * Comma-separated list of artifacts to add to HADOOP_CLASSPATH evn var in LaunchMapper.
+   * Works before launching Hive command.
    */
   public static final String HIVE_EXTRA_FILES = "templeton.hive.extra.files";
 
@@ -214,13 +212,16 @@ public class AppConfig extends Configuration {
   }
 
   private void init() {
-    for (Map.Entry<String, String> e : System.getenv().entrySet())
+    for (Map.Entry<String, String> e : System.getenv().entrySet()) {
       set("env." + e.getKey(), e.getValue());
+    }
 
     String webhcatConfDir = getWebhcatConfDir();
     for (String fname : TEMPLETON_CONF_FILENAMES) {
       logConfigLoadAttempt(webhcatConfDir + File.separator + fname);
-      loadOneFileConfig(webhcatConfDir, fname);
+      if (!loadOneClasspathConfig(fname)) {
+        loadOneFileConfig(webhcatConfDir, fname);
+      }
     }
     String hadoopConfDir = getHadoopConfDir();
     for (String fname : HADOOP_CONF_FILENAMES) {
@@ -231,6 +232,7 @@ public class AppConfig extends Configuration {
     handleHiveProperties();
     LOG.info(dumpEnvironent());
   }
+
   /**
    * When auto-shipping hive tar (for example when hive query or pig script
    * is submitted via webhcat), Hive client is launched on some remote node where Hive has not
@@ -243,41 +245,38 @@ public class AppConfig extends Configuration {
    * those values should take precedence.
    */
   private void handleHiveProperties() {
-    HiveConf hiveConf = new HiveConf();//load hive-site.xml from classpath
-    List<String> interestingPropNames = Arrays.asList(
-        HiveConf.ConfVars.METASTOREURIS.varname,
-        HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname,
-        HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI.varname,
-        HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.varname,
-        HiveConf.ConfVars.HIVE_CONF_HIDDEN_LIST.varname);
+    HiveConf hiveConf = new HiveConf(); //load hive-site.xml from classpath
+    List<String> interestingPropNames = Arrays
+        .asList(HiveConf.ConfVars.METASTOREURIS.varname, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname,
+            HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI.varname, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.varname,
+            HiveConf.ConfVars.HIVE_CONF_HIDDEN_LIST.varname);
 
     //each items is a "key=value" format
     List<String> webhcatHiveProps = new ArrayList<String>(hiveProps());
-    for(String interestingPropName : interestingPropNames) {
+    for (String interestingPropName : interestingPropNames) {
       String value = hiveConf.get(interestingPropName);
-      if(value != null) {
+      if (value != null) {
         boolean found = false;
-        for(String whProp : webhcatHiveProps) {
-          if(whProp.startsWith(interestingPropName + "=")) {
+        for (String whProp : webhcatHiveProps) {
+          if (whProp.startsWith(interestingPropName + "=")) {
             found = true;
             break;
           }
         }
-        if(!found) {
+        if (!found) {
           webhcatHiveProps.add(interestingPropName + "=" + value);
         }
       }
     }
     StringBuilder hiveProps = new StringBuilder();
-    for(String whProp : webhcatHiveProps) {
+    for (String whProp : webhcatHiveProps) {
       //make sure to escape separator char in prop values
       hiveProps.append(hiveProps.length() > 0 ? "," : "").append(StringUtils.escapeString(whProp));
     }
     set(HIVE_PROPS_NAME, hiveProps.toString());
     // Setting the hidden list
     String hiddenProperties = hiveConf.get(HiveConf.ConfVars.HIVE_CONF_HIDDEN_LIST.varname);
-    if (this.get(HiveConf.ConfVars.HIVE_CONF_HIDDEN_LIST.varname) == null
-        && hiddenProperties!=null) {
+    if (this.get(HiveConf.ConfVars.HIVE_CONF_HIDDEN_LIST.varname) == null && hiddenProperties != null) {
       set(HiveConf.ConfVars.HIVE_CONF_HIDDEN_LIST.varname, hiddenProperties);
     }
   }
@@ -307,9 +306,9 @@ public class AppConfig extends Configuration {
     if (requestedOrder != null) {
       try {
         return JobsListOrder.valueOf(requestedOrder.toLowerCase());
-      }
-      catch(IllegalArgumentException ex) {
-        LOG.warn("Ignoring setting " + TEMPLETON_JOBSLIST_ORDER + " configured with in-correct value " + requestedOrder);
+      } catch (IllegalArgumentException ex) {
+        LOG.warn(
+            "Ignoring setting " + TEMPLETON_JOBSLIST_ORDER + " configured with in-correct value " + requestedOrder);
       }
     }
 
@@ -328,6 +327,7 @@ public class AppConfig extends Configuration {
   public static String getTempletonDir() {
     return System.getenv(TEMPLETON_HOME_VAR);
   }
+
   public static String getWebhcatConfDir() {
     return System.getenv(WEBHCAT_CONF_DIR);
   }
@@ -355,31 +355,90 @@ public class AppConfig extends Configuration {
     return false;
   }
 
-  public String jettyConfiguration() { return get(JETTY_CONFIGURATION); }
-  public String libJars()          { return get(LIB_JARS_NAME); }
-  public String hadoopQueueName()  { return get(HADOOP_QUEUE_NAME); }
-  public String enableJobReconnectDefault() { return get(ENABLE_JOB_RECONNECT_DEFAULT); }
-  public String clusterHadoop()    { return get(HADOOP_NAME); }
-  public String clusterHcat()      { return get(HCAT_NAME); }
-  public String clusterPython()    { return get(PYTHON_NAME); }
-  public String pigPath()          { return get(PIG_PATH_NAME); }
-  public String pigArchive()       { return get(PIG_ARCHIVE_NAME); }
-  public String hivePath()         { return get(HIVE_PATH_NAME); }
-  public String hiveArchive()      { return get(HIVE_ARCHIVE_NAME); }
-  public String sqoopPath()        { return get(SQOOP_PATH_NAME); }
-  public String sqoopArchive()     { return get(SQOOP_ARCHIVE_NAME); }
-  public String sqoopHome()        { return get(SQOOP_HOME_PATH); }
-  public String streamingJar()     { return get(STREAMING_JAR_NAME); }
-  public String kerberosSecret()   { return get(KERBEROS_SECRET); }
-  public String kerberosPrincipal(){ return get(KERBEROS_PRINCIPAL); }
-  public String kerberosKeytab()   { return get(KERBEROS_KEYTAB); }
-  public String controllerMRChildOpts() { 
-    return get(TEMPLETON_CONTROLLER_MR_CHILD_OPTS); 
+  public String jettyConfiguration() {
+    return get(JETTY_CONFIGURATION);
   }
+
+  public String libJars() {
+    return get(LIB_JARS_NAME);
+  }
+
+  public String hadoopQueueName() {
+    return get(HADOOP_QUEUE_NAME);
+  }
+
+  public String enableJobReconnectDefault() {
+    return get(ENABLE_JOB_RECONNECT_DEFAULT);
+  }
+
+  public String clusterHadoop() {
+    return get(HADOOP_NAME);
+  }
+
+  public String clusterHcat() {
+    return get(HCAT_NAME);
+  }
+
+  public String clusterPython() {
+    return get(PYTHON_NAME);
+  }
+
+  public String pigPath() {
+    return get(PIG_PATH_NAME);
+  }
+
+  public String pigArchive() {
+    return get(PIG_ARCHIVE_NAME);
+  }
+
+  public String hivePath() {
+    return get(HIVE_PATH_NAME);
+  }
+
+  public String hiveArchive() {
+    return get(HIVE_ARCHIVE_NAME);
+  }
+
+  public String sqoopPath() {
+    return get(SQOOP_PATH_NAME);
+  }
+
+  public String sqoopArchive() {
+    return get(SQOOP_ARCHIVE_NAME);
+  }
+
+  public String sqoopHome() {
+    return get(SQOOP_HOME_PATH);
+  }
+
+  public String streamingJar() {
+    return get(STREAMING_JAR_NAME);
+  }
+
+  public String kerberosSecret() {
+    return get(KERBEROS_SECRET);
+  }
+
+  public String kerberosPrincipal() {
+    return get(KERBEROS_PRINCIPAL);
+  }
+
+  public String kerberosKeytab() {
+    return get(KERBEROS_KEYTAB);
+  }
+
+  public String controllerMRChildOpts() {
+    return get(TEMPLETON_CONTROLLER_MR_CHILD_OPTS);
+  }
+
   public String controllerAMChildOpts() {
     return get(TEMPLETON_CONTROLLER_MR_AM_JAVA_OPTS);
   }
-  public String mapperMemoryMb()   { return get(MAPPER_MEMORY_MB); }
+
+  public String mapperMemoryMb() {
+    return get(MAPPER_MEMORY_MB);
+  }
+
   public String amMemoryMb() {
     return get(MR_AM_MEMORY_MB);
   }
@@ -388,13 +447,13 @@ public class AppConfig extends Configuration {
    * @see  #HIVE_PROPS_NAME
    */
   public Collection<String> hiveProps() {
-    String[] props= StringUtils.split(get(HIVE_PROPS_NAME));
+    String[] props = StringUtils.split(get(HIVE_PROPS_NAME));
     //since raw data was (possibly) escaped to make split work,
     //now need to remove escape chars so they don't interfere with downstream processing
     if (props == null) {
       return Collections.emptyList();
     } else {
-      for(int i = 0; i < props.length; i++) {
+      for (int i = 0; i < props.length; i++) {
         props[i] = TempletonUtils.unEscapeString(props[i]);
       }
       return Arrays.asList(props);
@@ -402,28 +461,34 @@ public class AppConfig extends Configuration {
   }
 
   public String[] overrideJars() {
-    if (getBoolean(OVERRIDE_JARS_ENABLED, true))
+    if (getBoolean(OVERRIDE_JARS_ENABLED, true)) {
       return getStrings(OVERRIDE_JARS_NAME);
-    else
+    } else {
       return null;
-  }
-  public String overrideJarsString() {
-    if (getBoolean(OVERRIDE_JARS_ENABLED, true))
-      return get(OVERRIDE_JARS_NAME);
-    else
-      return null;
+    }
   }
 
-  public long zkCleanupInterval()  {
-    return getLong(ZooKeeperCleanup.ZK_CLEANUP_INTERVAL,
-      (1000L * 60L * 60L * 12L));
+  public String overrideJarsString() {
+    if (getBoolean(OVERRIDE_JARS_ENABLED, true)) {
+      return get(OVERRIDE_JARS_NAME);
+    } else {
+      return null;
+    }
+  }
+
+  public long zkCleanupInterval() {
+    return getLong(ZooKeeperCleanup.ZK_CLEANUP_INTERVAL, (1000L * 60L * 60L * 12L));
   }
 
   public long zkMaxAge() {
-    return getLong(ZooKeeperCleanup.ZK_CLEANUP_MAX_AGE,
-      (1000L * 60L * 60L * 24L * 7L));
+    return getLong(ZooKeeperCleanup.ZK_CLEANUP_MAX_AGE, (1000L * 60L * 60L * 24L * 7L));
   }
 
-  public String zkHosts()          { return get(ZooKeeperStorage.ZK_HOSTS); }
-  public int zkSessionTimeout()    { return getInt(ZooKeeperStorage.ZK_SESSION_TIMEOUT, 30000); }
+  public String zkHosts() {
+    return get(ZooKeeperStorage.ZK_HOSTS);
+  }
+
+  public int zkSessionTimeout() {
+    return getInt(ZooKeeperStorage.ZK_SESSION_TIMEOUT, 30000);
+  }
 }
