@@ -28,6 +28,7 @@ import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 
 /**
  * TSetIpAddressProcessor passes the IP address of the Thrift client to the HMSHandler.
@@ -44,8 +45,13 @@ public class TSetIpAddressProcessor<I extends Iface> extends ThriftHiveMetastore
   @Override
   public boolean process(final TProtocol in, final TProtocol out) throws TException {
     setIpAddress(in);
-
-    return super.process(in, out);
+    boolean result;
+    try {
+      result = super.process(in, out);
+    } catch (TTransportException tte) {
+      throw new RuntimeException(tte);
+    }
+    return result;
   }
 
   protected void setIpAddress(final TProtocol in) {
