@@ -49,6 +49,8 @@ HIVE_CONF="$HIVE_HOME"/conf
 HIVE_LOGS="$HIVE_HOME"/logs
 HIVE_PIDS="$HIVE_HOME"/pids
 HIVE_SITE="$HIVE_CONF"/hive-site.xml
+HIVE_ENV="$HIVE_CONF"/hive-env.sh
+HPLSQL_SITE="$HIVE_CONF"/hplsql-site.xml
 RESTART_DIR="${RESTART_DIR:=$MAPR_HOME/conf/restart}"
 RESTART_LOG_DIR="${RESTART_LOG_DIR:=${MAPR_HOME}/logs/restart_logs}"
 METASTOREWAREHOUSE="/user/hive/warehouse"
@@ -69,7 +71,7 @@ afterHiveSiteCksum=""
 DEFAULT_DERBY_DB_NAME="metastore_db"
 declare -A MAPRCLI=( ["hivemetastore"]="hivemeta" ["hiveserver2"]="hs2" ["hivewebhcat"]="hcat")
 declare -A PORTS=( ["hivemetastore"]="9083" ["hiveserver2"]="10000" ["hivewebhcat"]="50111")
-
+FILES=("$HIVE_SITE" "$HPLSQL_SITE" "$WEBHCAT_SITE" "$HIVE_ENV")
 
 #
 # Checks if HiveServer2 High Availability flag exists
@@ -267,17 +269,70 @@ fi
 #  Save off current configuration file
 #
 backup_configuration(){
-if [ -d "$HIVE_CONF" ]; then
-  cp -pa "$HIVE_CONF" "$HIVE_CONF"."$NOW"
+for FILE in "${FILES[@]}" ; do
+  if [ -f ${FILE} ]; then
+    if is_check_sum_changed_for ${FILE}; then
+      backup_all_files
+      save_all_checksums
+      break
+    fi
+  fi
+done
+}
+
+#
+# Checks if checksum was changed in configuration-file for appropriate file
+#
+is_check_sum_changed_for(){
+local file=$1
+local old_checksum=$(read_checksum_for "$file")
+local new_checksum=$(cksum "$file" | cut -d ' ' -f 1)
+if [ "$old_checksum" != "$new_checksum" ]; then
+  return 0 # true
+else
+  return 1;
 fi
 }
 
 #
-# Save new hive-site.xml check sum to file
+#  Save off all configuration files
 #
-save_new_hive_site_check_sum(){
-beforeHiveSiteCksum=$(cksum "$HIVE_SITE" | cut -d' ' -f1)
-echo "$beforeHiveSiteCksum" > "$HIVE_CONF"/.hive_site_check_sum
+backup_all_files(){
+mkdir -p "$HIVE_CONF".backup."$NOW"/ && cp "$HIVE_CONF"/{hive-site.xml,hplsql-site.xml} "$_"
+cp "$WEBHCAT_SITE" "$HIVE_CONF".backup."$NOW"/
+if is_hive_env_file; then
+  cp "$HIVE_ENV" "$HIVE_CONF".backup."$NOW"
+fi
+}
+
+#
+# Save all checksums in configuration_file
+#
+save_all_checksums(){
+if is_hive_env_file; then
+  beforeConfigurationFileCksum=$(cksum "$HPLSQL_SITE" "$HIVE_SITE" "$WEBHCAT_SITE" "$HIVE_ENV"| cut -d' ' -f 1,3)
+else
+  beforeConfigurationFileCksum=$(cksum "$HPLSQL_SITE" "$HIVE_SITE" "$WEBHCAT_SITE" | cut -d' ' -f 1,3)
+fi
+echo "$beforeConfigurationFileCksum" > "$HIVE_CONF"/.configuration_file_check_sum
+}
+
+#
+# Read file checksum
+#
+read_checksum_for(){
+grep "${1}$" ""$HIVE_CONF"/.configuration_file_check_sum" | cut -d ' ' -f 1
+}
+
+#
+# Check if exists hive-env.sh file
+#
+is_hive_env_file(){
+if [ -f ${HIVE_ENV} ]; then
+  return 0 # true
+else
+  return 1;
+fi
 }
 
 #
@@ -789,4 +844,4 @@ remove_fresh_install_indicator
 
 configure_permissions
 
-save_new_hive_site_check_sum
+save_all_checksums
