@@ -43,6 +43,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -68,6 +69,7 @@ import org.apache.hadoop.mapred.JobContext;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -123,6 +125,8 @@ public class TezSessionState {
   private boolean defaultQueue = false;
   @JsonProperty("user")
   private String user;
+  private ApplicationId applicationId;
+  private Path activeAppsPath;
 
   private AtomicReference<String> ownerThread = new AtomicReference<>(null);
 
@@ -278,6 +282,7 @@ public class TezSessionState {
 
     // Create the tez tmp dir and a directory for Hive resources.
     tezScratchDir = createTezDir(sessionId, null);
+    activeAppsPath = SessionState.get().getActiveAppsPath();
     if (resources != null) {
       // If we are getting the resources externally, don't relocalize anything.
       this.resources = resources;
@@ -467,10 +472,44 @@ public class TezSessionState {
       // names i.e, if client has not died and if the user has explicitly set a queue name
       // then reopened session will use user specified queue name else default cluster queue names.
       conf.unset(TezConfiguration.TEZ_QUEUE_NAME);
+      applicationId = session.getAppMasterApplicationId();
+      saveActiveAppToFile();
       return session;
     } finally {
       if (isOnThread && !isSuccessful) {
         closeAndIgnoreExceptions(session);
+        deleteFileWithAppId();
+      }
+    }
+  }
+
+  /**
+   * Creates file with the name the same as the YARN application has been submitted.
+   *
+   *   (1) We use that when we check if the application is running in utility removing
+   * scratch dirs.
+   *
+   *   (2) All files with active applications names are placed in SESSION_PATH/active_apps folder.
+   *
+   * @throws IOException
+   */
+  private void saveActiveAppToFile() throws IOException {
+    FileSystem fs = activeAppsPath.getFileSystem(conf);
+    FSDataOutputStream fsDataOutputStream = fs.create(new Path(activeAppsPath, applicationId.toString()));
+    fsDataOutputStream.close();
+  }
+
+  /**
+   * Deletes file with the name the same as the application has been submitted.
+   *
+   * @throws IOException
+   */
+  private void deleteFileWithAppId() throws IOException {
+    FileSystem fs = activeAppsPath.getFileSystem(conf);
+    if (applicationId != null) {
+      Path jobIdPath = new Path(activeAppsPath, applicationId.toString());
+      if (fs.exists(jobIdPath)) {
+        fs.delete(jobIdPath, true);
       }
     }
   }
@@ -666,6 +705,8 @@ public class TezSessionState {
   void close(boolean keepDagFilesDir) throws Exception {
     console = null;
     appJarLr = null;
+    applicationId = null;
+    activeAppsPath = null;
 
     try {
       if (getSession() != null) {
@@ -692,6 +733,7 @@ public class TezSessionState {
     } finally {
       try {
         cleanupScratchDir();
+        deleteFileWithAppId();
       } finally {
         if (!keepDagFilesDir) {
           cleanupDagResources();

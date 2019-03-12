@@ -122,6 +122,8 @@ public class SessionState {
   private static final String TMP_TABLE_SPACE_KEY = "_hive.tmp_table_space";
   static final String LOCK_FILE_NAME = "inuse.lck";
   static final String INFO_FILE_NAME = "inuse.info";
+  static final String ACTIVE_JOBS = "active_jobs";
+  static final String ACTIVE_APPS = "active_apps";
 
   /**
    * Concurrent since SessionState is often propagated to workers in thread pools
@@ -253,6 +255,10 @@ public class SessionState {
    *  @return Path for Scratch path for the current session
    */
   private Path hdfsSessionPath;
+
+  private Path activeJobsPath;
+
+  private Path activeAppsPath;
 
   private FSDataOutputStream hdfsSessionPathLockFile = null;
 
@@ -725,7 +731,11 @@ public class SessionState {
     String sessionId = getSessionId();
     // 4. HDFS session path
     hdfsSessionPath = new Path(hdfsScratchDirURIString, sessionId);
+    activeJobsPath = new Path(hdfsSessionPath, ACTIVE_JOBS);
+    activeAppsPath = new Path(hdfsSessionPath, ACTIVE_APPS);
     createPath(conf, hdfsSessionPath, scratchDirPermission, false, true);
+    createPath(conf, activeJobsPath, scratchDirPermission, false, true);
+    createPath(conf, activeAppsPath, scratchDirPermission, false, true);
     conf.set(HDFS_SESSION_PATH_KEY, hdfsSessionPath.toUri().toString());
     // 5. hold a lock file in HDFS session dir to indicate the it is in use
     if (conf.getBoolVar(HiveConf.ConfVars.HIVE_SCRATCH_DIR_LOCK)) {
@@ -755,6 +765,15 @@ public class SessionState {
     conf.addToRestrictList(
         LOCAL_SESSION_PATH_KEY + "," + HDFS_SESSION_PATH_KEY + "," + TMP_TABLE_SPACE_KEY);
   }
+
+  public Path getActiveJobsPath() {
+    return activeJobsPath;
+  }
+
+  public Path getActiveAppsPath() {
+    return activeAppsPath;
+  }
+
 
   /**
    * Create the root scratch dir on hdfs (if it doesn't already exist) and make it writable
