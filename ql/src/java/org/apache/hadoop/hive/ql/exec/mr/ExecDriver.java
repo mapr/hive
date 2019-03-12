@@ -414,7 +414,8 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
 
       // Finally SUBMIT the JOB!
       rj = jc.submitJob(job);
-      this.jobID = rj.getJobID();
+      this.jobID = rj.getID().toString();
+      saveJobIdToFile();
       updateStatusInQueryDisplay();
       returnVal = jobExecHelper.progress(rj, jc, ctx);
       success = (returnVal == 0);
@@ -445,7 +446,7 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
           if (returnVal != 0) {
             rj.killJob();
           }
-          jobID = rj.getID().toString();
+          deleteFileWithJobId();
         }
         if (jc!=null) {
           jc.close();

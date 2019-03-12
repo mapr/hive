@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
 import org.apache.hadoop.hive.ql.DriverContext;
@@ -295,6 +298,44 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
       List<Task<? extends Serializable>> siblingTasks = childTsk.getParentTasks();
       if (siblingTasks == null || siblingTasks.size() == 0) {
         childTsk.removeFromChildrenTasks();
+      }
+    }
+  }
+
+  /**
+   * Creates file with the name the same as the job has been submitted.
+   *
+   *   (1) We use that when we check if the job is running in utility removing
+   * scratch dirs.
+   *
+   *   (2) All files with active job names are placed in SESSION_PATH/active_jobs folder.
+   *
+   *
+   * @throws IOException
+   */
+  protected void saveJobIdToFile() throws IOException {
+    SessionState ss = SessionState.get();
+    if (ss != null) {
+      Path path = ss.getActiveJobsPath();
+      FileSystem fs = path.getFileSystem(conf);
+      FSDataOutputStream fsDataOutputStream = fs.create(new Path(path, jobID));
+      fsDataOutputStream.close();
+    }
+  }
+
+  /**
+   * Deletes file with the name the same as the job has been submitted.
+   *
+   * @throws IOException
+   */
+  protected void deleteFileWithJobId() throws IOException {
+    SessionState ss = SessionState.get();
+    if (ss != null) {
+      Path path = ss.getActiveJobsPath();
+      FileSystem fs = path.getFileSystem(conf);
+      Path jobIdPath = new Path(path, jobID);
+      if (fs.exists(jobIdPath)) {
+        fs.delete(jobIdPath, true);
       }
     }
   }
