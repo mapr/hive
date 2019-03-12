@@ -420,6 +420,7 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
       }
 
       this.jobID = rj.getJobID();
+      saveJobIdToFile();
       updateStatusInQueryDisplay();
       returnVal = jobExecHelper.progress(rj, jc, ctx);
       success = (returnVal == 0);
@@ -451,6 +452,7 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
             rj.killJob();
           }
           jobID = rj.getID().toString();
+          deleteFileWithJobId();
         }
         if (jc!=null) {
           jc.close();
