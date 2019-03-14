@@ -285,9 +285,13 @@ public class Main {
   private static void configureSsl(SslContextFactory sslContextFactory) throws IOException {
     if (conf.get(AppConfig.KEY_STORE_PATH) == null || conf.get(AppConfig.KEY_STORE_PATH).isEmpty()) {
       sslContextFactory.setKeyStorePath(getClientKeystoreLocation());
+    } else {
+      sslContextFactory.setKeyStorePath(conf.get(AppConfig.KEY_STORE_PATH));
     }
     if (conf.getPassword(AppConfig.KEY_STORE_PASSWORD) == null) {
       sslContextFactory.setKeyStorePassword(getClientKeystorePassword());
+    } else {
+      sslContextFactory.setKeyStorePassword(new String(conf.getPassword(AppConfig.KEY_STORE_PASSWORD)));
     }
   }
 
