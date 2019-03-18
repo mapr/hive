@@ -180,7 +180,7 @@
     <stax.version>1.0.1</stax.version>
     <slf4j.version>1.7.10</slf4j.version>
     <ST4.version>4.0.4</ST4.version>
-    <tez.version>0.8.4</tez.version>
+    <tez.version>0.8.4-mapr-SNAPSHOT</tez.version>
     <slider.version>0.90.2-incubating</slider.version>
     <super-csv.version>2.2.0</super-csv.version>
     <spark.version>1.6.1-mapr-1611</spark.version>
@@ -201,6 +201,17 @@
   </properties>
 
   <repositories>
+    <!-- Temporary repo -->
+    <repository>
+      <id>mapr.release</id>
+      <url>${env.MAPR_MAVEN_REPO}</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
    <!-- This needs to be removed before checking in-->
     <repository>
       <id>mapr</id>
