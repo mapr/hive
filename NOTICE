@@ -1,7 +1,91 @@
 Apache Hive
-Copyright 2008-2017 The Apache Software Foundation
 
-This product includes software developed by The Apache Software
-Foundation (http://www.apache.org/).
+Copyright (c) 2008-2017 The Apache Software Foundation
+Copyright (c) 2003-2008, Terence Parr
+Copyright (c) 2008, Terence Parr
+Copyright (c) 2000-2005 INRIA, France Telecom
+Copyright (c) 2002-2006, Marc Prud'hommeaux <mwp1@cornell.edu>
+Copyright (c) 2002, 2003, 2004, 2005 Marc Prud'hommeaux
+Copyright (c) 2004-2008 QOS.ch
+Copyright (c) 2007 Mockito contributors
+Copyright (c) 1997-2011, PostgreSQL Global Development Group
+Copyright (c) 2007, Aviad Ben Dov
+Copyright (c) 2012, Splunk Inc.
+Copyright (c) 2016 Mariano Guerra
+Copyright (c) 2002 JSON.org
 
-This project includes software licensed under the JSON license.
+Source code: Source code: git://git.apache.org/hive.git
+
+License: Apache License, Version 2.0
+http://www.apache.org/licenses/LICENSE-2.0.html
+
+-----------------------------------------------------------
+
+For the ANTLR libraries:
+
+Copyright (c) 2003-2008, Terence Parr
+All rights reserved.
+
+-----------------------------------------------------------
+
+For the StringTemplate library:
+
+Copyright (c) 2008, Terence Parr
+All rights reserved.
+
+-----------------------------------------------------------
+
+For the ASM library:
+
+Copyright (c) 2000-2005 INRIA, France Telecom
+All rights reserved.
+
+-----------------------------------------------------------
+
+For the org.json library:
+
+Copyright (c) 2002 JSON.org
+
+-----------------------------------------------------------
+
+For the JLine library:
+
+Copyright (c) 2002-2006, Marc Prud'hommeaux <mwp1@cornell.edu>
+All rights reserved.
+
+-----------------------------------------------------------
+
+For the SQLLine package:
+
+Copyright (c) 2002, 2003, 2004, 2005 Marc Prud'hommeaux
+
+From: http://sqlline.sourceforge.net/#license
+
+-----------------------------------------------------------
+
+For the SLF4J library:
+
+Copyright (c) 2004-2008 QOS.ch
+All rights reserved.
+
+-----------------------------------------------------------
+
+For the Mockito library:
+
+The MIT License
+
+Copyright (c) 2007 Mockito contributors
+
+-----------------------------------------------------------
+
+For the org.apache.hive.beeline.ClassNameCompleter class:
+
+Copyright (c) 2002-2006, Marc Prud'hommeaux <mwp1@cornell.edu>
+All rights reserved.
+
+-----------------------------------------------------------
+
+For the PostgreSQL JDBC driver jar file:
+
+Copyright (c) 1997-2011, PostgreSQL Global Development Group
+All rights reserved.
