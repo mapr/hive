@@ -182,11 +182,13 @@ public class HiveServer2 extends CompositeService {
     }
 
     // Create views registry
-    try {
-      Hive sessionHive = Hive.get(hiveConf);
-      HiveMaterializedViewsRegistry.get().init(sessionHive);
-    } catch (HiveException e) {
-      throw new RuntimeException("Failed to get metastore connection", e);
+    if (hiveConf.getBoolVar(ConfVars.HIVE_MATERIALIZED_VIEW_ENABLE_VIEWS_REGISTRY)) {
+      try {
+        Hive sessionHive = Hive.get(hiveConf);
+        HiveMaterializedViewsRegistry.get().init(sessionHive);
+      } catch (HiveException e) {
+        throw new RuntimeException("Failed to get metastore connection", e);
+      }
     }
     // Setup web UI
     try {
