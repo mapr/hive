@@ -4763,7 +4763,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     db.dropTable(dropTbl.getTableName(), dropTbl.getIfPurge());
     if (tbl != null) {
       // Remove from cache if it is a materialized view
-      if (tbl.isMaterializedView()) {
+      if (tbl.isMaterializedView() && conf.getBoolVar(ConfVars.HIVE_MATERIALIZED_VIEW_ENABLE_VIEWS_REGISTRY)) {
         HiveMaterializedViewsRegistry.get().dropMaterializedView(tbl);
       }
       // We have already locked the table in DDLSemanticAnalyzer, don't do it again here

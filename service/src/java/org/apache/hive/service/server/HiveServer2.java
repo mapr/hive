@@ -276,7 +276,9 @@ public class HiveServer2 extends CompositeService {
     }
 
     // Create views registry
-    HiveMaterializedViewsRegistry.get().init();
+    if (hiveConf.getBoolVar(ConfVars.HIVE_MATERIALIZED_VIEW_ENABLE_VIEWS_REGISTRY)) {
+      HiveMaterializedViewsRegistry.get().init();
+    }
 
     StatsSources.initialize(hiveConf);
 
