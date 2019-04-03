@@ -58,6 +58,8 @@ import org.apache.hadoop.hive.ql.io.orc.OrcRecordUpdater;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.orc.Writer;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.CreateTableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
 import org.apache.hadoop.hive.shims.HadoopShims;
@@ -1977,4 +1979,17 @@ public class AcidUtils {
     tblProps.put(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL, "false");
     tblProps.remove(hive_metastoreConstants.TABLE_TRANSACTIONAL_PROPERTIES);
   }
+
+  /**
+   * Checks if a table is a valid ACID table.
+   * @param tree parse tree
+   * @param conf configuration
+   * @return true if table is a legit ACID table, false otherwise
+   * @throws SemanticException
+   */
+
+  public static boolean isAcidTable(ASTNode tree, HiveConf conf) throws SemanticException {
+    return isFullAcidTable(TableUtils.findTable(tree, conf));
+  }
+
 }

@@ -117,6 +117,9 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
   @Override
   public void preCreateTable(Table tbl) throws MetaException {
     checkPreConditions(tbl);
+    if(isInTestMode(tbl)) {
+      return;
+    }
     boolean isExternal = MetaStoreUtils.isExternalTable(tbl);
 
     try {
@@ -145,6 +148,14 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
         admin.close();
       }
     }
+  }
+
+  private static boolean isInTestMode(Table tbl) {
+    Map<String, String> tblParams = tbl.getParameters();
+    if (!(tblParams.containsKey(MAPRDB_IS_IN_TEST_MODE))) {
+      return false;
+    }
+    return "true".equalsIgnoreCase(tblParams.get(MAPRDB_IS_IN_TEST_MODE));
   }
 
   private void checkPreConditions(Table tbl) throws MetaException {
@@ -212,6 +223,9 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
 
   @Override
   public void commitDropTable(Table table, boolean deleteData) throws MetaException {
+    if(isInTestMode(table)) {
+      return;
+    }
     String tableName = getMapRDBTableName(table);
     boolean isExternal = MetaStoreUtils.isExternalTable(table);
     boolean exists = getMapRDBAdmin().tableExists(tableName);

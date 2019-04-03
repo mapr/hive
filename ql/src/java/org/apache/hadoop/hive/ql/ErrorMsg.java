@@ -408,6 +408,7 @@ public enum ErrorMsg {
 
   DROP_NATIVE_FUNCTION(10301, "Cannot drop native function"),
   UPDATE_CANNOT_UPDATE_BUCKET_VALUE(10302, "Updating values of bucketing columns is not supported.  Column {0}.", true),
+  UPDATE_CANNOT_UPDATE_MAPR_DB_COLUMN_ID_VALUE(22302, "Updating values of maprdb.column.id columns is not supported. Column {0}.", true),
   IMPORT_INTO_STRICT_REPL_TABLE(10303,"Non-repl import disallowed against table that is a destination of replication."),
   CTAS_LOCATION_NONEMPTY(10304, "CREATE-TABLE-AS-SELECT cannot create table with location to a non-empty directory."),
   CTAS_CREATES_VOID_TYPE(10305, "CREATE-TABLE-AS-SELECT creates a VOID type, please use CAST to specify the type, near field: "),

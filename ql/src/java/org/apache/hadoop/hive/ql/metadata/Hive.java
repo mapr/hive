@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.metadata;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -184,6 +185,7 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.ql.plan.LoadTableDesc.LoadFileType;
 import org.apache.hadoop.hive.ql.session.CreateTableAutomaticGrant;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
@@ -606,9 +608,34 @@ public class Hive {
    * @throws HiveException
    */
   public void createTable(String tableName, List<String> columns, List<String> partCols,
-                          Class<? extends InputFormat> fileInputFormat,
-                          Class<?> fileOutputFormat, int bucketCount, List<String> bucketCols,
-                          Map<String, String> parameters) throws HiveException {
+      Class<? extends InputFormat> fileInputFormat,
+      Class<?> fileOutputFormat, int bucketCount, List<String> bucketCols,
+      Map<String, String> parameters) throws HiveException {
+    createTable(tableName, columns, partCols, fileInputFormat, fileOutputFormat, bucketCount, bucketCols, parameters, LazySimpleSerDe.class);
+  }
+
+
+
+  /**
+   * Create a table metadata and the directory for the table data
+   * @param tableName table name
+   * @param columns list of fields of the table
+   * @param partCols partition keys of the table
+   * @param fileInputFormat Class of the input format of the table data file
+   * @param fileOutputFormat Class of the output format of the table data file
+   * @param bucketCount number of buckets that each partition (or the table itself) should be
+   *                    divided into
+   * @param bucketCols Bucket columns
+   * @param parameters Parameters for the table
+   * @param serDe Serialization/Deserialization class. If null, then LazySimpleSerDe is used. Used for tests only
+   * @throws HiveException
+   */
+
+  @VisibleForTesting
+  public void createTable(String tableName, List<String> columns, List<String> partCols,
+      Class<? extends InputFormat> fileInputFormat,
+      Class<?> fileOutputFormat, int bucketCount, List<String> bucketCols,
+    Map<String, String> parameters, Class<? extends AbstractSerDe> serDe) throws HiveException {
     if (columns == null) {
       throw new HiveException("columns not specified for table " + tableName);
     }
@@ -630,7 +657,7 @@ public class Hive {
         tbl.getPartCols().add(part);
       }
     }
-    tbl.setSerializationLib(LazySimpleSerDe.class.getName());
+    tbl.setSerializationLib(serDe.getName());
     tbl.setNumBuckets(bucketCount);
     tbl.setBucketCols(bucketCols);
     if (parameters != null) {

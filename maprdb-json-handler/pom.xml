@@ -54,6 +54,11 @@
       <artifactId>hive-standalone-metastore</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-metastore</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>

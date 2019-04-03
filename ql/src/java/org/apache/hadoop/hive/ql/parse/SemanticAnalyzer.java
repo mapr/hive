@@ -110,6 +110,7 @@ import org.apache.hadoop.hive.ql.io.AcidInputFormat;
 import org.apache.hadoop.hive.ql.io.AcidOutputFormat;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.AcidUtils.Operation;
+import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
 import org.apache.hadoop.hive.ql.io.arrow.ArrowColumnarBatchSerDe;
 import org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
@@ -794,10 +795,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     for (int i = 0; i < selectExprs.getChildCount(); i++) {
       ASTNode selectExpr = (ASTNode) selectExprs.getChild(i);
       if (selectExpr.getChildCount() == 1 && selectExpr.getChild(0).getType() == HiveParser.TOK_TABLE_OR_COL) {
-        //first child should be rowid
-        if (i == 0 && !selectExpr.getChild(0).getChild(0).getText().equals("ROW__ID")) {
+        //first child should be rowid or MapR DB JSON column Id
+        String firstChild = selectExpr.getChild(0).getChild(0).getText();
+        String rowId = "ROW__ID";
+        String mapRColumnId = "";
+        if (MapRDbJsonUtils.isMapRDbJsonTable(targetTable)) {
+          mapRColumnId = MapRDbJsonUtils.getMapRColumnId(targetTable);
+        }
+
+        if (i == 0 && !(rowId.equals(firstChild) || mapRColumnId.equals(firstChild))) {
           throw new SemanticException("Unexpected element when replacing default keyword for UPDATE."
-                                          + " Expected ROW_ID, found: " + selectExpr.getChild(0).getChild(0).getText());
+                                          + " Expected ROW_ID or MapR DB JSON column ID, found: " + firstChild);
         }
         else if (selectExpr.getChild(0).getChild(0).getText().toLowerCase().equals("default")) {
           if (defaultConstraints == null) {
@@ -2297,7 +2305,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 name + " but it's not in isInsertIntoTable() or getInsertOverwriteTables()";
         // Disallow update and delete on non-acid tables
         boolean isFullAcid = AcidUtils.isFullAcidTable(ts.tableHandle);
-        if ((updating(name) || deleting(name)) && !isFullAcid) {
+        boolean isMapRDbJson = MapRDbJsonUtils.isMapRDbJsonTable(ts.tableHandle);
+        if ((updating(name) || deleting(name)) && !(isFullAcid || isMapRDbJson)) {
           if (!AcidUtils.isInsertOnlyTable(ts.tableHandle)) {
             // Whether we are using an acid compliant transaction manager has already been caught in
             // UpdateDeleteSemanticAnalyzer, so if we are updating or deleting and getting nonAcid
@@ -6880,7 +6889,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if (dest_tab.getNumBuckets() > 0) {
       enforceBucketing = true;
-      if (updating(dest) || deleting(dest)) {
+      boolean isFullAcid = AcidUtils.isFullAcidTable(dest_tab);
+      if (updating(dest) || deleting(dest) && isFullAcid) {
         partnCols = getPartitionColsFromBucketColsForUpdateDelete(input, true);
       } else {
         partnCols = getPartitionColsFromBucketCols(dest, qb, dest_tab, table_desc, input, true);
@@ -6954,7 +6964,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if ((dest_tab.getNumBuckets() > 0)) {
       enforceBucketing = true;
-      if (updating(dest) || deleting(dest)) {
+      boolean isFullAcid = AcidUtils.isFullAcidTable(dest_tab);
+      if (updating(dest) || deleting(dest) && isFullAcid) {
         partnColsNoConvert = getPartitionColsFromBucketColsForUpdateDelete(input, false);
       } else {
         partnColsNoConvert = getPartitionColsFromBucketCols(dest, qb, dest_tab, table_desc, input,
@@ -7227,6 +7238,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     Table dest_tab = null; // destination table if any
     boolean destTableIsTransactional;     // true for full ACID table and MM table
     boolean destTableIsFullAcid; // should the destination table be written to using ACID
+    boolean destTableIsMapRDbJson = false; // should the destination table be written to using MapRDbJSon
     boolean destTableIsTemporary = false;
     boolean destTableIsMaterialization = false;
     Partition dest_part = null;// destination partition if any
@@ -7250,6 +7262,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       dest_tab = qbm.getDestTableForAlias(dest);
       destTableIsTransactional = AcidUtils.isTransactionalTable(dest_tab);
       destTableIsFullAcid = AcidUtils.isFullAcidTable(dest_tab);
+      destTableIsMapRDbJson = MapRDbJsonUtils.isMapRDbJsonTable(dest_tab);
       destTableIsTemporary = dest_tab.isTemporary();
 
       // Is the user trying to insert into a external tables
@@ -7372,7 +7385,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
 
       WriteEntity output = generateTableWriteEntity(
-          dest, dest_tab, partSpec, ltd, dpCtx, isNonNativeTable);
+          dest, dest_tab, partSpec, ltd, dpCtx, isNonNativeTable, destTableIsMapRDbJson);
       ctx.getLoadTableOutputMap().put(ltd, output);
       break;
     }
@@ -7596,7 +7609,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     ArrayList<ColumnInfo> vecCol = new ArrayList<ColumnInfo>();
 
-    if (updating(dest) || deleting(dest)) {
+    boolean isFullAcid = AcidUtils.isFullAcidTable(dest_tab);
+    if (updating(dest) || deleting(dest) && isFullAcid) {
       vecCol.add(new ColumnInfo(VirtualColumn.ROWID.getName(), VirtualColumn.ROWID.getTypeInfo(),
           "", true));
     } else {
@@ -7625,6 +7639,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     // If this table is working with ACID semantics, turn off merging
     canBeMerged &= !destTableIsFullAcid;
+    canBeMerged &= !destTableIsMapRDbJson;
 
     // Generate the partition columns from the parent input
     if (dest_type.intValue() == QBMetaData.DEST_TABLE
@@ -7862,9 +7877,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
   }
 
-  private WriteEntity generateTableWriteEntity(String dest, Table dest_tab,
-                                               Map<String, String> partSpec, LoadTableDesc ltd,
-                                               DynamicPartitionCtx dpCtx, boolean isNonNativeTable)
+  private WriteEntity generateTableWriteEntity(String dest, Table dest_tab, Map<String, String> partSpec,
+      LoadTableDesc ltd, DynamicPartitionCtx dpCtx, boolean isNonNativeTable, boolean destTableIsMapRDbJson)
       throws SemanticException {
     WriteEntity output = null;
 
@@ -7873,7 +7887,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // list of dynamically created partitions are known.
     if ((dpCtx == null || dpCtx.getNumDPCols() == 0)) {
       output = new WriteEntity(dest_tab, determineWriteType(ltd, isNonNativeTable, dest));
-      if (!outputs.add(output)) {
+      if (!outputs.add(output) && !destTableIsMapRDbJson) {
         throw new SemanticException(ErrorMsg.OUTPUT_SPECIFIED_MULTIPLE_TIMES
             .getMsg(dest_tab.getTableName()));
       }
@@ -8041,7 +8055,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // The numbers of input columns and output columns should match for regular query
-    if (!updating(dest) && !deleting(dest) && inColumnCnt != outColumnCnt) {
+    boolean isMapRDbJsonTable = MapRDbJsonUtils.isMapRDbJsonTable(table_desc);
+    if (((!updating(dest) && !deleting(dest)) || isMapRDbJsonTable) && inColumnCnt != outColumnCnt) {
       String reason = "Table " + dest + " has " + outColumnCnt
           + " columns, but query has " + inColumnCnt + " columns.";
       throw new SemanticException(ErrorMsg.TARGET_TABLE_COLUMN_MISMATCH.getMsg(
@@ -8064,14 +8079,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       // If we're updating, add the ROW__ID expression, then make the following column accesses
       // offset by 1 so that we don't try to convert the ROW__ID
-      if (updating(dest)) {
+      if (updating(dest) && !isMapRDbJsonTable) {
         expressions.add(new ExprNodeColumnDesc(rowFields.get(0).getType(),
             rowFields.get(0).getInternalName(), "", true));
       }
 
       // here only deals with non-partition columns. We deal with partition columns next
       for (int i = 0; i < columnNumber; i++) {
-        int rowFieldsOffset = updating(dest) ? i + 1 : i;
+        int rowFieldsOffset = updating(dest) && !isMapRDbJsonTable? i + 1 : i;
         ObjectInspector tableFieldOI = tableFields.get(i)
             .getFieldObjectInspector();
         TypeInfo tableFieldTypeInfo = TypeInfoUtils

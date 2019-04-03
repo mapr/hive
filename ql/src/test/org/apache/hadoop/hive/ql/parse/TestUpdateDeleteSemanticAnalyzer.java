@@ -260,10 +260,9 @@ public class TestUpdateDeleteSemanticAnalyzer {
 
     ASTNode tree = ParseUtils.parse(query, ctx);
 
-    BaseSemanticAnalyzer sem = SemanticAnalyzerFactory.get(queryState, tree);
     SessionState.get().initTxnMgr(conf);
     SessionState.get().getTxnMgr().openTxn(ctx, conf.getUser());
-    db = sem.getDb();
+    db = Hive.get(conf);;
 
     // I have to create the tables here (rather than in setup()) because I need the Hive
     // connection, which is conveniently created by the semantic analyzer.
@@ -280,6 +279,7 @@ public class TestUpdateDeleteSemanticAnalyzer {
     partVals.clear();
     partVals.put("ds", "today");
     db.createPartition(u, partVals);
+    BaseSemanticAnalyzer sem = SemanticAnalyzerFactory.get(queryState, tree);
     sem.analyze(tree, ctx);
     // validate the plan
     sem.validate();
