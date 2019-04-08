@@ -43,21 +43,43 @@ public final class MapRKeystoreReader {
   }
 
   /**
-   * Reads client password value.
-   * @return client password value as string
+   * Reads client truststore location.
+   * @return client truststore location as string
+   */
+
+  public static String getClientTruststoreLocation() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
+      return sslConfig.getClientTruststoreLocation();
+    }
+  }
+
+
+  /**
+   * Reads client keystore password value.
+   * @return client keystore password value as string
    */
 
   public static String getClientKeystorePassword() {
     try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
       return new String(sslConfig.getClientKeystorePassword());
+    }
+  }
 
+  /**
+   * Reads client truststore password value.
+   * @return client truststore password value as string
+   */
+
+  public static String getClientTruststorePassword() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
+      return new String(sslConfig.getClientTruststorePassword());
     }
   }
 
   /**
    * Check if mapr security is enabled on the cluster.
    * Value mapr_sec_enabled is set in $HIVE_BIN/hive script
-   * @return
+   * @return true if mapr security is enabled
    */
 
   public static boolean isSecurityEnabled() {

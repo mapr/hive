@@ -217,6 +217,24 @@ public class ConfToolTest {
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
   }
 
+  @Test public void hMetaSslSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-056.xml");
+    ConfTool.setHMetaSsl(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_USE_SSL));
+  }
+
+  @Test public void hMetaSslSecurityOffTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-056.xml");
+    ConfTool.setHMetaSsl(doc, NONE);
+    Assert.assertFalse(ConfTool.propertyExists(doc, ConfVars.HIVE_METASTORE_USE_SSL));
+  }
+
+  @Test public void hMetaSslSecurityCustomTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-057.xml");
+    ConfTool.setHMetaSsl(doc, CUSTOM);
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_USE_SSL));
+  }
+
   @Test public void metaStoreUgiSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-014.xml");
     ConfTool.setMetaStoreUgi(doc, MAPRSASL);
