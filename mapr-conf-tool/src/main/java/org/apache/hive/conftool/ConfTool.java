@@ -353,6 +353,33 @@ final class ConfTool {
   }
 
   /**
+   * Configures Ssl encryption for Hive Metastore.
+   *
+   * @param doc xml document
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  static void setHMetaSsl(Document doc, Security security) {
+    switch (security) {
+    case CUSTOM:
+      return;
+    case MAPRSASL:
+      LOG.info("Configuring Hive Metastore for  SSL encryption");
+      set(doc, ConfVars.HIVE_METASTORE_USE_SSL, TRUE);
+      break;
+    case NONE:
+      remove(doc, ConfVars.HIVE_METASTORE_USE_SSL);
+      break;
+    default:
+      return;
+    }
+  }
+
+
+  /**
    * Configures Ssl encryption for HiveServer2.
    *
    * @param pathToHiveSite hive-site.xml location
@@ -366,6 +393,23 @@ final class ConfTool {
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     setHs2Ssl(doc, security);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures Ssl encryption for Hive Metastore.
+   *
+   * @param pathToHiveSite hive-site.xml location
+   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  static void setHMetaSsl(String pathToHiveSite, Security security)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    setHMetaSsl(doc, security);
     saveToFile(doc, pathToHiveSite);
   }
 

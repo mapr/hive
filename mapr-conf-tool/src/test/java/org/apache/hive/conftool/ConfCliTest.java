@@ -390,6 +390,7 @@ public class ConfCliTest {
     String pathToHiveSite = getPath("hive-site-023.xml");
     ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--security", "true" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
+    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.use.SSL"));
   }
 
   @Test public void configureHs2SslSecurityOffTest()
@@ -404,6 +405,29 @@ public class ConfCliTest {
     String pathToHiveSite = getPath("hive-site-037.xml");
     ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--security", "custom" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
+  }
+
+  @Test public void configureHMetaSslSecurityOnTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-056.xml");
+    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--security", "true" });
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.use.SSL"));
+    Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.metastore.use.SSL"));
+  }
+
+  @Test public void configureHMetaSslSecurityOffTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-056.xml");
+    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--security", "false" });
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.use.SSL"));
+  }
+
+  @Test public void configureHMetaSslSecurityCustomTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-057.xml");
+    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--security", "custom" });
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.use.SSL"));
+    Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.metastore.use.SSL"));
   }
 
   @Test public void configureHs2SslWithoutSecurityArgsTest()

@@ -247,6 +247,17 @@ fi
 }
 
 #
+# Set SSL encryption by default for Hive Metastore on MapR SASL cluster
+#
+configure_hmeta_ssl(){
+HIVE_SITE="$1"
+isSecure="$2"
+if security_has_to_be_configured ; then
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hmetassl" -security "$isSecure"
+fi
+}
+
+#
 # Check that port is available
 #
 check_port_for(){
@@ -901,6 +912,8 @@ configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$isSecure"
 configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
 
 configure_hs2_ssl "$HIVE_SITE" "$isSecure"
+
+configure_hmeta_ssl "$HIVE_SITE" "$isSecure"
 
 configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$isSecure"
 
