@@ -51,6 +51,9 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hive.hcatalog.templeton.UgiFactory;
 
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityFlagSet;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+
 /**
  * General utility methods.
  */
@@ -397,6 +400,9 @@ public class TempletonUtils {
       env.put("HADOOP_CLASSPATH", overrideClasspath);
     }
 
+    if (isSecurityFlagSet()) {
+      env.put("MAPR_SEC_ENABLED", Boolean.toString(isSecurityEnabled()));
+    }
     return env;
   }
 

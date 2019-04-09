@@ -69,6 +69,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
+
 
 /**
  * Hive Configuration.
@@ -5103,16 +5109,19 @@ public class HiveConf extends Configuration {
   public HiveConf() {
     super();
     initialize(this.getClass());
+    initializeMapRSll();
   }
 
   public HiveConf(Class<?> cls) {
     super();
     initialize(cls);
+    initializeMapRSll();
   }
 
   public HiveConf(Configuration other, Class<?> cls) {
     super(other);
     initialize(cls);
+    initializeMapRSll();
   }
 
   /**
@@ -5127,6 +5136,51 @@ public class HiveConf extends Configuration {
     restrictList.addAll(other.restrictList);
     hiddenSet.addAll(other.hiddenSet);
     modWhiteListPattern = other.modWhiteListPattern;
+    initializeMapRSll();
+  }
+
+  private void initializeMapRSll() {
+    if (isSecurityEnabled()) {
+      configureSsl();
+    }
+  }
+
+  private void configureSsl() {
+    // Configure keystore path / password for web UI
+    if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+    }
+
+    // Configure keystore path / password for Hive Server2
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+    }
+
+    // Configure keystore path / password for Hive Metastore
+    if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+    }
+
+    // Configure truststore path / password for Hive Metastore
+    if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH).isEmpty()) {
+      setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH, getClientTruststoreLocation());
+    }
+
+    if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD).isEmpty()) {
+      setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD, getClientTruststorePassword());
+    }
   }
 
   public Properties getAllProperties() {
