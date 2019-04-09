@@ -849,7 +849,7 @@ public class MetastoreConf {
             "More users can be added in ADMIN role later."),
     USE_SSL("metastore.use.SSL", "hive.metastore.use.SSL", false,
         "Set this to true for using SSL encryption in HMS server."),
-    USE_THRIFT_SASL("metastore.sasl.enabled", "hive.metastore.sasl.enabled", false,
+    USE_THRIFT_SASL("metastore.sasl.enabled", "hive.metastore.sasl.enabled", System.getProperty("mapr_sec_enabled") != null && Boolean.parseBoolean(System.getProperty("mapr_sec_enabled")),
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos."),
     USE_THRIFT_FRAMED_TRANSPORT("metastore.thrift.framed.transport.enabled",
         "hive.metastore.thrift.framed.transport.enabled", false,
