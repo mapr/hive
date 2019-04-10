@@ -119,7 +119,7 @@ final class Security {
         new Text(), ugi.getTokens());
       LOG.info("Security::handleSecurity(): Checking for pre-existing metastore token... "
           + (hiveToken == null? "Not found. Creating a new one." : "Found. Using existing token."));
-      if (hiveToken == null) {
+      if (hiveToken == null && !client.isLocalMetaStore()) {
         // we did not get token set up by oozie, let's get them ourselves here.
         // we essentially get a token per unique Output HCatTableInfo - this is
         // done because through Pig, setOutput() method is called multiple times
