@@ -44,6 +44,7 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolException;
 import org.apache.thrift.protocol.TProtocolUtil;
 import org.apache.thrift.protocol.TType;
+import org.apache.thrift.transport.TTransportException;
 
 /** TUGIBasedProcessor is used in unsecure mode for thrift metastore client server communication.
  *  This processor checks whether the first rpc call after connection is set up is set_ugi()
@@ -73,7 +74,12 @@ public class TUGIBasedProcessor<I extends Iface> extends TSetIpAddressProcessor<
   public boolean process(final TProtocol in, final TProtocol out) throws TException {
     setIpAddress(in);
 
-    final TMessage msg = in.readMessageBegin();
+    final TMessage msg;
+    try {
+      msg = in.readMessageBegin();
+    } catch (TTransportException tte) {
+      throw new RuntimeException(tte);
+    }
     final ProcessFunction<Iface, ? extends  TBase> fn = functions.get(msg.name);
     if (fn == null) {
       TProtocolUtil.skip(in, TType.STRUCT);

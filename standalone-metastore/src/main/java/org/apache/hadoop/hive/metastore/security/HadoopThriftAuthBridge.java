@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.metastore.security;
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
 
 import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -631,12 +632,8 @@ public abstract class HadoopThriftAuthBridge {
             return clientUgi.doAs(new PrivilegedExceptionAction<Boolean>() {
 
               @Override
-              public Boolean run() {
-                try {
-                  return wrapped.process(inProt, outProt);
-                } catch (TException te) {
-                  throw new RuntimeException(te);
-                }
+              public Boolean run() throws TException {
+                return wrapped.process(inProt, outProt);
               }
             });
           } else {
@@ -646,11 +643,16 @@ public abstract class HadoopThriftAuthBridge {
             LOG.debug("Set remoteUser :" + remoteUser.get() + ", from endUser :" + endUser);
             return wrapped.process(inProt, outProt);
           }
-        } catch (RuntimeException rte) {
-          if (rte.getCause() instanceof TException) {
-            throw (TException)rte.getCause();
+        } catch (TTransportException tte) {
+          throw new RuntimeException(tte);
+        } catch (UndeclaredThrowableException ute) {
+          if (ute.getCause() instanceof TTransportException) {
+            throw new RuntimeException(ute.getCause());
           }
-          throw rte;
+          if (ute.getCause() instanceof TException) {
+            throw (TException) ute.getCause();
+          }
+          throw ute;
         } catch (InterruptedException ie) {
           throw new RuntimeException(ie); // unexpected!
         } catch (IOException ioe) {
