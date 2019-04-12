@@ -30,7 +30,7 @@ function die() {
 
 # The directory,file containing the running pid
 PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-3.1.1/pids/webhcat}
-PID_FILE=${PID_DIR}/webhcat.pid
+PID_FILE=${PID_DIR}/hive-mapr-webhcat.pid
 mkdir -p $PID_DIR 2>/dev/null
 
 #default log directory

@@ -186,7 +186,7 @@ function stop_webhcat() {
                 fi
         fi
 
-        rm ${BASEMAPR}/pid/webhcat.pid
+        rm ${BASEMAPR}/pid/hive-mapr-webhcat.pid
         if [[ -z "$pid" ]]; then
                 log "no running server found"
         else
