@@ -81,6 +81,6 @@ sync_daemon_pid "$METASTORE_PID_NAME" "$METASTORE_PID_FILE"
 # WebHCat PID synchronization
 #
 WEBHCAT_PID_NAME="org.apache.hive.hcatalog.templeton.Main"
-WEBHCAT_PID_FILE="$HIVE_PID_DIR"/webhcat/webhcat.pid
+WEBHCAT_PID_FILE="$HIVE_PID_DIR"/webhcat/hive-mapr-webhcat.pid
 
 sync_daemon_pid "$WEBHCAT_PID_NAME" "$WEBHCAT_PID_FILE"
