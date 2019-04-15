@@ -6915,12 +6915,10 @@ public class ObjectStore implements RawStore, Configurable {
               " does not match metastore's schema version " + schemaVer +
               " Metastore is not upgraded or corrupt");
         } else {
-          LOG.error("Version information found in metastore differs " + schemaVer +
+          LOG.info("Version information found in metastore differs " + schemaVer +
               " from expected schema version " + MetaStoreSchemaInfo.getHiveSchemaVersion() +
-              ". Schema verififcation is disabled " +
-              HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION + " so setting version.");
-          setMetaStoreSchemaVersion(MetaStoreSchemaInfo.getHiveSchemaVersion(),
-            "Set by MetaStore " + USER + "@" + HOSTNAME);
+              ". Schema verification is disabled. Skipping the version update of metastore "
+              + "since both Hive-1.X ThriftServer in Spark and Hive-2.X uses the same metastore");
         }
       }
     }
