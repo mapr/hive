@@ -737,32 +737,62 @@ final class ConfTool {
   }
 
   /**
-   * Configures metrics file location.
+   * Configures HiveServer2 metrics file location.
    *
    * @param pathToHiveSite hive-site location
    * @param fileLocation the location of local JSON metrics file
    */
-  static void configureMetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled, String fileLocation)
+  static void configureHiveServer2MetricsFileLocation(String pathToHiveSite,
+      boolean isReporterEnabled, String fileLocation)
+      throws SAXException, TransformerException, ParserConfigurationException,
+      IOException {
+    configureMetricsFileLocation(pathToHiveSite, isReporterEnabled,
+        HIVE_SERVER2_METRICS_JSON_FILE_LOCATION, fileLocation);
+  }
+
+  /**
+   * Configures Hive Metastore metrics file location.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param fileLocation the location of local JSON metrics file
+   */
+  static void configureHiveMetastoreMetricsFileLocation(String pathToHiveSite,
+      boolean isReporterEnabled, String fileLocation)
+      throws SAXException, TransformerException, ParserConfigurationException,
+      IOException {
+    configureMetricsFileLocation(pathToHiveSite, isReporterEnabled,
+        HIVE_METASTORE_METRICS_JSON_FILE_LOCATION, fileLocation);
+  }
+
+  /**
+   * Configures metrics file location.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param servicePropertyName HiveConf property for specific
+   * @param fileLocation the location of local JSON metrics file
+   */
+  static void configureMetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled, ConfVars servicePropertyName, String fileLocation)
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    configureMetricsFileLocation(doc, isReporterEnabled, fileLocation);
+    configureMetricsFileLocation(doc, isReporterEnabled, servicePropertyName, fileLocation);
     saveToFile(doc, pathToHiveSite);
   }
 
   /**
-   * Configures metrics reported type.
+   * Configures metrics file location.
    *
    * @param doc xml document
+   * @param servicePropertyName HiveConf property for specific
    * @param fileLocation the location of local JSON metrics file
    */
-  static void configureMetricsFileLocation(Document doc, boolean isReporterEnabled, String fileLocation) {
+  static void configureMetricsFileLocation(Document doc, boolean isReporterEnabled, ConfVars servicePropertyName, String fileLocation) {
     if (isReporterEnabled) {
       LOG.info("Configuring metrics file location : {}", fileLocation);
-      set(doc, HIVE_METRICS_JSON_FILE_LOCATION, fileLocation);
+      set(doc, servicePropertyName, fileLocation);
     } else {
       LOG.info("Removing metrics file location");
-      remove(doc, HIVE_METRICS_JSON_FILE_LOCATION);
+      remove(doc, servicePropertyName);
     }
   }
 

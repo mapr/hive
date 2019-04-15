@@ -69,7 +69,8 @@ public final class ConfCli {
   private static final String METASTORE_METRICS_ENABLED = "metastore_metrics_enabled";
   private static final String REPORTER_ENABLED = "reporter_enabled";
   private static final String METRICS_REPORTER_TYPE = "reporter_type";
-  private static final String JSON_JMX_METRICS_FILE_LOCATION = "reporter_file";
+  private static final String JSON_JMX_METASTORE_METRICS_FILE_LOCATION = "hmeta_report_file";
+  private static final String JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION = "hs2_report_file";
 
   static {
     OptionBuilder.hasArg(false);
@@ -186,14 +187,19 @@ public final class ConfCli {
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(REPORTER_ENABLED));
 
     OptionBuilder.hasArg();
-    OptionBuilder.withArgName("Metrics reporter type");
+    OptionBuilder.withArgName("metrics reporter type");
     OptionBuilder.withDescription("Configures metrics reporter type");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METRICS_REPORTER_TYPE));
 
     OptionBuilder.hasArg();
-    OptionBuilder.withArgName("Metrics file location");
-    OptionBuilder.withDescription("Configures metrics output file location");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_METRICS_FILE_LOCATION));
+    OptionBuilder.withArgName("metrics file location");
+    OptionBuilder.withDescription("Configures HiveServer2 metrics output file location");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("metrics file location");
+    OptionBuilder.withDescription("Configures Metastore metrics output file location");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_METASTORE_METRICS_FILE_LOCATION));
   }
 
   public static void main(String[] args)
@@ -333,10 +339,19 @@ public final class ConfCli {
           }
         }
 
-        if (isMetricsReporterFileLocation(line)) {
-          String fileLocation = line.getOptionValue(JSON_JMX_METRICS_FILE_LOCATION);
+        if (isHiveServer2MetricsReporterFileLocation(line)) {
+          String fileLocation = line.getOptionValue(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
           if (isNotNullNotEmpty(fileLocation)) {
-            ConfTool.configureMetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
+            ConfTool.configureHiveServer2MetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
+          } else {
+            throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
+          }
+        }
+
+        if (isMetastoreMetricsReporterFileLocation(line)) {
+          String fileLocation = line.getOptionValue(JSON_JMX_METASTORE_METRICS_FILE_LOCATION);
+          if (isNotNullNotEmpty(fileLocation)) {
+            ConfTool.configureHiveMetastoreMetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
           } else {
             throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
           }
@@ -464,8 +479,12 @@ public final class ConfCli {
     return line.hasOption(METRICS_REPORTER_TYPE);
   }
 
-  private static boolean isMetricsReporterFileLocation(CommandLine line) {
-    return line.hasOption(JSON_JMX_METRICS_FILE_LOCATION);
+  private static boolean isMetastoreMetricsReporterFileLocation(CommandLine line) {
+    return line.hasOption(JSON_JMX_METASTORE_METRICS_FILE_LOCATION);
+  }
+
+  private static boolean isHiveServer2MetricsReporterFileLocation(CommandLine line) {
+    return line.hasOption(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
   }
 
   private static void printHelp() {

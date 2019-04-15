@@ -434,6 +434,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       //Start Metrics for Embedded mode
       if (hiveConf.getBoolVar(ConfVars.METASTORE_METRICS)) {
         try {
+          hiveConf.setVar(ConfVars.HIVE_METRICS_JSON_FILE_LOCATION,
+              hiveConf.getVar(ConfVars.HIVE_METASTORE_METRICS_JSON_FILE_LOCATION));
           MetricsFactory.init(hiveConf);
         } catch (Exception e) {
           // log exception, but ignore inability to start
@@ -7059,6 +7061,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       //Start Metrics for Standalone (Remote) Mode
       if (conf.getBoolVar(ConfVars.METASTORE_METRICS)) {
         try {
+          conf.setVar(ConfVars.HIVE_METRICS_JSON_FILE_LOCATION,
+              conf.getVar(ConfVars.HIVE_METASTORE_METRICS_JSON_FILE_LOCATION));
           MetricsFactory.init(conf);
         } catch (Exception e) {
           // log exception, but ignore inability to start

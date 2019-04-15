@@ -122,6 +122,8 @@ public class HiveServer2 extends CompositeService {
     //Initialize metrics first, as some metrics are for initialization stuff.
     try {
       if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_METRICS_ENABLED)) {
+        hiveConf.setVar(ConfVars.HIVE_METRICS_JSON_FILE_LOCATION,
+            hiveConf.getVar(ConfVars.HIVE_SERVER2_METRICS_JSON_FILE_LOCATION));
         MetricsFactory.init(hiveConf);
       }
     } catch (Throwable t) {

@@ -30,6 +30,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_METRICS_JSON_FILE_LOCATION;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
 import static org.apache.hive.conftool.Security.NONE;
 import static org.apache.hive.conftool.Security.MAPRSASL;
@@ -427,16 +428,16 @@ public class ConfToolTest {
   @Test public void configureMetricsReportEnabled() throws IOException, SAXException, ParserConfigurationException {
     Document doc = parseFrom("hive-site-054.xml");
     ConfTool.configureMetricsReporterType(doc, true, "JSON_FILE,JMX");
-    ConfTool.configureMetricsFileLocation(doc, true, "/tmp/hive_report.json");
+    ConfTool.configureMetricsFileLocation(doc, true, HIVE_METASTORE_METRICS_JSON_FILE_LOCATION,"/tmp/hivemetastore_report.json");
     Assert.assertEquals("JSON_FILE,JMX", ConfTool.getProperty(doc, "hive.service.metrics.reporter"));
-    Assert.assertEquals("/tmp/hive_report.json", ConfTool.getProperty(doc, "hive.service.metrics.file.location"));
+    Assert.assertEquals("/tmp/hivemetastore_report.json", ConfTool.getProperty(doc, HIVE_METASTORE_METRICS_JSON_FILE_LOCATION));
   }
 
   @Test public void configureMetricsReportDisabled() throws IOException, SAXException, ParserConfigurationException {
     Document doc = parseFrom("hive-site-055.xml");
     ConfTool.configureMetricsReporterType(doc, false, "JSON_FILE,JMX");
-    ConfTool.configureMetricsFileLocation(doc, false, "/tmp/hive_report.json");
+    ConfTool.configureMetricsFileLocation(doc, false, HIVE_METASTORE_METRICS_JSON_FILE_LOCATION, "/tmp/hivemetastore_report.json");
     Assert.assertFalse(ConfTool.propertyExists(doc, "hive.service.metrics.reporter"));
-    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.service.metrics.file.location"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, HIVE_METASTORE_METRICS_JSON_FILE_LOCATION));
   }
 }
