@@ -60,7 +60,8 @@ CONNECTION_URL_PROPERTY_NAME="javax.jdo.option.ConnectionURL"
 HIVE_METASTORE_URIS_PROPERTY_NAME="hive.metastore.uris"
 WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
 REPORTER_TYPE="JSON_FILE,JMX"
-REPORTER_FILE_LOCATION="/tmp/hive_report.json"
+HIVE_SERVER2_REPORTER_FILE_LOCATION="/tmp/hiveserver2_report.json"
+HIVE_METASTORE_REPORTER_FILE_LOCATION="/tmp/hivemetastore_report.json"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -778,7 +779,10 @@ configure_users_in_admin_role(){
 #
 configure_hs2_metrics() {
 HIVE_SITE="$1"
+if is_hive_not_configured_yet ; then
 . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hiveserver2_metrics_enabled true
+. ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hs2_report_file "$HIVE_SERVER2_REPORTER_FILE_LOCATION" -reporter_enabled true
+fi
 }
 
 #
@@ -789,6 +793,7 @@ configure_metastore_metrics() {
 HIVE_SITE="$1"
 if is_hive_not_configured_yet ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -metastore_metrics_enabled true
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hmeta_report_file "$HIVE_METASTORE_REPORTER_FILE_LOCATION" -reporter_enabled true
 fi
 }
 
@@ -802,7 +807,7 @@ fi
 configure_reporter_type_and_file_location() {
 HIVE_SITE="$1"
 if is_hive_not_configured_yet ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -reporter_type "$REPORTER_TYPE" -reporter_file "$REPORTER_FILE_LOCATION" -reporter_enabled true
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -reporter_type "$REPORTER_TYPE" -reporter_enabled true
 fi
 }
 

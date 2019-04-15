@@ -506,22 +506,41 @@ public class ConfCliTest {
     Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.enabled"));
   }
 
-  @Test public void configureMetricsReportEnabled()
+  @Test public void configureMetastoreMetricsReportEnabled()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-054.xml");
-    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--reporter_file", "/tmp/hive_report.json",
+    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hmeta_report_file", "/tmp/hivemetastore_report.json",
         "--reporter_enabled", "true", "--path", pathToHiveSite });
     Assert.assertEquals("JSON_FILE,JMX", ConfTool.getProperty(pathToHiveSite, "hive.service.metrics.reporter"));
-    Assert.assertEquals("/tmp/hive_report.json",
-        ConfTool.getProperty(pathToHiveSite, "hive.service.metrics.file.location"));
+    Assert.assertEquals("/tmp/hivemetastore_report.json",
+        ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.file.location"));
   }
 
-  @Test public void configureMetricsReportDisabled()
+  @Test public void configureMetastoreMetricsReportDisabled()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-055.xml");
-    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--reporter_file", "/tmp/hive_report.json",
+    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hmeta_report_file", "/tmp/hivemetastore_report.json",
         "--reporter_enabled", "false", "--path", pathToHiveSite });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.service.metrics.reporter"));
-    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.service.metrics.file.location"));
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.metrics.file.location"));
+  }
+
+  @Test public void configureHiveServer2MetricsReportEnabled()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    String pathToHiveSite = getPath("hive-site-054.xml");
+    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hs2_report_file", "/tmp/hiveserver2_report.json",
+        "--reporter_enabled", "true", "--path", pathToHiveSite });
+    Assert.assertEquals("JSON_FILE,JMX", ConfTool.getProperty(pathToHiveSite, "hive.service.metrics.reporter"));
+    Assert.assertEquals("/tmp/hiveserver2_report.json",
+        ConfTool.getProperty(pathToHiveSite, "hive.server2.metrics.file.location"));
+  }
+
+  @Test public void configureHiveServer2MetricsReportDisabled()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    String pathToHiveSite = getPath("hive-site-055.xml");
+    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hs2_report_file", "/tmp/hiveserver2_report.json",
+        "--reporter_enabled", "false", "--path", pathToHiveSite });
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.service.metrics.reporter"));
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.metrics.file.location"));
   }
 }

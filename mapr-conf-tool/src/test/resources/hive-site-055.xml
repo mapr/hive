@@ -29,7 +29,11 @@
         <value>JSON_FILE, JMX</value>
     </property>
     <property>
-        <name>hive.service.metrics.file.location</name>
-        <value>/tmp/hive_report.json</value>
+        <name>hive.metastore.metrics.file.location</name>
+        <value>/tmp/hivemetastore_report.json</value>
+    </property>
+    <property>
+        <name>hive.server2.metrics.file.location</name>
+        <value>/tmp/hiveserver2_report.json</value>
     </property>
 </configuration>

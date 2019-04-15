@@ -2934,6 +2934,10 @@ public class HiveConf extends Configuration {
     HIVE_METRICS_JSON_FILE_LOCATION("hive.service.metrics.file.location", "/tmp/report.json",
         "For metric class org.apache.hadoop.hive.common.metrics.metrics2.CodahaleMetrics JSON_FILE reporter, the location of local JSON metrics file.  " +
         "This file will get overwritten at every interval."),
+    HIVE_METASTORE_METRICS_JSON_FILE_LOCATION("hive.metastore.metrics.file.location", "/tmp/hivemetastore_report.json",
+        "The location of local JSON metrics file for Hive Metastore service. This file will get overwritten at every interval."),
+    HIVE_SERVER2_METRICS_JSON_FILE_LOCATION("hive.server2.metrics.file.location", "/tmp/hiveserver2_report.json",
+        "The location of local JSON metrics file for HiveServer2 service. This file will get overwritten at every interval."),
     HIVE_METRICS_JSON_FILE_INTERVAL("hive.service.metrics.file.frequency", "5000ms",
         new TimeValidator(TimeUnit.MILLISECONDS),
         "For metric class org.apache.hadoop.hive.common.metrics.metrics2.JsonFileMetricsReporter, " +

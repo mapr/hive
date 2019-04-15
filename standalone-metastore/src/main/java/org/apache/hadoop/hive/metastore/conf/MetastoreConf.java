@@ -610,7 +610,7 @@ public class MetastoreConf {
         "hive.service.metrics.file.frequency", 1, TimeUnit.MINUTES,
         "For json metric reporter, the frequency of updating JSON metrics file."),
     METRICS_JSON_FILE_LOCATION("metastore.metrics.file.location",
-        "hive.service.metrics.file.location", "/tmp/report.json",
+        "hive.metastore.metrics.file.location", "/tmp/hivemetastore_report.json",
         "For metric class json metric reporter, the location of local JSON metrics file.  " +
             "This file will get overwritten at every interval."),
     METRICS_REPORTERS("metastore.metrics.reporters", "metastore.metrics.reporters", "json,jmx",
