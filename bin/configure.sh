@@ -917,7 +917,9 @@ configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
 
 configure_hs2_ssl "$HIVE_SITE" "$isSecure"
 
-configure_hmeta_ssl "$HIVE_SITE" "$isSecure"
+# Comment out according MAPR-HIVE-507 : hive.metastore.use.SSL should be set to false by default
+# TODO: uncomment after hive.metastore.use.SSL back-porting to Hive-1.2 Spark branch
+# configure_hmeta_ssl "$HIVE_SITE" "$isSecure"
 
 configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$isSecure"
 
