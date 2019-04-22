@@ -41,6 +41,7 @@
     <module>contrib</module>
     <module>druid-handler</module>
     <module>hbase-handler</module>
+    <module>maprdb-json-common</module>
     <module>maprdb-json-handler</module>
     <module>jdbc-handler</module>
     <module>hcatalog</module>
@@ -185,6 +186,7 @@
     <mockito-all.version>1.10.19</mockito-all.version>
     <mina.version>2.0.0-M5</mina.version>
     <netty.version>4.0.52.Final</netty.version>
+    <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.8.1</parquet.version>
     <pig.version>0.16.0</pig.version>
     <protobuf.version>2.5.0</protobuf.version>

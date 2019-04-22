@@ -42,7 +42,7 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.mapr.db.MapRDB;
+import org.apache.hadoop.hive.maprdb.json.util.MapRDBAdmin;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -1620,11 +1620,16 @@ public class SessionState {
     progressMonitor = null;
   }
 
+  /**
+   * Drops all MapR db Json tables if and only if it is temporary table.
+   *
+   * @throws IOException
+   */
   private void dropTempMapRDbJsonTables() throws IOException {
     for(Map<String, Table> tables: getTempTables().values()){
       for(Table table : tables.values())
       if(MapRDbJsonUtils.isMapRDbJsonTable(table)){
-        MapRDB.newAdmin(sessionConf).deleteTable(table.getMapRDbTableName());
+        MapRDBAdmin.deleteTable(sessionConf, table.getMapRDbTableName());
       }
     }
   }

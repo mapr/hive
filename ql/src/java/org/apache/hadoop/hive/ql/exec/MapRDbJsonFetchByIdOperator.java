@@ -18,9 +18,8 @@
 
 package org.apache.hadoop.hive.ql.exec;
 
-import com.mapr.db.Table;
-import com.mapr.db.impl.MapRDBImpl;
 import org.apache.hadoop.hive.maprdb.json.shims.DocumentWritable;
+import org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonTableUtil;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.plan.FetchWork;
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * MapR DB JSON specific FetchTask implementation.
@@ -55,15 +53,13 @@ public class MapRDbJsonFetchByIdOperator extends FetchOperator {
       if (mapRWork.isEmpty()) {
         return null;
       } else {
-        Table table = MapRDBImpl.getTable(mapRWork.getMapRDbTableName());
-        Document document = table.findById(mapRWork.getSearchValue());
+        Document document = MapRDbJsonTableUtil.findById(mapRWork.getMapRDbTableName(), mapRWork.getSearchValue());
         inspectable.o = new DocumentWritable(document);
         currSerDe = tableSerDe;
         inspectable.oi = currSerDe.getObjectInspector();
         inspectable.o = currSerDe.deserialize(new DocumentWritable(document));
         return inspectable;
       }
-
     } catch (Exception e) {
       throw new IOException(e);
     }

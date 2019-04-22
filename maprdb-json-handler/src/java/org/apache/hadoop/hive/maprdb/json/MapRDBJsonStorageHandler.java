@@ -24,21 +24,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat;
 import org.apache.hadoop.hive.maprdb.json.output.HiveMapRDBJsonOutputFormat;
 import org.apache.hadoop.hive.maprdb.json.serde.MapRDBSerDe;
+import org.apache.hadoop.hive.maprdb.json.util.MapRDbFileUtil;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.ql.index.IndexPredicateAnalyzer;
-import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler;
-import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
-import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqual;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
-import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
@@ -120,7 +114,7 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
 
   @Override public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
     try {
-      Utils.addDependencyJars(jobConf, MapRDBJsonStorageHandler.class);
+      MapRDbFileUtil.addDependencyJars(jobConf, MapRDBJsonStorageHandler.class);
     } catch (IOException e) {
       LOG.warn("Can't set properties for job", e);
     }
