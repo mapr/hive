@@ -1,4 +1,4 @@
-package org.apache.hadoop.hive.maprdb.json;
+package org.apache.hadoop.hive.maprdb.json.util;
 
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
@@ -25,15 +25,23 @@ import java.util.zip.ZipOutputStream;
 
 import static com.google.common.base.Charsets.UTF_8;
 
-public final class Utils {
-  private Utils(){}
-  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+public final class MapRDbFileUtil {
+  private MapRDbFileUtil(){}
+  private static final Logger LOG = LoggerFactory.getLogger(MapRDbFileUtil.class);
   private static final String CLASS = ".class";
   private static final String FILE = "file:";
   private static final String JAR = "jar";
 
   // Thanks, HBase
-  static void addDependencyJars(Configuration conf, Class<?>... classes) throws IOException {
+
+  /**
+   * Finds jar file where class file is placed and add to parameter tmpjars in configuration object.
+   *
+   * @param conf configuration object where to set tmpjars parameter
+   * @param classes array of classes
+   * @throws IOException
+   */
+  public static void addDependencyJars(Configuration conf, Class<?>... classes) throws IOException {
     FileSystem localFs = FileSystem.getLocal(conf);
     Set<String> jars = new HashSet<>();
     // Add jars that are already in the tmpjars variable
@@ -211,7 +219,7 @@ public final class Utils {
    * @return path to the Jar containing the class.
    */
   @SuppressWarnings("rawtypes")
-  public static String jarFinderGetJar(Class clazz) {
+  private static String jarFinderGetJar(Class clazz) {
     Preconditions.checkNotNull(clazz, "clazz");
     ClassLoader loader = clazz.getClassLoader();
     if (loader != null) {
@@ -263,7 +271,7 @@ public final class Utils {
     zos.closeEntry();
   }
 
-  public static void jarDir(File dir, String relativePath, ZipOutputStream zos) throws IOException {
+  private static void jarDir(File dir, String relativePath, ZipOutputStream zos) throws IOException {
     Preconditions.checkNotNull(relativePath, "relativePath");
     Preconditions.checkNotNull(zos, "zos");
 

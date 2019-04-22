@@ -16,26 +16,7 @@
  * limitations under the License.
  */
 
-package com.mapr.db;
-
-import org.apache.hadoop.conf.Configuration;
-
 /**
- * Wrapper for MapRDB class.
- * Hides usage of MapRDB.newAdmin(conf) call from the Hive packages and
- * escapes clashing of dependencies in hadoop from mapr-core (where MapRDB is placed)
- * and direct dependency in Hive modules.
- *
+ * Utility package for MapR DB JSON tables.
  */
-public class MapRDBAdmin {
-
-  /**
-   * Deletes MapR db Table.
-   *
-   * @param conf configuration file
-   * @param tableName table name
-   */
-  public static void deleteTable(Configuration conf, String tableName) {
-    MapRDB.newAdmin(conf).deleteTable(tableName);
-  }
-}
+package org.apache.hadoop.hive.maprdb.json;
