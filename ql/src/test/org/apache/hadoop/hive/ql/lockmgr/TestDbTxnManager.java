@@ -85,7 +85,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.getLockManager().unlock(locks.get(0));
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -99,7 +99,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.getLockManager().unlock(locks.get(0));
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -117,7 +117,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(3,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.getLockManager().unlock(locks.get(0));
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -135,7 +135,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(4,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.getLockManager().unlock(locks.get(0));
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -150,7 +150,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.commitTxn();
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -166,7 +166,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.commitTxn();
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -301,7 +301,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(4,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.commitTxn();
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -316,7 +316,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.commitTxn();
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -331,7 +331,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.commitTxn();
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -346,7 +346,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.rollbackTxn();
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -360,7 +360,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.getLockManager().unlock(locks.get(0));
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -374,7 +374,7 @@ public class TestDbTxnManager {
     List<HiveLock> locks = ctx.getHiveLocks();
     Assert.assertEquals(1, locks.size());
     Assert.assertEquals(1,
-        TxnDbUtil.countLockComponents(((DbLockManager.DbHiveLock) locks.get(0)).lockId));
+        TxnDbUtil.countLockComponents(conf, ((DbLockManager.DbHiveLock) locks.get(0)).lockId));
     txnMgr.getLockManager().unlock(locks.get(0));
     locks = txnMgr.getLockManager().getLocks(false, false);
     Assert.assertEquals(0, locks.size());
@@ -470,7 +470,7 @@ public class TestDbTxnManager {
 
   @Before
   public void setUp() throws Exception {
-    TxnDbUtil.prepDb();
+    TxnDbUtil.prepDb(conf);
     txnMgr = TxnManagerFactory.getTxnManagerFactory().getTxnManager(conf);
     txnMgr.getLockManager();//init lock manager
     Assert.assertTrue(txnMgr instanceof DbTxnManager);
@@ -486,7 +486,7 @@ public class TestDbTxnManager {
   public void tearDown() throws Exception {
     if(houseKeeperService != null) houseKeeperService.stop();
     if (txnMgr != null) txnMgr.closeTxnManager();
-    TxnDbUtil.cleanDb();
+    TxnDbUtil.cleanDb(conf);
   }
 
   private static class MockQueryPlan extends QueryPlan {

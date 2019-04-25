@@ -109,7 +109,6 @@ public class TestTxnCommands2 {
   }
 
   protected void setUpWithTableProperties(String tableProperties) throws Exception {
-    tearDown();
     hiveConf = new HiveConf(this.getClass());
     hiveConf.set("fs.default.name", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
@@ -123,7 +122,7 @@ public class TestTxnCommands2 {
     hiveConf.setBoolVar(HiveConf.ConfVars.MERGE_CARDINALITY_VIOLATION_CHECK, true);
 
     TxnDbUtil.setConfValues(hiveConf);
-    TxnDbUtil.prepDb();
+    TxnDbUtil.prepDb(hiveConf);
     File f = new File(TEST_WAREHOUSE_DIR);
     if (f.exists()) {
       FileUtil.fullyDelete(f);
@@ -160,7 +159,7 @@ public class TestTxnCommands2 {
         d.close();
         d = null;
       }
-      TxnDbUtil.cleanDb();
+      TxnDbUtil.cleanDb(hiveConf);
     } finally {
       FileUtils.deleteDirectory(new File(TEST_DATA_DIR));
     }
