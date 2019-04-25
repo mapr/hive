@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.hive.hcatalog</groupId>
     <artifactId>hive-hcatalog</artifactId>
-    <version>1.2.0-mapr-spark-SNAPSHOT</version>
+    <version>1.2.0-mapr-1904-spark</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 

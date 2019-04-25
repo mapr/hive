@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.hive</groupId>
     <artifactId>hive</artifactId>
-    <version>1.2.0-mapr-spark-SNAPSHOT</version>
+    <version>1.2.0-mapr-1904-spark</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
