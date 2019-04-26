@@ -73,7 +73,7 @@ public class FunctionLocalizer implements GenericUDFBridge.UdfWhitelistChecker {
     this.conf = conf;
     this.localDir = new File(localDir, DIR_NAME);
     AddToClassPathAction addAction = new AddToClassPathAction(
-        Thread.currentThread().getContextClassLoader(), Collections.EMPTY_LIST, true);
+        Thread.currentThread().getContextClassLoader(), Collections.<String>emptyList(), true);
     this.executorClassloader = AccessController.doPrivileged(addAction);
     this.workThread = new Thread(new Runnable() {
       @Override

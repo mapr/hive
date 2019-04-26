@@ -402,7 +402,7 @@ public class SessionState {
     parentLoader = SessionState.class.getClassLoader();
     // Make sure that each session has its own UDFClassloader. For details see {@link UDFClassLoader}
     AddToClassPathAction addAction = new AddToClassPathAction(
-        parentLoader, Collections.EMPTY_LIST, true);
+        parentLoader, Collections.emptyList(), true);
     final ClassLoader currentLoader = AccessController.doPrivileged(addAction);
     this.sessionConf.setClassLoader(currentLoader);
     resourceDownloader = new ResourceDownloader(conf,
@@ -1210,8 +1210,9 @@ public class SessionState {
    */
   public void loadAuxJars() throws IOException {
     String[] jarPaths = StringUtils.split(sessionConf.getAuxJars(), ',');
-    if (ArrayUtils.isEmpty(jarPaths)) return;
-
+    if (ArrayUtils.isEmpty(jarPaths)) {
+      return;
+    }
     AddToClassPathAction addAction = new AddToClassPathAction(
         SessionState.get().getConf().getClassLoader(), Arrays.asList(jarPaths)
         );

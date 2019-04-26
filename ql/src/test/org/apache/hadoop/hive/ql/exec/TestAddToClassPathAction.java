@@ -25,10 +25,10 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URL;
 import java.security.AccessController;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -45,10 +45,7 @@ public class TestAddToClassPathAction {
   private ClassLoader originalClassLoader;
 
   private static void assertURLsMatch(String message, List<String> expected, URL[] actual) {
-    List<String> actualStrings = new ArrayList<>();
-    for (URL url : actual) {
-      actualStrings.add(url.toExternalForm());
-    }
+    List<String> actualStrings = Arrays.stream(actual).map(URL::toExternalForm).collect(Collectors.toList());
     assertEquals(message, expected, actualStrings);
   }
 
@@ -69,7 +66,7 @@ public class TestAddToClassPathAction {
   @Test
   public void testNullClassLoader() {
     try {
-      new AddToClassPathAction(null, Collections.EMPTY_LIST);
+      new AddToClassPathAction(null, Collections.emptyList());
       fail("When pafrent class loader is null, IllegalArgumentException is expected!");
     } catch (IllegalArgumentException e) {
       // pass
@@ -82,8 +79,8 @@ public class TestAddToClassPathAction {
     AddToClassPathAction action = new AddToClassPathAction(rootLoader, null);
     UDFClassLoader childLoader = action.run();
     assertURLsMatch(
-            "When newPaths is null, loader shall be created normally with no extra paths.",
-            Collections.EMPTY_LIST, childLoader.getURLs());
+        "When newPaths is null, loader shall be created normally with no extra paths.",
+        Collections.emptyList(), childLoader.getURLs());
   }
 
   @Test
@@ -94,11 +91,11 @@ public class TestAddToClassPathAction {
     AddToClassPathAction action2 = new AddToClassPathAction(parentLoader, Arrays.asList("/b/2", "/d/4"));
     UDFClassLoader childLoader = action2.run();
     assertSame(
-            "Normally, the existing class loader should be reused (not closed, no force new).",
-            parentLoader, childLoader);
+        "Normally, the existing class loader should be reused (not closed, no force new).",
+        parentLoader, childLoader);
     assertURLsMatch(
-            "The class path of the class loader should be updated.",
-            Arrays.asList("file:/a/1", "file:/c/3", "file:/b/2", "file:/d/4"), childLoader.getURLs());
+        "The class path of the class loader should be updated.",
+        Arrays.asList("file:/a/1", "file:/c/3", "file:/b/2", "file:/d/4"), childLoader.getURLs());
   }
 
   @Test
@@ -110,8 +107,8 @@ public class TestAddToClassPathAction {
     AddToClassPathAction action2 = new AddToClassPathAction(parentLoader, Arrays.asList("/b/2", "/d/4"));
     UDFClassLoader childLoader = action2.run();
     assertNotSame(
-            "When the parent class loader is closed, a new instance must be created.",
-            parentLoader, childLoader);
+        "When the parent class loader is closed, a new instance must be created.",
+        parentLoader, childLoader);
     assertURLsMatch(Arrays.asList("file:/b/2", "file:/d/4"), childLoader.getURLs());
   }
 
@@ -123,8 +120,8 @@ public class TestAddToClassPathAction {
     AddToClassPathAction action2 = new AddToClassPathAction(parentLoader, Arrays.asList("/b/2", "/d/4"), true);
     UDFClassLoader childLoader = action2.run();
     assertNotSame(
-            "When forceNewClassLoader is set, a new instance must be created.",
-            parentLoader, childLoader);
+        "When forceNewClassLoader is set, a new instance must be created.",
+        parentLoader, childLoader);
     assertURLsMatch(Arrays.asList("file:/b/2", "file:/d/4"), childLoader.getURLs());
   }
 
@@ -134,9 +131,9 @@ public class TestAddToClassPathAction {
     List<String> newPaths = Arrays.asList("file://a/aa", "c/cc", "/bb/b");
     String userDir = System.getProperty("user.dir");
     List<String> expectedURLs = Arrays.asList(
-            "file://a/aa",
-            "file:" + userDir + "/c/cc",
-            "file:/bb/b");
+        "file://a/aa",
+        "file:" + userDir + "/c/cc",
+        "file:/bb/b");
     AddToClassPathAction action = new AddToClassPathAction(rootLoader, newPaths);
     UDFClassLoader loader = AccessController.doPrivileged(action);
     assertURLsMatch(expectedURLs, loader.getURLs());
