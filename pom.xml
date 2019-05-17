@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.hive</groupId>
   <artifactId>hive</artifactId>
-  <version>2.3.3-mapr-SNAPSHOT</version>
+  <version>2.3.3-mapr-1904</version>
   <packaging>pom</packaging>
 
   <name>Hive</name>
@@ -191,8 +191,8 @@
     <stax.version>1.0.1</stax.version>
     <slf4j.version>1.7.10</slf4j.version>
     <ST4.version>4.0.4</ST4.version>
-    <storage-api.version>2.4.0-mapr-SNAPSHOT</storage-api.version>
-    <tez.version>0.9.1-mapr-SNAPSHOT</tez.version>
+    <storage-api.version>2.4.0-mapr</storage-api.version>
+    <tez.version>0.9.1-mapr-1904</tez.version>
     <slider.version>0.90.2-incubating</slider.version>
     <super-csv.version>2.2.0</super-csv.version>
     <spark.version>2.0.0</spark.version>
