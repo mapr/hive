@@ -3727,6 +3727,52 @@ public class TestInputOutputFormat {
   }
 
   /**
+   * Test column names normalization.
+   */
+  @Test
+  public void testStructColumnNames() throws IOException {
+    TypeDescription fileSchema =
+            TypeDescription.fromString("struct<Aaa:int,Bbb:struct<Ccc:int>,Ddd:string>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf)
+                    .fileSystem(fs)
+                    .setSchema(fileSchema)
+                    .compress(org.apache.orc.CompressionKind.NONE));
+    VectorizedRowBatch batch = fileSchema.createRowBatch(1000);
+    batch.size = 1000;
+    LongColumnVector lcv = ((LongColumnVector) ((StructColumnVector) batch.cols[1]).fields[0]);
+    for (int r = 0; r < 1000; r++) {
+      ((LongColumnVector) batch.cols[0]).vector[r] = r * 42;
+      lcv.vector[r] = r * 10001;
+      ((BytesColumnVector) batch.cols[2]).setVal(r,
+              Integer.toHexString(r).getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    TypeDescription readerSchema = TypeDescription.fromString(
+            "struct<aaa:int,bbb:struct<ccc:int>,ddd:string>");
+
+    Reader reader = OrcFile.createReader(testFilePath,
+            OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rowsOptions(new Reader.Options()
+            .schema(readerSchema));
+    batch = readerSchema.createRowBatch();
+    lcv = ((LongColumnVector) ((StructColumnVector) batch.cols[1]).fields[0]);
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(1000, batch.size);
+    for (int r = 0; r < batch.size; ++r) {
+      assertEquals("row " + r, r * 42, ((LongColumnVector) batch.cols[0]).vector[r]);
+      assertEquals("row " + r, r * 10001, lcv.vector[r]);
+      assertEquals("row " + r, r * 10001, lcv.vector[r]);
+      assertEquals("row " + r, Integer.toHexString(r),
+              ((BytesColumnVector) batch.cols[2]).toString(r));
+    }
+    assertFalse(rows.nextBatch(batch));
+    rows.close();
+  }
+
+  /**
    * Test schema evolution when using the reader directly.
    */
   @Test
