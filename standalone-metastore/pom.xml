@@ -94,6 +94,44 @@
 
   </properties>
 
+  <repositories>
+    <!-- Temporary repo -->
+    <repository>
+      <id>mapr.release</id>
+      <url>${env.MAPR_MAVEN_REPO}</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <!-- MapR Maven Repository -->
+    <repository>
+      <id>mapr.maven</id>
+      <url>http://maven.corp.maprtech.com/nexus/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <!-- This needs to be removed before checking in-->
+    <repository>
+      <id>mapr</id>
+      <name>MapR Maven repository</name>
+      <url>http://repository.mapr.com/nexus/content/repositories/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.orc</groupId>
