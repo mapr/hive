@@ -167,6 +167,15 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemPropertyVariables>
+              <SKIP_MAPR_SPECIFIC_PROPERTIES>true</SKIP_MAPR_SPECIFIC_PROPERTIES>
+            </systemPropertyVariables>
+          </configuration>
+      </plugin>
     </plugins>
   </build>
 

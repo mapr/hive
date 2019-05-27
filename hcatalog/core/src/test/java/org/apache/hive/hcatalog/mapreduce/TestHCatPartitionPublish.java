@@ -64,6 +64,7 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
+import org.apache.hive.maprminicluster.MapRMiniDFSCluster;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,7 +72,7 @@ import org.junit.Test;
 public class TestHCatPartitionPublish {
   private static Configuration mrConf = null;
   private static FileSystem fs = null;
-  private static MiniMRCluster mrCluster = null;
+  private static MapRMiniDFSCluster mrCluster = null;
   private static boolean isServerRunning = false;
   private static int msPort;
   private static HiveConf hcatConf;
@@ -104,8 +105,7 @@ public class TestHCatPartitionPublish {
     System.setProperty("hadoop.log.dir", new File(workDir, "/logs").getAbsolutePath());
     // LocalJobRunner does not work with mapreduce OutputCommitter. So need
     // to use MiniMRCluster. MAPREDUCE-2350
-    mrCluster = new MiniMRCluster(1, fs.getUri().toString(), 1, null, null,
-        new JobConf(conf));
+    mrCluster = new MapRMiniDFSCluster(new JobConf(conf));
     mrConf = mrCluster.createJobConf();
 
     if (isServerRunning) {
