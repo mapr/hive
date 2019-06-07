@@ -45,11 +45,11 @@ function get_canonical_dir() {
   echo $ret
 }
 
-bin=$(get_canonical_dir "$0")
+HIVE_BIN=$(get_canonical_dir "$0")
 
-bin=`cd "$bin"; pwd`
+HIVE_BIN=$(cd "$HIVE_BIN"; pwd)
 
-. "$bin"/hive-config.sh
+. "$HIVE_BIN"/hive-config.sh
 
 #BASEMAPR should be set by hive-config.sh
 HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
@@ -438,11 +438,11 @@ esac
 
 SERVICE_LIST=""
 
-for i in "$bin"/ext/*.sh ; do
+for i in "$HIVE_BIN"/ext/*.sh ; do
   . $i
 done
 
-for i in "$bin"/ext/util/*.sh ; do
+for i in "$HIVE_BIN"/ext/util/*.sh ; do
   . $i
 done
 
@@ -492,7 +492,7 @@ fi
 if [ -f "${HIVE_CONF_DIR}/parquet-logging.properties" ]; then
   export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Djava.util.logging.config.file=${HIVE_CONF_DIR}/parquet-logging.properties "
 else
-  export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Djava.util.logging.config.file=$bin/../conf/parquet-logging.properties "
+  export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Djava.util.logging.config.file=$HIVE_BIN/../conf/parquet-logging.properties "
 fi
 
 if [[ "$SERVICE" =~ ^(hiveserver2|beeline|cli)$ ]] ; then
