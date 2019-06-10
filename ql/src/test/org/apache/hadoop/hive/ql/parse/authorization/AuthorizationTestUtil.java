@@ -22,6 +22,7 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.exec.Task;
@@ -63,11 +64,11 @@ public class AuthorizationTestUtil {
    * @throws Exception
    */
   public static DDLWork analyze(String command, QueryState queryState, Hive db) throws Exception {
-    return analyze(parse(command), queryState, db);
+    return analyze(parse(command, queryState.getConf()), queryState, db);
   }
 
-  private static ASTNode parse(String command) throws Exception {
-    return ParseUtils.parse(command);
+  private static ASTNode parse(String command, HiveConf conf) throws Exception {
+    return ParseUtils.parse(command, conf);
   }
 
   /**

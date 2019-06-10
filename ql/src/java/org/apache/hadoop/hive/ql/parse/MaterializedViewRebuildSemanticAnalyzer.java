@@ -73,7 +73,7 @@ public class MaterializedViewRebuildSemanticAnalyzer extends CalcitePlanner {
       Context ctx = new Context(queryState.getConf());
       rewrittenAST = ParseUtils.parse("insert overwrite table " +
           "`" + qualifiedTableName[0] + "`.`" + qualifiedTableName[1] + "` " +
-          viewText, ctx);
+          viewText, ctx, conf);
       this.ctx.addRewrittenStatementContext(ctx);
 
       if (!this.ctx.isExplainPlan() && AcidUtils.isTransactionalTable(tab)) {

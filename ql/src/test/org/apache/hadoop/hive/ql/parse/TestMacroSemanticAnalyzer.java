@@ -50,7 +50,7 @@ public class TestMacroSemanticAnalyzer {
   }
 
   private ASTNode parse(String command) throws Exception {
-    return ParseUtils.parse(command);
+    return ParseUtils.parse(command, conf);
   }
   private void analyze(ASTNode ast) throws Exception {
     analyzer.analyze(ast, context);

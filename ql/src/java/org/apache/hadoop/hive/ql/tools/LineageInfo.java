@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.tools;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
 
 import java.io.IOException;
@@ -111,7 +112,7 @@ public class LineageInfo implements NodeProcessor {
     /*
      * Get the AST tree
      */
-    ASTNode tree = ParseUtils.parse(query, null);
+    ASTNode tree = ParseUtils.parse(query, null, new HiveConf());
 
     while ((tree.getToken() == null) && (tree.getChildCount() > 0)) {
       tree = (ASTNode) tree.getChild(0);

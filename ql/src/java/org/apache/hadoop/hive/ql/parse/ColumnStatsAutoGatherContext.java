@@ -129,7 +129,7 @@ public class ColumnStatsAutoGatherContext {
     Context ctx = new Context(conf);
     ctx.setOpContext(origCtx.getOpContext());
     ctx.setExplainConfig(origCtx.getExplainConfig());
-    ASTNode tree = ParseUtils.parse(analyzeCommand, ctx);
+    ASTNode tree = ParseUtils.parse(analyzeCommand, ctx, conf);
 
     //1. get the ColumnStatsSemanticAnalyzer
     QueryState queryState = new QueryState.Builder().withHiveConf(conf).build();
