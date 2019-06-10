@@ -465,7 +465,7 @@ public class Driver implements CommandProcessor {
       ctx.setHDFSCleanup(true);
 
       perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.PARSE);
-      ASTNode tree = ParseUtils.parse(command, ctx);
+      ASTNode tree = ParseUtils.parse(command, ctx, conf);
       perfLogger.PerfLogEnd(CLASS_NAME, PerfLogger.PARSE);
 
       // Trigger query hook before compilation

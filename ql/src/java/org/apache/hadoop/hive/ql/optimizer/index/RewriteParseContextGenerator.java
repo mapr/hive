@@ -62,7 +62,7 @@ public final class RewriteParseContextGenerator {
     Operator<? extends OperatorDesc> operatorTree;
     try {
       Context ctx = new Context(queryState.getConf());
-      ASTNode tree = ParseUtils.parse(command, ctx);
+      ASTNode tree = ParseUtils.parse(command, ctx, queryState.getConf());
 
       BaseSemanticAnalyzer sem = SemanticAnalyzerFactory.get(queryState, tree);
       assert(sem instanceof SemanticAnalyzer);

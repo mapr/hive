@@ -300,7 +300,7 @@ public class ColumnStatsSemanticAnalyzer extends SemanticAnalyzer {
     ctx.setCmd(rewrittenQuery);
 
     try {
-      rewrittenTree = ParseUtils.parse(rewrittenQuery, ctx);
+      rewrittenTree = ParseUtils.parse(rewrittenQuery, ctx, conf);
     } catch (ParseException e) {
       throw new SemanticException(ErrorMsg.COLUMNSTATSCOLLECTOR_PARSE_ERROR.getMsg());
     }

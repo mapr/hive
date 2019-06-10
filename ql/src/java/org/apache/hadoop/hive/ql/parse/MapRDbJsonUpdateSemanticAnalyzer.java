@@ -282,7 +282,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
     ASTNode rewrittenTree;
     try {
       LOG.info("Going to reparse <" + originalQuery + "> as \n<" + rewrittenQueryStr.toString() + ">");
-      rewrittenTree = ParseUtils.parse(rewrittenQueryStr.toString(), rewrittenCtx);
+      rewrittenTree = ParseUtils.parse(rewrittenQueryStr.toString(), rewrittenCtx, conf);
     } catch (ParseException e) {
       throw new SemanticException(ErrorMsg.UPDATEDELETE_PARSE_ERROR.getMsg(), e);
     }

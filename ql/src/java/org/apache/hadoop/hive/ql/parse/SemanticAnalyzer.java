@@ -2464,12 +2464,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       String viewFullyQualifiedName = tab.getCompleteName();
       String viewText = tab.getViewExpandedText();
       TableMask viewMask = new TableMask(this, conf, false);
-      viewTree = ParseUtils.parse(viewText, ctx, tab.getCompleteName());
+      viewTree = ParseUtils.parse(viewText, ctx, tab.getCompleteName(), conf);
       if (!unparseTranslator.isEnabled() &&
           (viewMask.isEnabled() && analyzeRewrite == null)) {
         viewTree = rewriteASTWithMaskAndFilter(viewMask, viewTree,
             ctx.getViewTokenRewriteStream(viewFullyQualifiedName),
-            ctx, db, tabNameToTabObject, ignoredTokens);
+            ctx, db, tabNameToTabObject, ignoredTokens, conf);
       }
       Dispatcher nodeOriginDispatcher = new Dispatcher() {
         @Override
@@ -10977,7 +10977,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   // For the replacement, we leverage the methods that are used for
   // unparseTranslator.
   protected static ASTNode rewriteASTWithMaskAndFilter(TableMask tableMask, ASTNode ast, TokenRewriteStream tokenRewriteStream,
-          Context ctx, Hive db, Map<String, Table> tabNameToTabObject, Set<Integer> ignoredTokens)
+          Context ctx, Hive db, Map<String, Table> tabNameToTabObject, Set<Integer> ignoredTokens, HiveConf conf)
                   throws SemanticException {
     // 1. collect information about CTE if there is any.
     // The base table of CTE should be masked.
@@ -11026,7 +11026,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       // check if we need to ctx.setCmd(rewrittenQuery);
       ParseDriver pd = new ParseDriver();
       try {
-        rewrittenTree = ParseUtils.parse(rewrittenQuery);
+        rewrittenTree = ParseUtils.parse(rewrittenQuery, conf);
       } catch (ParseException e) {
         throw new SemanticException(e);
       }
@@ -11218,7 +11218,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (!unparseTranslator.isEnabled() && tableMask.isEnabled()) {
       // Here we rewrite the * and also the masking table
       ASTNode tree = rewriteASTWithMaskAndFilter(tableMask, ast, ctx.getTokenRewriteStream(),
-              ctx, db, tabNameToTabObject, ignoredTokens);
+              ctx, db, tabNameToTabObject, ignoredTokens, conf);
       if (tree != ast) {
         ctx.setSkipTableMasking(true);
         init(true);

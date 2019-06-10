@@ -88,7 +88,7 @@ abstract class BaseExplainTest {
     ctx.setCmd(query);
     ctx.setHDFSCleanup(true);
     SessionState.get().initTxnMgr(conf);
-    ASTNode tree = ParseUtils.parse(query, ctx);
+    ASTNode tree = ParseUtils.parse(query, ctx, conf);
     BaseSemanticAnalyzer sem = SemanticAnalyzerFactory.get(queryState, tree);
     sem.analyze(tree, ctx);
     // validate the plan

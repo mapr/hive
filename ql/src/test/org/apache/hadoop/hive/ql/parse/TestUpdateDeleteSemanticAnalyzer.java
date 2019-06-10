@@ -259,7 +259,7 @@ public class TestUpdateDeleteSemanticAnalyzer {
     ctx.setCmd(query);
     ctx.setHDFSCleanup(true);
 
-    ASTNode tree = ParseUtils.parse(query, ctx);
+    ASTNode tree = ParseUtils.parse(query, ctx, conf);
 
     SessionState.get().initTxnMgr(conf);
     db = Hive.get(conf);

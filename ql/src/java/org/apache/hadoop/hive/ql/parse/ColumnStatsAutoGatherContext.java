@@ -132,7 +132,7 @@ public class ColumnStatsAutoGatherContext {
     //0. initialization
     Context ctx = new Context(conf);
     ctx.setExplainConfig(origCtx.getExplainConfig());
-    ASTNode tree = ParseUtils.parse(analyzeCommand, ctx);
+    ASTNode tree = ParseUtils.parse(analyzeCommand, ctx, conf);
 
     //1. get the ColumnStatsSemanticAnalyzer
     BaseSemanticAnalyzer baseSem = SemanticAnalyzerFactory.get(new QueryState(conf), tree);
