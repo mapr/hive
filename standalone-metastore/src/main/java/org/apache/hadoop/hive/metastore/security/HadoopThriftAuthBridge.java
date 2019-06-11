@@ -80,7 +80,7 @@ public abstract class HadoopThriftAuthBridge {
   public static HadoopThriftAuthBridge getBridge() {
     if (self == null) {
       synchronized (HadoopThriftAuthBridge.class) {
-        if (self == null) self = new HadoopThriftAuthBridge23();
+        if (self == null) self = new HadoopThriftAuthBridge25Sasl();
       }
     }
     return self;
