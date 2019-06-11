@@ -33,6 +33,7 @@ import java.util.Map;
 public abstract class ShimLoader {
   private static final Logger LOG = LoggerFactory.getLogger(ShimLoader.class);
   public static final String HADOOP23VERSIONNAME = "0.23";
+  public static final String HADOOP25SASLVERSIONNAME = "0.25Sasl";
 
   private static volatile HadoopShims hadoopShims;
   private static JettyShims jettyShims;
@@ -48,6 +49,7 @@ public abstract class ShimLoader {
 
   static {
     HADOOP_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.hadoop.hive.shims.Hadoop23Shims");
+    HADOOP_SHIM_CLASSES.put(HADOOP25SASLVERSIONNAME, "org.apache.hadoop.hive.shims.Hadoop23Shims");
   }
 
   /**
@@ -59,6 +61,8 @@ public abstract class ShimLoader {
   static {
     EVENT_COUNTER_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.hadoop.log.metrics" +
         ".EventCounter");
+    EVENT_COUNTER_SHIM_CLASSES.put(HADOOP25SASLVERSIONNAME, "org.apache.hadoop.log.metrics" +
+        ".EventCounter");
   }
 
   /**
@@ -69,7 +73,9 @@ public abstract class ShimLoader {
 
   static {
     HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put(HADOOP23VERSIONNAME,
-        "org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge23");
+        "org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge23");
+    HADOOP_THRIFT_AUTH_BRIDGE_CLASSES.put(HADOOP25SASLVERSIONNAME,
+        "org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge25Sasl");
   }
 
 
@@ -151,7 +157,7 @@ public abstract class ShimLoader {
     switch (Integer.parseInt(parts[0])) {
     case 2:
     case 3:
-      return HADOOP23VERSIONNAME;
+      return HADOOP25SASLVERSIONNAME;
     default:
       throw new IllegalArgumentException("Unrecognized Hadoop major version number: " + vers);
     }
