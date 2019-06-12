@@ -18,14 +18,9 @@
 
 package org.apache.hive.service.server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -93,7 +88,6 @@ import org.apache.hadoop.hive.ql.session.ClearDanglingScratchDir;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
 import org.apache.hadoop.hive.shims.ShimLoader;
-import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.HiveVersionInfo;
@@ -760,17 +754,26 @@ public class HiveServer2 extends CompositeService {
       }
     }
 
-    if (!activePassiveHA) {
-      LOG.info("HS2 interactive HA not enabled. Starting tez sessions..");
-      try {
-        startOrReconnectTezSessions();
-      } catch (Exception e) {
-        LOG.error("Error starting  Tez sessions: ", e);
-        throw new ServiceException(e);
+    if (isTezEngine(hiveConf)) {
+      if (!activePassiveHA) {
+        LOG.info("HS2 interactive HA not enabled. Starting tez sessions..");
+        try {
+          startOrReconnectTezSessions();
+        } catch (Exception e) {
+          LOG.error("Error starting  Tez sessions: ", e);
+          throw new ServiceException(e);
+        }
+      } else {
+        LOG.info("HS2 interactive HA enabled. Tez sessions will be started/reconnected by the leader.");
       }
-    } else {
-      LOG.info("HS2 interactive HA enabled. Tez sessions will be started/reconnected by the leader.");
     }
+  }
+
+  private static boolean isTezEngine(HiveConf hiveConf){
+    if (hiveConf != null) {
+      return "tez".equalsIgnoreCase(hiveConf.getVar(ConfVars.HIVE_EXECUTION_ENGINE));
+    }
+    return "tez".equalsIgnoreCase(new HiveConf().getVar(ConfVars.HIVE_EXECUTION_ENGINE));
   }
 
   private static class HS2LeaderLatchListener implements LeaderLatchListener {
@@ -793,8 +796,10 @@ public class HiveServer2 extends CompositeService {
       if (parentSession != null) {
         SessionState.setCurrentSessionState(parentSession);
       }
-      hiveServer2.startOrReconnectTezSessions();
-      LOG.info("Started/Reconnected tez sessions.");
+      if (isTezEngine(hiveServer2.getHiveConf())) {
+        hiveServer2.startOrReconnectTezSessions();
+        LOG.info("Started/Reconnected tez sessions.");
+      }
 
       // resolve futures used for testing
       if (HiveConf.getBoolVar(hiveServer2.getHiveConf(), ConfVars.HIVE_IN_TEST)) {
@@ -808,8 +813,10 @@ public class HiveServer2 extends CompositeService {
       LOG.info("HS2 instance {} LOST LEADERSHIP. Stopping/Disconnecting tez sessions..", hiveServer2.serviceUri);
       hiveServer2.isLeader.set(false);
       hiveServer2.closeHiveSessions();
-      hiveServer2.stopOrDisconnectTezSessions();
-      LOG.info("Stopped/Disconnected tez sessions.");
+      if (isTezEngine(hiveServer2.getHiveConf())) {
+        hiveServer2.stopOrDisconnectTezSessions();
+        LOG.info("Stopped/Disconnected tez sessions.");
+      }
 
       // resolve futures used for testing
       if (HiveConf.getBoolVar(hiveServer2.getHiveConf(), ConfVars.HIVE_IN_TEST)) {
@@ -953,7 +960,9 @@ public class HiveServer2 extends CompositeService {
       }
     }
 
-    stopOrDisconnectTezSessions();
+    if (isTezEngine(hiveConf)) {
+      stopOrDisconnectTezSessions();
+    }
 
     if (hiveConf != null && hiveConf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
       try {
