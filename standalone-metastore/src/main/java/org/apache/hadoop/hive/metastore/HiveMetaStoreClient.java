@@ -61,6 +61,7 @@ import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars;
 import org.apache.hadoop.hive.metastore.hooks.URIResolverHook;
 import org.apache.hadoop.hive.metastore.partition.spec.PartitionSpecProxy;
+import org.apache.hadoop.hive.metastore.security.AuthType;
 import org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge;
 import org.apache.hadoop.hive.metastore.txn.TxnUtils;
 import org.apache.hadoop.hive.metastore.utils.JavaUtils;
@@ -487,12 +488,21 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
                     "DIGEST", tokenStrForm, transport,
                         MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
               } else {
-                LOG.info("HMSC::open(): Could not find delegation token. Creating KERBEROS-based thrift connection.");
-                String principalConfig =
-                    MetastoreConf.getVar(conf, ConfVars.KERBEROS_PRINCIPAL);
-                transport = authBridge.createClientTransport(
-                    principalConfig, store.getHost(), "KERBEROS", null,
-                    transport, MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
+                AuthType authType = AuthType.parse(MetastoreConf.getVar(conf, ConfVars.METASTORE_AUTHENTICATION));
+                switch (authType) {
+                case KERBEROS:
+                  LOG.info("HMSC::open(): Could not find delegation token. Creating KERBEROS-based thrift connection.");
+                  String principalConfig = MetastoreConf.getVar(conf, ConfVars.KERBEROS_PRINCIPAL);
+                  transport = authBridge
+                      .createClientTransport(principalConfig, store.getHost(), "KERBEROS", null, transport,
+                          MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
+                  break;
+                case MAPRSASL:
+                  LOG.info("HMSC::open(): Creating MapR-SASL-based thrift connection");
+                  transport = authBridge.createClientTransport(null, null, "MAPRSASL", null, transport,
+                      MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
+                  break;
+                }
               }
             } catch (IOException ioe) {
               LOG.error("Couldn't create client transport", ioe);

@@ -424,12 +424,14 @@ fi
 
 case "$MAPR_SECURITY_STATUS" in
   "true")
-    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=PAM"   # This option enables both PAM and MAPRSASL security for HS2
-    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"  # This option enables MAPRSASL security for HiveMeta
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=PAM"      # This option sets both PAM and MAPRSASL authentication for HS2
+    HADOOP_OPTS="$HADOOP_OPTS -Dmetastore.auth=MAPRSASL"   # This option sets MAPRSASL authentication for Metastore
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"     # Indicates that MAPRSASL is on
   ;;
   "false")
-    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=NONE"  # This option disables security for HS2
-    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false" # This option disables security for HiveMeta
+    HADOOP_OPTS="$HADOOP_OPTS -Dhiveserver2.auth=NONE"     # This option disables authentication for HS2
+    HADOOP_OPTS="$HADOOP_OPTS -Dmetastore.auth=NONE"       # This option disables authentication for Metastore
+    HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false"    # Indicates that MAPRSASL is off
   ;;
   "custom")
   # All custom security is configured in hive-site.xml, so do nothing here
