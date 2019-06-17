@@ -35,6 +35,11 @@
     <!-- dependencies are always listed in sorted order by groupId, artifectId -->
     <!-- intra-proect -->
     <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.core.version}</version>
+    </dependency>
+    <dependency>
     <groupId>com.mapr.security</groupId>
     <artifactId>mapr-security-web</artifactId>
     <version>${mapr.release.version}</version>
