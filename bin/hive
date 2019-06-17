@@ -484,11 +484,7 @@ export SPLIT_HIVE_LOGS_INTO_FILES="${SPLIT_HIVE_LOGS_INTO_FILES:-true}"
 if [ "$SPLIT_HIVE_LOGS_INTO_FILES" = false ] ; then
   echo "Hive logs will be written only in the hive.logs file. Set SPLIT_HIVE_LOGS_INTO_FILES to true or remove it to write hivemeta and hs2 logs separately."
 else
-  if [ "metastore" = "$SERVICE" ] ; then
-    export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dhive.log.file=${USER}-metastore-${HOSTNAME}.log "
-  else
-    export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dhive.log.file=${USER}-hiveserver2-${HOSTNAME}.log "
-  fi
+  export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dhive.log.file=${USER}-${SERVICE}-${HOSTNAME}.log "
 fi
 
 if [ -f "${HIVE_CONF_DIR}/parquet-logging.properties" ]; then
