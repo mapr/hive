@@ -57,15 +57,15 @@ POSTHOOK: Output: target/warehouse/mi4.out
 STAGE DEPENDENCIES:
   Stage-4 is a root stage
   Stage-0 depends on stages: Stage-4
-  Stage-5 depends on stages: Stage-0, Stage-6, Stage-8, Stage-10, Stage-3
+  Stage-5 depends on stages: Stage-0, Stage-6, Stage-8, Stage-3
   Stage-6 depends on stages: Stage-4
-  Stage-7 depends on stages: Stage-1, Stage-6, Stage-8, Stage-10, Stage-3
-  Stage-9 depends on stages: Stage-2, Stage-6, Stage-8, Stage-10, Stage-3
+  Stage-7 depends on stages: Stage-1, Stage-6, Stage-8, Stage-3
+  Stage-9 depends on stages: Stage-2, Stage-6, Stage-8, Stage-3
   Stage-1 depends on stages: Stage-4
   Stage-8 depends on stages: Stage-4
   Stage-2 depends on stages: Stage-4
   Stage-10 depends on stages: Stage-4
-  Stage-3 depends on stages: Stage-4
+  Stage-3 depends on stages: Stage-10
 
 STAGE PLANS:
   Stage: Stage-4
@@ -1472,15 +1472,15 @@ POSTHOOK: Output: target/warehouse/mi4.out
 STAGE DEPENDENCIES:
   Stage-4 is a root stage
   Stage-0 depends on stages: Stage-4
-  Stage-5 depends on stages: Stage-0, Stage-6, Stage-8, Stage-10, Stage-3
+  Stage-5 depends on stages: Stage-0, Stage-6, Stage-8, Stage-3
   Stage-6 depends on stages: Stage-4
-  Stage-7 depends on stages: Stage-1, Stage-6, Stage-8, Stage-10, Stage-3
-  Stage-9 depends on stages: Stage-2, Stage-6, Stage-8, Stage-10, Stage-3
+  Stage-7 depends on stages: Stage-1, Stage-6, Stage-8, Stage-3
+  Stage-9 depends on stages: Stage-2, Stage-6, Stage-8, Stage-3
   Stage-1 depends on stages: Stage-4
   Stage-8 depends on stages: Stage-4
   Stage-2 depends on stages: Stage-4
   Stage-10 depends on stages: Stage-4
-  Stage-3 depends on stages: Stage-4
+  Stage-3 depends on stages: Stage-10
 
 STAGE PLANS:
   Stage: Stage-4

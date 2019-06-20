@@ -71,16 +71,20 @@ public class GenMRFileSink1 implements NodeProcessor {
     boolean chDir = false;
     // we should look take the parent of fsOp's task as the current task.
     FileSinkOperator fsOp = (FileSinkOperator) nd;
-    Map<Operator<? extends OperatorDesc>, GenMapRedCtx> mapCurrCtx = ctx
-        .getMapCurrCtx();
-    GenMapRedCtx mapredCtx = mapCurrCtx.get(fsOp.getParentOperators().get(0));
-    Task<? extends Serializable> currTask = mapredCtx.getCurrTask();
-    
-    ctx.setCurrTask(currTask);
-    ctx.addRootIfPossible(currTask);
 
     boolean isInsertTable = // is INSERT OVERWRITE TABLE
         GenMapRedUtils.isInsertInto(parseCtx, fsOp);
+
+    Task<? extends Serializable> currTask = ctx.getCurrTask();
+    if (isInsertTable) {
+      Map<Operator<? extends OperatorDesc>, GenMapRedCtx> mapCurrCtx = ctx
+          .getMapCurrCtx();
+      GenMapRedCtx mapredCtx = mapCurrCtx.get(fsOp.getParentOperators().get(0));
+      currTask = mapredCtx.getCurrTask();
+      ctx.setCurrTask(currTask);
+    }
+
+    ctx.addRootIfPossible(currTask);
     HiveConf hconf = parseCtx.getConf();
 
     // Mark this task as a final map reduce task (ignoring the optional merge task)
