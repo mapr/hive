@@ -494,9 +494,11 @@ public class TezSessionState {
    * @throws IOException
    */
   private void saveActiveAppToFile() throws IOException {
-    FileSystem fs = activeAppsPath.getFileSystem(conf);
-    FSDataOutputStream fsDataOutputStream = fs.create(new Path(activeAppsPath, applicationId.toString()));
-    fsDataOutputStream.close();
+    if (activeAppsPath != null) {
+      FileSystem fs = activeAppsPath.getFileSystem(conf);
+      FSDataOutputStream fsDataOutputStream = fs.create(new Path(activeAppsPath, applicationId.toString()));
+      fsDataOutputStream.close();
+    }
   }
 
   /**
@@ -505,8 +507,8 @@ public class TezSessionState {
    * @throws IOException
    */
   private void deleteFileWithAppId() throws IOException {
-    FileSystem fs = activeAppsPath.getFileSystem(conf);
-    if (applicationId != null) {
+    if (activeAppsPath != null && applicationId != null) {
+      FileSystem fs = activeAppsPath.getFileSystem(conf);
       Path jobIdPath = new Path(activeAppsPath, applicationId.toString());
       if (fs.exists(jobIdPath)) {
         fs.delete(jobIdPath, true);
