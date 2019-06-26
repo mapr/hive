@@ -590,9 +590,17 @@ public class DagUtils {
    * container size isn't set.
    */
   public static Resource getContainerResource(Configuration conf) {
-    int memory = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVETEZCONTAINERSIZE) > 0 ?
-      HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVETEZCONTAINERSIZE) :
-      conf.getInt(MRJobConfig.MAP_MEMORY_MB, MRJobConfig.DEFAULT_MAP_MEMORY_MB);
+    int hiveTezContainerSize =
+        HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVETEZCONTAINERSIZE);
+    int mapMemoryMb = conf.getInt(MRJobConfig.MAP_MEMORY_MB,
+        MRJobConfig.DEFAULT_MAP_MEMORY_MB);
+
+    int memory = MRJobConfig.DEFAULT_MAP_MEMORY_MB;
+    if (hiveTezContainerSize > 0) {
+      memory = hiveTezContainerSize;
+    } else if (mapMemoryMb > 0) {
+      memory = mapMemoryMb;
+    }
     int cpus = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVETEZCPUVCORES) > 0 ?
       HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVETEZCPUVCORES) :
       conf.getInt(MRJobConfig.MAP_CPU_VCORES, MRJobConfig.DEFAULT_MAP_CPU_VCORES);
