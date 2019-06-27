@@ -20,7 +20,7 @@ import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.util.security.Constraint;
 
 public class PamConstraintMapping extends ConstraintMapping {
-  public PamConstraintMapping(Constraint constraint){
+  public PamConstraintMapping(Constraint constraint) {
     setPathSpec("/*");
     setConstraint(constraint);
   }

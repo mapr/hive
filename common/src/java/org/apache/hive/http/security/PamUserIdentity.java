@@ -23,13 +23,15 @@ import javax.security.auth.Subject;
 
 public class PamUserIdentity extends DefaultUserIdentity {
   public PamUserIdentity(String username) {
-    super(new Subject(), new UserPrincipal(username) , new String[]{"pam"});
+    super(new Subject(), new UserPrincipal(username), new String[] { "pam" });
   }
 
+  @Override
   public boolean isUserInRole(String role, Scope scope) {
     return true;
   }
 
+  @Override
   public String toString() {
     return PamUserIdentity.class.getSimpleName();
   }

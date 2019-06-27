@@ -27,7 +27,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.eclipse.jetty.http.HttpHeaders;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.StringUtil;
@@ -64,7 +64,8 @@ public class TestHS2HttpServerPam {
     hiveConf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER, "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
     hiveConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_WEBUI_PAM_AUTHENTICATOR, TestPamAuthenticator.class.getName());
     hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_PAM, true);
-    hiveServer2 = new HiveServer2();
+    hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL, false);
+    hiveServer2 = new HiveServer2(new TestPamAuthenticator());
     hiveServer2.init(hiveConf);
     hiveServer2.start();
     Thread.sleep(5000);
@@ -88,7 +89,7 @@ public class TestHS2HttpServerPam {
 
       HttpGet httpGet = new HttpGet("http://" + host + ":" + webUIPort);
       String authB64Code = B64Code.encode(username + ":" + password, StringUtil.__ISO_8859_1);
-      httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + authB64Code);
+      httpGet.setHeader(HttpHeader.AUTHORIZATION.asString(), "Basic " + authB64Code);
       CloseableHttpResponse response = httpclient.execute(httpGet);
       Assert.assertTrue(response.toString().contains(Integer.toString(HttpURLConnection.HTTP_OK)));
 
@@ -110,7 +111,7 @@ public class TestHS2HttpServerPam {
 
       HttpGet httpGet = new HttpGet("http://" + host + ":" + webUIPort);
       String authB64Code = B64Code.encode(username + ":" + password, StringUtil.__ISO_8859_1);
-      httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + authB64Code);
+      httpGet.setHeader(HttpHeader.AUTHORIZATION.asString(), "Basic " + authB64Code);
       CloseableHttpResponse response = httpclient.execute(httpGet);
       Assert.assertTrue(response.toString().contains(Integer.toString(HttpURLConnection.HTTP_UNAUTHORIZED)));
 
@@ -132,7 +133,7 @@ public class TestHS2HttpServerPam {
 
       HttpGet httpGet = new HttpGet("http://" + host + ":" + webUIPort);
       String authB64Code = B64Code.encode(username + ":" + password, StringUtil.__ISO_8859_1);
-      httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + authB64Code);
+      httpGet.setHeader(HttpHeader.AUTHORIZATION.asString(), "Basic " + authB64Code);
       CloseableHttpResponse response = httpclient.execute(httpGet);
       Assert.assertTrue(response.toString().contains(Integer.toString(HttpURLConnection.HTTP_UNAUTHORIZED)));
 

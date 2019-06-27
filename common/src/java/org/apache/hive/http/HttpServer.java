@@ -20,8 +20,6 @@ package org.apache.hive.http;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,7 +43,6 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authorize.AccessControlList;
-import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience;
 import org.apache.hive.http.security.PamAuthenticator;
 import org.apache.hive.http.security.PamConstraint;
@@ -60,17 +57,18 @@ import org.apache.logging.log4j.core.appender.FileManager;
 import org.apache.logging.log4j.core.appender.OutputStreamManager;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.rewrite.handler.RewriteRegexRule;
-import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.LowResourceMonitor;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler.Context;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
@@ -98,9 +96,9 @@ public class HttpServer {
   public static final String ADMINS_ACL = "admins.acl";
 
   private final String name;
-  private final String appDir;
-  private final WebAppContext webAppContext;
-  private final Server webServer;
+  private String appDir;
+  private WebAppContext webAppContext;
+  private Server webServer;
 
   /**
    * Create a status server on the given port.
@@ -108,16 +106,7 @@ public class HttpServer {
   private HttpServer(final Builder b) throws IOException {
     this.name = b.name;
 
-    webServer = new Server();
-    appDir = getWebAppsPath(b.name);
-    webAppContext = createWebAppContext(b);
-
-    if (b.useSPNEGO) {
-      // Secure the web server with kerberos
-      setupSpnegoFilter(b);
-    }
-
-    initializeWebServer(b);
+    createWebServer(b);
   }
 
   public static class Builder {
@@ -134,7 +123,7 @@ public class HttpServer {
     private boolean useSPNEGO;
     private boolean useSSL;
     private boolean usePAM;
-    private String authClassName;
+    private PamAuthenticator pamAuthenticator;
     private String contextRootRewriteTarget = "/index.html";
     private final List<Pair<String, Class<? extends HttpServlet>>> servlets =
         new LinkedList<Pair<String, Class<? extends HttpServlet>>>();
@@ -198,8 +187,8 @@ public class HttpServer {
       return this;
     }
 
-    public Builder setAuthClassName(String authClassName) {
-      this.authClassName = authClassName;
+    public Builder setPAMAuthenticator(PamAuthenticator pamAuthenticator){
+      this.pamAuthenticator = pamAuthenticator;
       return this;
     }
 
@@ -244,7 +233,7 @@ public class HttpServer {
   }
 
   public int getPort() {
-    return webServer.getConnectors()[0].getLocalPort();
+    return ((ServerConnector)(webServer.getConnectors()[0])).getLocalPort();
   }
 
   /**
@@ -302,16 +291,20 @@ public class HttpServer {
 
     String remoteUser = request.getRemoteUser();
     if (remoteUser == null) {
-      response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                         "Unauthenticated users are not " +
-                         "authorized to access this page.");
+      if (response != null) {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                           "Unauthenticated users are not " +
+                           "authorized to access this page.");
+      }
       return false;
     }
 
     if (servletContext.getAttribute(ADMINS_ACL) != null &&
         !userHasAdministratorAccess(servletContext, remoteUser)) {
-      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User "
-          + remoteUser + " is unauthorized to access this page.");
+      if (response != null) {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User "
+            + remoteUser + " is unauthorized to access this page.");
+      }
       return false;
     }
 
@@ -366,40 +359,19 @@ public class HttpServer {
       holder, "/*", FilterMapping.ALL);
   }
 
-  /**
-   * Secure the web server with PAM.
-   */
-  void setupPam(Builder b, Handler handler) throws IOException{
-    LoginService loginService = new PamLoginService();
-    webServer.addBean(loginService);
-    ConstraintSecurityHandler security = new ConstraintSecurityHandler();
-    Constraint constraint = new PamConstraint();
-    ConstraintMapping mapping = new PamConstraintMapping(constraint);
-    security.setConstraintMappings(Collections.singletonList(mapping));
-    security.setAuthenticator(buildAuthenticator(b.authClassName));
-    security.setLoginService(loginService);
-    security.setHandler(handler);
-    webServer.setHandler(security);
-  }
 
-
-  private static Authenticator buildAuthenticator(String authClassName) throws IOException {
-    try {
-      Class<?>  clazz = Class.forName(authClassName);
-      Constructor<?> constructor = clazz.getConstructor();
-      Object object = constructor.newInstance();
-      return (Authenticator) object;
-    } catch (Exception e) {
-      throw new IOException(e);
-    }
-  }
   /**
    * Create a channel connector for "http/https" requests
    */
   Connector createChannelConnector(int queueSize, Builder b) {
-    SelectChannelConnector connector;
+    ServerConnector connector;
+
+    final HttpConfiguration conf = new HttpConfiguration();
+    conf.setRequestHeaderSize(1024*64);
+    final HttpConnectionFactory http = new HttpConnectionFactory(conf);
+
     if (!b.useSSL) {
-      connector = new SelectChannelConnector();
+      connector = new ServerConnector(webServer, http);
     } else {
       SslContextFactory sslContextFactory = new SslContextFactory();
       sslContextFactory.setKeyStorePath(b.keyStorePath);
@@ -409,16 +381,30 @@ public class HttpServer {
       sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(
           new String[excludedSSLProtocols.size()]));
       sslContextFactory.setKeyStorePassword(b.keyStorePassword);
-      connector = new SslSelectChannelConnector(sslContextFactory);
+      connector = new ServerConnector(webServer, sslContextFactory, http);
     }
 
-    connector.setLowResourcesMaxIdleTime(10000);
     connector.setAcceptQueueSize(queueSize);
-    connector.setResolveNames(false);
-    connector.setUseDirectBuffers(false);
-    connector.setRequestHeaderSize(1024*64);
     connector.setReuseAddress(true);
+    connector.setHost(b.host);
+    connector.setPort(b.port);
     return connector;
+  }
+
+  /**
+   * Secure the web server with PAM.
+   */
+  void setupPam(Builder b, Handler handler) {
+    LoginService loginService = new PamLoginService();
+    webServer.addBean(loginService);
+    ConstraintSecurityHandler security = new ConstraintSecurityHandler();
+    Constraint constraint = new PamConstraint();
+    ConstraintMapping mapping = new PamConstraintMapping(constraint);
+    security.setConstraintMappings(Collections.singletonList(mapping));
+    security.setAuthenticator(b.pamAuthenticator);
+    security.setLoginService(loginService);
+    security.setHandler(handler);
+    webServer.setHandler(security);
   }
 
   /**
@@ -430,7 +416,7 @@ public class HttpServer {
     }
   }
 
-  void initializeWebServer(Builder b) throws IOException{
+  private void createWebServer(final Builder b) throws IOException {
     // Create the thread pool for the web server to handle HTTP requests
     QueuedThreadPool threadPool = new QueuedThreadPool();
     if (b.maxThreads > 0) {
@@ -438,12 +424,26 @@ public class HttpServer {
     }
     threadPool.setDaemon(true);
     threadPool.setName(b.name + "-web");
-    webServer.setThreadPool(threadPool);
 
-    // Create the channel connector for the web server
-    Connector connector = createChannelConnector(threadPool.getMaxThreads(), b);
-    connector.setHost(b.host);
-    connector.setPort(b.port);
+    this.webServer = new Server(threadPool);
+    this.appDir = getWebAppsPath(b.name);
+    this.webAppContext = createWebAppContext(b);
+
+    if (b.useSPNEGO) {
+      // Secure the web server with kerberos
+      setupSpnegoFilter(b);
+    }
+
+    initializeWebServer(b, threadPool.getMaxThreads());
+  }
+
+  private void initializeWebServer(final Builder b, int queueSize) throws IOException {
+    // Set handling for low resource conditions.
+    final LowResourceMonitor low = new LowResourceMonitor(webServer);
+    low.setLowResourcesIdleTimeout(10000);
+    webServer.addBean(low);
+
+    Connector connector = createChannelConnector(queueSize, b);
     webServer.addConnector(connector);
 
     RewriteHandler rwHandler = new RewriteHandler();

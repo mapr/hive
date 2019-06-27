@@ -28,13 +28,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.apache.hadoop.util.Shell;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.LowResourceMonitor;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,19 +48,21 @@ import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.eclipse.jetty.rewrite.handler.RedirectPatternRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpServletRequest;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
@@ -75,8 +78,6 @@ public class Main {
 
   public static final int DEFAULT_PORT = 8080;
   public static final String DEFAULT_HOST = "0.0.0.0";
-  public static final String DEFAULT_KEY_STORE_PATH = "";
-  public static final String DEFAULT_KEY_STORE_PASSWORD = "";
   public static final String DEFAULT_SSL_PROTOCOL_BLACKLIST = "SSLv2,SSLv3";
   private Server server;
 
@@ -86,8 +87,9 @@ public class Main {
    * Retrieve the config singleton.
    */
   public static synchronized AppConfig getAppConfigInstance() {
-    if (conf == null)
+    if (conf == null) {
       LOG.error("Bug: configuration not yet loaded");
+    }
     return conf;
   }
 
@@ -104,10 +106,10 @@ public class Main {
 
   // Jersey uses java.util.logging - bridge to slf4
   private void initLogger() {
-    java.util.logging.Logger rootLogger
-      = java.util.logging.LogManager.getLogManager().getLogger("");
-    for (java.util.logging.Handler h : rootLogger.getHandlers())
+    java.util.logging.Logger rootLogger = java.util.logging.LogManager.getLogManager().getLogger("");
+    for (java.util.logging.Handler h : rootLogger.getHandlers()) {
       rootLogger.removeHandler(h);
+    }
 
     SLF4JBridgeHandler.install();
   }
@@ -116,8 +118,9 @@ public class Main {
     AppConfig cf = new AppConfig();
     try {
       GenericOptionsParser parser = new GenericOptionsParser(cf, args);
-      if (parser.getRemainingArgs().length > 0)
+      if (parser.getRemainingArgs().length > 0) {
         usage();
+      }
     } catch (IOException e) {
       LOG.error("Unable to parse options: " + e);
       usage();
@@ -137,7 +140,8 @@ public class Main {
       checkEnv();
       runServer(port);
       // Currently only print the first port to be consistent with old behavior
-      port =  ArrayUtils.isEmpty(server.getConnectors()) ? -1 : server.getConnectors()[0].getPort();
+      port = ArrayUtils.isEmpty(server.getConnectors()) ? -1 : ((ServerConnector) (server.getConnectors()[0]))
+          .getLocalPort();
 
       System.out.println("templeton: listening on port " + port);
       LOG.info("Templeton listening on port " + port);
@@ -147,6 +151,7 @@ public class Main {
       System.exit(1);
     }
   }
+
   void stop() {
     if(server != null) {
       try {
@@ -176,18 +181,16 @@ public class Main {
     }
   }
 
-  public Server runServer(int port)
-    throws Exception {
+  public Server runServer(int port) throws Exception {
 
     //Authenticate using keytab
     if (UserGroupInformation.isSecurityEnabled()) {
-      UserGroupInformation.loginUserFromKeytab(conf.kerberosPrincipal(),
-        conf.kerberosKeytab());
+      String serverPrincipal = SecurityUtil.getServerPrincipal(conf.kerberosPrincipal(), DEFAULT_HOST);
+      UserGroupInformation.loginUserFromKeytab(serverPrincipal, conf.kerberosKeytab());
     }
 
     // Create the Jetty server. If jetty conf file exists, use that to create server
     // to have more control.
-    Server server = null;
     if (StringUtils.isEmpty(conf.jettyConfiguration())) {
       server = new Server();
     } else {
@@ -200,6 +203,7 @@ public class Main {
 
     // Add the Auth filter
     FilterHolder fHolder = makeAuthFilter();
+    EnumSet<DispatcherType> dispatches = EnumSet.of(DispatcherType.REQUEST);
 
     /* 
      * We add filters for each of the URIs supported by templeton.
@@ -208,28 +212,18 @@ public class Main {
      * This is because mapreduce does not use secure credentials for 
      * callbacks. So jetty would fail the request as unauthorized.
      */ 
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/ddl/*", 
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/pig/*", 
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/hive/*", 
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/sqoop/*",
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/queue/*", 
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/jobs/*",
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/mapreduce/*", 
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/status/*", 
-             FilterMapping.REQUEST);
-    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/version/*", 
-             FilterMapping.REQUEST);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/ddl/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/pig/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/hive/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/sqoop/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/queue/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/jobs/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/mapreduce/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/status/*", dispatches);
+    root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/version/*", dispatches);
 
     if (conf.getBoolean(AppConfig.XSRF_FILTER_ENABLED, false)){
-      root.addFilter(makeXSRFFilter(), "/" + SERVLET_PATH + "/*",
-             FilterMapping.REQUEST);
+      root.addFilter(makeXSRFFilter(), "/" + SERVLET_PATH + "/*", dispatches);
       LOG.debug("XSRF filter enabled");
     } else {
       LOG.warn("XSRF filter disabled");
@@ -240,39 +234,43 @@ public class Main {
     root.addServlet(h, "/" + SERVLET_PATH + "/*");
     // Add any redirects
     addRedirects(server);
+
+    // Set handling for low resource conditions.
+    final LowResourceMonitor low = new LowResourceMonitor(server);
+    low.setLowResourcesIdleTimeout(10000);
+    server.addBean(low);
+
     server.addConnector(createChannelConnector());
     // Start the server
     server.start();
-    this.server = server;
     return server;
   }
 
   /**
-   Create a channel connector for "http/https" requests
+   Create a channel connector for "http/https" requests.
    */
 
   private Connector createChannelConnector() throws IOException {
-    SelectChannelConnector connector;
+    ServerConnector connector;
+    final HttpConfiguration httpConf = new HttpConfiguration();
+    httpConf.setRequestHeaderSize(1024 * 64);
+    final HttpConnectionFactory http = new HttpConnectionFactory(httpConf);
+
     if (conf.getBoolean(AppConfig.USE_SSL, false)) {
       LOG.info("Using SSL for templeton.");
       SslContextFactory sslContextFactory = new SslContextFactory();
       initializeMapRSll(sslContextFactory);
-      Set<String> excludedSSLProtocols = Sets.newHashSet(
-          Splitter.on(",").trimResults().omitEmptyStrings().split(Strings.nullToEmpty(
-              conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
-      sslContextFactory.addExcludeProtocols(
-          excludedSSLProtocols.toArray(new String[excludedSSLProtocols.size()]));
-      connector = new SslSelectChannelConnector(sslContextFactory);
+      Set<String> excludedSSLProtocols = Sets.newHashSet(Splitter.on(",").trimResults().omitEmptyStrings()
+          .split(Strings.nullToEmpty(conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
+      sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(new String[excludedSSLProtocols.size()]));
+      connector = new ServerConnector(server, sslContextFactory, http);
     } else {
-      connector = new SelectChannelConnector();
+      connector = new ServerConnector(server, http);
     }
-    connector.setLowResourcesMaxIdleTime(10000);
-    connector.setResolveNames(false);
-    connector.setUseDirectBuffers(false);
-    connector.setReuseAddress(!Shell.WINDOWS);
+
+    connector.setReuseAddress(true);
     connector.setHost(conf.get(AppConfig.HOST, DEFAULT_HOST));
     connector.setPort(conf.getInt(AppConfig.PORT, DEFAULT_PORT));
-    connector.setRequestHeaderSize(1024 * 64);
     return connector;
   }
 

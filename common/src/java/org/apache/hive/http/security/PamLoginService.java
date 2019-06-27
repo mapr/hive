@@ -24,6 +24,7 @@ import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 
+import javax.servlet.ServletRequest;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -40,7 +41,7 @@ public class PamLoginService extends AbstractLifeCycle implements LoginService {
   }
 
   @Override
-  public UserIdentity login(String username, Object credentials) {
+  public UserIdentity login(String username, Object credentials, ServletRequest request) {
     UserIdentity user = users.get(username);
 
     if (user != null) {
@@ -64,7 +65,8 @@ public class PamLoginService extends AbstractLifeCycle implements LoginService {
 
   @Override
   public void setIdentityService(IdentityService identityService) {
-    if (isRunning()) throw new IllegalStateException("Running");
+    if (isRunning())
+      throw new IllegalStateException("Running");
     this.identityService = identityService;
   }
 

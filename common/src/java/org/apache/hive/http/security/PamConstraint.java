@@ -18,16 +18,16 @@ package org.apache.hive.http.security;
 
 import org.eclipse.jetty.util.security.Constraint;
 
-public class PamConstraint extends Constraint{
-  private static final String roles[] = {"pam"};
+public class PamConstraint extends Constraint {
+  private static final String[] roles = { "pam" };
 
-  public boolean getAuthenticate()
-  {
+  @Override
+  public boolean getAuthenticate() {
     return true;
   }
 
-  public String[] getRoles()
-  {
+  @Override
+  public String[] getRoles() {
     return roles;
   }
 }

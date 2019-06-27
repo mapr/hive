@@ -17,7 +17,7 @@
 package org.apache.hive.http.security;
 
 import com.mapr.login.PasswordAuthentication;
-import org.eclipse.jetty.http.HttpHeaders;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.security.UserAuthentication;
 import org.eclipse.jetty.security.authentication.DeferredAuthentication;
@@ -27,13 +27,26 @@ import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.StringUtil;
 
+import javax.security.sasl.AuthenticationException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+
+/*
+
+  This class authenticates HS2 web UI via PAM. To authenticate use
+
+   * httpGet with header name "Authorization"
+   * and header value "Basic authB64Code"
+
+    where  authB64Code is Base64 string for "login:password"
+ */
+
 public class PamAuthenticator extends LoginAuthenticator {
+
 
   @Override
   public String getAuthMethod() {
@@ -41,13 +54,15 @@ public class PamAuthenticator extends LoginAuthenticator {
   }
 
   @Override
-  public Authentication validateRequest(ServletRequest req, ServletResponse res, boolean mandatory) throws ServerAuthException {
+  public Authentication validateRequest(ServletRequest req, ServletResponse res, boolean mandatory)
+      throws ServerAuthException {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) res;
-    String credentials = request.getHeader(HttpHeaders.AUTHORIZATION);
+    String credentials = request.getHeader(HttpHeader.AUTHORIZATION.asString());
 
     try {
-      if (!mandatory) return _deferred;
+      if (!mandatory)
+        return new DeferredAuthentication(this);
 
       if (credentials != null) {
         int space = credentials.indexOf(' ');
@@ -63,7 +78,6 @@ public class PamAuthenticator extends LoginAuthenticator {
 
               UserIdentity user = login(username, password);
               if (user != null) {
-                renewSessionOnAuthentication(request, response);
                 return new UserAuthentication(getAuthMethod(), user);
               }
             }
@@ -71,9 +85,10 @@ public class PamAuthenticator extends LoginAuthenticator {
         }
       }
 
-      if (DeferredAuthentication.isDeferred(response)) return Authentication.UNAUTHENTICATED;
+      if (DeferredAuthentication.isDeferred(response))
+        return Authentication.UNAUTHENTICATED;
 
-      response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "basic realm=\"" + _loginService.getName() + '"');
+      response.setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), "basic realm=\"" + _loginService.getName() + '"');
       response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
       return Authentication.SEND_CONTINUE;
     } catch (IOException e) {
@@ -81,7 +96,7 @@ public class PamAuthenticator extends LoginAuthenticator {
     }
   }
 
-  protected UserIdentity login(String username, String password) {
+  protected UserIdentity login(String username, String password) throws AuthenticationException {
     UserIdentity user = null;
     if (PasswordAuthentication.authenticate(username, password)) {
       user = new PamUserIdentity(username);
@@ -90,7 +105,8 @@ public class PamAuthenticator extends LoginAuthenticator {
   }
 
   @Override
-  public boolean secureResponse(ServletRequest servletRequest, ServletResponse servletResponse, boolean b, Authentication.User user) throws ServerAuthException {
+  public boolean secureResponse(ServletRequest servletRequest, ServletResponse servletResponse, boolean b,
+      Authentication.User user) throws ServerAuthException {
     return true;
   }
 }
