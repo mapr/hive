@@ -428,9 +428,14 @@
       <version>${gson.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hive</groupId>
-      <artifactId>hive-maprdb-json-common</artifactId>
-      <version>${project.version}</version>
+      <groupId>com.mapr.db</groupId>
+      <artifactId>maprdb</artifactId>
+      <version>${mapr.release.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.mapr.db</groupId>
+      <artifactId>maprdb-mapreduce</artifactId>
+      <version>${mapr.release.version}</version>
     </dependency>
     <dependency>
       <groupId>com.tdunning</groupId>
