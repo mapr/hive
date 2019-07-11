@@ -721,8 +721,11 @@ public class HiveConf extends Configuration {
         "The service principal for the metastore Thrift server. \n" +
         "The special string _HOST will be replaced automatically with the correct host name."),
     METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled",
-        System.getProperty("mapr_sec_enabled") == null ? false : System.getProperty("mapr_sec_enabled"),
-        "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos."),
+        System.getProperty("mapr_sec_enabled") != null && Boolean.parseBoolean(System.getProperty("mapr_sec_enabled")),
+        "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos or MapRSASL."),
+    METASTORE_AUTHENTICATION("hive.metastore.authentication",
+        System.getProperty("metastore.auth") == null ? "NONE" : System.getProperty("metastore.auth"),
+        "Hive Metastore authentication type: NONE, KERBEROS, MAPRSASL"),
     METASTORE_USE_THRIFT_FRAMED_TRANSPORT("hive.metastore.thrift.framed.transport.enabled", false,
         "If true, the metastore Thrift interface will use TFramedTransport. When false (default) a standard TTransport is used."),
     METASTORE_USE_THRIFT_COMPACT_PROTOCOL("hive.metastore.thrift.compact.protocol.enabled", false,

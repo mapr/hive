@@ -429,12 +429,21 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
                     "DIGEST", tokenStrForm, transport,
                         MetaStoreUtils.getMetaStoreSaslProperties(conf));
               } else {
-                String principalConfig =
-                    conf.getVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL);
-                transport = authBridge.createClientTransport(
-                    principalConfig, store.getHost(), "KERBEROS", null,
-                    transport, MetaStoreUtils.getMetaStoreSaslProperties(conf));
-              }
+                AuthType authType = AuthType.parse(conf.getVar(HiveConf.ConfVars.METASTORE_AUTHENTICATION));
+                switch (authType) {
+                case KERBEROS:
+                  LOG.info("HMSC::open(): Could not find delegation token. Creating KERBEROS-based thrift connection.");
+                  String principalConfig = conf.getVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL);
+                  transport = authBridge
+                      .createClientTransport(principalConfig, store.getHost(), "KERBEROS", null, transport,
+                          MetaStoreUtils.getMetaStoreSaslProperties(conf));
+                  break;
+                case MAPRSASL:
+                  LOG.info("HMSC::open(): Creating MapR-SASL-based thrift connection");
+                  transport = authBridge.createClientTransport(null, null, "MAPRSASL", null, transport,
+                      MetaStoreUtils.getMetaStoreSaslProperties(conf));
+                  break;
+                }              }
             } catch (IOException ioe) {
               LOG.error("Couldn't create client transport", ioe);
               throw new MetaException(ioe.toString());
