@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.parse;
 import org.antlr.runtime.TokenRewriteStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.TransactionalValidationListener;
 import org.apache.hadoop.hive.metastore.Warehouse;
@@ -29,6 +30,8 @@ import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.QueryState;
+import org.apache.hadoop.hive.ql.exec.DeleteTask;
+import org.apache.hadoop.hive.ql.plan.DeleteWork;
 import org.apache.hadoop.hive.ql.hooks.Entity;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
@@ -40,18 +43,29 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import java.io.IOException;
 import java.util.*;
 
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.buildSetToDelete;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.buildSetToPreserve;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.buildSingleValueSetToDelete;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isDeleteAllClause;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isInListClause;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isNotInListClause;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isSingeEqualsClause;
+import static org.apache.hadoop.hive.ql.exec.TaskFactory.getAndIncrementId;
+import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_ALL_EXCEPT_IN_SET;
+import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_ALL_IN_SET;
+import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_SINGLE;
 
 /**
  * A subclass of the {@link SemanticAnalyzer} that just handles
- * update, delete and merge statements.  It works by rewriting the updates and deletes into insert
+ * update, delete and merge statements.  It works by rewriting the updates into insert
  * statements (since they are actually inserts) and then doing some patch up to make them work as
- * updates and deletes instead.
+ * updates instead.
  */
-public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
+public class MapRDbJsonUpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
 
   private boolean useSuper = false;
 
-  MapRDbJsonUpdateSemanticAnalyzer(QueryState queryState) throws SemanticException {
+  MapRDbJsonUpdateDeleteSemanticAnalyzer(QueryState queryState) throws SemanticException {
     super(queryState);
   }
 
@@ -63,7 +77,8 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
 
       switch (tree.getToken().getType()) {
         case HiveParser.TOK_DELETE_FROM:
-          throw new SemanticException("Deletes are not supported for MapR DB JSON tables");
+          analyzeDelete(tree);
+          break;
         case HiveParser.TOK_UPDATE_TABLE:
           analyzeUpdate(tree);
           break;
@@ -88,10 +103,92 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
     reparseAndSuperAnalyze(tree);
   }
 
+  /**
+   * Validates deletion statement and creates DeleteTask.
+   *
+   * @param tree abstract semantic tree node
+   */
   private void analyzeDelete(ASTNode tree) throws SemanticException {
-    currentOperation = Context.Operation.DELETE;
-    reparseAndSuperAnalyze(tree);
+    List<? extends Node> children = tree.getChildren();
+    ASTNode tableNode = (ASTNode) children.get(0);
+    String mapRDbTableName = getTableName(tableNode);
+    String columnId = getColumnId(tableNode);
+    DeleteTask deleteTask = new DeleteTask();
+    deleteTask.setId(String.format("Stage-%d", getAndIncrementId()));
+    getRootTasks().add(deleteTask);
+
+    if (isDeleteAllClause(children)) {
+      deleteTask.setWork(new DeleteWork(mapRDbTableName));
+      return;
+    }
+    if (isInListClause(children, columnId)) {
+      deleteTask.setWork(new DeleteWork(buildSetToDelete(children), mapRDbTableName, DELETE_ALL_IN_SET));
+      return;
+    }
+    if (isNotInListClause(children, columnId)) {
+      deleteTask.setWork(new DeleteWork(buildSetToPreserve(children), mapRDbTableName, DELETE_ALL_EXCEPT_IN_SET));
+      return;
+    }
+    if (isSingeEqualsClause(children, columnId)) {
+      deleteTask.setWork(new DeleteWork(buildSingleValueSetToDelete(children), mapRDbTableName, DELETE_SINGLE));
+      return;
+    }
+    throw new SemanticException(ErrorMsg.CONDITION_IS_NOT_SUPPORTED);
   }
+
+  /**
+   * Returns MapR DB JSON column Id name.
+   *
+   * @param tableNode abstract semantic tree node with type TOK_TABNAME
+   * @return MapR DB JSON column Id name.
+   * @throws SemanticException when can't find column name
+   */
+  private String getColumnId(ASTNode tableNode) throws SemanticException {
+    if (tableNode == null || tableNode.getChildren().isEmpty()) {
+      throw new SemanticException(ErrorMsg.AST_CONTAINS_NO_CHILDREN);
+    }
+    if (tableNode.getToken().getType() != HiveParser.TOK_TABNAME) {
+      throw new SemanticException(ErrorMsg.EXPECTED_TABLE_NAME, tableNode.getToken().getText());
+    }
+
+    Table table = getTable(((ASTNode)tableNode.getChildren().get(0)).getText());
+    if (table == null) {
+      throw new SemanticException(ErrorMsg.COLUMN_ID_IS_NOT_SET);
+    }
+    String mapRDbJsonTableName = table.getParameters().get(MapRDBConstants.MAPRDB_COLUMN_ID);
+    if (mapRDbJsonTableName == null || mapRDbJsonTableName.isEmpty()) {
+      throw new SemanticException(ErrorMsg.MAPR_DB_JSON_PARAMETER_IS_NOT_SET, MapRDBConstants.MAPRDB_COLUMN_ID);
+    }
+    return mapRDbJsonTableName;
+  }
+
+
+  /**
+   * Returns MapR DB JSON table name with full path.
+   *
+   * @param tableNode abstract semantic tree node with type TOK_TABNAME
+   * @return MapR DB JSON table name with full path
+   * @throws SemanticException when can't find table name
+   */
+  private String getTableName(ASTNode tableNode) throws SemanticException {
+    if (tableNode == null || tableNode.getChildren().isEmpty()) {
+      throw new SemanticException(ErrorMsg.AST_CONTAINS_NO_CHILDREN);
+    }
+    if (tableNode.getToken().getType() != HiveParser.TOK_TABNAME) {
+      throw new SemanticException(ErrorMsg.EXPECTED_TABLE_NAME, tableNode.getToken().getText());
+    }
+
+    Table table = getTable(((ASTNode)tableNode.getChildren().get(0)).getText());
+    if (table == null) {
+      throw new SemanticException(ErrorMsg.NO_MAPR_DB_JSON_TABLE);
+    }
+    String mapRDbJsonTableName = table.getParameters().get(MapRDBConstants.MAPRDB_TABLE_NAME);
+    if (mapRDbJsonTableName == null || mapRDbJsonTableName.isEmpty()) {
+      throw new SemanticException(String.format("Parameter %s is not set.", MapRDBConstants.MAPRDB_TABLE_NAME));
+    }
+    return mapRDbJsonTableName;
+  }
+
   /**
    * Append list of partition columns to Insert statement, i.e. the 2nd set of partCol1,partCol2
    * INSERT INTO T PARTITION(partCol1,partCol2...) SELECT col1, ... partCol1,partCol2...
@@ -631,7 +728,7 @@ public class MapRDbJsonUpdateSemanticAnalyzer extends SemanticAnalyzer {
           }
           break;
         case HiveParser.TOK_DELETE:
-          throw new SemanticException("Deletes are not supported for MapR DB JSON tables");
+          throw new SemanticException("Deletes are not supported for MapR DB JSON tables in MERGE operator");
         default:
           throw new IllegalStateException("Unexpected WHEN clause type: " + whenClause.getType() +
             addParseInfo(whenClause));

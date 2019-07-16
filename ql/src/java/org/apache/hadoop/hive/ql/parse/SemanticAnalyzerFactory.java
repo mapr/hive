@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.parse;
 
 import org.antlr.runtime.tree.Tree;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.MapRDbJsonUtils;
@@ -149,6 +150,7 @@ public final class SemanticAnalyzerFactory {
     commandType.put(HiveParser.TOK_CREATE_MAPPING, HiveOperation.CREATE_MAPPING);
     commandType.put(HiveParser.TOK_ALTER_MAPPING, HiveOperation.ALTER_MAPPING);
     commandType.put(HiveParser.TOK_DROP_MAPPING, HiveOperation.DROP_MAPPING);
+    commandType.put(HiveParser.TOK_DELETE_FROM, HiveOperation.DELETE);
   }
 
   static {
@@ -373,12 +375,12 @@ public final class SemanticAnalyzerFactory {
       case HiveParser.TOK_MERGE:
         HiveConf hiveConf = queryState.getConf();
         if (MapRDbJsonUtils.isMapRDbJsonTable(tree, hiveConf)) {
-          return new MapRDbJsonUpdateSemanticAnalyzer(queryState);
+          return new MapRDbJsonUpdateDeleteSemanticAnalyzer(queryState);
         }
         if (AcidUtils.isAcidTable(tree, hiveConf)) {
           return new UpdateDeleteSemanticAnalyzer(queryState);
         }
-        throw new SemanticException("Operation is not supported. Table is nor ACID neither MapRDbJSON");
+        throw new SemanticException(ErrorMsg.OPERATION_IS_NOT_SUPPORTED);
 
       case HiveParser.TOK_START_TRANSACTION:
       case HiveParser.TOK_COMMIT:

@@ -26,9 +26,9 @@ import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_IS_
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_TABLE_NAME;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
-@RunWith(Parameterized.class) public class MapRDbJsonUpdateSemanticAnalyzerTest extends BaseExplainTest {
+@RunWith(Parameterized.class) public class MapRDbJsonUpdateDeleteSemanticAnalyzerTest extends BaseExplainTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MapRDbJsonUpdateSemanticAnalyzerTest.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(MapRDbJsonUpdateDeleteSemanticAnalyzerTest.class.getName());
   private static final String CUSTOMER_DB_JSON_TARGET = "customer_db_json_target";
   private static final String CUSTOMER_DB_JSON_SOURCE = "customer_db_json_source";
   private static final String CUSTOMER_DB_JSON_ALL_TARGET = "customer_db_json_all_target";
@@ -36,7 +36,7 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
   private static final String CUSTOMER_WEST = "customer_west";
   private static final String CUSTOMER_EAST = "customer_east";
 
-  public MapRDbJsonUpdateSemanticAnalyzerTest(String query) {
+  public MapRDbJsonUpdateDeleteSemanticAnalyzerTest(String query) {
     this.query = query;
   }
 

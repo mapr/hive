@@ -153,8 +153,8 @@ public enum HiveOperation {
   DROP_POOL("DROP POOL", null, null, false, false),
   CREATE_MAPPING("CREATE MAPPING", null, null, false, false),
   ALTER_MAPPING("ALTER MAPPING", null, null, false, false),
-  DROP_MAPPING("DROP MAPPING", null, null, false, false);
-
+  DROP_MAPPING("DROP MAPPING", null, null, false, false),
+  DELETE("DELETE", new Privilege[] { Privilege.SELECT, Privilege.DELETE }, new Privilege[] {});
 
   private String operationName;
 
