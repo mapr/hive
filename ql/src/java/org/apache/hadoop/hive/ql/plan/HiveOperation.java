@@ -134,7 +134,8 @@ public enum HiveOperation {
   COMMIT("COMMIT", null, null, true, true),
   ROLLBACK("ROLLBACK", null, null, true, true),
   SET_AUTOCOMMIT("SET AUTOCOMMIT", null, null, true, false),
-  ABORT_TRANSACTIONS("ABORT TRANSACTIONS", null, null, false, false);
+  ABORT_TRANSACTIONS("ABORT TRANSACTIONS", null, null, false, false),
+  DELETE("DELETE", new Privilege[] { Privilege.SELECT, Privilege.DELETE }, new Privilege[] {});
 
   private String operationName;
 
