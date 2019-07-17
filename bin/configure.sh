@@ -675,7 +675,9 @@ fi
 # Sets default 0644 permissions to hive-site.xml
 #
 grant_permissions_to_hive_site(){
-chmod 0644 "$HIVE_SITE"
+if security_has_to_be_configured ; then
+  chmod 0644 "$HIVE_SITE"
+fi
 }
 
 #
