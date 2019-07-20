@@ -53,6 +53,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,12 +67,16 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTHENTICATION;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
-
+import static org.apache.hadoop.hive.conf.SecurityUtil.isCustomSecurityEnabled;
+import static org.apache.hadoop.hive.conf.SecurityUtil.isMapRSecurityEnabled;
+import static org.apache.hadoop.hive.conf.SecurityUtil.isNoSecurity;
 
 /**
  * Hive Configuration.
@@ -724,7 +729,7 @@ public class HiveConf extends Configuration {
         System.getProperty("mapr_sec_enabled") != null && Boolean.parseBoolean(System.getProperty("mapr_sec_enabled")),
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos or MapRSASL."),
     METASTORE_AUTHENTICATION("hive.metastore.authentication",
-        System.getProperty("metastore.auth") == null ? "NONE" : System.getProperty("metastore.auth"),
+        System.getProperty("metastore.auth") == null ? "" : System.getProperty("metastore.auth"),
         "Hive Metastore authentication type: NONE, KERBEROS, MAPRSASL"),
     METASTORE_USE_THRIFT_FRAMED_TRANSPORT("hive.metastore.thrift.framed.transport.enabled", false,
         "If true, the metastore Thrift interface will use TFramedTransport. When false (default) a standard TTransport is used."),
@@ -4056,19 +4061,56 @@ public class HiveConf extends Configuration {
     super();
     initialize(this.getClass());
     initializeMapRSll();
+    initializeMetaAuth();
   }
 
   public HiveConf(Class<?> cls) {
     super();
     initialize(cls);
     initializeMapRSll();
+    initializeMetaAuth();
   }
 
   public HiveConf(Configuration other, Class<?> cls) {
     super(other);
     initialize(cls);
     initializeMapRSll();
+    initializeMetaAuth();
   }
+
+  private void initializeMetaAuth() {
+    // Do not change hive.metastore.authentication if it already has been configured directly
+    if (!getVar(METASTORE_AUTHENTICATION).isEmpty()) {
+      return;
+    }
+    String hiveServer2Auth = getVar(HIVE_SERVER2_AUTHENTICATION).trim().toUpperCase();
+    // Hive configured to be MapR secure
+    if (isMapRSecurityEnabled()) {
+      if (Arrays.asList("LDAP", "PAM", "MAPRSASL").contains(hiveServer2Auth)) {
+        setVar(METASTORE_AUTHENTICATION, "MAPRSASL");
+        l4j.info("Default configuration for hive.metastore.authentication is MAPRSASL");
+        return;
+      }
+    }
+    // Hive configured to be custom (usually Kerberos) secure
+    if (isCustomSecurityEnabled()) {
+      if ("KERBEROS".equals(hiveServer2Auth)) {
+        setVar(METASTORE_AUTHENTICATION, "KERBEROS");
+        l4j.info("Default configuration for hive.metastore.authentication is KERBEROS");
+        return;
+      }
+    }
+    // Non secure configuration
+    if (isNoSecurity()) {
+      setVar(METASTORE_AUTHENTICATION, "NONE");
+      l4j.info("Default configuration for hive.metastore.authentication is NONE");
+      return;
+    }
+    l4j.warn(String.format(
+        "Unknown type of the hive.server2.authentication %s. Value for hive.metastore.authentication is not set",
+        hiveServer2Auth));
+  }
+
 
   /**
    * Copy constructor
@@ -4086,7 +4128,7 @@ public class HiveConf extends Configuration {
   }
 
   private void initializeMapRSll() {
-    if (isSecurityEnabled()) {
+    if (isMapRSecurityEnabled()) {
       configureSsl();
     }
   }

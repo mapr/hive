@@ -64,7 +64,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpServletRequest;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hadoop.hive.conf.SecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 /**
@@ -275,7 +275,7 @@ public class Main {
   }
 
   private static void initializeMapRSll(SslContextFactory sslContextFactory) throws IOException {
-    if (isSecurityEnabled()) {
+    if (isMapRSecurityEnabled()) {
       configureSsl(sslContextFactory);
     }
   }

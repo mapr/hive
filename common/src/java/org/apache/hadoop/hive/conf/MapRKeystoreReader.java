@@ -27,7 +27,6 @@ import com.mapr.web.security.WebSecurityManager;
  */
 
 public final class MapRKeystoreReader {
-  private static final String MAPR_SEC_ENABLED = "mapr_sec_enabled";
   private MapRKeystoreReader() {
   }
 
@@ -74,29 +73,5 @@ public final class MapRKeystoreReader {
     try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
       return new String(sslConfig.getClientTruststorePassword());
     }
-  }
-
-  /**
-   * Check if mapr security is enabled on the cluster.
-   * Value mapr_sec_enabled is set in $HIVE_BIN/hive script
-   * @return true if mapr security is enabled
-   */
-
-  public static boolean isSecurityEnabled() {
-    String mapRSecurityEnabled = System.getProperty(MAPR_SEC_ENABLED);
-    if (!isSecurityFlagSet()) {
-      return false;
-    }
-    return "true".equalsIgnoreCase(mapRSecurityEnabled.trim());
-  }
-
-  /**
-   * Checks if security flag is set and has non empty value.
-   * @return true if security flag is set and has non empty value
-   */
-
-  public static boolean isSecurityFlagSet() {
-    String mapRSecurityEnabled = System.getProperty(MAPR_SEC_ENABLED);
-    return mapRSecurityEnabled != null && !mapRSecurityEnabled.isEmpty();
   }
 }
