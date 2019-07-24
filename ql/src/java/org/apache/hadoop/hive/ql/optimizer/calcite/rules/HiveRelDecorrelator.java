@@ -838,7 +838,7 @@ public final class HiveRelDecorrelator implements ReflectiveVisitor {
     if (!omittedConstants.isEmpty()) {
       final List<RexNode> postProjects = new ArrayList<>(relBuilder.fields());
       for (Map.Entry<Integer, RexLiteral> entry
-          : omittedConstants.descendingMap().entrySet()) {
+          : omittedConstants.entrySet()) {
         postProjects.add(entry.getKey() + frame.corDefOutputs.size(),
             entry.getValue());
       }
