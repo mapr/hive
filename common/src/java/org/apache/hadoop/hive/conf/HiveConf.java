@@ -70,6 +70,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTHENTICATION;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
@@ -4092,6 +4093,12 @@ public class HiveConf extends Configuration {
         return;
       }
     }
+    // If user enables Sasl for Metastore we expect it to be MapR Sasl.
+    if (isMetaStoreSaslEnabled()) {
+      setVar(METASTORE_AUTHENTICATION, "MAPRSASL");
+      l4j.info("Default configuration for hive.metastore.authentication is MAPRSASL");
+      return;
+    }
     // Hive configured to be custom (usually Kerberos) secure
     if (isCustomSecurityEnabled()) {
       if ("KERBEROS".equals(hiveServer2Auth)) {
@@ -4111,6 +4118,15 @@ public class HiveConf extends Configuration {
         hiveServer2Auth));
   }
 
+  /**
+   * Checks if Metastore is secure.
+   * If MetaStore is secured we expect it to be MapR Sasl, (not Kerberos) by default.
+   *
+   * @return true if configured to be secure
+   */
+  private boolean isMetaStoreSaslEnabled(){
+    return getBoolVar(METASTORE_USE_THRIFT_SASL);
+  }
 
   /**
    * Copy constructor
