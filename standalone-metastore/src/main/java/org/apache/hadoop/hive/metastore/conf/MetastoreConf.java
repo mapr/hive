@@ -50,6 +50,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.METASTORE_AUTHENTICATION;
+import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.USE_THRIFT_SASL;
+
 /**
  * A set of definitions of config values used by the Metastore.  One of the key aims of this
  * class is to provide backwards compatibility with existing Hive configuration keys while
@@ -852,7 +855,7 @@ public class MetastoreConf {
     USE_THRIFT_SASL("metastore.sasl.enabled", "hive.metastore.sasl.enabled", System.getProperty("mapr_sec_enabled") != null && Boolean.parseBoolean(System.getProperty("mapr_sec_enabled")),
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos or MapRSASL."),
     METASTORE_AUTHENTICATION("metastore.authentication", "hive.metastore.authentication",
-        System.getProperty("metastore.auth") == null ? "NONE" : System.getProperty("metastore.auth"),
+        System.getProperty("metastore.auth") == null ? "" : System.getProperty("metastore.auth"),
         "Hive Metastore authentication type: NONE, KERBEROS, MAPRSASL"),
     USE_THRIFT_FRAMED_TRANSPORT("metastore.thrift.framed.transport.enabled",
         "hive.metastore.thrift.framed.transport.enabled", false,
@@ -1212,7 +1215,30 @@ public class MetastoreConf {
         LOG.isDebugEnabled()) {
       LOG.debug(dumpConfig(conf));
     }
+    initializeMetaAuth(conf);
     return conf;
+  }
+
+  private static void initializeMetaAuth(Configuration conf) {
+    // Do not change metastore.authentication if it already has been configured directly
+    if (!getVar(conf, METASTORE_AUTHENTICATION).isEmpty()) {
+      return;
+    }
+    // If user enables Sasl for Metastore we expect it to be MapR Sasl.
+    if (isMetaStoreSaslEnabled(conf)) {
+      setVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
+      LOG.info("Default configuration for hive.metastore.authentication is MAPRSASL");
+    }
+  }
+
+  /**
+   * Checks if Metastore is secure.
+   * If MetaStore is secured we expect it to be MapR Sasl, (not Kerberos) by default.
+   *
+   * @return true if configured to be secure
+   */
+  private static boolean isMetaStoreSaslEnabled(Configuration conf){
+    return getBoolVar(conf, USE_THRIFT_SASL);
   }
 
   private static URL findConfigFile(ClassLoader classLoader, String name) {
