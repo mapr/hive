@@ -75,9 +75,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
+
 /**
  * The main executable that starts up and runs the Server.
  */
@@ -284,7 +285,7 @@ import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePa
   }
 
   private static void initializeMapRSll(SslContextFactory sslContextFactory) throws IOException {
-    if (isSecurityEnabled()) {
+    if (isMapRSecurityEnabled()) {
       configureSsl(sslContextFactory);
     }
   }

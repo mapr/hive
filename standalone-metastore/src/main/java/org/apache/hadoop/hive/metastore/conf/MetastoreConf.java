@@ -52,6 +52,9 @@ import java.util.regex.Pattern;
 
 import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.METASTORE_AUTHENTICATION;
 import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.USE_THRIFT_SASL;
+import static org.apache.hive.common.util.MapRSecurityUtil.isCustomSecurityEnabled;
+import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
+import static org.apache.hive.common.util.MapRSecurityUtil.isNoSecurity;
 
 /**
  * A set of definitions of config values used by the Metastore.  One of the key aims of this
@@ -1224,11 +1227,30 @@ public class MetastoreConf {
     if (!getVar(conf, METASTORE_AUTHENTICATION).isEmpty()) {
       return;
     }
+    // Hive configured to be MapR secure
+    if (isMapRSecurityEnabled()) {
+        setVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
+        LOG.info("Default configuration for hive.metastore.authentication is MAPRSASL");
+        return;
+    }
     // If user enables Sasl for Metastore we expect it to be MapR Sasl.
     if (isMetaStoreSaslEnabled(conf)) {
       setVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
       LOG.info("Default configuration for hive.metastore.authentication is MAPRSASL");
     }
+    // Hive configured to be custom (usually Kerberos) secure
+    if (isCustomSecurityEnabled()) {
+      setVar(conf, METASTORE_AUTHENTICATION, "KERBEROS");
+      LOG.info("Default configuration for hive.metastore.authentication is KERBEROS");
+      return;
+    }
+    // Non secure configuration
+    if (isNoSecurity()) {
+      setVar(conf, METASTORE_AUTHENTICATION, "NONE");
+      LOG.info("Default configuration for hive.metastore.authentication is NONE");
+      return;
+    }
+    LOG.warn("Value for metastore.authentication is not set");
   }
 
   /**

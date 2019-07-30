@@ -69,7 +69,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.isSecurityEnabled;
+import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
@@ -5151,7 +5151,7 @@ public class HiveConf extends Configuration {
   }
 
   private void initializeMapRSll() {
-    if (isSecurityEnabled()) {
+    if (isMapRSecurityEnabled()) {
       configureSsl();
     }
   }
