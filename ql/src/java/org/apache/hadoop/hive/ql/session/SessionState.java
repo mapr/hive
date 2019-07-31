@@ -714,9 +714,6 @@ public class SessionState {
     Path rootHDFSDirPath = createRootHDFSDir(conf);
     // Now create session specific dirs
     String scratchDirPermission = HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIRPERMISSION);
-    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
-      scratchDirPermission = "777";
-    }
     Path path;
     // 1. HDFS scratch dir
     path = new Path(rootHDFSDirPath, userName);
