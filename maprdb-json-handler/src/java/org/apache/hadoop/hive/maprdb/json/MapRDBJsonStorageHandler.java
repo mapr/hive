@@ -114,7 +114,8 @@ public class MapRDBJsonStorageHandler extends DefaultStorageHandler implements H
 
   @Override public void configureJobConf(TableDesc tableDesc, JobConf jobConf) {
     try {
-      MapRDbFileUtil.addDependencyJars(jobConf, MapRDBJsonStorageHandler.class);
+      MapRDbFileUtil.addDependencyJars(jobConf, HiveMapRDBJsonInputFormat.class);
+      MapRDbFileUtil.addDependencyJars(jobConf, HiveMapRDBJsonOutputFormat.class);
     } catch (IOException e) {
       LOG.warn("Can't set properties for job", e);
     }

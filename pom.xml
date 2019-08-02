@@ -41,6 +41,7 @@
     <module>contrib</module>
     <module>druid-handler</module>
     <module>hbase-handler</module>
+    <module>hive-maprdb-json-common</module>
     <module>maprdb-json-handler</module>
     <module>jdbc-handler</module>
     <module>hcatalog</module>
