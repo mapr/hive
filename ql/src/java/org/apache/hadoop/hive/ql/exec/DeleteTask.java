@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.plan.api.StageType;
 import org.apache.hadoop.hive.ql.plan.DeleteWork;
 import org.ojai.Document;
 import org.ojai.DocumentStream;
+import org.ojai.Value;
 
 import java.io.Serializable;
 
@@ -38,34 +39,47 @@ import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.buildQ
 public class DeleteTask extends Task<DeleteWork> implements Serializable {
 
   @Override protected int execute(DriverContext driverContext) {
-    String mapRDbTableName = work.getMapRDbTableName();
+    String targetMapRDbTableName = work.getTargetMapRDbTableName();
+    String sourceMapRDbTableName = work.getSourceMapRDbTableName();
     switch (work.getDeleteOperation()) {
     case DELETE_ALL:
       try (Admin admin = MapRDB.newAdmin()) {
-        if (admin.tableExists(mapRDbTableName)) {
-          admin.deleteTable(mapRDbTableName);
-          admin.createTable(mapRDbTableName);
+        if (admin.tableExists(targetMapRDbTableName)) {
+          admin.deleteTable(targetMapRDbTableName);
+          admin.createTable(targetMapRDbTableName);
         }
       }
       return 0;
     case DELETE_ALL_IN_SET:
-      try (Table table = MapRDBImpl.getTable(mapRDbTableName)) {
+      try (Table table = MapRDBImpl.getTable(targetMapRDbTableName)) {
         for (String id : work.getValues()) {
           table.delete(id);
         }
       }
       return 0;
     case DELETE_ALL_EXCEPT_IN_SET:
-      try (Table table = MapRDBImpl.getTable(mapRDbTableName); DocumentStream documentStream = table
+      try (Table table = MapRDBImpl.getTable(targetMapRDbTableName); DocumentStream documents = table
           .find(buildQueryCondition(work.getValues()))) {
-        for (Document document : documentStream) {
+        for (Document document : documents) {
           table.delete(document);
         }
         return 0;
       }
     case DELETE_SINGLE:
-      try (Table table = MapRDBImpl.getTable(mapRDbTableName)) {
+      try (Table table = MapRDBImpl.getTable(targetMapRDbTableName)) {
           table.delete(work.getValue());
+      }
+      return 0;
+    case DELETE_WHEN_MATCHED:
+      try (Table targetTable = MapRDBImpl.getTable(targetMapRDbTableName); Table sourceTable = MapRDBImpl
+          .getTable(sourceMapRDbTableName); DocumentStream targetDocs = targetTable.find()) {
+        for (Document targetDoc : targetDocs) {
+          Document sourceDoc = sourceTable.findById(targetDoc.getId());
+          boolean sourceDocExists = sourceDoc != null;
+          if (sourceDocExists && sourceDoc.equals(targetDoc)) {
+            targetTable.delete(targetDoc);
+          }
+        }
       }
       return 0;
     }

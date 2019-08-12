@@ -1,0 +1,4 @@
+MERGE INTO tgt
+USING src ON tgt.id=src.id
+WHEN MATCHED AND tgt.id <> "123" THEN DELETE
+WHEN NOT MATCHED THEN INSERT VALUES (src.id, src.value)

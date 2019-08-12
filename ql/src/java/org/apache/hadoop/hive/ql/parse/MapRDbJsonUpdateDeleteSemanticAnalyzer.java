@@ -50,10 +50,15 @@ import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isDele
 import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isInListClause;
 import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isNotInListClause;
 import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isSingeEqualsClause;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isSubQuery;
+import static org.apache.hadoop.hive.maprdb.json.util.MapRDbJsonParseUtil.isWhenMatchedDeleteClause;
 import static org.apache.hadoop.hive.ql.exec.TaskFactory.getAndIncrementId;
+import static org.apache.hadoop.hive.ql.io.MapRDbJsonUtils.getMapRDbTableName;
+import static org.apache.hadoop.hive.ql.io.MapRDbJsonUtils.isMapRDbJsonTable;
 import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_ALL_EXCEPT_IN_SET;
 import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_ALL_IN_SET;
 import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_SINGLE;
+import static org.apache.hadoop.hive.ql.plan.DeleteWork.DeleteOperation.DELETE_WHEN_MATCHED;
 
 /**
  * A subclass of the {@link SemanticAnalyzer} that just handles
@@ -182,7 +187,7 @@ public class MapRDbJsonUpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     if (table == null) {
       throw new SemanticException(ErrorMsg.NO_MAPR_DB_JSON_TABLE);
     }
-    String mapRDbJsonTableName = table.getParameters().get(MapRDBConstants.MAPRDB_TABLE_NAME);
+    String mapRDbJsonTableName = getMapRDbTableName(table);
     if (mapRDbJsonTableName == null || mapRDbJsonTableName.isEmpty()) {
       throw new SemanticException(String.format("Parameter %s is not set.", MapRDBConstants.MAPRDB_TABLE_NAME));
     }
@@ -714,6 +719,8 @@ public class MapRDbJsonUpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     String extraPredicate = null;
     int numWhenMatchedUpdateClauses = 0, numWhenMatchedDeleteClauses = 0;
     int numInsertClauses = 0;
+    boolean useOptimizedDelete = false;
+    DeleteTask deleteTask = new DeleteTask();
     for(ASTNode whenClause : whenClauses) {
       switch (getWhenClauseOperation(whenClause).getType()) {
         case HiveParser.TOK_INSERT:
@@ -728,7 +735,24 @@ public class MapRDbJsonUpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
           }
           break;
         case HiveParser.TOK_DELETE:
-          throw new SemanticException("Deletes are not supported for MapR DB JSON tables in MERGE operator");
+          if(isSubQuery(source)) {
+            throw new SemanticException("Sub queries are not supported as a source when DELETE is used.");
+          }
+          Table sourceTable = getTargetTable(source);
+          if (!isMapRDbJsonTable(sourceTable)) {
+            throw new SemanticException(
+                "Source table should be MapR DB JSON table when deletion is used in MERGE operator.");
+          }
+          if (!isWhenMatchedDeleteClause(whenClause)) {
+            throw new SemanticException(
+                "Delete operator is not supported with additional conditions after WHEN MATCHED. Use either single UPDATE or DELETE.");
+          }
+          deleteTask.setId(String.format("Stage-%d", getAndIncrementId()));
+          if (whenClause.getType() == HiveParser.TOK_MATCHED) {
+            deleteTask.setWork(new DeleteWork(getMapRDbTableName(targetTable), getMapRDbTableName(sourceTable)));
+            useOptimizedDelete = true;
+          }
+          break;
         default:
           throw new IllegalStateException("Unexpected WHEN clause type: " + whenClause.getType() +
             addParseInfo(whenClause));
@@ -778,6 +802,9 @@ public class MapRDbJsonUpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     try {
       useSuper = true;
       super.analyze(rewrittenTree, rewrittenCtx);
+      if (useOptimizedDelete) {
+        getRootTasks().add(deleteTask);
+      }
     } finally {
       useSuper = false;
     }

@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.plan;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,34 +30,48 @@ import java.util.Set;
 @Explain(displayName = "Deletion from MapR DB Json Table", explainLevels = { Explain.Level.USER, Explain.Level.DEFAULT,
     Explain.Level.EXTENDED }) public class DeleteWork implements Serializable {
   private final Set<String> values;
-  private final String mapRDbTableName;
+  private final String targetMapRDbTableName;
+  private final String sourceMapRDbTableName;
   private final DeleteOperation deleteOperation;
 
   /**
    * List of supported conditions of WHERE close while deleting a row from MapR Db Json table.
    */
   public enum DeleteOperation {
-    DELETE_ALL, DELETE_ALL_IN_SET, DELETE_ALL_EXCEPT_IN_SET, DELETE_SINGLE
+    DELETE_ALL, DELETE_ALL_IN_SET, DELETE_ALL_EXCEPT_IN_SET, DELETE_SINGLE, DELETE_WHEN_MATCHED
   }
 
-  public DeleteWork(String mapRDbTableName) {
+  public DeleteWork(String targetMapRDbTableName) {
     this.values = new HashSet<>();
-    this.mapRDbTableName = mapRDbTableName;
+    this.targetMapRDbTableName = targetMapRDbTableName;
+    this.sourceMapRDbTableName = "";
     deleteOperation = DeleteOperation.DELETE_ALL;
   }
 
-  public DeleteWork(Set<String> values, String mapRDbTableName, DeleteOperation deleteOperation) {
+  public DeleteWork(Set<String> values, String targetMapRDbTableName, DeleteOperation deleteOperation) {
     this.values = values;
-    this.mapRDbTableName = mapRDbTableName;
+    this.targetMapRDbTableName = targetMapRDbTableName;
+    this.sourceMapRDbTableName = "";
     this.deleteOperation = deleteOperation;
+  }
+
+  public DeleteWork(String targetMapRDbTableName, String sourceMapRDbTableName) {
+    this.values = Collections.unmodifiableSet(new HashSet<String>());
+    this.targetMapRDbTableName = targetMapRDbTableName;
+    this.sourceMapRDbTableName = sourceMapRDbTableName;
+    this.deleteOperation = DeleteOperation.DELETE_WHEN_MATCHED;
   }
 
   public Set<String> getValues() {
     return values;
   }
 
-  public String getMapRDbTableName() {
-    return mapRDbTableName;
+  public String getTargetMapRDbTableName() {
+    return targetMapRDbTableName;
+  }
+
+  public String getSourceMapRDbTableName() {
+    return sourceMapRDbTableName;
   }
 
   public DeleteOperation getDeleteOperation() {
