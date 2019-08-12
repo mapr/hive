@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.io;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -92,5 +93,14 @@ public final class MapRDbJsonUtils {
     LOG.debug(format("Input File Format class name is %s", inputFileFormatClassName));
     LOG.debug(format("Output File Format class name is %s", outputFileFormatClassName));
     return MAPR_DB_JSON_INPUT_FORMAT.equals(inputFileFormatClassName) && MAPR_DB_JSON_OUTPUT_FORMAT.equals(outputFileFormatClassName);
+  }
+
+  /**
+   * Returns full name of MapR Db Json table in MapR FS
+   * @param table table object
+   * @return full name of MapR Db Json table in MapR FS
+   */
+  public static String getMapRDbTableName(Table table){
+    return table.getParameters().get(MapRDBConstants.MAPRDB_TABLE_NAME);
   }
 }

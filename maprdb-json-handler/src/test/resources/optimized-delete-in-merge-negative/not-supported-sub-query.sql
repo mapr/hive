@@ -1,0 +1,4 @@
+MERGE INTO tgt
+USING (SELECT * FROM scr WHERE id <> "123") sub ON tgt.id=sub.id
+WHEN MATCHED THEN DELETE
+WHEN NOT MATCHED THEN INSERT VALUES (sub.id, sub.value)

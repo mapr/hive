@@ -342,6 +342,42 @@ public final class MapRDbJsonParseUtil {
   }
 
   /**
+   * Checks if WHEN clause of MERGE statement has needed structure.
+   *
+   * TOK_MATCHED
+   * |
+   * +--- TOK_DELETE
+   *
+   * to prevent unsupported condition like this
+   *
+   * WHEN MATCHED AND <boolean expression> THEN DELETE
+   *
+   * @param node abstract semantic tree node
+   * @return true if the we have clause WHEN MATCHED THEN DELETE (without boolean expression)
+   */
+  public static boolean isWhenMatchedDeleteClause(ASTNode node){
+    List<Node> children = node.getChildren();
+    if (children.isEmpty()) {
+      return false;
+    }
+    ASTNode deleteNode = (ASTNode) children.get(0);
+    if (deleteNode.getType() != HiveParser.TOK_DELETE) {
+      return false;
+    }
+    return children.size() == 1;
+  }
+
+  /**
+   * Check if the node represents a subquery.
+   *
+   * @param node abstract semantic tree node
+   * @return true if the node represents a subquery
+   */
+  public static boolean isSubQuery(ASTNode node){
+    return node.getType() == HiveParser.TOK_SUBQUERY;
+  }
+
+  /**
    * Removes single and double quotes from string.
    *
    * @param value string to remove quotes from
