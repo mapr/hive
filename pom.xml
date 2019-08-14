@@ -148,7 +148,7 @@
     <hadoop.version>2.7.4.0-mapr-1908-SNAPSHOT</hadoop.version>
     <hadoop.bin.path>${basedir}/${hive.path.to.root}/testutils/hadoop</hadoop.bin.path>
     <hamcrest.version>1.1</hamcrest.version>
-    <hbase.version>1.1.13-mapr-SNAPSHOT</hbase.version>
+    <hbase.version>1.1.13.0-mapr-SNAPSHOT</hbase.version>
     <!-- required for logging test to avoid including hbase which pulls disruptor transitively -->
     <disruptor.version>3.3.0</disruptor.version>
     <hikaricp.version>2.5.1</hikaricp.version>

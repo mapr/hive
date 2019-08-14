@@ -82,6 +82,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.yammer.metrics.core.MetricsRegistry;
+import static org.apache.hadoop.hbase.client.ConnectionFactory.isMapRDBOnlyCluster;
+
 
 /**
  * HBaseStorageHandler provides a HiveStorageHandler implementation for
@@ -481,7 +483,7 @@ public class HBaseStorageHandler extends DefaultStorageHandler
   }
 
   private void addHBaseDelegationToken(Configuration conf) throws IOException {
-    if (User.isHBaseSecurityEnabled(conf)) {
+    if (User.isHBaseSecurityEnabled(conf) && !isMapRDBOnlyCluster(conf)) {
       HConnection conn = HConnectionManager.createConnection(conf);
       try {
         User curUser = User.getCurrent();
