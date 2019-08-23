@@ -137,29 +137,25 @@ fi
 }
 
 #
-# Saves security flag to file "$HIVE_BIN"/isSecure
+# Saves authentication method to file "$HIVE_CONF"/.authMethod
 #
-save_security_flag() {
-# isSecure is set in server/configure.sh
-if [ -n "$isSecure" ]; then
-  echo "$isSecure" > "$HIVE_BIN"/isSecure
+save_auth_method_flag() {
+if [ -n "$authMethod" ]; then
+  echo "$authMethod" > "$HIVE_CONF"/.authMethod
 else
-  if isSecurityEnabled 2>/dev/null; then
-    echo true > "$HIVE_BIN"/isSecure
-  else
-    echo false > "$HIVE_BIN"/isSecure
-  fi
+  authMethod=$(. "${HIVE_BIN}"/conftool -getAuthMethod)
+  echo "$authMethod" > "$HIVE_CONF"/.authMethod
 fi
 }
 
 #
-# Backup security flag to file "$HIVE_BIN"/isSecure.backup
+# Backup authentication method to file "$HIVE_CONF"/.authMethod.backup
 #
-backup_security_flag() {
-if [ -f "$HIVE_BIN"/isSecure ] ; then
-  cp "$HIVE_BIN"/isSecure "$HIVE_BIN"/isSecure.backup
+backup_auth_method_flag() {
+if [ -f "$HIVE_CONF"/.authMethod ] ; then
+  cp "$HIVE_CONF"/.authMethod "$HIVE_CONF"/.authMethod.backup
 else
-  touch "$HIVE_BIN"/isSecure.backup
+  touch "$HIVE_CONF"/.authMethod.backup
 fi
 }
 
@@ -169,10 +165,10 @@ fi
 # user turns on security (security OFF --> security ON) then method returns true
 # and false otherwise. This method is used for triggering security related configuration
 #
-is_security_changed(){
-security_backup=$(cat "$HIVE_BIN"/isSecure.backup)
-current_security=$(cat "$HIVE_BIN"/isSecure)
-if [ "$security_backup" = "$current_security" ] ; then
+is_auth_method_changed(){
+auth_method_backup=$(cat "$HIVE_CONF"/.authMethod.backup)
+current_auth_method=$(cat "$HIVE_CONF"/.authMethod)
+if [ "$auth_method_backup" = "$current_auth_method" ] ; then
   return 1; # 1 = false
 else
   return 0; # 0 = true
@@ -196,7 +192,7 @@ fi
 # or if hive was not configured yet.
 #
 security_has_to_be_configured(){
-if ( is_security_changed || is_hive_not_configured_yet ) && ! is_custom_security ; then
+if ( is_auth_method_changed || is_hive_not_configured_yet ) && ! is_custom_security ; then
   return 0; # 0 = true
 else
   return 1; # 1 = false
@@ -205,10 +201,10 @@ fi
 
 configure_security(){
 HIVE_SITE="$1"
-isSecure="$2"
+authMethod="$2"
 
 if security_has_to_be_configured ; then
-  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-maprsasl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -authMethod "$authMethod"
 fi
 }
 
@@ -217,10 +213,10 @@ fi
 #
 configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
-isSecure="$2"
+authMethod="$2"
 
 if security_has_to_be_configured ; then
-  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-webuipamssl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-webuipamssl" -authMethod "$authMethod"
 fi
 }
 
@@ -229,9 +225,10 @@ fi
 #
 configure_webhcat_ssl(){
 WEBHCAT_SITE="$1"
-isSecure="$2"
+authMethod="$2"
+
 if security_has_to_be_configured ;  then
-  . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -authMethod "$authMethod"
 fi
 }
 
@@ -240,9 +237,10 @@ fi
 #
 configure_hs2_ssl(){
 HIVE_SITE="$1"
-isSecure="$2"
+authMethod="$2"
+
 if security_has_to_be_configured ; then
-  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -authMethod "$authMethod"
 fi
 }
 
@@ -251,9 +249,10 @@ fi
 #
 configure_hmeta_ssl(){
 HIVE_SITE="$1"
-isSecure="$2"
+authMethod="$2"
+
 if security_has_to_be_configured ; then
-  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hmetassl" -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hmetassl" -authMethod "$authMethod"
 fi
 }
 
@@ -657,9 +656,9 @@ fi
 # Set 777 permissions to /user/hive/warehouse folder to enable creation of tables by other users
 #
 configure_impersonation(){
-isSecure="$1"
+authMethod="$1"
 if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-  if [ "${isSecure}" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
+  if [ "${authMethod}" = "maprsasl" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
     export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
   fi
   if is_hive_not_configured_yet ; then
@@ -687,9 +686,10 @@ fi
 
 configure_restricted_list(){
 HIVE_SITE="$1"
-isSecure="$2"
+authMethod="$2"
+
 if security_has_to_be_configured ; then
-  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -restrictedList -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -restrictedList -authMethod "$authMethod"
 fi
 }
 
@@ -699,9 +699,10 @@ fi
 
 configure_fallback_authorizer(){
 HIVE_SITE="$1"
-isSecure="$2"
+authMethod="$2"
+
 if security_has_to_be_configured ; then
-  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -fallBackAuthorizer -security "$isSecure"
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -fallBackAuthorizer -authMethod "$authMethod"
 fi
 }
 
@@ -768,9 +769,9 @@ grant_write_permission_in_logs_dir
 configure_users_in_admin_role(){
   HIVE_SITE="$1"
   ADMIN_USER="$2"
-  isSecure="$3"
+  authMethod="$3"
   if security_has_to_be_configured ; then
-  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -adminUser "$ADMIN_USER" -security "$isSecure"
+  . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -adminUser "$ADMIN_USER" -authMethod "$authMethod"
   fi
 }
 
@@ -835,6 +836,8 @@ if [ $# -gt 0 ]; then
   fi
   eval set -- "$OPTS"
 
+  authMethod=$(. "${HIVE_BIN}"/conftool -getAuthMethod)
+
   while (( "$#" )); do
     case "$1" in
       --EC|-C)
@@ -870,19 +873,12 @@ if [ $# -gt 0 ]; then
         shift 1
         ;;
       --secure|-s)
-          isSecure="true"
           shift 1;;
       --customSecure|-c)
-          if is_hive_not_configured_yet ; then
-            # If the file exist and our configure.sh is passed --customSecure, then we need to
-            # translate this to doing what we normally do for --secure (best we can do)
-            isSecure="true"
-          else
-            isSecure="custom"
-          fi
+          shift 1;;
+      --kerberosEnable|-K)
           shift 1;;
       --unsecure|-u)
-          isSecure="false"
           shift 1;;
       --help|-h)
           echo -e "${USAGE}"
@@ -903,31 +899,31 @@ init_backup
 
 backup_configuration
 
-backup_security_flag
+backup_auth_method_flag
 
 find_mapr_user_and_group
 
-save_security_flag
+save_auth_method_flag
 
-configure_security "$HIVE_SITE" "$isSecure"
+configure_security "$HIVE_SITE" "$authMethod"
 
-configure_impersonation "$isSecure"
+configure_impersonation "$authMethod"
 
-configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$isSecure"
+configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$authMethod"
 
-configure_webhcat_ssl "$WEBHCAT_SITE" "$isSecure"
+configure_webhcat_ssl "$WEBHCAT_SITE" "$authMethod"
 
-configure_hs2_ssl "$HIVE_SITE" "$isSecure"
+configure_hs2_ssl "$HIVE_SITE" "$authMethod"
 
 # Comment out according MAPR-HIVE-507 : hive.metastore.use.SSL should be set to false by default
 # TODO: uncomment after hive.metastore.use.SSL back-porting to Hive-1.2 Spark branch
-# configure_hmeta_ssl "$HIVE_SITE" "$isSecure"
+# configure_hmeta_ssl "$HIVE_SITE" "$authMethod"
 
-configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$isSecure"
+configure_users_in_admin_role "$HIVE_SITE" "$MAPR_USER" "$authMethod"
 
-configure_restricted_list "$HIVE_SITE" "$isSecure"
+configure_restricted_list "$HIVE_SITE" "$authMethod"
 
-configure_fallback_authorizer "$HIVE_SITE" "$isSecure"
+configure_fallback_authorizer "$HIVE_SITE" "$authMethod"
 
 init_derby_schema
 

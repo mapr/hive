@@ -76,22 +76,23 @@ final class ConfTool {
   private static final String EMPTY = "";
 
   /**
-   * Enables/disable Mapr-Sasl security for Hive.
+   * Configures MetaStore authentication.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod authentication method
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setMaprSasl(Document doc, Security security) {
-    switch (security) {
+  static void setMetaStoreUseThriftSasl(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
-      LOG.info("Configuring Hive for MAPR-SASL");
+    case KERBEROS:
+      LOG.info(String.format("Configuring Hive for %s", authMethod));
       set(doc, METASTORE_USE_THRIFT_SASL, TRUE);
       break;
     case NONE:
@@ -104,21 +105,21 @@ final class ConfTool {
   }
 
   /**
-   * Enables/disable Mapr-Sasl security for Hive.
+   * Configures MetaStore authentication.
    *
    * @param pathToHiveSite hive-site location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod authentication method
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setMaprSasl(String pathToHiveSite, Security security)
+  static void setMetaStoreUseThriftSasl(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    setMaprSasl(doc, security);
+    setMetaStoreUseThriftSasl(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -127,15 +128,15 @@ final class ConfTool {
    * just removes property from hive-site.xml since it has default true value.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setMetaStoreUgi(Document doc, Security security) {
-    switch (security) {
+  static void setMetaStoreUgi(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -157,17 +158,17 @@ final class ConfTool {
    * just removes property from hive-site.xml since it has default true value.
    *
    * @param pathToHiveSite  hive-site location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setMetaStoreUgi(String pathToHiveSite, Security security)
+  static void setMetaStoreUgi(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
-    setMetaStoreUgi(doc, security);
+    setMetaStoreUgi(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -175,14 +176,14 @@ final class ConfTool {
    * Configures hive.security.metastore.authorization.manager property to use StorageBasedAuthorizationProvider if secure
    * or remove this property if not secure.
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setMetaStoreAuthManager(Document doc, Security security) {
-    switch (security) {
+  static void setMetaStoreAuthManager(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -202,17 +203,17 @@ final class ConfTool {
    * Configures hive.security.metastore.authorization.manager property to use StorageBasedAuthorizationProvider if secure
    * or remove this property if not secure.
    * @param pathToHiveSite hive-site location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setMetaStoreAuthManager(String pathToHiveSite, Security security)
+  static void setMetaStoreAuthManager(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    setMetaStoreAuthManager(doc, security);
+    setMetaStoreAuthManager(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -220,15 +221,15 @@ final class ConfTool {
    * Configures PAM and SSL encryption for HiveServer2 web UI.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setHs2WebUiPamSsl(Document doc, Security security) {
-    switch (security) {
+  static void setHs2WebUiPamSsl(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -251,18 +252,18 @@ final class ConfTool {
    * Configures PAM and SSL encryption for HiveServer2 web UI.
    *
    * @param pathToHiveSite hive-site location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setHs2WebUiPamSsl(String pathToHiveSite, Security security)
+  static void setHs2WebUiPamSsl(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    setHs2WebUiPamSsl(doc, security);
+    setHs2WebUiPamSsl(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -270,15 +271,15 @@ final class ConfTool {
    * Configures Ssl encryption for webHCat server.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setWebHCatSsl(Document doc, Security security) {
-    switch (security) {
+  static void setWebHCatSsl(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -298,18 +299,18 @@ final class ConfTool {
    * Configures Ssl encryption for webHCat server.
    *
    * @param pathToWebHCatSite webhcat-site.xml location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setWebHCatSsl(String pathToWebHCatSite, Security security)
+  static void setWebHCatSsl(String pathToWebHCatSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToWebHCatSite);
     LOG.info("Reading webhcat-site.xml from path : {}", pathToWebHCatSite);
-    switch (security) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -330,14 +331,14 @@ final class ConfTool {
    * Configures Ssl encryption for HiveServer2.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setHs2Ssl(Document doc, Security security) {
-    switch (security) {
+  static void setHs2Ssl(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -356,14 +357,14 @@ final class ConfTool {
    * Configures Ssl encryption for Hive Metastore.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setHMetaSsl(Document doc, Security security) {
-    switch (security) {
+  static void setHMetaSsl(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -378,21 +379,20 @@ final class ConfTool {
     }
   }
 
-
   /**
    * Configures Ssl encryption for HiveServer2.
    *
    * @param pathToHiveSite hive-site.xml location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setHs2Ssl(String pathToHiveSite, Security security)
+  static void setHs2Ssl(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
-    setHs2Ssl(doc, security);
+    setHs2Ssl(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -400,16 +400,16 @@ final class ConfTool {
    * Configures Ssl encryption for Hive Metastore.
    *
    * @param pathToHiveSite hive-site.xml location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
-  static void setHMetaSsl(String pathToHiveSite, Security security)
+  static void setHMetaSsl(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
-    setHMetaSsl(doc, security);
+    setHMetaSsl(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -417,16 +417,16 @@ final class ConfTool {
    * Configures hive.users.in.admin role for secure cluster. If cluster is not secure the property will be removed.
    * @param pathToHiveSite hive-site location
    * @param adminUser admin user to add
-   * @param security true if MapR Sasl security is enabled on the cluster
+   * @param authMethod true if MapR Sasl security is enabled on the cluster
    * @throws SAXException
    * @throws TransformerException
    * @throws ParserConfigurationException
    * @throws IOException
    */
-  static void setAdminUser(String pathToHiveSite, String adminUser, Security security)
+  static void setAdminUser(String pathToHiveSite, String adminUser, AuthMethod authMethod)
       throws SAXException, TransformerException, ParserConfigurationException, IOException {
     Document doc = readDocument(pathToHiveSite);
-    setAdminUser(doc, adminUser, security);
+    setAdminUser(doc, adminUser, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -434,14 +434,14 @@ final class ConfTool {
    * Configures hive.users.in.admin role for secure cluster. If cluster is not secure the property will be removed.
    * @param doc xml document
    * @param adminUser admin user to add
-   * @param security true if MapR Sasl security is enabled on the cluster
+   * @param authMethod true if MapR Sasl security is enabled on the cluster
    * @throws SAXException
    * @throws TransformerException
    * @throws ParserConfigurationException
    * @throws IOException
    */
-  static void setAdminUser(Document doc, String adminUser, Security security) {
-    switch (security) {
+  static void setAdminUser(Document doc, String adminUser, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -457,15 +457,15 @@ final class ConfTool {
    * Configures Ssl encryption for HiveServer2.
    *
    * @param doc xml document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setEncryption(Document doc, Security security) {
-    switch (security) {
+  static void setEncryption(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -485,18 +485,18 @@ final class ConfTool {
    * Configures Ssl encryption for HiveServer2.
    *
    * @param pathToHiveSite hive-site location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws TransformerException
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setEncryption(String pathToHiveSite, Security security)
+  static void setEncryption(String pathToHiveSite, AuthMethod authMethod)
       throws TransformerException, IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    setEncryption(doc, security);
+    setEncryption(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -504,17 +504,17 @@ final class ConfTool {
    * Fixes CVE-2018-11777. Configures Hive for usage of FallbackHiveAuthorizerFactory.
    *
    * @param pathToHiveSite hive-site location
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    * @throws TransformerException
    */
-  static void setFallbackAuthorizer(String pathToHiveSite, Security security)
+  static void setFallbackAuthorizer(String pathToHiveSite, AuthMethod authMethod)
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    setFallbackAuthorizer(doc, security);
+    setFallbackAuthorizer(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -522,14 +522,14 @@ final class ConfTool {
    * Fixes CVE-2018-11777. Configures Hive for usage of FallbackHiveAuthorizerFactory.
    *
    * @param doc hive-site document
-   * @param security true if Mapr Sasl security is enabled on the cluster
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    * @throws TransformerException
    */
-  static void setFallbackAuthorizer(Document doc, Security security) throws TransformerException {
-    switch (security) {
+  static void setFallbackAuthorizer(Document doc, AuthMethod authMethod) throws TransformerException {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -631,17 +631,17 @@ final class ConfTool {
    * Configures restricted list of options that are immutable at runtime.
    *
    * @param pathToHiveSite hive-site location
-   * @param security true if MapR Sasl security is enabled on the cluster
+   * @param authMethod true if MapR Sasl security is enabled on the cluster
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setRestrictedList(String pathToHiveSite, Security security)
+  static void setRestrictedList(String pathToHiveSite, AuthMethod authMethod)
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
-    setRestrictedList(doc, security);
+    setRestrictedList(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
   }
 
@@ -649,14 +649,14 @@ final class ConfTool {
    * Configures restricted list of options that are immutable at runtime.
    *
    * @param doc xml document
-   * @param security true if MapR Sasl security is enabled on the cluster
+   * @param authMethod true if MapR Sasl security is enabled on the cluster
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
    */
 
-  static void setRestrictedList(Document doc, Security security) {
-    switch (security) {
+  static void setRestrictedList(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
     case CUSTOM:
       return;
     case MAPRSASL:
@@ -742,12 +742,10 @@ final class ConfTool {
    * @param pathToHiveSite hive-site location
    * @param fileLocation the location of local JSON metrics file
    */
-  static void configureHiveServer2MetricsFileLocation(String pathToHiveSite,
-      boolean isReporterEnabled, String fileLocation)
-      throws SAXException, TransformerException, ParserConfigurationException,
-      IOException {
-    configureMetricsFileLocation(pathToHiveSite, isReporterEnabled,
-        HIVE_SERVER2_METRICS_JSON_FILE_LOCATION, fileLocation);
+  static void configureHiveServer2MetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled,
+      String fileLocation) throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    configureMetricsFileLocation(pathToHiveSite, isReporterEnabled, HIVE_SERVER2_METRICS_JSON_FILE_LOCATION,
+        fileLocation);
   }
 
   /**
@@ -756,12 +754,10 @@ final class ConfTool {
    * @param pathToHiveSite hive-site location
    * @param fileLocation the location of local JSON metrics file
    */
-  static void configureHiveMetastoreMetricsFileLocation(String pathToHiveSite,
-      boolean isReporterEnabled, String fileLocation)
-      throws SAXException, TransformerException, ParserConfigurationException,
-      IOException {
-    configureMetricsFileLocation(pathToHiveSite, isReporterEnabled,
-        HIVE_METASTORE_METRICS_JSON_FILE_LOCATION, fileLocation);
+  static void configureHiveMetastoreMetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled,
+      String fileLocation) throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    configureMetricsFileLocation(pathToHiveSite, isReporterEnabled, HIVE_METASTORE_METRICS_JSON_FILE_LOCATION,
+        fileLocation);
   }
 
   /**
@@ -771,7 +767,8 @@ final class ConfTool {
    * @param servicePropertyName HiveConf property for specific
    * @param fileLocation the location of local JSON metrics file
    */
-  static void configureMetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled, ConfVars servicePropertyName, String fileLocation)
+  static void configureMetricsFileLocation(String pathToHiveSite, boolean isReporterEnabled,
+      ConfVars servicePropertyName, String fileLocation)
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
@@ -786,7 +783,8 @@ final class ConfTool {
    * @param servicePropertyName HiveConf property for specific
    * @param fileLocation the location of local JSON metrics file
    */
-  static void configureMetricsFileLocation(Document doc, boolean isReporterEnabled, ConfVars servicePropertyName, String fileLocation) {
+  static void configureMetricsFileLocation(Document doc, boolean isReporterEnabled, ConfVars servicePropertyName,
+      String fileLocation) {
     if (isReporterEnabled) {
       LOG.info("Configuring metrics file location : {}", fileLocation);
       set(doc, servicePropertyName, fileLocation);
@@ -982,7 +980,8 @@ final class ConfTool {
    * @param property property name
    * @param value value to append
    */
-  @VisibleForTesting static void appendProperty(Document doc, String property, String value) {
+  @VisibleForTesting
+  static void appendProperty(Document doc, String property, String value) {
     if (propertyExists(doc, property)) {
       LOG.info("Property {} exists in xml file. Append value: {}", property, value);
       String oldPropertyValue = getProperty(doc, property);
@@ -1033,7 +1032,8 @@ final class ConfTool {
     transformer.transform(source, result);
   }
 
-  @VisibleForTesting static void addProperty(Document doc, ConfVars confVars, String value) {
+  @VisibleForTesting
+  static void addProperty(Document doc, ConfVars confVars, String value) {
     addPropertyInternal(doc, confVars.varname, value);
   }
 
@@ -1045,7 +1045,8 @@ final class ConfTool {
     getConfigurationNode(doc).appendChild(element);
   }
 
-  @VisibleForTesting static void removeProperty(Document doc, ConfVars confVars) {
+  @VisibleForTesting
+  static void removeProperty(Document doc, ConfVars confVars) {
     removeProperty(doc, confVars.varname);
   }
 
@@ -1074,7 +1075,8 @@ final class ConfTool {
     }
   }
 
-  @VisibleForTesting static Node getConfigurationNode(Document doc) {
+  @VisibleForTesting
+  static Node getConfigurationNode(Document doc) {
     NodeList nodes = doc.getChildNodes();
     int length = nodes.getLength();
     for (int i = 0; i <= length - 1; i++) {
@@ -1098,11 +1100,13 @@ final class ConfTool {
     property.appendChild(name);
   }
 
-  @VisibleForTesting static boolean propertyExists(Document doc, ConfVars confVars) {
+  @VisibleForTesting
+  static boolean propertyExists(Document doc, ConfVars confVars) {
     return propertyExists(doc, confVars.varname);
   }
 
-  @VisibleForTesting static boolean propertyExists(Document doc, String property) {
+  @VisibleForTesting
+  static boolean propertyExists(Document doc, String property) {
     LOG.info("Checking that property exists in hive-site.xml : {}", property);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
@@ -1130,7 +1134,8 @@ final class ConfTool {
     return StringUtils.repeat("*", password.length());
   }
 
-  @VisibleForTesting static void setProperty(Document doc, ConfVars confVars, String value) {
+  @VisibleForTesting
+  static void setProperty(Document doc, ConfVars confVars, String value) {
     set(doc, confVars.varname, value);
   }
 
@@ -1153,11 +1158,13 @@ final class ConfTool {
     }
   }
 
-  @VisibleForTesting static String getProperty(Document doc, ConfVars confVars) {
+  @VisibleForTesting
+  static String getProperty(Document doc, ConfVars confVars) {
     return getProperty(doc, confVars.varname);
   }
 
-  @VisibleForTesting static String getProperty(Document doc, String property) {
+  @VisibleForTesting
+  static String getProperty(Document doc, String property) {
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();

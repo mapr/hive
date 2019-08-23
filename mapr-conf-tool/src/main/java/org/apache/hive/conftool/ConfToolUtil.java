@@ -62,9 +62,9 @@ public final class ConfToolUtil {
    * @param value string to check
    * @return true if string has 'true' or 'false' or 'custom' value
    */
-  static boolean isTrueOrFalseOrCustom(String value) {
-    for (Security security : Security.values()) {
-      if (security.value().equalsIgnoreCase(value.trim())) {
+  static boolean isValid(String value) {
+    for (AuthMethod authMethod : AuthMethod.values()) {
+      if (authMethod.value().equalsIgnoreCase(value.trim())) {
         return true;
       }
     }

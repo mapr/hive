@@ -159,8 +159,3 @@ fi
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
 export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
-if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
-  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=true"
-else
-  HADOOP_OPTS="$HADOOP_OPTS -Dmapr_sec_enabled=false"
-fi

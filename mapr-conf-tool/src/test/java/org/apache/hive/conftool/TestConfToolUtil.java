@@ -17,6 +17,7 @@
  */
 package org.apache.hive.conftool;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -26,12 +27,20 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * Util methods for testing.
  */
 final class TestConfToolUtil {
+
+  private static final String NAME = "name";
+  private static final String VALUE = "value";
+  private static final String CONFIGURATION = "configuration";
+  private static final String EMPTY = "";
+
   private TestConfToolUtil() {}
 
   /**
@@ -86,5 +95,114 @@ final class TestConfToolUtil {
       }
     }
     return sb.toString();
+  }
+
+  /**
+   *  Return property value from xml file.
+   *
+   * @param url hive-site location
+   * @param property name of the property
+   * @return
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static String getStringVal(URL url, String property)
+      throws IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(url.getPath());
+    return getStringProperty(doc, property);
+  }
+
+
+
+
+  /**
+   *  Return property value from xml file.
+   *
+   * @param url hive-site location
+   * @param confVar name of the property
+   * @return
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static String getStringVal(URL url, HiveConf.ConfVars confVar)
+      throws IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(url.getPath());
+    return getStringProperty(doc, confVar.varname);
+  }
+
+
+  /**
+   *  Return property value from xml file.
+   *
+   * @param url hive-site location
+   * @param confVar name of the property
+   * @return
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static boolean getBoolVal(URL url, HiveConf.ConfVars confVar)
+      throws IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(url.getPath());
+    return Boolean.parseBoolean(getStringProperty(doc, confVar.varname));
+  }
+
+
+
+
+  private static String getStringProperty(Document doc, String property) {
+    Node configuration = getConfigurationNode(doc);
+    NodeList properties = configuration.getChildNodes();
+    int length = properties.getLength();
+    for (int i = 0; i <= length - 1; i++) {
+      Node node = properties.item(i);
+      NodeList nameValueDesc = node.getChildNodes();
+      int childLength = nameValueDesc.getLength();
+      for (int j = 0; j <= childLength - 1; j++) {
+        Node childNode = nameValueDesc.item(j);
+        if (NAME.equals(childNode.getNodeName()) && property.equals(childNode.getTextContent())) {
+          return readValue(nameValueDesc);
+        }
+      }
+    }
+    return EMPTY;
+  }
+
+
+  private static Node getConfigurationNode(Document doc) {
+    NodeList nodes = doc.getChildNodes();
+    int length = nodes.getLength();
+    for (int i = 0; i <= length - 1; i++) {
+      Node node = nodes.item(i);
+      if (CONFIGURATION.equals(node.getNodeName())) {
+        return node;
+      }
+    }
+    throw new IllegalArgumentException("No <configuration> tag");
+  }
+
+
+  private static String readValue(NodeList nameValueDesc) {
+    int childLength = nameValueDesc.getLength();
+    for (int j = 0; j <= childLength - 1; j++) {
+      Node childNode = nameValueDesc.item(j);
+      if (VALUE.equals(childNode.getNodeName())) {
+        return childNode.getTextContent();
+      }
+    }
+    return EMPTY;
+  }
+
+
+  private static Document readDocument(String pathToHiveSite)
+      throws ParserConfigurationException, IOException, SAXException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    return docBuilder.parse(pathToHiveSite);
   }
 }

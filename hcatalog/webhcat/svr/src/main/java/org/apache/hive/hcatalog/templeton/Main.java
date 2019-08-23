@@ -64,7 +64,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpServletRequest;
-import static org.apache.hadoop.hive.conf.SecurityUtil.isMapRSecurityEnabled;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 /**

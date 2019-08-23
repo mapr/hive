@@ -1,0 +1,30 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>hive.metastore.sasl.enabled</name>
+    <value>true</value>
+    <description>Test desc</description>
+  </property>
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>KERBEROS</value>
+  </property>
+
+  <property>
+    <name>hive.metastore.authentication</name>
+    <value>KERBEROS</value>
+  </property>
+
+  <property>
+    <name>hive.server2.thrift.sasl.qop</name>
+    <value>auth</value>
+  </property>
+
+  <property>
+    <name>hive.metastore.execute.setugi</name>
+    <value>true</value>
+
+  </property>
+</configuration>
