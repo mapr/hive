@@ -521,6 +521,13 @@ interface ThriftHiveMetastoreIf extends \FacebookServiceIf
      */
     public function get_partition_names($db_name, $tbl_name, $max_parts);
     /**
+     * @param \metastore\PartitionValuesRequest $request
+     * @return \metastore\PartitionValuesResponse
+     * @throws \metastore\MetaException
+     * @throws \metastore\NoSuchObjectException
+     */
+    public function get_partition_values(\metastore\PartitionValuesRequest $request);
+    /**
      * @param string $db_name
      * @param string $tbl_name
      * @param string[] $part_vals

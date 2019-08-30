@@ -100,13 +100,13 @@ class GetTablesRequest
                 case 2:
                     if ($ftype == TType::LST) {
                         $this->tblNames = array();
-                        $_size583 = 0;
-                        $_etype586 = 0;
-                        $xfer += $input->readListBegin($_etype586, $_size583);
-                        for ($_i587 = 0; $_i587 < $_size583; ++$_i587) {
-                            $elem588 = null;
-                            $xfer += $input->readString($elem588);
-                            $this->tblNames []= $elem588;
+                        $_size611 = 0;
+                        $_etype614 = 0;
+                        $xfer += $input->readListBegin($_etype614, $_size611);
+                        for ($_i615 = 0; $_i615 < $_size611; ++$_i615) {
+                            $elem616 = null;
+                            $xfer += $input->readString($elem616);
+                            $this->tblNames []= $elem616;
                         }
                         $xfer += $input->readListEnd();
                     } else {
@@ -146,8 +146,8 @@ class GetTablesRequest
             }
             $xfer += $output->writeFieldBegin('tblNames', TType::LST, 2);
             $output->writeListBegin(TType::STRING, count($this->tblNames));
-            foreach ($this->tblNames as $iter589) {
-                $xfer += $output->writeString($iter589);
+            foreach ($this->tblNames as $iter617) {
+                $xfer += $output->writeString($iter617);
             }
             $output->writeListEnd();
             $xfer += $output->writeFieldEnd();

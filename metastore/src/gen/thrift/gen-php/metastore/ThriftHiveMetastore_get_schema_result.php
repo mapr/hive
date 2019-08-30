@@ -108,14 +108,14 @@ class ThriftHiveMetastore_get_schema_result
                 case 0:
                     if ($ftype == TType::LST) {
                         $this->success = array();
-                        $_size634 = 0;
-                        $_etype637 = 0;
-                        $xfer += $input->readListBegin($_etype637, $_size634);
-                        for ($_i638 = 0; $_i638 < $_size634; ++$_i638) {
-                            $elem639 = null;
-                            $elem639 = new \metastore\FieldSchema();
-                            $xfer += $elem639->read($input);
-                            $this->success []= $elem639;
+                        $_size662 = 0;
+                        $_etype665 = 0;
+                        $xfer += $input->readListBegin($_etype665, $_size662);
+                        for ($_i666 = 0; $_i666 < $_size662; ++$_i666) {
+                            $elem667 = null;
+                            $elem667 = new \metastore\FieldSchema();
+                            $xfer += $elem667->read($input);
+                            $this->success []= $elem667;
                         }
                         $xfer += $input->readListEnd();
                     } else {
@@ -166,8 +166,8 @@ class ThriftHiveMetastore_get_schema_result
             }
             $xfer += $output->writeFieldBegin('success', TType::LST, 0);
             $output->writeListBegin(TType::STRUCT, count($this->success));
-            foreach ($this->success as $iter640) {
-                $xfer += $iter640->write($output);
+            foreach ($this->success as $iter668) {
+                $xfer += $iter668->write($output);
             }
             $output->writeListEnd();
             $xfer += $output->writeFieldEnd();

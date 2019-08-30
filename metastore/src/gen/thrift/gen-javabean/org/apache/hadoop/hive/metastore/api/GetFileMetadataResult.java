@@ -406,15 +406,15 @@ public class GetFileMetadataResult implements org.apache.thrift.TBase<GetFileMet
           case 1: // METADATA
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map600 = iprot.readMapBegin();
-                struct.metadata = new java.util.HashMap<java.lang.Long,java.nio.ByteBuffer>(2*_map600.size);
-                long _key601;
-                @org.apache.thrift.annotation.Nullable java.nio.ByteBuffer _val602;
-                for (int _i603 = 0; _i603 < _map600.size; ++_i603)
+                org.apache.thrift.protocol.TMap _map632 = iprot.readMapBegin();
+                struct.metadata = new java.util.HashMap<java.lang.Long,java.nio.ByteBuffer>(2*_map632.size);
+                long _key633;
+                @org.apache.thrift.annotation.Nullable java.nio.ByteBuffer _val634;
+                for (int _i635 = 0; _i635 < _map632.size; ++_i635)
                 {
-                  _key601 = iprot.readI64();
-                  _val602 = iprot.readBinary();
-                  struct.metadata.put(_key601, _val602);
+                  _key633 = iprot.readI64();
+                  _val634 = iprot.readBinary();
+                  struct.metadata.put(_key633, _val634);
                 }
                 iprot.readMapEnd();
               }
@@ -448,10 +448,10 @@ public class GetFileMetadataResult implements org.apache.thrift.TBase<GetFileMet
         oprot.writeFieldBegin(METADATA_FIELD_DESC);
         {
           oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, struct.metadata.size()));
-          for (java.util.Map.Entry<java.lang.Long, java.nio.ByteBuffer> _iter604 : struct.metadata.entrySet())
+          for (java.util.Map.Entry<java.lang.Long, java.nio.ByteBuffer> _iter636 : struct.metadata.entrySet())
           {
-            oprot.writeI64(_iter604.getKey());
-            oprot.writeBinary(_iter604.getValue());
+            oprot.writeI64(_iter636.getKey());
+            oprot.writeBinary(_iter636.getValue());
           }
           oprot.writeMapEnd();
         }
@@ -479,10 +479,10 @@ public class GetFileMetadataResult implements org.apache.thrift.TBase<GetFileMet
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       {
         oprot.writeI32(struct.metadata.size());
-        for (java.util.Map.Entry<java.lang.Long, java.nio.ByteBuffer> _iter605 : struct.metadata.entrySet())
+        for (java.util.Map.Entry<java.lang.Long, java.nio.ByteBuffer> _iter637 : struct.metadata.entrySet())
         {
-          oprot.writeI64(_iter605.getKey());
-          oprot.writeBinary(_iter605.getValue());
+          oprot.writeI64(_iter637.getKey());
+          oprot.writeBinary(_iter637.getValue());
         }
       }
       oprot.writeBool(struct.isSupported);
@@ -492,15 +492,15 @@ public class GetFileMetadataResult implements org.apache.thrift.TBase<GetFileMet
     public void read(org.apache.thrift.protocol.TProtocol prot, GetFileMetadataResult struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       {
-        org.apache.thrift.protocol.TMap _map606 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-        struct.metadata = new java.util.HashMap<java.lang.Long,java.nio.ByteBuffer>(2*_map606.size);
-        long _key607;
-        @org.apache.thrift.annotation.Nullable java.nio.ByteBuffer _val608;
-        for (int _i609 = 0; _i609 < _map606.size; ++_i609)
+        org.apache.thrift.protocol.TMap _map638 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+        struct.metadata = new java.util.HashMap<java.lang.Long,java.nio.ByteBuffer>(2*_map638.size);
+        long _key639;
+        @org.apache.thrift.annotation.Nullable java.nio.ByteBuffer _val640;
+        for (int _i641 = 0; _i641 < _map638.size; ++_i641)
         {
-          _key607 = iprot.readI64();
-          _val608 = iprot.readBinary();
-          struct.metadata.put(_key607, _val608);
+          _key639 = iprot.readI64();
+          _val640 = iprot.readBinary();
+          struct.metadata.put(_key639, _val640);
         }
       }
       struct.setMetadataIsSet(true);

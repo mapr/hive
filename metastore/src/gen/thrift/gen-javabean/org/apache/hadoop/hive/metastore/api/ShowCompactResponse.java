@@ -331,14 +331,14 @@ public class ShowCompactResponse implements org.apache.thrift.TBase<ShowCompactR
           case 1: // COMPACTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list534 = iprot.readListBegin();
-                struct.compacts = new java.util.ArrayList<ShowCompactResponseElement>(_list534.size);
-                @org.apache.thrift.annotation.Nullable ShowCompactResponseElement _elem535;
-                for (int _i536 = 0; _i536 < _list534.size; ++_i536)
+                org.apache.thrift.protocol.TList _list566 = iprot.readListBegin();
+                struct.compacts = new java.util.ArrayList<ShowCompactResponseElement>(_list566.size);
+                @org.apache.thrift.annotation.Nullable ShowCompactResponseElement _elem567;
+                for (int _i568 = 0; _i568 < _list566.size; ++_i568)
                 {
-                  _elem535 = new ShowCompactResponseElement();
-                  _elem535.read(iprot);
-                  struct.compacts.add(_elem535);
+                  _elem567 = new ShowCompactResponseElement();
+                  _elem567.read(iprot);
+                  struct.compacts.add(_elem567);
                 }
                 iprot.readListEnd();
               }
@@ -364,9 +364,9 @@ public class ShowCompactResponse implements org.apache.thrift.TBase<ShowCompactR
         oprot.writeFieldBegin(COMPACTS_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.compacts.size()));
-          for (ShowCompactResponseElement _iter537 : struct.compacts)
+          for (ShowCompactResponseElement _iter569 : struct.compacts)
           {
-            _iter537.write(oprot);
+            _iter569.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -391,9 +391,9 @@ public class ShowCompactResponse implements org.apache.thrift.TBase<ShowCompactR
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       {
         oprot.writeI32(struct.compacts.size());
-        for (ShowCompactResponseElement _iter538 : struct.compacts)
+        for (ShowCompactResponseElement _iter570 : struct.compacts)
         {
-          _iter538.write(oprot);
+          _iter570.write(oprot);
         }
       }
     }
@@ -402,14 +402,14 @@ public class ShowCompactResponse implements org.apache.thrift.TBase<ShowCompactR
     public void read(org.apache.thrift.protocol.TProtocol prot, ShowCompactResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       {
-        org.apache.thrift.protocol.TList _list539 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.compacts = new java.util.ArrayList<ShowCompactResponseElement>(_list539.size);
-        @org.apache.thrift.annotation.Nullable ShowCompactResponseElement _elem540;
-        for (int _i541 = 0; _i541 < _list539.size; ++_i541)
+        org.apache.thrift.protocol.TList _list571 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+        struct.compacts = new java.util.ArrayList<ShowCompactResponseElement>(_list571.size);
+        @org.apache.thrift.annotation.Nullable ShowCompactResponseElement _elem572;
+        for (int _i573 = 0; _i573 < _list571.size; ++_i573)
         {
-          _elem540 = new ShowCompactResponseElement();
-          _elem540.read(iprot);
-          struct.compacts.add(_elem540);
+          _elem572 = new ShowCompactResponseElement();
+          _elem572.read(iprot);
+          struct.compacts.add(_elem572);
         }
       }
       struct.setCompactsIsSet(true);

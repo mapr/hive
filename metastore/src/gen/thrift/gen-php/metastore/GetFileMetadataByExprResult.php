@@ -85,17 +85,17 @@ class GetFileMetadataByExprResult
                 case 1:
                     if ($ftype == TType::MAP) {
                         $this->metadata = array();
-                        $_size516 = 0;
-                        $_ktype517 = 0;
-                        $_vtype518 = 0;
-                        $xfer += $input->readMapBegin($_ktype517, $_vtype518, $_size516);
-                        for ($_i520 = 0; $_i520 < $_size516; ++$_i520) {
-                            $key521 = 0;
-                            $val522 = new \metastore\MetadataPpdResult();
-                            $xfer += $input->readI64($key521);
-                            $val522 = new \metastore\MetadataPpdResult();
-                            $xfer += $val522->read($input);
-                            $this->metadata[$key521] = $val522;
+                        $_size544 = 0;
+                        $_ktype545 = 0;
+                        $_vtype546 = 0;
+                        $xfer += $input->readMapBegin($_ktype545, $_vtype546, $_size544);
+                        for ($_i548 = 0; $_i548 < $_size544; ++$_i548) {
+                            $key549 = 0;
+                            $val550 = new \metastore\MetadataPpdResult();
+                            $xfer += $input->readI64($key549);
+                            $val550 = new \metastore\MetadataPpdResult();
+                            $xfer += $val550->read($input);
+                            $this->metadata[$key549] = $val550;
                         }
                         $xfer += $input->readMapEnd();
                     } else {
@@ -129,9 +129,9 @@ class GetFileMetadataByExprResult
             }
             $xfer += $output->writeFieldBegin('metadata', TType::MAP, 1);
             $output->writeMapBegin(TType::I64, TType::STRUCT, count($this->metadata));
-            foreach ($this->metadata as $kiter523 => $viter524) {
-                $xfer += $output->writeI64($kiter523);
-                $xfer += $viter524->write($output);
+            foreach ($this->metadata as $kiter551 => $viter552) {
+                $xfer += $output->writeI64($kiter551);
+                $xfer += $viter552->write($output);
             }
             $output->writeMapEnd();
             $xfer += $output->writeFieldEnd();

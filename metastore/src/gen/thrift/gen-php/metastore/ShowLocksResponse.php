@@ -69,14 +69,14 @@ class ShowLocksResponse
                 case 1:
                     if ($ftype == TType::LST) {
                         $this->locks = array();
-                        $_size442 = 0;
-                        $_etype445 = 0;
-                        $xfer += $input->readListBegin($_etype445, $_size442);
-                        for ($_i446 = 0; $_i446 < $_size442; ++$_i446) {
-                            $elem447 = null;
-                            $elem447 = new \metastore\ShowLocksResponseElement();
-                            $xfer += $elem447->read($input);
-                            $this->locks []= $elem447;
+                        $_size470 = 0;
+                        $_etype473 = 0;
+                        $xfer += $input->readListBegin($_etype473, $_size470);
+                        for ($_i474 = 0; $_i474 < $_size470; ++$_i474) {
+                            $elem475 = null;
+                            $elem475 = new \metastore\ShowLocksResponseElement();
+                            $xfer += $elem475->read($input);
+                            $this->locks []= $elem475;
                         }
                         $xfer += $input->readListEnd();
                     } else {
@@ -103,8 +103,8 @@ class ShowLocksResponse
             }
             $xfer += $output->writeFieldBegin('locks', TType::LST, 1);
             $output->writeListBegin(TType::STRUCT, count($this->locks));
-            foreach ($this->locks as $iter448) {
-                $xfer += $iter448->write($output);
+            foreach ($this->locks as $iter476) {
+                $xfer += $iter476->write($output);
             }
             $output->writeListEnd();
             $xfer += $output->writeFieldEnd();
