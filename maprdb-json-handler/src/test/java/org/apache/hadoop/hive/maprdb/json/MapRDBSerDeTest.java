@@ -372,6 +372,24 @@ public class MapRDBSerDeTest {
     assertThat(new DocumentWritable(document), equalTo(serialized));
   }
 
+  @Test
+  public void testNullValue() throws SerDeException {
+    String columnNames = "s";
+    String columnTypes = "string";
+    String value = "null";
+    Value ojaiValue = DBValueBuilderImpl.KeyValueBuilder.initFromNull();
+
+    Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
+    assertNull(result);
+
+    ObjectInspector innerInspector = PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(String.class);
+    Document document = MapRDBImpl.newDocument();
+    document.set(columnNames, value);
+
+    Object serialized = serialize(columnNames, innerInspector, value, serDe);
+    assertThat(new DocumentWritable(document), equalTo(serialized));
+  }
+
   private Object serialize(String columnNames, ObjectInspector innerInspector, Object value, MapRDBSerDe serDe)
     throws SerDeException {
     StructObjectInspector oi = createObjectInspector(columnNames, innerInspector);

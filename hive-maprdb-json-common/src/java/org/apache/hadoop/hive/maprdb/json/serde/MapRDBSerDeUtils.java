@@ -70,7 +70,7 @@ public final class MapRDBSerDeUtils {
   public static Object deserializeField(Object value, TypeInfo valueTypeInfo) {
     Object result = null;
 
-    if (value != null) {
+    if (value != null && !value.equals(null)) {
       switch (valueTypeInfo.getCategory()) {
       case LIST: {
         result = deserializeList(value, (ListTypeInfo) valueTypeInfo);
