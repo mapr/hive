@@ -54,6 +54,11 @@
       <artifactId>hive-llap-server</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>javax.servlet.jsp</groupId>
+      <artifactId>javax.servlet.jsp-api</artifactId>
+      <version>${javax-servlet-jsp.version}</version>
+    </dependency>
 
     <!-- inter-project -->
     <dependency>
@@ -100,6 +105,12 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-runner</artifactId>
       <version>${jetty.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mortbay.jasper</groupId>
+          <artifactId>apache-jsp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
