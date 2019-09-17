@@ -69,11 +69,20 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
+
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTHENTICATION;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRSecurityUtil.getAuthMethod;
+import static org.apache.hive.common.util.MapRSecurityUtil.isCustomSecurityEnabled;
+import static org.apache.hive.common.util.MapRSecurityUtil.isKerberosEnabled;
+import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
+import static org.apache.hive.common.util.MapRSecurityUtil.isNoSecurity;
+import static org.apache.hive.common.util.XmlUtil.existsIn;
 
 
 /**
@@ -875,13 +884,14 @@ public class HiveConf extends Configuration {
      * @deprecated Use MetastoreConf.USE_THRIFT_SASL
      */
     @Deprecated
-    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled",
-        System.getProperty("mapr_sec_enabled") != null && Boolean.parseBoolean(System.getProperty("mapr_sec_enabled")),
+    METASTORE_USE_THRIFT_SASL("hive.metastore.sasl.enabled", false,
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos or MapRSASL."),
     /**
      * @deprecated Use MetastoreConf.USE_THRIFT_FRAMED_TRANSPORT
      */
     @Deprecated
+    METASTORE_AUTHENTICATION("hive.metastore.authentication", "MAPRSASL",
+        "Hive Metastore authentication type: KERBEROS, MAPRSASL. In case of hive.metastore.sasl.enabled = false we simply do not wrap Thrift transport with SASL wrapper and hence there is no need in value NONE."),
     METASTORE_USE_THRIFT_FRAMED_TRANSPORT("hive.metastore.thrift.framed.transport.enabled", false,
         "If true, the metastore Thrift interface will use TFramedTransport. When false (default) a standard TTransport is used."),
     /**
@@ -3262,9 +3272,7 @@ public class HiveConf extends Configuration {
     HIVE_SESSION_IMPL_WITH_UGI_CLASSNAME("hive.session.impl.withugi.classname", null, "Classname for custom implementation of hive session with UGI"),
 
     // HiveServer2 auth configuration
-    HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication",
-        System.getProperty("hiveserver2.auth") == null ?
-        "NONE" : System.getProperty("hiveserver2.auth"),
+    HIVE_SERVER2_AUTHENTICATION("hive.server2.authentication", "NONE",
         new StringSet("NOSASL", "NONE", "LDAP", "KERBEROS", "PAM", "CUSTOM"),
         "Client authentication types.\n" +
         "  NONE: no authentication check\n" +
@@ -5120,19 +5128,88 @@ public class HiveConf extends Configuration {
   public HiveConf() {
     super();
     initialize(this.getClass());
-    initializeMapRSll();
+    initializeMapRSsl();
+    initializeAuth();
   }
 
   public HiveConf(Class<?> cls) {
     super();
     initialize(cls);
-    initializeMapRSll();
+    initializeMapRSsl();
+    initializeAuth();
   }
 
   public HiveConf(Configuration other, Class<?> cls) {
     super(other);
     initialize(cls);
-    initializeMapRSll();
+    initializeMapRSsl();
+    initializeAuth();
+  }
+
+  private static final String DEFAULT_MSG = "Default value for %s is set to %s";
+  private static final String IS_EMPTY_MSG = "%s is empty";
+  private static final String NON_EMPTY = "%s has non empty value %s. Skip changing";
+  private static final HiveConf.ConfVars HS2_AUTH = HIVE_SERVER2_AUTHENTICATION;
+
+  /**
+   * Initializes authentication for HS2 HMS and sasl.enabled if it not has been initialized yet.
+   */
+  private void initializeAuth() {
+    LOG.info(String.format("Authentication method is %s", getAuthMethod()));
+    // Do not change value if it already has been configured directly in hive-site.xml
+    // Init for HiveServer2 auth
+    if (!isInHiveSite(HS2_AUTH)) {
+      logEmpty(HS2_AUTH);
+      initHs2Auth();
+    } else {
+      logNonEmpty(HS2_AUTH);
+    }
+  }
+
+  /**
+   * Initializes authentication for HiveServer2 if it has not been initialized yet.
+   */
+  private void initHs2Auth() {
+    if (isMapRSecurityEnabled() || isKerberosEnabled()) {
+      setHs2AuthPam();
+      return;
+    }
+    if (isNoSecurity() || isCustomSecurityEnabled()) {
+      setHs2AuthNone();
+      return;
+    }
+    logVar(HS2_AUTH);
+  }
+
+  private void setHs2AuthPam(){
+    setVar(HS2_AUTH, "PAM");
+    logVar(HS2_AUTH);
+  }
+
+  private void setHs2AuthNone(){
+    setVar(HS2_AUTH, "NONE");
+    logVar(HS2_AUTH);
+  }
+
+  private static boolean isInHiveSite(HiveConf.ConfVars confVars) {
+    return existsIn(hiveSiteURL, confVars.varname);
+  }
+
+  private void logNonEmpty(HiveConf.ConfVars var) {
+    if (var.valType == ConfVars.VarType.BOOLEAN) {
+      LOG.info(String.format(NON_EMPTY, var.varname, getBoolVar(var)));
+    }
+    if (var.valType == ConfVars.VarType.STRING) {
+      LOG.info(String.format(NON_EMPTY, var.varname, getVar(var)));
+    }
+  }
+
+  private void logEmpty(HiveConf.ConfVars var){
+    LOG.info(String.format(IS_EMPTY_MSG, var.varname));
+  }
+
+  private void logVar(HiveConf.ConfVars var){
+    LOG.info(String.format(DEFAULT_MSG, var.varname, getVar(var)));
   }
 
   /**
@@ -5147,37 +5224,50 @@ public class HiveConf extends Configuration {
     restrictList.addAll(other.restrictList);
     hiddenSet.addAll(other.hiddenSet);
     modWhiteListPattern = other.modWhiteListPattern;
-    initializeMapRSll();
+    initializeMapRSsl();
   }
 
-  private void initializeMapRSll() {
-    if (isMapRSecurityEnabled()) {
-      configureSsl();
+  private void initializeMapRSsl() {
+    if (getBoolVar(ConfVars.HIVE_SERVER2_USE_SSL)) {
+      configureHs2Ssl();
+    }
+    if(getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_USE_SSL)) {
+      configureHs2WebUiSsl();
+    }
+    if (getBoolVar(ConfVars.HIVE_METASTORE_USE_SSL)) {
+      configureHmsSsl();
     }
   }
 
-  private void configureSsl() {
+  private void configureHs2WebUiSsl(){
     // Configure keystore path / password for web UI
     if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      logVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty()) {
       setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
     }
+  }
 
+  private void configureHs2Ssl(){
     // Configure keystore path / password for Hive Server2
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      logVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty()) {
       setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
     }
+  }
 
+  private void configureHmsSsl() {
     // Configure keystore path / password for Hive Metastore
     if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      logVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD).isEmpty()) {
@@ -5187,6 +5277,7 @@ public class HiveConf extends Configuration {
     // Configure truststore path / password for Hive Metastore
     if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH, getClientTruststoreLocation());
+      logVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD).isEmpty()) {

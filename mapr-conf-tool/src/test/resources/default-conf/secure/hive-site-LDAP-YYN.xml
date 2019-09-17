@@ -1,0 +1,19 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>LDAP</value>
+  </property>
+
+  <property>
+    <name>metastore.authentication</name>
+    <value>MAPRSASL</value>
+  </property>
+
+  <property>
+    <name>hive.server2.thrift.sasl.qop</name>
+    <value>auth</value>
+  </property>
+
+</configuration>

@@ -1,0 +1,9 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>hive.metastore.sasl.enabled</name>
+    <value>true</value>
+    <description>Test desc</description>
+  </property>
+</configuration>

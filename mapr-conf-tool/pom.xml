@@ -53,6 +53,20 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-surefire-plugin</artifactId>
+      <configuration>
+        <environmentVariables>
+          <MAPR_HOME>${test.tmp.dir}/opt/mapr/</MAPR_HOME>
+          <MAPR_TICKETFILE_LOCATION>${test.tmp.dir}/opt/mapr/conf/mapruserticket</MAPR_TICKETFILE_LOCATION>
+        </environmentVariables>
+        <systemPropertyVariables>
+          <mapr.home.dir>${test.tmp.dir}/opt/mapr/</mapr.home.dir>
+          <java.security.auth.login.config>${basedir}/${hive.path.to.root}/data/conf/mapr.login.conf</java.security.auth.login.config>
+        </systemPropertyVariables>
+      </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

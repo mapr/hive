@@ -16,6 +16,8 @@
  */
 package org.apache.hive.conftool;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,9 +28,9 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URL;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
 import static org.apache.hive.conftool.TestConfToolUtil.getPath;
@@ -39,41 +41,51 @@ public class ConfCliTest {
 
   private ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-  @Before public void init() {
+  @Before
+  public void init() {
     System.setOut(new PrintStream(baos));
+  }
+
+  @After
+  public void cleanUp() throws IOException {
+    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    File mapRConfDir = new File(mapRConfPath);
+    if(mapRConfDir.exists()) {
+      FileUtils.deleteDirectory(mapRConfDir);
+    }
   }
 
   private String output() {
     return baos.toString();
   }
 
-  @Test public void printHelpTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void printHelpTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     ConfCli.main(new String[] { "--help" });
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void noArgumentsTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void noArgumentsTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     ConfCli.main(new String[] { "" });
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void nullArgumentsTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void nullArgumentsTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     ConfCli.main(null);
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void parsingErrorTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void parsingErrorTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Parsing failed");
     ConfCli.main(new String[] { "--lhjlk", "-/--l)9" });
   }
 
-  @Test public void addPropertyTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void addPropertyTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-018.xml");
     String property = "test.property";
     String value = "test.value";
@@ -82,7 +94,8 @@ public class ConfCliTest {
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void addPropertyIncorrectArgumentsTest()
+  @Test
+  public void addPropertyIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -91,34 +104,38 @@ public class ConfCliTest {
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void adminUserSecurityOnTest()
+  @Test
+  public void adminUserSecurityOnTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-024.xml");
     String adminUser = "mapr";
-    ConfCli.main(new String[] { "--adminUser", adminUser, "--path", pathToHiveSite, "--security", "true" });
+    ConfCli.main(new String[] { "--adminUser", adminUser, "--path", pathToHiveSite, "--authMethod", "maprsasl" });
     Assert.assertEquals("mapr", ConfTool.getProperty(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void adminUserSecurityOffTest()
+  @Test
+  public void adminUserSecurityOffTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-025.xml");
     String adminUser = "mapr";
-    ConfCli.main(new String[] { "--adminUser", adminUser, "--path", pathToHiveSite, "--security", "false" });
+    ConfCli.main(new String[] { "--adminUser", adminUser, "--path", pathToHiveSite, "--authMethod", "none" });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void adminUserSecurityCustomTest()
+  @Test
+  public void adminUserSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-031.xml");
     String adminUser = "mapr";
-    ConfCli.main(new String[] { "--adminUser", adminUser, "--path", pathToHiveSite, "--security", "custom" });
+    ConfCli.main(new String[] { "--adminUser", adminUser, "--path", pathToHiveSite, "--authMethod", "custom" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, USERS_IN_ADMIN_ROLE.varname));
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void appendPropertyTest()
+  @Test
+  public void appendPropertyTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-028.xml");
     String property = "cli.test";
@@ -128,10 +145,11 @@ public class ConfCliTest {
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void restrictedListSecurityOnTest()
+  @Test
+  public void restrictedListSecurityOnTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-046.xml");
-    ConfCli.main(new String[] { "--restrictedList", "--security", "true", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--restrictedList", "--authMethod", "maprsasl", "--path", pathToHiveSite });
     String output = baos.toString();
     Assert.assertEquals(
         "hive.security.authenticator.manager,hive.security.authorization.manager,"
@@ -156,24 +174,26 @@ public class ConfCliTest {
     Assert.assertFalse(output.contains("Print help information"));
   }
 
-  @Test public void restrictedListSecurityOffTest()
+  @Test
+  public void restrictedListSecurityOffTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-027.xml");
-    ConfCli.main(new String[] { "--restrictedList", "--security", "false", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--restrictedList", "--authMethod", "none", "--path", pathToHiveSite });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.conf.restricted.list"));
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void restrictedListSecurityCustomTest()
+  @Test
+  public void restrictedListSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-032.xml");
-    ConfCli.main(new String[] { "--restrictedList", "--security", "custom", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--restrictedList", "--authMethod", "custom", "--path", pathToHiveSite });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.conf.restricted.list"));
     Assert.assertFalse(output().contains("Print help information"));
   }
 
-  @Test public void delPropertyTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void delPropertyTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-019.xml");
     String property = "test.property.to.delete";
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, property));
@@ -181,7 +201,8 @@ public class ConfCliTest {
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, property));
   }
 
-  @Test public void delPropertyIncorrectArgumentsTest()
+  @Test
+  public void delPropertyIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -190,15 +211,16 @@ public class ConfCliTest {
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void getPropertyTest()
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+  @Test
+  public void getPropertyTest() throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-021.xml");
     String property = "test.property.to.get";
     ConfCli.main(new String[] { "--getProperty", property, "--path", pathToHiveSite });
     Assert.assertEquals("test.value", output());
   }
 
-  @Test public void getPropertyIncorrectArgumentsTest()
+  @Test
+  public void getPropertyIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-021.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -206,7 +228,8 @@ public class ConfCliTest {
     ConfCli.main(new String[] { "--getProperty", "--path", pathToHiveSite });
   }
 
-  @Test public void getPropertyNonexistentProperty()
+  @Test
+  public void getPropertyNonexistentProperty()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-021.xml");
     String property = "test.nonexistent.property";
@@ -215,10 +238,11 @@ public class ConfCliTest {
     ConfCli.main(new String[] { "--getProperty", property, "--path", pathToHiveSite });
   }
 
-  @Test public void configureSecurityEnabledTest()
+  @Test
+  public void configureSecurityEnabledTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-020.xml");
-    ConfCli.main(new String[] { "--security", "true", "--maprsasl", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--authMethod", "maprsasl", "--path", pathToHiveSite });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.sasl.enabled"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.thrift.sasl.qop"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.execute.setugi"));
@@ -230,10 +254,11 @@ public class ConfCliTest {
         ConfTool.getProperty(pathToHiveSite, "hive.security.metastore.authorization.manager"));
   }
 
-  @Test public void configureSecurityDisabledTest()
+  @Test
+  public void configureSecurityDisabledTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
-    ConfCli.main(new String[] { "--security", "false", "--maprsasl", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--authMethod", "none", "--path", pathToHiveSite });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.sasl.enabled"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.thrift.sasl.qop"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.execute.setugi"));
@@ -241,35 +266,39 @@ public class ConfCliTest {
     Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.metastore.sasl.enabled"));
   }
 
-  @Test public void configureSecurityCustomTest()
+  @Test
+  public void configureSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-033.xml");
-    ConfCli.main(new String[] { "--security", "custom", "--maprsasl", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--authMethod", "custom", "--path", pathToHiveSite });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.sasl.enabled"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.thrift.sasl.qop"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.execute.setugi"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.security.metastore.authorization.manager"));
   }
 
-  @Test public void configureSecurityIncorrectArgumentsTest()
+  @Test
+  public void configureSecurityIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Incorrect security configuration options");
-    ConfCli.main(new String[] { "--maprsasl", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--authMethod", "wrong_auth_method", "--path", pathToHiveSite });
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void configureSecurityIncorrectValueTest()
+  @Test
+  public void configureSecurityIncorrectValueTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Incorrect security configuration options");
-    ConfCli.main(new String[] { "--maprsasl", "--security", "akhkj", "--path", pathToHiveSite });
+    ConfCli.main(new String[] { "--authMethod", "akhkj", "--path", pathToHiveSite });
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void configureHs2HaTest()
+  @Test
+  public void configureHs2HaTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     String zkQuorum = "host1,host2";
@@ -280,7 +309,8 @@ public class ConfCliTest {
     Assert.assertEquals(zkQuorum, ConfTool.getProperty(pathToHiveSite, "hive.zookeeper.quorum"));
   }
 
-  @Test public void configureHs2HaIncorrectArgumentsTest()
+  @Test
+  public void configureHs2HaIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -289,7 +319,8 @@ public class ConfCliTest {
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void configureMetastoreUriTest()
+  @Test
+  public void configureMetastoreUriTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     ConfCli.main(new String[] { "--initMetastoreUri", "--path", pathToHiveSite });
@@ -297,21 +328,24 @@ public class ConfCliTest {
     Assert.assertEquals("thrift://localhost:9083", ConfTool.getProperty(pathToHiveSite, "hive.metastore.uris"));
   }
 
-  @Test public void existPropertyTrueTest()
+  @Test
+  public void existPropertyTrueTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     ConfCli.main(new String[] { "--existProperty", "datanucleus.schema.autoCreateAll", "--path", pathToHiveSite });
     Assert.assertTrue(output().contains("true"));
   }
 
-  @Test public void existPropertyFalseTest()
+  @Test
+  public void existPropertyFalseTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     ConfCli.main(new String[] { "--existProperty", "no.such.property.test", "--path", pathToHiveSite });
     Assert.assertTrue(output().contains("false"));
   }
 
-  @Test public void existPropertyIncorrectArgumentsTest()
+  @Test
+  public void existPropertyIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -320,7 +354,8 @@ public class ConfCliTest {
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void configureConnectionUrlTest()
+  @Test
+  public void configureConnectionUrlTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     String connectionUrl = "jdbc:derby:;databaseName=/opt/mapr/hive/hive-2.1/bin/metastore_db;create=true";
@@ -329,7 +364,8 @@ public class ConfCliTest {
     Assert.assertEquals(connectionUrl, ConfTool.getProperty(pathToHiveSite, "javax.jdo.option.ConnectionURL"));
   }
 
-  @Test public void configureConnectionUrlIncorrectArgumentsTest()
+  @Test
+  public void configureConnectionUrlIncorrectArgumentsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -338,99 +374,112 @@ public class ConfCliTest {
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void configureWebUiHs2PamSslSecurityOnTest()
+  @Test
+  public void configureWebUiHs2PamSslSecurityOnTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
-    ConfCli.main(new String[] { "--webuipamssl", "--path", pathToHiveSite, "--security", "true" });
+    ConfCli.main(new String[] { "--webuipamssl", "--path", pathToHiveSite, "--authMethod", "maprsasl" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.ssl"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.use.ssl"));
   }
 
-  @Test public void configureWebUiHs2PamSslSecurityOffTest()
+  @Test
+  public void configureWebUiHs2PamSslSecurityOffTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-034.xml");
-    ConfCli.main(new String[] { "--webuipamssl", "--path", pathToHiveSite, "--security", "false" });
+    ConfCli.main(new String[] { "--webuipamssl", "--path", pathToHiveSite, "--authMethod", "none" });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.ssl"));
   }
 
-  @Test public void configureWebUiHs2PamSslSecurityCustomTest()
+  @Test
+  public void configureWebUiHs2PamSslSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-035.xml");
-    ConfCli.main(new String[] { "--webuipamssl", "--path", pathToHiveSite, "--security", "custom" });
+    ConfCli.main(new String[] { "--webuipamssl", "--path", pathToHiveSite, "--authMethod", "custom" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.pam"));
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.webui.use.ssl"));
   }
 
-  @Test public void configureWebHCatSslSecurityOnTest()
+  @Test
+  public void configureWebHCatSslSecurityOnTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToWebHCatSite = getPath("webhcat-site-002.xml");
-    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--security", "true" });
+    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--authMethod", "maprsasl" });
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
   }
 
-  @Test public void configureWebHCatSslSecurityOffTest()
+  @Test
+  public void configureWebHCatSslSecurityOffTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToWebHCatSite = getPath("webhcat-site-003.xml");
-    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--security", "false" });
+    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--authMethod", "none" });
     Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
   }
 
-  @Test public void configureWebHCatSslSecurityCustomTest()
+  @Test
+  public void configureWebHCatSslSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToWebHCatSite = getPath("webhcat-site-004.xml");
-    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--security", "custom" });
+    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--authMethod", "custom" });
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
   }
 
-  @Test public void configureHs2SslSecurityOnTest()
+  @Test
+  public void configureHs2SslSecurityOnTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-023.xml");
-    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--security", "true" });
+    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--authMethod", "maprsasl" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.use.SSL"));
   }
 
-  @Test public void configureHs2SslSecurityOffTest()
+  @Test
+  public void configureHs2SslSecurityOffTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-036.xml");
-    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--security", "false" });
+    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--authMethod", "none" });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
   }
 
-  @Test public void configureHs2SslSecurityCustomTest()
+  @Test
+  public void configureHs2SslSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-037.xml");
-    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--security", "custom" });
+    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--authMethod", "custom" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.server2.use.SSL"));
   }
 
-  @Test public void configureHMetaSslSecurityOnTest()
+  @Test
+  public void configureHMetaSslSecurityOnTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-056.xml");
-    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--security", "true" });
+    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--authMethod", "maprsasl" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.use.SSL"));
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.metastore.use.SSL"));
   }
 
-  @Test public void configureHMetaSslSecurityOffTest()
+  @Test
+  public void configureHMetaSslSecurityOffTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-056.xml");
-    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--security", "false" });
+    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--authMethod", "none" });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.use.SSL"));
   }
 
-  @Test public void configureHMetaSslSecurityCustomTest()
+  @Test
+  public void configureHMetaSslSecurityCustomTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-057.xml");
-    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--security", "custom" });
+    ConfCli.main(new String[] { "--hmetassl", "--path", pathToHiveSite, "--authMethod", "custom" });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.use.SSL"));
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.metastore.use.SSL"));
   }
 
-  @Test public void configureHs2SslWithoutSecurityArgsTest()
+  @Test
+  public void configureHs2SslWithoutSecurityArgsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
@@ -439,42 +488,47 @@ public class ConfCliTest {
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void configureHs2SslMissingSecurityArgsTest()
+  @Test
+  public void configureHs2SslMissingSecurityArgsTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-022.xml");
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Missing argument for option: security");
-    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--security" });
+    thrown.expectMessage("Missing argument for option: authMethod");
+    ConfCli.main(new String[] { "--hs2ssl", "--path", pathToHiveSite, "--authMethod" });
     Assert.assertTrue(output().contains("Print help information"));
   }
 
-  @Test public void setFallbackAuthorizerSecurityOnTest()
+  @Test
+  public void setFallbackAuthorizerSecurityOnTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-047.xml");
-    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--security", "true" });
+    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--authMethod", "maprsasl" });
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.enabled"));
     Assert
         .assertEquals("org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory",
             ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.manager"));
   }
 
-  @Test public void setFallbackAuthorizerSecurityOffTest()
+  @Test
+  public void setFallbackAuthorizerSecurityOffTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-048.xml");
-    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--security", "false" });
+    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--authMethod", "none" });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.security.authorization.enabled"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.security.authorization.manager"));
   }
 
-  @Test public void setFallbackAuthorizerSecurityCustomTest()
+  @Test
+  public void setFallbackAuthorizerSecurityCustomTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-049.xml");
-    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--security", "custom" });
+    ConfCli.main(new String[] { "--fallBackAuthorizer", "--path", pathToHiveSite, "--authMethod", "custom" });
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.enabled"));
     Assert.assertEquals("MyCustomValue", ConfTool.getProperty(pathToHiveSite, "hive.security.authorization.manager"));
   }
 
-  @Test public void configureHs2MetricsEnabledTest()
+  @Test
+  public void configureHs2MetricsEnabledTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-050.xml");
     ConfCli.main(new String[] { "--hiveserver2_metrics_enabled", "true", "--path", pathToHiveSite });
@@ -482,7 +536,8 @@ public class ConfCliTest {
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.server2.metrics.enabled"));
   }
 
-  @Test public void configureHs2MetricsDisabledTest()
+  @Test
+  public void configureHs2MetricsDisabledTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-051.xml");
     ConfCli.main(new String[] { "--hiveserver2_metrics_enabled", "false", "--path", pathToHiveSite });
@@ -490,7 +545,8 @@ public class ConfCliTest {
     Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.server2.metrics.enabled"));
   }
 
-  @Test public void configureMetastoreMetricsEnabledTest()
+  @Test
+  public void configureMetastoreMetricsEnabledTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-052.xml");
     ConfCli.main(new String[] { "--metastore_metrics_enabled", "true", "--path", pathToHiveSite });
@@ -498,7 +554,8 @@ public class ConfCliTest {
     Assert.assertEquals("true", ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.enabled"));
   }
 
-  @Test public void configureMetastoreMetricsDisabledTest()
+  @Test
+  public void configureMetastoreMetricsDisabledTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToHiveSite = getPath("hive-site-053.xml");
     ConfCli.main(new String[] { "--metastore_metrics_enabled", "false", "--path", pathToHiveSite });
@@ -506,26 +563,31 @@ public class ConfCliTest {
     Assert.assertEquals("false", ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.enabled"));
   }
 
-  @Test public void configureMetastoreMetricsReportEnabled()
+  @Test
+  public void configureMetastoreMetricsReportEnabled()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-054.xml");
-    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hmeta_report_file", "/tmp/hivemetastore_report.json",
-        "--reporter_enabled", "true", "--path", pathToHiveSite });
+    ConfCli.main(
+        new String[] { "--reporter_type", "JSON_FILE,JMX", "--hmeta_report_file", "/tmp/hivemetastore_report.json",
+            "--reporter_enabled", "true", "--path", pathToHiveSite });
     Assert.assertEquals("JSON_FILE,JMX", ConfTool.getProperty(pathToHiveSite, "hive.service.metrics.reporter"));
     Assert.assertEquals("/tmp/hivemetastore_report.json",
         ConfTool.getProperty(pathToHiveSite, "hive.metastore.metrics.file.location"));
   }
 
-  @Test public void configureMetastoreMetricsReportDisabled()
+  @Test
+  public void configureMetastoreMetricsReportDisabled()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-055.xml");
-    ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hmeta_report_file", "/tmp/hivemetastore_report.json",
-        "--reporter_enabled", "false", "--path", pathToHiveSite });
+    ConfCli.main(
+        new String[] { "--reporter_type", "JSON_FILE,JMX", "--hmeta_report_file", "/tmp/hivemetastore_report.json",
+            "--reporter_enabled", "false", "--path", pathToHiveSite });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.service.metrics.reporter"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.metrics.file.location"));
   }
 
-  @Test public void configureHiveServer2MetricsReportEnabled()
+  @Test
+  public void configureHiveServer2MetricsReportEnabled()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-054.xml");
     ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hs2_report_file", "/tmp/hiveserver2_report.json",
@@ -535,12 +597,95 @@ public class ConfCliTest {
         ConfTool.getProperty(pathToHiveSite, "hive.server2.metrics.file.location"));
   }
 
-  @Test public void configureHiveServer2MetricsReportDisabled()
+  @Test
+  public void configureHiveServer2MetricsReportDisabled()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String pathToHiveSite = getPath("hive-site-055.xml");
     ConfCli.main(new String[] { "--reporter_type", "JSON_FILE,JMX", "--hs2_report_file", "/tmp/hiveserver2_report.json",
         "--reporter_enabled", "false", "--path", pathToHiveSite });
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.service.metrics.reporter"));
     Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.server2.metrics.file.location"));
+  }
+
+  @Test
+  public void getAuthMethodMapRSaslTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    final String mapRClusters = "mapr-clusters.conf";
+    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    File mapRConfDir = new File(mapRConfPath);
+    if(mapRConfDir.exists()) {
+      FileUtils.deleteDirectory(mapRConfDir);
+    }
+    if (!mapRConfDir.mkdirs()) {
+      Assert.fail(String.format("Error creating test dir %s", mapRConfPath));
+    }
+    File src = new File(getPath("maprsasl-enabled" + File.separator + mapRClusters));
+    File tgt = new File(mapRConfPath + File.separator + mapRClusters);
+    FileUtils.copyFile(src, tgt);
+    ConfCli.main(new String[] { "--getAuthMethod" });
+    Assert.assertTrue(output().contains("maprsasl"));
+  }
+
+  @Test
+  public void getAuthMethodKerberosTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    final String mapRClusters = "mapr-clusters.conf";
+    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    File mapRConfDir = new File(mapRConfPath);
+    if(mapRConfDir.exists()) {
+      FileUtils.deleteDirectory(mapRConfDir);
+    }
+    if (!mapRConfDir.mkdirs()) {
+      Assert.fail(String.format("Error creating test dir %s", mapRConfPath));
+    }
+    File src = new File(getPath("krb-enabled" + File.separator + mapRClusters));
+    File tgt = new File(mapRConfPath + File.separator + mapRClusters);
+    FileUtils.copyFile(src, tgt);
+    ConfCli.main(new String[] { "--getAuthMethod" });
+    Assert.assertTrue(output().contains("kerberos"));
+  }
+
+  @Test
+  public void getAuthMethodNoSecurityTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    final String mapRClusters = "mapr-clusters.conf";
+    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    File mapRConfDir = new File(mapRConfPath);
+    if(mapRConfDir.exists()) {
+      FileUtils.deleteDirectory(mapRConfDir);
+    }
+    if (!mapRConfDir.mkdirs()) {
+      Assert.fail(String.format("Error creating test dir %s", mapRConfPath));
+    }
+    File src = new File(getPath("no-security" + File.separator + mapRClusters));
+    File tgt = new File(mapRConfPath + File.separator + mapRClusters);
+    FileUtils.copyFile(src, tgt);
+    ConfCli.main(new String[] { "--getAuthMethod" });
+    Assert.assertTrue(output().contains("none"));
+  }
+
+  @Test
+  public void getAuthMethodCustomTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    final String mapRClusters = "mapr-clusters.conf";
+    final String customSecure = ".customSecure";
+    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    File mapRConfDir = new File(mapRConfPath);
+    if(mapRConfDir.exists()) {
+      FileUtils.deleteDirectory(mapRConfDir);
+    }
+    if (!mapRConfDir.mkdirs()) {
+      Assert.fail(String.format("Error creating test dir %s", mapRConfPath));
+    }
+    File src = new File(getPath("custom-enabled" + File.separator + mapRClusters));
+    File tgt = new File(mapRConfPath + File.separator + mapRClusters);
+    FileUtils.copyFile(src, tgt);
+
+    src = new File(getPath("custom-enabled" + File.separator + customSecure));
+    tgt = new File(mapRConfPath + File.separator + customSecure);
+    FileUtils.copyFile(src, tgt);
+
+    ConfCli.main(new String[] { "--getAuthMethod" });
+    Assert.assertTrue(output().contains("custom"));
   }
 }

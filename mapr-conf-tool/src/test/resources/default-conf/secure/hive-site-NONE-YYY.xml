@@ -1,0 +1,30 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>metastore.sasl.enabled</name>
+    <value>false</value>
+    <description>Test desc</description>
+  </property>
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>NONE</value>
+  </property>
+
+  <property>
+    <name>metastore.authentication</name>
+    <value>MAPRSASL</value>
+  </property>
+
+  <property>
+    <name>hive.server2.thrift.sasl.qop</name>
+    <value>auth</value>
+  </property>
+
+  <property>
+    <name>hive.metastore.execute.setugi</name>
+    <value>true</value>
+
+  </property>
+</configuration>

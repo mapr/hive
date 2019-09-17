@@ -19,14 +19,14 @@
 package org.apache.hive.conftool;
 
 /**
- * This enum contains possible values of security flag.
+ * This enum contains possible values of authentication method.
  */
 
-public enum Security {
-  NONE("false"), MAPRSASL("true"), CUSTOM("custom");
+public enum AuthMethod {
+  NONE("none"), MAPRSASL("maprsasl"), CUSTOM("custom"), KERBEROS("kerberos");
   private String value;
 
-  Security(String value) {
+  AuthMethod(String value) {
     this.value = value;
   }
 
@@ -34,10 +34,10 @@ public enum Security {
     return value;
   }
 
-  public static Security parse(String value) {
-    for (Security security : Security.values()) {
-      if (security.value().equalsIgnoreCase(value.trim())) {
-        return security;
+  public static AuthMethod parse(String value) {
+    for (AuthMethod authMethod : AuthMethod.values()) {
+      if (authMethod.value().equalsIgnoreCase(value.trim())) {
+        return authMethod;
       }
     }
     throw new IllegalArgumentException(String.format("%s is not valid value for security", value));

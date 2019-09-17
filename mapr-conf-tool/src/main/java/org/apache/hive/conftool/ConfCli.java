@@ -24,6 +24,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.hive.common.util.MapRSecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -45,8 +46,7 @@ public final class ConfCli {
   private static final Options CMD_LINE_OPTIONS = new Options();
   private static final HelpFormatter HELP_FORMATTER = new HelpFormatter();
   private static final String HELP = "help";
-  private static final String MAPR_SASL = "maprsasl";
-  private static final String SECURITY = "security";
+  private static final String AUTH_METHOD = "authMethod";
   private static final String PATH = "path";
   private static final String TOOL_NAME = "conftool";
   private static final String HS2_HA = "hs2ha";
@@ -55,6 +55,7 @@ public final class ConfCli {
   private static final String CONNECTION_URL = "connurl";
   private static final String WEB_UI_PAM_SSL = "webuipamssl";
   private static final String EXIST_PROPERTY = "existProperty";
+  private static final String GET_AUTH_METHOD = "getAuthMethod";
   private static final String WEBHCAT_SSL = "webhcatssl";
   private static final String HS2_SSL = "hs2ssl";
   private static final String METASTORE_SSL = "hmetassl";
@@ -77,14 +78,10 @@ public final class ConfCli {
     OptionBuilder.withDescription("Print help information");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HELP));
 
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures hive-site.xml for MapR-SASL security");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(MAPR_SASL));
-
     OptionBuilder.hasArg();
-    OptionBuilder.withArgName("true or false for security");
-    OptionBuilder.withDescription("Shows current status of security");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(SECURITY));
+    OptionBuilder.withArgName("'maprsasl', 'kerberos' or 'custom' when security is on and 'none' when security is off");
+    OptionBuilder.withDescription("Shows authentication method for the security");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(AUTH_METHOD));
 
     OptionBuilder.hasArg();
     OptionBuilder.withArgName("path to xml file");
@@ -200,6 +197,10 @@ public final class ConfCli {
     OptionBuilder.withArgName("metrics file location");
     OptionBuilder.withDescription("Configures Metastore metrics output file location");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_METASTORE_METRICS_FILE_LOCATION));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Returns authentication method to MapR FS");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_AUTH_METHOD));
   }
 
   public static void main(String[] args)
@@ -219,8 +220,8 @@ public final class ConfCli {
       printHelp();
     } else if (line.hasOption(PATH)) {
       String pathToXmlFile = line.getOptionValue(PATH);
-      if (isSecurityConfig(line)) {
-        configureSecurity(pathToXmlFile, getSecurity(line));
+      if (isAuthMethodConfig(line)) {
+        configureSecurity(pathToXmlFile, getAuthMethod(line));
       }
 
       if (isHs2HaConfig(line)) {
@@ -281,7 +282,7 @@ public final class ConfCli {
       }
 
       if (isRestrictedList(line)) {
-        ConfTool.setRestrictedList(pathToXmlFile, getSecurity(line));
+        ConfTool.setRestrictedList(pathToXmlFile, getAuthMethod(line));
       }
 
       if (isGetProperty(line)) {
@@ -295,28 +296,28 @@ public final class ConfCli {
       }
 
       if (isWebUiHs2PamSslConfig(line)) {
-        ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getSecurity(line));
+        ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getAuthMethod(line));
       }
 
       if (isWeHCatSslConfig(line)) {
-        ConfTool.setWebHCatSsl(pathToXmlFile, getSecurity(line));
+        ConfTool.setWebHCatSsl(pathToXmlFile, getAuthMethod(line));
       }
 
       if (isHs2SslConfig(line)) {
-        ConfTool.setHs2Ssl(pathToXmlFile, getSecurity(line));
+        ConfTool.setHs2Ssl(pathToXmlFile, getAuthMethod(line));
       }
 
       if (isHMetaSslConfig(line)) {
-        ConfTool.setHMetaSsl(pathToXmlFile, getSecurity(line));
+        ConfTool.setHMetaSsl(pathToXmlFile, getAuthMethod(line));
       }
 
       if (isAdminUser(line)) {
         String adminUser = line.getOptionValue(ADMIN_USER);
-        ConfTool.setAdminUser(pathToXmlFile, adminUser, getSecurity(line));
+        ConfTool.setAdminUser(pathToXmlFile, adminUser, getAuthMethod(line));
       }
 
       if (isFallbackAuthorizer(line)) {
-        ConfTool.setFallbackAuthorizer(pathToXmlFile, getSecurity(line));
+        ConfTool.setFallbackAuthorizer(pathToXmlFile, getAuthMethod(line));
       }
       if (isHiveServer2Metrics(line)) {
         boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
@@ -358,6 +359,8 @@ public final class ConfCli {
         }
       }
 
+    } else if (isGetAuthMethod(line)) {
+      System.out.println(MapRSecurityUtil.getAuthMethod());
     } else {
       printHelp();
     }
@@ -371,25 +374,25 @@ public final class ConfCli {
     return line.getOptionValue(CONNECTION_URL) != null && !line.getOptionValue(CONNECTION_URL).isEmpty();
   }
 
-  private static boolean isSecurityConfig(CommandLine line) {
-    return line.hasOption(MAPR_SASL);
+  private static boolean isAuthMethodConfig(CommandLine line) {
+    return line.hasOption(AUTH_METHOD);
   }
 
-  private static boolean hasValidSecurityOptions(CommandLine line) {
-    return line.hasOption(SECURITY) && isTrueOrFalseOrCustom(line.getOptionValue(SECURITY));
+  private static boolean isValidAuthMethodAndOption(CommandLine line) {
+    return isAuthMethodConfig(line) && isValid(line.getOptionValue(AUTH_METHOD));
   }
 
-  private static void configureSecurity(String pathToHiveSite, Security security)
+  private static void configureSecurity(String pathToHiveSite, AuthMethod authMethod)
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
-    ConfTool.setMaprSasl(pathToHiveSite, security);
-    ConfTool.setEncryption(pathToHiveSite, security);
-    ConfTool.setMetaStoreUgi(pathToHiveSite, security);
-    ConfTool.setMetaStoreAuthManager(pathToHiveSite, security);
+    ConfTool.setMetaStoreUseThriftSasl(pathToHiveSite, authMethod);
+    ConfTool.setEncryption(pathToHiveSite, authMethod);
+    ConfTool.setMetaStoreUgi(pathToHiveSite, authMethod);
+    ConfTool.setMetaStoreAuthManager(pathToHiveSite, authMethod);
   }
 
-  private static Security getSecurity(CommandLine line) {
-    if (hasValidSecurityOptions(line)) {
-      return Security.parse(line.getOptionValue(SECURITY));
+  private static AuthMethod getAuthMethod(CommandLine line) {
+    if (isValidAuthMethodAndOption(line)) {
+      return AuthMethod.parse(line.getOptionValue(AUTH_METHOD));
     } else {
       printHelp();
       throw new IllegalArgumentException("Incorrect security configuration options");
@@ -435,6 +438,10 @@ public final class ConfCli {
 
   private static boolean isExistVerification(CommandLine line) {
     return line.hasOption(EXIST_PROPERTY);
+  }
+
+  private static boolean isGetAuthMethod(CommandLine line) {
+    return line.hasOption(GET_AUTH_METHOD);
   }
 
   private static boolean hasValidExistPropertyOptions(CommandLine line) {

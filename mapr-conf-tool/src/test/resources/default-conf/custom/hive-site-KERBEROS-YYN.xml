@@ -1,0 +1,19 @@
+<configuration>
+  <!-- MaprSals -->
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>KERBEROS</value>
+  </property>
+
+  <property>
+    <name>metastore.authentication</name>
+    <value>KERBEROS</value>
+  </property>
+
+  <property>
+    <name>hive.server2.thrift.sasl.qop</name>
+    <value>auth</value>
+  </property>
+
+</configuration>
