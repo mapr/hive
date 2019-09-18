@@ -47,14 +47,18 @@ public class MapRDbJsonFetchByIdOperator extends FetchOperator {
     super(work, job, operator, new ArrayList<VirtualColumn>());
   }
 
-  @Override public InspectableObject getNextRow() throws IOException {
+  @Override
+  public InspectableObject getNextRow() throws IOException {
     try {
       MapRDbJsonFetchByIdWork mapRWork = (MapRDbJsonFetchByIdWork) work;
       if (mapRWork.isEmpty()) {
         return null;
       } else {
-        Document document = MapRDbJsonTableUtil.findById(mapRWork.getMapRDbTableName(), mapRWork.getSearchValue());
-        inspectable.o = new DocumentWritable(document);
+        Document document = MapRDbJsonTableUtil
+            .findById(mapRWork.getMapRDbTableName(), mapRWork.getSearchValue());
+        if (document == null) {
+          return null;
+        }
         currSerDe = tableSerDe;
         inspectable.oi = currSerDe.getObjectInspector();
         inspectable.o = currSerDe.deserialize(new DocumentWritable(document));
