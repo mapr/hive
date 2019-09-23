@@ -140,6 +140,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring metastore not to use UGI");
       set(doc, METASTORE_EXECUTE_SET_UGI, FALSE);
       break;
@@ -187,6 +188,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring metastore authorization manager to StorageBasedAuthorizationProvider");
       set(doc, HIVE_METASTORE_AUTHORIZATION_MANAGER, METASTORE_SECURE_AUTH_MANAGER);
       break;
@@ -233,6 +235,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring Hive for HiveServer2 web UI PAM authentication and SSL encryption");
       set(doc, HIVE_SERVER2_WEBUI_USE_PAM, TRUE);
       set(doc, HIVE_SERVER2_WEBUI_USE_SSL, TRUE);
@@ -283,6 +286,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring webHCat for SSL encryption");
       set(doc, AppConfig.USE_SSL, TRUE);
       break;
@@ -314,6 +318,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring webHCat for SSL encryption");
       set(doc, AppConfig.USE_SSL, TRUE);
       break;
@@ -342,6 +347,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring HS2 for  SSL encryption");
       set(doc, ConfVars.HIVE_SERVER2_USE_SSL, TRUE);
       break;
@@ -368,6 +374,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring Hive Metastore for  SSL encryption");
       set(doc, ConfVars.HIVE_METASTORE_USE_SSL, TRUE);
       break;
@@ -445,6 +452,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       appendProperty(doc, USERS_IN_ADMIN_ROLE.varname, adminUser);
       break;
     case NONE:
@@ -469,6 +477,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Configuring auth-conf by default");
       set(doc, HIVE_SERVER2_THRIFT_SASL_QOP, AUTH_CONF);
       break;
@@ -533,6 +542,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       set(doc, HIVE_AUTHORIZATION_ENABLED, TRUE);
       set(doc, HIVE_AUTHORIZATION_MANAGER, FALLBACK_HIVE_AUTHORIZER_FACTORY);
       break;
@@ -660,6 +670,7 @@ final class ConfTool {
     case CUSTOM:
       return;
     case MAPRSASL:
+    case KERBEROS:
       LOG.info("Enabling additional options for restricted list : {}", OPTIONS_AS_LIST);
       set(doc, HIVE_CONF_RESTRICTED_LIST, OPTIONS_AS_LIST);
       break;
