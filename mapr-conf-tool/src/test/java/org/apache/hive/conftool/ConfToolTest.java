@@ -32,6 +32,7 @@ import java.io.IOException;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_METRICS_JSON_FILE_LOCATION;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
+import static org.apache.hive.conftool.AuthMethod.KERBEROS;
 import static org.apache.hive.conftool.AuthMethod.NONE;
 import static org.apache.hive.conftool.AuthMethod.MAPRSASL;
 import static org.apache.hive.conftool.AuthMethod.CUSTOM;
@@ -48,6 +49,14 @@ public class ConfToolTest {
   }
 
   @Test
+  public void setKrbTrueTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-003.xml");
+    ConfTool.setMetaStoreUseThriftSasl(doc, KERBEROS);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
+  }
+
+
+  @Test
   public void enableHs2HaTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-010.xml");
     ConfTool.enableHs2Ha(doc, "node1,node2");
@@ -59,6 +68,13 @@ public class ConfToolTest {
   public void setMaprSaslTrueTest2() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-005.xml");
     ConfTool.setMetaStoreUseThriftSasl(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
+  }
+
+  @Test
+  public void setKrbTrueTest2() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-005.xml");
+    ConfTool.setMetaStoreUseThriftSasl(doc, KERBEROS);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
   }
 
@@ -77,9 +93,16 @@ public class ConfToolTest {
   }
 
   @Test
-  public void enableEncryptionTrueTest() throws IOException, ParserConfigurationException, SAXException {
+  public void enableEncryptionMaprSaslTrueTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-008.xml");
     ConfTool.setEncryption(doc, MAPRSASL);
+    Assert.assertEquals("auth-conf", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
+  }
+
+  @Test
+  public void enableEncryptionKrbTrueTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-008.xml");
+    ConfTool.setEncryption(doc, KERBEROS);
     Assert.assertEquals("auth-conf", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
   }
 
@@ -159,6 +182,14 @@ public class ConfToolTest {
   }
 
   @Test
+  public void setKrbTrueComplexTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-006.xml");
+    ConfTool.setMetaStoreUseThriftSasl(doc, KERBEROS);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.METASTORE_USE_THRIFT_SASL));
+  }
+
+
+  @Test
   public void removePropertyTest() throws IOException, SAXException, ParserConfigurationException {
     Document doc = parseFrom("hive-site-011.xml");
     Assert.assertTrue(ConfTool.propertyExists(doc, ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
@@ -176,9 +207,17 @@ public class ConfToolTest {
   }
 
   @Test
-  public void hs2WebUiPamSslSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
+  public void hs2WebUiPamSslMaprSaslTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-013.xml");
     ConfTool.setHs2WebUiPamSsl(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
+  }
+
+  @Test
+  public void hs2WebUiPamSslKrbTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-013.xml");
+    ConfTool.setHs2WebUiPamSsl(doc, KERBEROS);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_PAM));
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_WEBUI_USE_SSL));
   }
@@ -200,10 +239,18 @@ public class ConfToolTest {
   }
 
   @Test
-  public void webHCatSslSecurityOnTest()
+  public void webHCatSslMaprSaslTest()
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
     Document doc = parseFrom("webhcat-site-001.xml");
     ConfTool.setWebHCatSsl(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, AppConfig.USE_SSL));
+  }
+
+  @Test
+  public void webHCatSslKrbTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    Document doc = parseFrom("webhcat-site-001.xml");
+    ConfTool.setWebHCatSsl(doc, KERBEROS);
     Assert.assertEquals("true", ConfTool.getProperty(doc, AppConfig.USE_SSL));
   }
 
@@ -224,11 +271,19 @@ public class ConfToolTest {
   }
 
   @Test
-  public void hs2SslSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
+  public void hs2SslMaprSaslTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-023.xml");
     ConfTool.setHs2Ssl(doc, MAPRSASL);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
   }
+
+  @Test
+  public void hs2SslKrbTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-023.xml");
+    ConfTool.setHs2Ssl(doc, KERBEROS);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_SERVER2_USE_SSL));
+  }
+
 
   @Test
   public void hs2SslSecurityOffTest() throws IOException, ParserConfigurationException, SAXException {
@@ -245,9 +300,16 @@ public class ConfToolTest {
   }
 
   @Test
-  public void hMetaSslSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
+  public void hMetaSslMaprSaslTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-056.xml");
     ConfTool.setHMetaSsl(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_USE_SSL));
+  }
+
+  @Test
+  public void hMetaSslKrbTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-056.xml");
+    ConfTool.setHMetaSsl(doc, KERBEROS);
     Assert.assertEquals("true", ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_USE_SSL));
   }
 
@@ -266,9 +328,16 @@ public class ConfToolTest {
   }
 
   @Test
-  public void metaStoreUgiSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
+  public void metaStoreUgiMaprSaslTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-014.xml");
     ConfTool.setMetaStoreUgi(doc, MAPRSASL);
+    Assert.assertEquals("false", ConfTool.getProperty(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
+  }
+
+  @Test
+  public void metaStoreUgiKrbTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-014.xml");
+    ConfTool.setMetaStoreUgi(doc, KERBEROS);
     Assert.assertEquals("false", ConfTool.getProperty(doc, ConfVars.METASTORE_EXECUTE_SET_UGI));
   }
 
@@ -287,12 +356,21 @@ public class ConfToolTest {
   }
 
   @Test
-  public void metaStoreAuthManagerSecurityOnTest() throws IOException, ParserConfigurationException, SAXException {
+  public void metaStoreAuthManagerMaprSaslTest() throws IOException, ParserConfigurationException, SAXException {
     Document doc = parseFrom("hive-site-014.xml");
     ConfTool.setMetaStoreAuthManager(doc, MAPRSASL);
     Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider",
         ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_AUTHORIZATION_MANAGER));
   }
+
+  @Test
+  public void metaStoreAuthManagerKrbTest() throws IOException, ParserConfigurationException, SAXException {
+    Document doc = parseFrom("hive-site-014.xml");
+    ConfTool.setMetaStoreAuthManager(doc, KERBEROS);
+    Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider",
+        ConfTool.getProperty(doc, ConfVars.HIVE_METASTORE_AUTHORIZATION_MANAGER));
+  }
+
 
   @Test
   public void metaStoreAuthManagerSecurityOffTest() throws IOException, ParserConfigurationException, SAXException {
@@ -360,11 +438,20 @@ public class ConfToolTest {
   }
 
   @Test
-  public void adminUserSecurityOnTest() throws IOException, SAXException, ParserConfigurationException {
+  public void adminUserMaprSaslTest() throws IOException, SAXException, ParserConfigurationException {
     String adminUser = "mapr";
     Document doc = parseFrom("hive-site-029.xml");
     Assert.assertFalse(ConfTool.propertyExists(doc, USERS_IN_ADMIN_ROLE.varname));
     ConfTool.setAdminUser(doc, adminUser, MAPRSASL);
+    Assert.assertEquals(adminUser, ConfTool.getProperty(doc, USERS_IN_ADMIN_ROLE.varname));
+  }
+
+  @Test
+  public void adminUserKrbTest() throws IOException, SAXException, ParserConfigurationException {
+    String adminUser = "mapr";
+    Document doc = parseFrom("hive-site-029.xml");
+    Assert.assertFalse(ConfTool.propertyExists(doc, USERS_IN_ADMIN_ROLE.varname));
+    ConfTool.setAdminUser(doc, adminUser, KERBEROS);
     Assert.assertEquals(adminUser, ConfTool.getProperty(doc, USERS_IN_ADMIN_ROLE.varname));
   }
 
@@ -386,7 +473,7 @@ public class ConfToolTest {
   }
 
   @Test
-  public void restrictedListSecurityOnTest() throws IOException, SAXException, ParserConfigurationException {
+  public void restrictedListMaprSaslTest() throws IOException, SAXException, ParserConfigurationException {
     Document doc = parseFrom("hive-site-026.xml");
 
     ConfTool.setRestrictedList(doc, MAPRSASL);
@@ -414,6 +501,35 @@ public class ConfToolTest {
   }
 
   @Test
+  public void restrictedListKrbTest() throws IOException, SAXException, ParserConfigurationException {
+    Document doc = parseFrom("hive-site-026.xml");
+
+    ConfTool.setRestrictedList(doc, KERBEROS);
+
+    Assert.assertEquals(
+        "hive.security.authenticator.manager,hive.security.authorization.manager,"
+            + "hive.security.metastore.authorization.manager,hive.security.metastore.authenticator.manager,"
+            + "hive.users.in.admin.role,hive.server2.xsrf.filter.enabled,hive.security.authorization.enabled,"
+            + "hive.distcp.privileged.doAs,hive.server2.authentication.ldap.baseDN,hive.server2.authentication.ldap.url,"
+            + "hive.server2.authentication.ldap.Domain,hive.server2.authentication.ldap.groupDNPattern,"
+            + "hive.server2.authentication.ldap.groupFilter,hive.server2.authentication.ldap.userDNPattern,"
+            + "hive.server2.authentication.ldap.userFilter,hive.server2.authentication.ldap.groupMembershipKey,"
+            + "hive.server2.authentication.ldap.userMembershipKey,hive.server2.authentication.ldap.groupClassKey,"
+            + "hive.server2.authentication.ldap.customLDAPQuery,hive.privilege.synchronizer,"
+            + "hive.privilege.synchronizer.interval,hive.spark.client.connect.timeout,"
+            + "hive.spark.client.server.connect.timeout,hive.spark.client.channel.log.level,"
+            + "hive.spark.client.rpc.max.size,hive.spark.client.rpc.threads,hive.spark.client.secret.bits,"
+            + "hive.spark.client.rpc.server.address,hive.spark.client.rpc.server.port,"
+            + "hive.spark.client.rpc.sasl.mechanisms,bonecp.,hive.druid.broker.address.default,"
+            + "hive.druid.coordinator.address.default,hikari.,hadoop.bin.path,yarn.bin.path,spark.home,"
+            + "hive.exec.pre.hooks,hive.exec.post.hooks,hive.exec.failure.hooks,hive.exec.query.redactor.hooks,"
+            + "hive.semantic.analyzer.hook,hive.query.lifetime.hooks,hive.exec.driver.run.hooks,"
+            + "hive.server2.session.hook",
+        ConfTool.getProperty(doc, "hive.conf.restricted.list"));
+  }
+
+
+  @Test
   public void restrictedListSecurityOffTest() throws IOException, SAXException, ParserConfigurationException {
     Document doc = parseFrom("hive-site-027.xml");
     ConfTool.setRestrictedList(doc, NONE);
@@ -428,10 +544,21 @@ public class ConfToolTest {
   }
 
   @Test
-  public void setFallbackAuthorizerSecurityOnTest()
+  public void setFallbackAuthorizerMaprSaslTest()
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     Document doc = parseFrom("hive-site-047.xml");
     ConfTool.setFallbackAuthorizer(doc, MAPRSASL);
+    Assert.assertEquals("true", ConfTool.getProperty(doc, "hive.security.authorization.enabled"));
+    Assert
+        .assertEquals("org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory",
+            ConfTool.getProperty(doc, "hive.security.authorization.manager"));
+  }
+
+  @Test
+  public void setFallbackAuthorizerKrbTest()
+      throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = parseFrom("hive-site-047.xml");
+    ConfTool.setFallbackAuthorizer(doc, KERBEROS);
     Assert.assertEquals("true", ConfTool.getProperty(doc, "hive.security.authorization.enabled"));
     Assert
         .assertEquals("org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory",
