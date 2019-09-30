@@ -247,11 +247,34 @@ public class ConfToolTest {
   }
 
   @Test
+  public void webHCatSslMaprSaslNoRedundantTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    Document doc = parseFrom("webhcat-site-001.xml");
+    ConfTool.setWebHCatSsl(doc, MAPRSASL);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.sasl.enabled"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.server2.thrift.sasl.qop"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.execute.setugi"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.security.metastore.authorization.manager"));
+  }
+
+
+  @Test
   public void webHCatSslKrbTest()
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
     Document doc = parseFrom("webhcat-site-001.xml");
     ConfTool.setWebHCatSsl(doc, KERBEROS);
     Assert.assertEquals("true", ConfTool.getProperty(doc, AppConfig.USE_SSL));
+  }
+
+  @Test
+  public void webHCatSslKrbNoRedundantTest()
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    Document doc = parseFrom("webhcat-site-001.xml");
+    ConfTool.setWebHCatSsl(doc, KERBEROS);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.sasl.enabled"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.server2.thrift.sasl.qop"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.execute.setugi"));
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.security.metastore.authorization.manager"));
   }
 
   @Test

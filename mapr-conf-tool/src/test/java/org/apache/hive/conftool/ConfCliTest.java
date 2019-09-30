@@ -481,11 +481,34 @@ public class ConfCliTest {
   }
 
   @Test
+  public void configureWebHCatSslMaprSaslNoRedundantTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToWebHCatSite = getPath("webhcat-site-002.xml");
+    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--authMethod", "maprsasl" });
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.metastore.sasl.enabled"));
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.server2.thrift.sasl.qop"));
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.metastore.execute.setugi"));
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.security.metastore.authorization.manager"));
+  }
+
+
+  @Test
   public void configureWebHCatSslKrbTest()
       throws ParserConfigurationException, TransformerException, SAXException, IOException {
     String pathToWebHCatSite = getPath("webhcat-site-002.xml");
     ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--authMethod", "kerberos" });
     Assert.assertTrue(ConfTool.exists(pathToWebHCatSite, "templeton.use.ssl"));
+  }
+
+  @Test
+  public void configureWebHCatSslKrbNoRedundantTest()
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToWebHCatSite = getPath("webhcat-site-002.xml");
+    ConfCli.main(new String[] { "--webhcatssl", "--path", pathToWebHCatSite, "--authMethod", "kerberos" });
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.metastore.sasl.enabled"));
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.server2.thrift.sasl.qop"));
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.metastore.execute.setugi"));
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "hive.security.metastore.authorization.manager"));
   }
 
 

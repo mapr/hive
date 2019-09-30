@@ -206,7 +206,7 @@ public final class ConfCli {
   public static void main(String[] args)
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
     CommandLineParser cmdParser = new GnuParser();
-    CommandLine line = null;
+    CommandLine line;
     try {
       line = cmdParser.parse(CMD_LINE_OPTIONS, args);
     } catch (ParseException e) {
@@ -220,150 +220,181 @@ public final class ConfCli {
       printHelp();
     } else if (line.hasOption(PATH)) {
       String pathToXmlFile = line.getOptionValue(PATH);
-      if (isAuthMethodConfig(line)) {
-        configureSecurity(pathToXmlFile, getAuthMethod(line));
+      if (isHiveSite(pathToXmlFile)) {
+        configureHiveSite(pathToXmlFile, line);
       }
-
-      if (isHs2HaConfig(line)) {
-        if (hasValidHs2HaOptions(line)) {
-          String zookeeperQuorum = line.getOptionValue(ZK_QUORUM);
-          ConfTool.enableHs2Ha(pathToXmlFile, zookeeperQuorum);
-        } else {
-          printHelp();
-          throw new IllegalArgumentException("Incorrect HS2 HA configuration options");
-        }
+      if (isWebHCatSite(pathToXmlFile)) {
+        configureWebHCatSite(pathToXmlFile, line);
       }
-
-      if (isMetaStoreUriConfig(line)) {
-        ConfTool.initMetaStoreUri(pathToXmlFile);
-      }
-
-      if (isExistVerification(line)) {
-        if (hasValidExistPropertyOptions(line)) {
-          String property = line.getOptionValue(EXIST_PROPERTY);
-          printBool(ConfTool.exists(pathToXmlFile, property));
-        } else {
-          printHelp();
-          throw new IllegalArgumentException("Incorrect property verification options");
-        }
-      }
-
-      if (isConnectionUrlConfig(line)) {
-        if (hasValidConnectionUrlOptions(line)) {
-          String connectionUrl = line.getOptionValue(CONNECTION_URL);
-          ConfTool.setConnectionUrl(pathToXmlFile, connectionUrl);
-        } else {
-          printHelp();
-          throw new IllegalArgumentException("Incorrect connection URL configuration options");
-        }
-      }
-
-      if (isDelProperty(line)) {
-        String property = line.getOptionValue(DEL_PROPERTY);
-        ConfTool.delProperty(pathToXmlFile, property);
-      }
-
-      if (isAddProperty(line)) {
-        String[] optionValues = line.getOptionValues(ADD_PROPERTY);
-        if (optionValues.length == 2) {
-          String property = optionValues[0];
-          String value = optionValues[1];
-          ConfTool.addProperty(pathToXmlFile, property, value);
-        }
-      }
-
-      if (isAppendProperty(line)) {
-        String[] optionValues = line.getOptionValues(APPEND_PROPERTY);
-        if (optionValues.length == 2) {
-          String property = optionValues[0];
-          String value = optionValues[1];
-          ConfTool.appendProperty(pathToXmlFile, property, value);
-        }
-      }
-
-      if (isRestrictedList(line)) {
-        ConfTool.setRestrictedList(pathToXmlFile, getAuthMethod(line));
-      }
-
-      if (isGetProperty(line)) {
-        String property = line.getOptionValue(GET_PROPERTY);
-        String propertyValue = ConfTool.getProperty(pathToXmlFile, property);
-        if (!propertyValue.isEmpty()) {
-          System.out.print(propertyValue);
-        } else {
-          throw new IllegalArgumentException("Property does not exist!");
-        }
-      }
-
-      if (isWebUiHs2PamSslConfig(line)) {
-        ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getAuthMethod(line));
-      }
-
-      if (isWeHCatSslConfig(line)) {
-        ConfTool.setWebHCatSsl(pathToXmlFile, getAuthMethod(line));
-      }
-
-      if (isHs2SslConfig(line)) {
-        ConfTool.setHs2Ssl(pathToXmlFile, getAuthMethod(line));
-      }
-
-      if (isHMetaSslConfig(line)) {
-        ConfTool.setHMetaSsl(pathToXmlFile, getAuthMethod(line));
-      }
-
-      if (isAdminUser(line)) {
-        String adminUser = line.getOptionValue(ADMIN_USER);
-        ConfTool.setAdminUser(pathToXmlFile, adminUser, getAuthMethod(line));
-      }
-
-      if (isFallbackAuthorizer(line)) {
-        ConfTool.setFallbackAuthorizer(pathToXmlFile, getAuthMethod(line));
-      }
-      if (isHiveServer2Metrics(line)) {
-        boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
-        ConfTool.configureHs2Metrics(pathToXmlFile, isMetricsEnabled);
-      }
-
-      if (isMetasoreMetrics(line)) {
-        boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(METASTORE_METRICS_ENABLED));
-        ConfTool.configureMetastoreMetrics(pathToXmlFile, isMetricsEnabled);
-      }
-
-      if (isReporterConfig(line)) {
-        boolean isReporterEnabled = Boolean.parseBoolean(line.getOptionValue(REPORTER_ENABLED));
-        if (isMetricsReporterType(line)) {
-          String reporterType = line.getOptionValue(METRICS_REPORTER_TYPE);
-          if (isNotNullNotEmpty(reporterType)) {
-            ConfTool.configureMetricsReporterType(pathToXmlFile, isReporterEnabled, reporterType);
-          } else {
-            throw new IllegalArgumentException("Incorrect metrics reporter type: empty string");
-          }
-        }
-
-        if (isHiveServer2MetricsReporterFileLocation(line)) {
-          String fileLocation = line.getOptionValue(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
-          if (isNotNullNotEmpty(fileLocation)) {
-            ConfTool.configureHiveServer2MetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
-          } else {
-            throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
-          }
-        }
-
-        if (isMetastoreMetricsReporterFileLocation(line)) {
-          String fileLocation = line.getOptionValue(JSON_JMX_METASTORE_METRICS_FILE_LOCATION);
-          if (isNotNullNotEmpty(fileLocation)) {
-            ConfTool.configureHiveMetastoreMetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
-          } else {
-            throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
-          }
-        }
-      }
-
+      processPropertyCmd(pathToXmlFile, line);
     } else if (isGetAuthMethod(line)) {
       System.out.println(MapRSecurityUtil.getAuthMethod());
     } else {
       printHelp();
     }
+  }
+
+  private static void processPropertyCmd(String pathToXmlFile, CommandLine line)
+      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    if (isExistVerification(line)) {
+      if (hasValidExistPropertyOptions(line)) {
+        String property = line.getOptionValue(EXIST_PROPERTY);
+        printBool(ConfTool.exists(pathToXmlFile, property));
+      } else {
+        printHelp();
+        throw new IllegalArgumentException("Incorrect property verification options");
+      }
+    }
+
+    if (isDelProperty(line)) {
+      String property = line.getOptionValue(DEL_PROPERTY);
+      ConfTool.delProperty(pathToXmlFile, property);
+    }
+
+    if (isAddProperty(line)) {
+      String[] optionValues = line.getOptionValues(ADD_PROPERTY);
+      if (optionValues.length == 2) {
+        String property = optionValues[0];
+        String value = optionValues[1];
+        ConfTool.addProperty(pathToXmlFile, property, value);
+      }
+    }
+
+    if (isAppendProperty(line)) {
+      String[] optionValues = line.getOptionValues(APPEND_PROPERTY);
+      if (optionValues.length == 2) {
+        String property = optionValues[0];
+        String value = optionValues[1];
+        ConfTool.appendProperty(pathToXmlFile, property, value);
+      }
+    }
+
+    if (isGetProperty(line)) {
+      String property = line.getOptionValue(GET_PROPERTY);
+      String propertyValue = ConfTool.getProperty(pathToXmlFile, property);
+      if (!propertyValue.isEmpty()) {
+        System.out.print(propertyValue);
+      } else {
+        throw new IllegalArgumentException("Property does not exist!");
+      }
+    }
+  }
+
+  private static void configureHiveSite(String pathToXmlFile, CommandLine line)
+      throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    if (isAuthMethodConfig(line)) {
+      configureSecurity(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isHs2HaConfig(line)) {
+      if (hasValidHs2HaOptions(line)) {
+        String zookeeperQuorum = line.getOptionValue(ZK_QUORUM);
+        ConfTool.enableHs2Ha(pathToXmlFile, zookeeperQuorum);
+      } else {
+        printHelp();
+        throw new IllegalArgumentException("Incorrect HS2 HA configuration options");
+      }
+    }
+
+    if (isMetaStoreUriConfig(line)) {
+      ConfTool.initMetaStoreUri(pathToXmlFile);
+    }
+
+    if (isConnectionUrlConfig(line)) {
+      if (hasValidConnectionUrlOptions(line)) {
+        String connectionUrl = line.getOptionValue(CONNECTION_URL);
+        ConfTool.setConnectionUrl(pathToXmlFile, connectionUrl);
+      } else {
+        printHelp();
+        throw new IllegalArgumentException("Incorrect connection URL configuration options");
+      }
+    }
+
+    if (isRestrictedList(line)) {
+      ConfTool.setRestrictedList(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isWebUiHs2PamSslConfig(line)) {
+      ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isHs2SslConfig(line)) {
+      ConfTool.setHs2Ssl(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isHMetaSslConfig(line)) {
+      ConfTool.setHMetaSsl(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isAdminUser(line)) {
+      String adminUser = line.getOptionValue(ADMIN_USER);
+      ConfTool.setAdminUser(pathToXmlFile, adminUser, getAuthMethod(line));
+    }
+
+    if (isFallbackAuthorizer(line)) {
+      ConfTool.setFallbackAuthorizer(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isHiveServer2Metrics(line)) {
+      boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
+      ConfTool.configureHs2Metrics(pathToXmlFile, isMetricsEnabled);
+    }
+
+    if (isMetasoreMetrics(line)) {
+      boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(METASTORE_METRICS_ENABLED));
+      ConfTool.configureMetastoreMetrics(pathToXmlFile, isMetricsEnabled);
+    }
+
+    if (isReporterConfig(line)) {
+      configureReporter(pathToXmlFile, line);
+    }
+  }
+
+  private static void configureReporter(String pathToXmlFile, CommandLine line)
+      throws SAXException, TransformerException, ParserConfigurationException, IOException {
+    boolean isReporterEnabled = Boolean.parseBoolean(line.getOptionValue(REPORTER_ENABLED));
+    if (isMetricsReporterType(line)) {
+      String reporterType = line.getOptionValue(METRICS_REPORTER_TYPE);
+      if (isNotNullNotEmpty(reporterType)) {
+        ConfTool.configureMetricsReporterType(pathToXmlFile, isReporterEnabled, reporterType);
+      } else {
+        throw new IllegalArgumentException("Incorrect metrics reporter type: empty string");
+      }
+    }
+
+    if (isHiveServer2MetricsReporterFileLocation(line)) {
+      String fileLocation = line.getOptionValue(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
+      if (isNotNullNotEmpty(fileLocation)) {
+        ConfTool.configureHiveServer2MetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
+      } else {
+        throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
+      }
+    }
+
+    if (isMetastoreMetricsReporterFileLocation(line)) {
+      String fileLocation = line.getOptionValue(JSON_JMX_METASTORE_METRICS_FILE_LOCATION);
+      if (isNotNullNotEmpty(fileLocation)) {
+        ConfTool.configureHiveMetastoreMetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
+      } else {
+        throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
+      }
+    }
+  }
+
+
+  private static void configureWebHCatSite(String pathToXmlFile, CommandLine line)
+      throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    if (isWeHCatSslConfig(line)) {
+      ConfTool.setWebHCatSsl(pathToXmlFile, getAuthMethod(line));
+    }
+  }
+
+  private static boolean isWebHCatSite(String pathToXmlFile) {
+    return pathToXmlFile != null && !pathToXmlFile.isEmpty() && pathToXmlFile.matches(".*/webhcat-site.*\\.xml$");
+  }
+
+  private static boolean isHiveSite(String pathToXmlFile) {
+    return pathToXmlFile != null && !pathToXmlFile.isEmpty() && pathToXmlFile.matches(".*/hive-site.*\\.xml$");
   }
 
   private static boolean isConnectionUrlConfig(CommandLine line) {
