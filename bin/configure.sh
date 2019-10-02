@@ -62,6 +62,7 @@ WEBHCAT_SITE="$HIVE_HOME"/hcatalog/etc/webhcat/webhcat-site.xml
 REPORTER_TYPE="JSON_FILE,JMX"
 HIVE_SERVER2_REPORTER_FILE_LOCATION="/tmp/hiveserver2_report.json"
 HIVE_METASTORE_REPORTER_FILE_LOCATION="/tmp/hivemetastore_report.json"
+HEADERS="$HIVE_CONF"/headers.xml
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -233,6 +234,18 @@ fi
 }
 
 #
+# Configure security headers for webHCat service
+#
+configure_webhcat_headres(){
+WEBHCAT_SITE="$1"
+authMethod="$2"
+headers="$3"
+if security_has_to_be_configured ;  then
+  . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" -webhcat_headers "$headers" -authMethod "$authMethod"
+fi
+}
+
+#
 # Set SSL encryption by default for HiveServer2 on MapR SASL cluster
 #
 configure_hs2_ssl(){
@@ -241,6 +254,18 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -authMethod "$authMethod"
+fi
+}
+
+#
+# Configure security headers for HiveServer2 Web UI service
+#
+configure_hs2_webui_headres(){
+HIVE_SITE="$1"
+authMethod="$2"
+headers="$3"
+if security_has_to_be_configured ;  then
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -webui_headers "$headers" -authMethod "$authMethod"
 fi
 }
 
@@ -913,7 +938,11 @@ configure_hs2_webui_pam_and_ssl "$HIVE_SITE" "$authMethod"
 
 configure_webhcat_ssl "$WEBHCAT_SITE" "$authMethod"
 
+configure_webhcat_headres "$WEBHCAT_SITE" "$authMethod" "$HEADERS"
+
 configure_hs2_ssl "$HIVE_SITE" "$authMethod"
+
+configure_hs2_webui_headres "$HIVE_SITE" "$authMethod" "$HEADERS"
 
 # Comment out according MAPR-HIVE-507 : hive.metastore.use.SSL should be set to false by default
 # TODO: uncomment after hive.metastore.use.SSL back-porting to Hive-1.2 Spark branch

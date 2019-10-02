@@ -22,12 +22,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -84,6 +86,8 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 /**
  * A simple embedded Jetty server to serve as HS2/HMS web UI.
@@ -490,6 +494,10 @@ public class HttpServer {
       logCtx.setResourceBase(logDir);
       logCtx.setDisplayName("logs");
     }
+
+    FilterHolder customHolder = new FilterHolder(CustomHeadersFilter.class);
+    customHolder.setInitParameter(HEADERS, b.conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE));
+    webAppContext.addFilter(customHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
   }
 
   String getLogDir(Configuration conf) {

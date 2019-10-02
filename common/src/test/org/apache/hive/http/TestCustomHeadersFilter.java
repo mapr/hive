@@ -1,0 +1,85 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.hive.http;
+
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+
+import static org.apache.hive.http.TestFileHelper.getPath;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.core.IsNot.not;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+
+public class TestCustomHeadersFilter {
+
+  private ServletRequest servletRequest;
+  private HttpServletResponse servletResponse;
+  private FilterChain filterChain;
+  private ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
+  private ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
+
+  {
+    servletRequest = mock(ServletRequest.class);
+    servletResponse = mock(HttpServletResponse.class);
+    filterChain = mock(FilterChain.class);
+    doNothing().when(servletResponse).addHeader(key.capture(), value.capture());
+  }
+
+  @Test
+  public void testDoCustomFilter() throws ServletException, IOException {
+    Filter filter = new CustomHeadersFilter();
+    TestFilterConfig filterConfig = new TestFilterConfig();
+    filterConfig.setHeaders(getPath("headers.xml"));
+    filter.init(filterConfig);
+    filter.doFilter(servletRequest, servletResponse, filterChain);
+
+    List<String> actualKeys = key.getAllValues();
+    List<String> actualValues = value.getAllValues();
+
+    assertThat(actualKeys, containsInAnyOrder("Content-Security-Policy", "X-XSS-Protection", "X-Content-Type-Options",
+        "Strict-Transport-Security", "Custom-Header"));
+    assertThat(actualValues,
+        containsInAnyOrder("nosniff", "1; mode=block", "max-age=31536000", "default-src https:", "custom-value"));
+  }
+
+  @Test
+  public void testNoCustomFilter() throws ServletException, IOException {
+    Filter filter = new CustomHeadersFilter();
+    filter.init(null);
+    filter.doFilter(servletRequest, servletResponse, filterChain);
+
+    List<String> actualKeys = key.getAllValues();
+    List<String> actualValues = value.getAllValues();
+
+    assertThat(actualKeys, not(containsInAnyOrder("Content-Security-Policy", "X-XSS-Protection", "X-Content-Type-Options",
+        "Strict-Transport-Security", "Custom-Header")));
+    assertThat(actualValues,
+        not(containsInAnyOrder("nosniff", "1; mode=block", "max-age=31536000", "default-src https:", "custom-value")));
+  }
+}

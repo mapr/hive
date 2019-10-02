@@ -2395,6 +2395,9 @@ public class HiveConf extends Configuration {
       "If true, the HiveServer2 WebUI will be secured with PAM."),
     HIVE_SERVER2_WEBUI_PAM_AUTHENTICATOR("hive.server2.webui.pam.authenticator",
       "org.apache.hive.http.security.PamAuthenticator", "Class for PAM authentication"),
+    HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE(
+        "hive.server2.webui.jetty.response.headers.file", "",
+        "Pointer to a file that contains list of custom headers for jetty's server response"),
 
     // Tez session settings
     HIVE_SERVER2_TEZ_DEFAULT_QUEUES("hive.server2.tez.default.queues", "",

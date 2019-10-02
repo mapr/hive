@@ -115,6 +115,7 @@ public class AppConfig extends Configuration {
   public static final String KEY_STORE_PASSWORD  = "templeton.keystore.password";
   public static final String SSL_PROTOCOL_BLACKLIST  = "templeton.ssl.protocol.blacklist";
   public static final String HOST                = "templeton.host";
+  public static final String HEADERS_FILE = "templeton.jetty.response.headers.file";
 
   /*
    * These parameters controls the maximum number of concurrent job submit/status/list
@@ -387,6 +388,7 @@ public class AppConfig extends Configuration {
   public String amMemoryMb() {
     return get(MR_AM_MEMORY_MB);
   }
+  public String headersFile(){return get(HEADERS_FILE, "");}
 
   /**
    * @see  #HIVE_PROPS_NAME

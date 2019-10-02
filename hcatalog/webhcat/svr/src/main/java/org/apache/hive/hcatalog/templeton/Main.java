@@ -32,6 +32,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.http.CustomHeadersFilter;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -67,6 +69,8 @@ import javax.servlet.http.HttpServletRequest;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
+
 /**
  * The main executable that starts up and runs the Server.
  */
@@ -221,6 +225,9 @@ public class Main {
     root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/mapreduce/*", dispatches);
     root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/status/*", dispatches);
     root.addFilter(fHolder, "/" + SERVLET_PATH + "/v1/version/*", dispatches);
+    FilterHolder customHolder = new FilterHolder(CustomHeadersFilter.class);
+    customHolder.setInitParameter(HEADERS, getAppConfigInstance().headersFile());
+    root.addFilter(customHolder, "/" + SERVLET_PATH + "/*", dispatches);
 
     if (conf.getBoolean(AppConfig.XSRF_FILTER_ENABLED, false)){
       root.addFilter(makeXSRFFilter(), "/" + SERVLET_PATH + "/*", dispatches);
