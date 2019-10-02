@@ -72,6 +72,8 @@ public final class ConfCli {
   private static final String METRICS_REPORTER_TYPE = "reporter_type";
   private static final String JSON_JMX_METASTORE_METRICS_FILE_LOCATION = "hmeta_report_file";
   private static final String JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION = "hs2_report_file";
+  private static final String WEBHCAT_HEADERS = "webhcat_headers";
+  private static final String WEBUI_HEADERS = "webui_headers";
 
   static {
     OptionBuilder.hasArg(false);
@@ -201,6 +203,16 @@ public final class ConfCli {
     OptionBuilder.hasArg(false);
     OptionBuilder.withDescription("Returns authentication method to MapR FS");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_AUTH_METHOD));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("path to headers xml file");
+    OptionBuilder.withDescription("Path to headers xml file to configure security headers for webHCat server");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBHCAT_HEADERS));
+
+    OptionBuilder.hasArg();
+    OptionBuilder.withArgName("path to headers xml file");
+    OptionBuilder.withDescription("Path to headers xml file to configure security headers for HS2 web UI server");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBUI_HEADERS));
   }
 
   public static void main(String[] args)
@@ -348,6 +360,11 @@ public final class ConfCli {
     if (isReporterConfig(line)) {
       configureReporter(pathToXmlFile, line);
     }
+
+    if (isWebUiHeadersConfig(line)) {
+      String headers = line.getOptionValue(WEBUI_HEADERS);
+      ConfTool.setWebUiHeaders(pathToXmlFile, getAuthMethod(line), headers);
+    }
   }
 
   private static void configureReporter(String pathToXmlFile, CommandLine line)
@@ -386,6 +403,11 @@ public final class ConfCli {
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
     if (isWeHCatSslConfig(line)) {
       ConfTool.setWebHCatSsl(pathToXmlFile, getAuthMethod(line));
+    }
+
+    if (isWebHCatHeadersConfig(line)) {
+      String headers = line.getOptionValue(WEBHCAT_HEADERS);
+      ConfTool.setWebHCatHeaders(pathToXmlFile, getAuthMethod(line), headers);
     }
   }
 
@@ -482,6 +504,17 @@ public final class ConfCli {
 
   private static boolean isWeHCatSslConfig(CommandLine line) {
     return line.hasOption(WEBHCAT_SSL);
+  }
+
+  private static boolean isWebHCatHeadersConfig(CommandLine line) {
+    return line.hasOption(WEBHCAT_HEADERS) && line.getOptionValue(WEBHCAT_HEADERS) != null && !line
+        .getOptionValue(WEBHCAT_HEADERS).isEmpty();
+  }
+
+
+  private static boolean isWebUiHeadersConfig(CommandLine line) {
+    return line.hasOption(WEBUI_HEADERS) && line.getOptionValue(WEBUI_HEADERS) != null && !line
+        .getOptionValue(WEBUI_HEADERS).isEmpty();
   }
 
   private static boolean isHs2SslConfig(CommandLine line) {

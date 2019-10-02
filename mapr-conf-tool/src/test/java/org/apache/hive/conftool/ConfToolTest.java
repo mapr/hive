@@ -654,4 +654,60 @@ public class ConfToolTest {
     Assert.assertFalse(ConfTool.propertyExists(doc, "hive.service.metrics.reporter"));
     Assert.assertFalse(ConfTool.propertyExists(doc, HIVE_METASTORE_METRICS_JSON_FILE_LOCATION));
   }
+
+  @Test
+  public void setWebHCatHeadersMaprSasl() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("webhcat-site-006.xml");
+    ConfTool.setWebHCatHeaders(doc, MAPRSASL, "/opt/mapr/conf/headers.xml");
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(doc, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebHCatHeadersKrb() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("webhcat-site-006.xml");
+    ConfTool.setWebHCatHeaders(doc, KERBEROS, "/opt/mapr/conf/headers.xml");
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(doc, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebHCatHeadersCustom() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("webhcat-site-007.xml");
+    ConfTool.setWebHCatHeaders(doc, CUSTOM, "/opt/mapr/conf/headers.xml");
+    Assert.assertEquals("customValue", ConfTool.getProperty(doc, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebHCatHeadersNone() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("webhcat-site-008.xml");
+    ConfTool.setWebHCatHeaders(doc, NONE, "/opt/mapr/conf/headers.xml");
+    Assert.assertFalse(ConfTool.propertyExists(doc, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersMaprSasl() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-058.xml");
+    ConfTool.setWebUiHeaders(doc, MAPRSASL, "/opt/mapr/conf/headers.xml");
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(doc, "hive.server2.webui.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersKrb() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-058.xml");
+    ConfTool.setWebUiHeaders(doc, KERBEROS, "/opt/mapr/conf/headers.xml");
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(doc, "hive.server2.webui.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersCustom() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-059.xml");
+    ConfTool.setWebUiHeaders(doc, CUSTOM, "/opt/mapr/conf/headers.xml");
+    Assert.assertEquals("customValue", ConfTool.getProperty(doc, "hive.server2.webui.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersNone() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-060.xml");
+    ConfTool.setWebUiHeaders(doc, NONE, "/opt/mapr/conf/headers.xml");
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.server2.webui.jetty.response.headers.file"));
+  }
 }

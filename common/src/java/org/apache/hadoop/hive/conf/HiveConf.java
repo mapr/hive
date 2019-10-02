@@ -3089,7 +3089,9 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_WEBUI_CORS_ALLOWED_HEADERS("hive.server2.webui.cors.allowed.headers",
       "X-Requested-With,Content-Type,Accept,Origin",
       "Comma separated list of http headers that are allowed when CORS is enabled.\n"),
-
+    HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE(
+        "hive.server2.webui.jetty.response.headers.file", "",
+        "Pointer to a file that contains list of custom headers for jetty's server response"),
 
     // Tez session settings
     HIVE_SERVER2_ACTIVE_PASSIVE_HA_ENABLE("hive.server2.active.passive.ha.enable", false,

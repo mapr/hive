@@ -249,6 +249,7 @@
         <include>*.template</include>
         <include>ivysettings.xml</include>
         <include>hive-site.xml</include>
+        <include>headers.xml</include>
       </includes>
       <outputDirectory>conf</outputDirectory>
     </fileSet>

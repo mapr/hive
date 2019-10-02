@@ -819,4 +819,68 @@ public class ConfCliTest {
     ConfCli.main(new String[] { "--getAuthMethod" });
     Assert.assertTrue(output().contains("custom"));
   }
+
+  @Test
+  public void setWebHCatHeadersMaprSasl()
+      throws ParserConfigurationException, SAXException, IOException, TransformerException {
+    String pathToWebHCatSite = getPath("webhcat-site-006.xml");
+    ConfCli.main(new String[] { "--authMethod", "maprsasl", "--webhcat_headers", "/opt/mapr/conf/headers.xml", "--path", pathToWebHCatSite });
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(pathToWebHCatSite, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebHCatHeadersKrb()
+      throws ParserConfigurationException, SAXException, IOException, TransformerException {
+    String pathToWebHCatSite = getPath("webhcat-site-006.xml");
+    ConfCli.main(new String[] { "--authMethod", "kerberos", "--webhcat_headers", "/opt/mapr/conf/headers.xml", "--path", pathToWebHCatSite });
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(pathToWebHCatSite, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebHCatHeadersCustom()
+      throws ParserConfigurationException, SAXException, IOException, TransformerException {
+    String pathToWebHCatSite = getPath("webhcat-site-007.xml");
+    ConfCli.main(new String[] { "--authMethod", "custom", "--webhcat_headers", "/opt/mapr/conf/headers.xml", "--path", pathToWebHCatSite });
+    Assert.assertEquals("customValue", ConfTool.getProperty(pathToWebHCatSite, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebHCatHeadersNone()
+      throws ParserConfigurationException, SAXException, IOException, TransformerException {
+    String pathToWebHCatSite = getPath("webhcat-site-008.xml");
+    ConfCli.main(new String[] { "--authMethod", "none", "--webhcat_headers", "/opt/mapr/conf/headers.xml", "--path", pathToWebHCatSite });
+    Assert.assertFalse(ConfTool.exists(pathToWebHCatSite, "templeton.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersMaprSasl()
+      throws ParserConfigurationException, SAXException, IOException, TransformerException {
+    String pathToHiveSite = getPath("hive-site-058.xml");
+    ConfCli.main(new String[] { "--authMethod", "maprsasl", "--webui_headers", "/opt/mapr/conf/headers.xml", "--path", pathToHiveSite });
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersKrb() throws ParserConfigurationException, SAXException, IOException,
+      TransformerException {
+    String pathToHiveSite = getPath("hive-site-058.xml");
+    ConfCli.main(new String[] { "--authMethod", "kerberos", "--webui_headers", "/opt/mapr/conf/headers.xml", "--path", pathToHiveSite });
+    Assert.assertEquals("/opt/mapr/conf/headers.xml", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersCustom()
+      throws ParserConfigurationException, SAXException, IOException, TransformerException {
+    String pathToHiveSite = getPath("hive-site-059.xml");
+    ConfCli.main(new String[] { "--authMethod", "custom", "--webui_headers", "/opt/mapr/conf/headers.xml", "--path", pathToHiveSite });
+    Assert.assertEquals("customValue", ConfTool.getProperty(pathToHiveSite, "hive.server2.webui.jetty.response.headers.file"));
+  }
+
+  @Test
+  public void setWebUiHeadersNone() throws ParserConfigurationException, SAXException, IOException,
+      TransformerException {
+    String pathToHivetSite = getPath("hive-site-060.xml");
+    ConfCli.main(new String[] { "--authMethod", "none", "--webui_headers", "/opt/mapr/conf/headers.xml", "--path", pathToHivetSite });
+    Assert.assertFalse(ConfTool.exists(pathToHivetSite, "hive.server2.webui.jetty.response.headers.file"));
+  }
 }

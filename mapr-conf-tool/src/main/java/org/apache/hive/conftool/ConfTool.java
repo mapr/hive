@@ -333,6 +333,58 @@ final class ConfTool {
   }
 
   /**
+   * Configures security headers for webHCat server.
+   *
+   * @param pathToWebHCatSite webhcat-site.xml location
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
+   * @param headers xml file containing headers
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setWebHCatHeaders(String pathToWebHCatSite, AuthMethod authMethod, String headers)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToWebHCatSite);
+    LOG.info("Reading webhcat-site.xml from path : {}", pathToWebHCatSite);
+    setWebHCatHeaders(doc, authMethod, headers);
+    saveToFile(doc, pathToWebHCatSite);
+  }
+
+
+  /**
+   * Configures security headers for webHCat server.
+   *
+   * @param doc webhcat-site.xml location
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
+   * @param headers xml file containing headers
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setWebHCatHeaders(Document doc, AuthMethod authMethod, String headers){
+    switch (authMethod) {
+    case CUSTOM:
+      return;
+    case MAPRSASL:
+    case KERBEROS:
+      LOG.info("Configuring webHCat security headers");
+      set(doc, AppConfig.HEADERS_FILE, headers);
+      break;
+    case NONE:
+      LOG.info("Removing webHCat security headers");
+      remove(doc, AppConfig.HEADERS_FILE);
+      break;
+    default:
+      return;
+    }
+  }
+
+
+  /**
    * Configures Ssl encryption for HiveServer2.
    *
    * @param doc xml document
@@ -358,6 +410,57 @@ final class ConfTool {
       return;
     }
   }
+
+  /**
+   * Configures security headers for HS2 web UI server.
+   *
+   * @param pathToHiveSite hive-site.xml location
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
+   * @param headers xml file containing headers
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setWebUiHeaders(String pathToHiveSite, AuthMethod authMethod, String headers)
+      throws TransformerException, IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    setWebUiHeaders(doc, authMethod, headers);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Configures security headers for HS2 web UI server.
+   *
+   * @param doc hive-site.xml location
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
+   * @param headers xml file containing headers
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  static void setWebUiHeaders(Document doc, AuthMethod authMethod, String headers) {
+    switch (authMethod) {
+    case CUSTOM:
+      return;
+    case MAPRSASL:
+    case KERBEROS:
+      LOG.info("Configuring HS2 Web UI security headers");
+      set(doc, ConfVars.HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE, headers);
+      break;
+    case NONE:
+      LOG.info("Removing HS2 Web UI security headers");
+      remove(doc, ConfVars.HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE);
+      break;
+    default:
+      return;
+    }
+  }
+
 
   /**
    * Configures Ssl encryption for Hive Metastore.
