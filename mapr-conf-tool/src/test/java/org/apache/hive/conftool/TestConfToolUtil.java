@@ -17,6 +17,7 @@
  */
 package org.apache.hive.conftool;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -26,22 +27,30 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Util methods for testing.
  */
-final class TestConfToolUtil {
+public final class TestConfToolUtil {
 
+  public static final String I = File.separator;
   private static final String NAME = "name";
   private static final String VALUE = "value";
   private static final String CONFIGURATION = "configuration";
   private static final String EMPTY = "";
 
-  private TestConfToolUtil() {}
+  private TestConfToolUtil() {
+  }
 
   /**
    * Parse xml from resource
@@ -108,14 +117,10 @@ final class TestConfToolUtil {
    * @throws ParserConfigurationException
    */
 
-  static String getStringVal(URL url, String property)
-      throws IOException, SAXException, ParserConfigurationException {
+  static String getStringVal(URL url, String property) throws IOException, SAXException, ParserConfigurationException {
     Document doc = readDocument(url.getPath());
     return getStringProperty(doc, property);
   }
-
-
-
 
   /**
    *  Return property value from xml file.
@@ -134,7 +139,6 @@ final class TestConfToolUtil {
     return getStringProperty(doc, confVar.varname);
   }
 
-
   /**
    *  Return property value from xml file.
    *
@@ -152,6 +156,106 @@ final class TestConfToolUtil {
     return Boolean.parseBoolean(getStringProperty(doc, confVar.varname));
   }
 
+  public static String readHiveVersion() throws IOException {
+    InputStream is = new FileInputStream(getPath("e2e/hive-files" + I + "hiveversion"));
+    BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+
+    String line = buf.readLine();
+    StringBuilder sb = new StringBuilder();
+
+    while (line != null) {
+      sb.append(line);
+      line = buf.readLine();
+    }
+    return sb.toString();
+  }
+
+  public static void copyFromResources(String pathInResources, String target) throws IOException {
+    File src = new File(getPath(pathInResources));
+    File tgt = new File(target);
+    FileUtils.copyFile(src, tgt);
+  }
+
+  public static void copyFile(String source, String target) throws IOException {
+    File src = new File(source);
+    File tgt = new File(target);
+    FileUtils.copyFile(src, tgt);
+  }
+
+  public static void setExec(String path) {
+    if (!new File(path).setExecutable(true)) {
+      throw new RuntimeException(String.format("Not enough permission to set executable %s", path));
+    }
+  }
+
+  public static void mkdir(String path) throws IOException {
+    File file = new File(path);
+    if (file.exists()) {
+      FileUtils.deleteDirectory(file);
+    }
+    if (!file.mkdirs()) {
+      throw new RuntimeException(String.format("Error creating test dir %s", path));
+    }
+  }
+
+  public static Map<String, String> readFrom(String pathInResources) throws IOException {
+    File src = new File(getPath(pathInResources));
+    Properties properties = new Properties();
+    try (InputStream input = new FileInputStream(src)) {
+      properties.load(input);
+    }
+    Map<String, String> result = new HashMap<>();
+    for (String key : properties.stringPropertyNames()) {
+      result.put(key, preProcess(properties.getProperty(key)));
+    }
+    return result;
+  }
+
+  /**
+   * Converts array of strings dir1, dir2, file-name to path dir1/dir2/file-name
+   *
+   * @param dirs array of strings
+   * @return path dir1/dir2/file-name
+   */
+  public static String asPath(String ... dirs) {
+    if (dirs == null || dirs.length == 0) {
+      return "";
+    }
+    boolean first = true;
+    StringBuilder sb = new StringBuilder();
+    for (String dir : dirs) {
+      if (first) {
+        first = false;
+        sb.append(dir);
+      } else {
+        sb.append(I);
+        sb.append(dir);
+      }
+    }
+    return sb.toString();
+  }
+
+  private static String preProcess(String value) throws IOException {
+    if (value != null && !value.isEmpty()) {
+      if (value.contains("${mapr.user}")) {
+        value = value.replace("${mapr.user}", System.getProperty("mapr.user"));
+      }
+      if (value.contains("${hive.version}")) {
+        value = value.replace("${hive.version}", readHiveVersion());
+      }
+      if (value.contains("${mapr.home.dir}")) {
+        value = value.replace("${mapr.home.dir}", System.getProperty("mapr.home.dir"));
+      }
+    }
+    return value;
+  }
+
+  public static String normalize(String path) {
+    if (path != null && !path.isEmpty()) {
+      path = path.replace(I + I, I);
+    }
+    return path;
+  }
 
   /**
    *  Return property value from xml file.
@@ -189,7 +293,6 @@ final class TestConfToolUtil {
     return EMPTY;
   }
 
-
   private static Node getConfigurationNode(Document doc) {
     NodeList nodes = doc.getChildNodes();
     int length = nodes.getLength();
@@ -202,7 +305,6 @@ final class TestConfToolUtil {
     throw new IllegalArgumentException("No <configuration> tag");
   }
 
-
   private static String readValue(NodeList nameValueDesc) {
     int childLength = nameValueDesc.getLength();
     for (int j = 0; j <= childLength - 1; j++) {
@@ -213,7 +315,6 @@ final class TestConfToolUtil {
     }
     return EMPTY;
   }
-
 
   private static Document readDocument(String pathToHiveSite)
       throws ParserConfigurationException, IOException, SAXException {
