@@ -44,7 +44,9 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
 
@@ -52,7 +54,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
  *  Helper for configuring Hive.
  */
 
-final class ConfTool {
+public final class ConfTool {
   private ConfTool() {
   }
 
@@ -712,6 +714,22 @@ final class ConfTool {
   }
 
   /**
+   * Reads all properties from file.
+   *
+   * @param pathToHiveSite hive-site location
+   * @return Map that represents properties in hive-site.xml
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+
+  public static Map<String, String> readAllProperties(String pathToHiveSite)
+      throws IOException, SAXException, ParserConfigurationException {
+    Document doc = readDocument(pathToHiveSite);
+    return readAllProperties(doc);
+  }
+
+  /**
    *  Removes property from xml file.
    *  IN-827
    * @param pathToHiveSite hive-site location
@@ -1237,6 +1255,34 @@ final class ConfTool {
       }
     }
     return false;
+  }
+
+  private static Map<String, String> readAllProperties(Document doc) {
+    LOG.info("Reading all properties from hive-site.xml");
+    Map<String, String> result = new HashMap<>();
+    Node configuration = getConfigurationNode(doc);
+    NodeList properties = configuration.getChildNodes();
+    int length = properties.getLength();
+    for (int i = 0; i <= length - 1; i++) {
+      Node node = properties.item(i);
+      NodeList nameValueDesc = node.getChildNodes();
+      int childLength = nameValueDesc.getLength();
+      String name = "";
+      String value = "";
+      for (int j = 0; j <= childLength - 1; j++) {
+        Node childNode = nameValueDesc.item(j);
+        if (NAME.equals(childNode.getNodeName())) {
+          name = childNode.getTextContent();
+        }
+        if (VALUE.equals(childNode.getNodeName())) {
+          value = childNode.getTextContent();
+        }
+      }
+      if (!name.isEmpty()) {
+        result.put(name, value);
+      }
+    }
+    return result;
   }
 
   private static boolean isPassword(String property) {
