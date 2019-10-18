@@ -901,8 +901,6 @@ if [ $# -gt 0 ]; then
           shift 1;;
       --customSecure|-c)
           shift 1;;
-      --kerberosEnable|-K)
-          shift 1;;
       --unsecure|-u)
           shift 1;;
       --help|-h)
