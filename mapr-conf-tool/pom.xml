@@ -40,6 +40,12 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>${hamcrest.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -59,10 +65,16 @@
       <configuration>
         <environmentVariables>
           <MAPR_HOME>${test.tmp.dir}/opt/mapr/</MAPR_HOME>
+          <MAPR_USER>${user.name}</MAPR_USER>
+          <MAPR_GROUP>${user.name}</MAPR_GROUP>
+          <BASEMAPR>${test.tmp.dir}/opt/mapr/</BASEMAPR>
           <MAPR_TICKETFILE_LOCATION>${test.tmp.dir}/opt/mapr/conf/mapruserticket</MAPR_TICKETFILE_LOCATION>
+          <HIVE_BIN>${basedir}/${hive.path.to.root}/bin/</HIVE_BIN>
+          <HADOOP_CLASSPATH>${test.conf.dir}:${basedir}/${hive.path.to.root}/conf:${basedir}/target/classes:${test.hive.hadoop.classpath}</HADOOP_CLASSPATH>
         </environmentVariables>
         <systemPropertyVariables>
           <mapr.home.dir>${test.tmp.dir}/opt/mapr/</mapr.home.dir>
+          <mapr.user>${user.name}</mapr.user>
         </systemPropertyVariables>
       </configuration>
       </plugin>
