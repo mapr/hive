@@ -295,6 +295,7 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
       // todo: this may be a perf issue as it prevents the optimizer.. or not
       HiveConf.setVar(conf, HiveConf.ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
       rewrittenCtx = new Context(conf);
+      rewrittenCtx.setHDFSCleanup(true);
       rewrittenCtx.setExplainConfig(ctx.getExplainConfig());
       rewrittenCtx.setIsUpdateDeleteMerge(true);
     } catch (IOException e) {
