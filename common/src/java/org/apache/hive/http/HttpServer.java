@@ -567,11 +567,18 @@ public class HttpServer {
       addServlet(p.getFirst(), "/" + p.getFirst(), p.getSecond());
     }
 
+    FilterHolder customHolder = new FilterHolder(CustomHeadersFilter.class);
+    customHolder.setInitParameter(HEADERS, b.conf.getVar(
+        HiveConf.ConfVars.HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE));
+    webAppContext
+        .addFilter(customHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
+
     ServletContextHandler staticCtx =
       new ServletContextHandler(contexts, "/static");
     staticCtx.setResourceBase(appDir + "/static");
     staticCtx.addServlet(DefaultServlet.class, "/*");
     staticCtx.setDisplayName("static");
+    staticCtx.addFilter(customHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
 
     String logDir = getLogDir(b.conf);
     if (logDir != null) {
@@ -581,11 +588,8 @@ public class HttpServer {
       logCtx.addServlet(AdminAuthorizedServlet.class, "/*");
       logCtx.setResourceBase(logDir);
       logCtx.setDisplayName("logs");
+      logCtx.addFilter(customHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
     }
-
-    FilterHolder customHolder = new FilterHolder(CustomHeadersFilter.class);
-    customHolder.setInitParameter(HEADERS, b.conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_WEBUI_JETTY_RESPONSE_HEADERS_FILE));
-    webAppContext.addFilter(customHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
   }
 
   String getLogDir(Configuration conf) {
