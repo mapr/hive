@@ -34,13 +34,14 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
 
   // Only altering the database property and owner is currently supported
   public static enum ALTER_DB_TYPES {
-    ALTER_PROPERTY, ALTER_OWNER
+    ALTER_PROPERTY, ALTER_OWNER, ALTER_LOCATION
   };
 
   ALTER_DB_TYPES alterType;
   String databaseName;
   Map<String, String> dbProperties;
   PrincipalDesc ownerPrincipal;
+  String location;
 
   /**
    * For serialization only.
@@ -59,6 +60,12 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
     this.databaseName = databaseName;
     this.setOwnerPrincipal(ownerPrincipal);
     this.setAlterType(ALTER_DB_TYPES.ALTER_OWNER);
+  }
+
+  public AlterDatabaseDesc(String databaseName, String newLocation) {
+    this.databaseName = databaseName;
+    this.setLocation(newLocation);
+    this.setAlterType(ALTER_DB_TYPES.ALTER_LOCATION);
   }
 
   @Explain(displayName="properties")
@@ -86,6 +93,15 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
 
   public void setOwnerPrincipal(PrincipalDesc ownerPrincipal) {
     this.ownerPrincipal = ownerPrincipal;
+  }
+
+  @Explain(displayName="location")
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
   }
 
   public ALTER_DB_TYPES getAlterType() {
