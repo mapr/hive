@@ -39,7 +39,6 @@ public abstract class ShimLoader {
   private static JettyShims jettyShims;
   private static AppenderSkeleton eventCounter;
   private static HadoopThriftAuthBridge hadoopThriftAuthBridge;
-  private static SchedulerShim schedulerShim;
 
   /**
    * The names of the classes for shimming Hadoop for each major version.
@@ -115,13 +114,6 @@ public abstract class ShimLoader {
           HadoopThriftAuthBridge.class);
     }
     return hadoopThriftAuthBridge;
-  }
-
-  public static synchronized SchedulerShim getSchedulerShims() {
-    if (schedulerShim == null) {
-      schedulerShim = createShim(SCHEDULER_SHIM_CLASSE, SchedulerShim.class);
-    }
-    return schedulerShim;
   }
 
   private static <T> T loadShims(Map<String, String> classMap, Class<T> xface) {
