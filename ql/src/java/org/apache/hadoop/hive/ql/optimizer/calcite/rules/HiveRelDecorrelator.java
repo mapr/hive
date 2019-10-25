@@ -725,15 +725,7 @@ public final class HiveRelDecorrelator implements ReflectiveVisitor {
     int newPos = 0;
 
     // oldInput has the original group by keys in the front.
-    final NavigableMap<Integer, RexLiteral> omittedConstants = new TreeMap<>();
     for (int i = 0; i < oldGroupKeyCount; i++) {
-      final RexLiteral constant = projectedLiteral(newInput, i);
-      if (constant != null) {
-        // Exclude constants. Aggregate({true}) occurs because Aggregate({})
-        // would generate 1 row even when applied to an empty table.
-        omittedConstants.put(i, constant);
-        continue;
-      }
       int newInputPos = frame.oldToNewOutputs.get(i);
       projects.add(RexInputRef.of2(newInputPos, newInputOutput));
       mapNewInputToProjOutputs.put(newInputPos, newPos);
@@ -834,16 +826,6 @@ public final class HiveRelDecorrelator implements ReflectiveVisitor {
     relBuilder.push(
         new HiveAggregate(rel.getCluster(), rel.getTraitSet(), newProject,
             newGroupSet, null, newAggCalls));
-
-    if (!omittedConstants.isEmpty()) {
-      final List<RexNode> postProjects = new ArrayList<>(relBuilder.fields());
-      for (Map.Entry<Integer, RexLiteral> entry
-          : omittedConstants.entrySet()) {
-        postProjects.add(entry.getKey() + frame.corDefOutputs.size(),
-            entry.getValue());
-      }
-      relBuilder.project(postProjects);
-    }
 
     // Aggregate does not change input ordering so corVars will be
     // located at the same position as the input newProject.
