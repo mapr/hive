@@ -65,3 +65,10 @@ explain SELECT p1.p_name FROM part p1 LEFT JOIN (select p_type as p_col from par
                 (select pp1.p_type as p_col from part pp1 where pp1.p_partkey = p2.p_col);
 SELECT p1.p_name FROM part p1 LEFT JOIN (select p_type as p_col from part ) p2 WHERE NOT EXISTS
                 (select pp1.p_type as p_col from part pp1 where pp1.p_partkey = p2.p_col);
+
+-- decorrelation should not mangle up the result schema
+create table tschema(id int, name string,dept string);
+insert into tschema values(1,'a','it'),(2,'b','eee'),(NULL, 'c', 'cse');
+select distinct 'empno' as eid, a.id from tschema a
+    where NOT EXISTS (select c.id from tschema c where a.id=c.id);
+drop table tschema;
