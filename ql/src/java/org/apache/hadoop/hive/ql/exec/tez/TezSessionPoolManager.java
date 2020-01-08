@@ -478,7 +478,7 @@ public class TezSessionPoolManager {
    * sessions for e.g. when a CLI session is started. The CLI session could re-use the
    * same tez session eliminating the latencies of new AM and containers.
    */
-  private static boolean canWorkWithSameSession(TezSessionState session, HiveConf conf)
+  private static boolean canWorkWithSameSession(TezSessionState session, HiveConf conf, String tezTaskQueueName)
        throws HiveException {
     if (session == null || conf == null || !session.isOpen()) {
       return false;
@@ -511,6 +511,9 @@ public class TezSessionPoolManager {
       String queueName = session.getQueueName();
       String confQueueName = conf.get(TezConfiguration.TEZ_QUEUE_NAME);
       LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName);
+      if (canUseTezTaskQueueName(confQueueName, tezTaskQueueName)) {
+        confQueueName = tezTaskQueueName; // use existing tez task queue name
+      }
       return (queueName == null) ? confQueueName == null : queueName.equals(confQueueName);
     } else {
       // this session should never be a default session unless something has messed up.
@@ -518,13 +521,18 @@ public class TezSessionPoolManager {
     }
   }
 
+  private static boolean canUseTezTaskQueueName(String confQueueName,
+      String tezTaskQueueName) {
+    return confQueueName == null && tezTaskQueueName != null;
+  }
+
   public TezSessionState getSession(
-      TezSessionState session, HiveConf conf, boolean doOpen, boolean llap) throws Exception {
+      TezSessionState session, HiveConf conf, boolean doOpen, boolean llap, String tezTaskQueueName) throws Exception {
     if (llap && (this.numConcurrentLlapQueries > 0)) {
       llapQueue.acquire(); // blocks if no more llap queries can be submitted.
     }
 
-    if (canWorkWithSameSession(session, conf)) {
+    if (canWorkWithSameSession(session, conf, tezTaskQueueName)) {
       return session;
     }
 
@@ -533,6 +541,11 @@ public class TezSessionPoolManager {
     }
 
     return getSession(conf, doOpen);
+  }
+
+  public TezSessionState getSession(
+      TezSessionState session, HiveConf conf, boolean doOpen, boolean llap) throws Exception {
+    return getSession(session, conf, doOpen, llap, null);
   }
 
   /** Reopens the session that was found to not be running. */

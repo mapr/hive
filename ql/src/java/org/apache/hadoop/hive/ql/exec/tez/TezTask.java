@@ -106,6 +106,7 @@ public class TezTask extends Task<TezWork> {
   private final DagUtils utils;
 
   private DAGClient dagClient = null;
+  private String tezQueueName = null;
 
   Map<BaseWork, Vertex> workToVertex = new HashMap<BaseWork, Vertex>();
   Map<BaseWork, JobConf> workToConf = new HashMap<BaseWork, JobConf>();
@@ -145,7 +146,7 @@ public class TezTask extends Task<TezWork> {
         LOG.warn("The session: " + session + " has not been opened");
       }
       session = TezSessionPoolManager.getInstance().getSession(
-          session, conf, false, getWork().getLlapMode());
+          session, conf, false, getWork().getLlapMode(), tezQueueName);
       ss.setTezSession(session);
       try {
         // jobConf will hold all the configuration for hadoop, tez, and hive
@@ -647,6 +648,10 @@ public class TezTask extends Task<TezWork> {
       }
       closeDagClientWithoutEx();
     }
+  }
+
+  public void setTezQueueName(String tezTaskQueueName) {
+    this.tezQueueName = tezTaskQueueName;
   }
 
   /** DAG client that does dumb global sync on all the method calls;

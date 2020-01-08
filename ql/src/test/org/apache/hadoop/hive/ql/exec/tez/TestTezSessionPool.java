@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.tez.dag.api.TezConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -323,5 +324,27 @@ public class TestTezSessionPool {
 
     Mockito.verify(session).close(false);
     Mockito.verify(session).open(conf, extraResources);
+  }
+
+  @Test
+  public void testTezTasksSequenceExecutionInSession() {
+    poolManager = new TestTezSessionPoolManager();
+    try {
+      TezSessionState sessionState = poolManager.getSession(null, conf, true, false, null);
+      conf.set("tez.queue.name", "tezTaskQueueName");
+      TezSessionState sessionState1 = poolManager.getSession(sessionState, conf, false, false, "tezTaskQueueName");
+      if (sessionState1 == sessionState) {
+        fail();
+      }
+      sessionState1.open(conf);
+      conf.unset(TezConfiguration.TEZ_QUEUE_NAME);
+      TezSessionState sessionState2 = poolManager.getSession(sessionState1, conf, false, false, "tezTaskQueueName");
+      if (sessionState2 != sessionState1) {
+        fail();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail();
+    }
   }
 }

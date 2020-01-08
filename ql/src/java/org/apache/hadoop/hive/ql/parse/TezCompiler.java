@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFBloomFilter.GenericUDAFBloomFilterEvaluator;
+import org.apache.tez.dag.api.TezConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -459,6 +460,12 @@ public class TezCompiler extends TaskCompiler {
     for (AppMasterEventOperator event : procCtx.eventOperatorSet) {
       LOG.debug("Handling AppMasterEventOperator: " + event);
       GenTezUtils.processAppMasterEvent(procCtx, event);
+    }
+
+    // Setting tez queue name in each TezTask helps re-use a session
+    List<TezTask> tezTasks = Utilities.getTezTasks(rootTasks);
+    for (TezTask task : tezTasks) {
+      task.setTezQueueName(conf.get(TezConfiguration.TEZ_QUEUE_NAME));
     }
     perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "generateTaskTree");
   }
