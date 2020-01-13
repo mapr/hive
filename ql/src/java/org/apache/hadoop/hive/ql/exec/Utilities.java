@@ -4484,7 +4484,7 @@ public final class Utilities {
    * @param conf
    */
   public static void ensurePathIsWritable(Path rootHDFSDirPath, HiveConf conf) throws IOException {
-    FsPermission writableHDFSDirPermission = new FsPermission((short)00777);
+    FsPermission writableHDFSDirPermission = new FsPermission((short)00733);
     FileSystem fs = rootHDFSDirPath.getFileSystem(conf);
     if (!fs.exists(rootHDFSDirPath)) {
       Utilities.createDirsWithPermission(conf, rootHDFSDirPath, writableHDFSDirPermission, true);
