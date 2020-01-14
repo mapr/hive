@@ -118,7 +118,7 @@ public class MapRDbJsonFetchByIdOptimizer extends Transform {
    * @param topOp scan operator to optimize
    * @throws SemanticException
    */
-  private void processTableScan(ParseContext pctx, TableScanOperator topOp) throws SemanticException {
+  void processTableScan(ParseContext pctx, TableScanOperator topOp) throws SemanticException {
     Table table = topOp.getConf().getTableMetadata();
     if (isMapRDbJsonTable(table)) {
       mapRDbColumn = table.getMapRDbColumnId();

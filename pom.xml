@@ -190,6 +190,7 @@
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.8.1</parquet.version>
     <pig.version>0.16.0</pig.version>
+    <powermock.version>1.6.2</powermock.version>
     <protobuf.version>3.11.1</protobuf.version>
     <stax.version>1.0.1</stax.version>
     <slf4j.version>1.7.10</slf4j.version>
@@ -829,6 +830,16 @@
             <artifactId>servlet-api-2.5</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito</artifactId>
+        <version>${powermock.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-junit4</artifactId>
+        <version>${powermock.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
