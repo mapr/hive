@@ -189,7 +189,7 @@
     <netty-all.version>4.1.49.Final</netty-all.version>
     <netty.version>3.10.6.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
-    <parquet.version>1.10.0</parquet.version>
+    <parquet.version>1.11.0</parquet.version>
     <pig.version>0.16.0-mapr-SNAPSHOT</pig.version>
     <powermock.version>1.6.2</powermock.version>
     <protobuf.version>2.5.0</protobuf.version>
