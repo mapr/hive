@@ -69,6 +69,7 @@ import org.apache.hadoop.hive.ql.hooks.HookUtils;
 import org.apache.hadoop.hive.ql.hooks.MetricsQueryLifeTimeHook;
 import org.apache.hadoop.hive.ql.hooks.PostExecute;
 import org.apache.hadoop.hive.ql.hooks.PreExecute;
+import org.apache.hadoop.hive.ql.hooks.PreParseHook;
 import org.apache.hadoop.hive.ql.hooks.QueryLifeTimeHook;
 import org.apache.hadoop.hive.ql.hooks.QueryLifeTimeHookContext;
 import org.apache.hadoop.hive.ql.hooks.QueryLifeTimeHookContextImpl;
@@ -398,6 +399,16 @@ public class Driver implements CommandProcessor {
       }
     }).substitute(conf, command);
 
+    try {
+    	List<PreParseHook> preParseHooks = getHooks(HiveConf.ConfVars.HIVE_PRE_PARSE_HOOKS,
+    			PreParseHook.class);
+    	for (PreParseHook preParseHook : preParseHooks) {
+    		command = preParseHook.getCustomCommand(ctx, command);
+    	}
+    } catch (Exception e) {
+    	LOG.warn("WARNING! Query command could not be customized by pre parse hook. "  + e);
+    }
+    
     String queryStr = command;
 
     try {
