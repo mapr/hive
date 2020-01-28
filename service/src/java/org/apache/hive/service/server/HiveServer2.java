@@ -141,17 +141,6 @@ public class HiveServer2 extends CompositeService {
 
     cliService = new CLIService(this);
     addService(cliService);
-    try {
-      Path scratchDir = new Path(HiveConf.getVar(hiveConf, HiveConf.ConfVars.SCRATCHDIR));
-      FileSystem fs = FileSystem.get(hiveConf);
-      if (!fs.exists(scratchDir)) {
-        fs.mkdirs(scratchDir);
-      }
-      // make sure permissions are 733
-      fs.setPermission(scratchDir, new FsPermission((short) 0733));
-    } catch (IOException e) {
-      LOG.warn(String.format("Failed to create/change scratchdir permissions to 733: %s", e.getMessage()), e);
-    }
     final HiveServer2 hiveServer2 = this;
     Runnable oomHook = new Runnable() {
       @Override
