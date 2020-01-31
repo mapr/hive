@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +50,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hive.common.JavaUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.common.ValidTxnWriteIdList;
 import org.apache.hadoop.hive.common.ValidWriteIdList;
@@ -1076,13 +1078,15 @@ public class Driver implements IDriver {
     }
     HiveAuthorizationProvider authorizer = ss.getAuthorizer();
     if (op.equals(HiveOperation.CREATEDATABASE)) {
-      authorizer.authorize(
-          op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
-    } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT)
-        || op.equals(HiveOperation.CREATETABLE)) {
-      authorizer.authorize(
-          db.getDatabase(SessionState.get().getCurrentDatabase()), null,
+      authorizer.authorize(getDbFrom(outputs), op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
+    } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT) || op.equals(HiveOperation.CREATETABLE)) {
+      authorizer.authorize(db.getDatabase(SessionState.get().getCurrentDatabase()), null,
           HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
+    }
+    if (op.equals(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION) || op
+        .equals(HiveOperation.CREATETABLE_WITH_LOCATION)) {
+      authorizer.authorize(getLocationFrom(outputs), null,
+          HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION.getOutputRequiredPrivileges());
     } else {
       if (op.equals(HiveOperation.IMPORT)) {
         ImportSemanticAnalyzer isa = (ImportSemanticAnalyzer) sem;
@@ -1093,13 +1097,17 @@ public class Driver implements IDriver {
         }
       }
     }
+    Set<HiveOperation> exceptions = new HashSet<>(
+        Arrays.asList(HiveOperation.IMPORT, HiveOperation.CREATETABLE_WITH_LOCATION,
+            HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION, HiveOperation.CREATE_MATERIALIZED_VIEW_WITH_LOCATION));
+
     if (outputs != null && outputs.size() > 0) {
       for (WriteEntity write : outputs) {
         if (write.isDummy() || write.isPathType()) {
           continue;
         }
         if (write.getType() == Entity.Type.DATABASE) {
-          if (!op.equals(HiveOperation.IMPORT)){
+          if (!exceptions.contains(op)) {
             // We skip DB check for import here because we already handle it above
             // as a CTAS check.
             authorizer.authorize(write.getDatabase(),
@@ -1230,6 +1238,24 @@ public class Driver implements IDriver {
     // this is only for the purpose of authorization, only the name matters.
     Database db = new Database(qualFunctionName[0], "", "", null);
     return new ReadEntity(db, qualFunctionName[1], functionInfo.getClassName(), Type.FUNCTION);
+  }
+
+  private static Database getDbFrom(Set<WriteEntity> outputs) throws HiveException {
+    for (WriteEntity write : outputs) {
+      if (write.getType() == Entity.Type.DATABASE) {
+        return write.getDatabase();
+      }
+    }
+    throw new HiveException("No database in the output");
+  }
+
+  private static Path getLocationFrom(Set<WriteEntity> outputs) throws HiveException {
+    for (WriteEntity write : outputs) {
+      if (write.getType() == Entity.Type.TABLE) {
+        return new Path(write.getT().getSd().getLocation());
+      }
+    }
+    throw new HiveException("No table object in the output");
   }
 
   private static void getTablePartitionUsedColumns(HiveOperation op, BaseSemanticAnalyzer sem,

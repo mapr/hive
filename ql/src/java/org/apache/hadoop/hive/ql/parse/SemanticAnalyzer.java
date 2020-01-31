@@ -2352,6 +2352,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             // If the CTAS query does specify a location, use the table location, else use the db location
             if (qb.getTableDesc() != null && qb.getTableDesc().getLocation() != null) {
               location = new Path(qb.getTableDesc().getLocation());
+            } else if (qb.getViewDesc() != null && qb.getViewDesc().getLocation() != null) {
+              location = new Path(qb.getViewDesc().getLocation());
             } else {
               // allocate a temporary output dir on the location of the table
               String tableName = getUnescapedName((ASTNode) ast.getChild(0));
@@ -13244,9 +13246,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     if (command_type == CREATE_TABLE || command_type == CTLT) {
-      queryState.setCommandType(HiveOperation.CREATETABLE);
+      if (location == null) {
+        queryState.setCommandType(HiveOperation.CREATETABLE);
+      } else {
+        queryState.setCommandType(HiveOperation.CREATETABLE_WITH_LOCATION);
+      }
     } else if (command_type == CTAS) {
-      queryState.setCommandType(HiveOperation.CREATETABLE_AS_SELECT);
+      if (location == null) {
+        queryState.setCommandType(HiveOperation.CREATETABLE_AS_SELECT);
+      } else {
+        queryState.setCommandType(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION);
+      }
     } else {
       throw new SemanticException("Unrecognized command.");
     }
@@ -13302,7 +13312,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     case CREATE_TABLE: // REGULAR CREATE TABLE DDL
       tblProps = addDefaultProperties(
           tblProps, isExt, storageFormat, dbDotTab, sortCols, isMaterialization, isTemporary);
-      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+      if (location == null) {
+        addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+      } else {
+        addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps, location);
+      }
 
       CreateTableDesc crtTblDesc = new CreateTableDesc(dbDotTab, isExt, isTemporary, cols, partCols,
           bucketCols, sortCols, numBuckets, rowFormatParams.fieldDelim,
@@ -13326,7 +13340,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     case CTLT: // create table like <tbl_name>
       tblProps = addDefaultProperties(
           tblProps, isExt, storageFormat, dbDotTab, sortCols, isMaterialization, isTemporary);
-      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+      if (location == null) {
+        addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+      } else {
+        addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps, location);
+      }
 
       if (isTemporary) {
         Table likeTable = getTable(likeTableName, false);
@@ -13406,7 +13424,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       tblProps = addDefaultProperties(
           tblProps, isExt, storageFormat, dbDotTab, sortCols, isMaterialization, isTemporary);
-      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+      if (location == null) {
+        addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+      } else {
+        addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps, location);
+      }
       tableDesc = new CreateTableDesc(qualifiedTabName[0], dbDotTab, isExt, isTemporary, cols,
           partCols, bucketCols, sortCols, numBuckets, rowFormatParams.fieldDelim,
           rowFormatParams.fieldEscape, rowFormatParams.collItemDelim, rowFormatParams.mapKeyDelim,
@@ -13426,6 +13448,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       throw new SemanticException("Unrecognized command.");
     }
     return null;
+  }
+
+  /** Adds entities for create table/create view with custom location. */
+  private void addTabWithLocationToOutputs(String[] qualifiedTabName, TableType type,
+      Map<String, String> tblProps, String locatoin) {
+    Table t = new Table(qualifiedTabName[0], qualifiedTabName[1], locatoin);
+    t.setParameters(tblProps);
+    t.setTableType(type);
+    outputs.add(new WriteEntity(t, WriteEntity.WriteType.DDL_NO_LOCK));
   }
 
   /** Adds entities for create table/create view. */
@@ -13537,8 +13568,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           storageFormat.getInputFormat(), storageFormat.getOutputFormat(),
           location, storageFormat.getSerde(), storageFormat.getStorageHandler(),
           storageFormat.getSerdeProps());
-      addDbAndTabToOutputs(qualTabName, TableType.MATERIALIZED_VIEW, tblProps);
-      queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW);
+      if (location == null) {
+        queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW);
+        addDbAndTabToOutputs(qualTabName, TableType.MATERIALIZED_VIEW, tblProps);
+      } else {
+        queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW_WITH_LOCATION);
+        addTabWithLocationToOutputs(qualTabName, TableType.MATERIALIZED_VIEW, tblProps, location);
+      }
     } else {
       createVwDesc = new CreateViewDesc(
           dbDotTable, cols, comment, tblProps, partColNames,

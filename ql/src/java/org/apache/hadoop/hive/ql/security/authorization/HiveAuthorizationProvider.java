@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.AuthorizationException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -71,6 +72,20 @@ public interface HiveAuthorizationProvider extends Configurable{
   public void authorize(Database db, Privilege[] readRequiredPriv,
       Privilege[] writeRequiredPriv) throws HiveException,
       AuthorizationException;
+
+  /**
+   * Authorization privileges against a path.
+   *
+   * @param path
+   *          a filesystem path
+   * @param readRequiredPriv
+   *          a list of privileges needed for inputs.
+   * @param writeRequiredPriv
+   *          a list of privileges needed for outputs.
+   */
+  void authorize(Path path, Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv)
+      throws HiveException, AuthorizationException;
+
 
   /**
    * Authorization privileges against a hive table object.

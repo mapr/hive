@@ -85,6 +85,8 @@ public enum HiveOperation {
   CREATEVIEW("CREATEVIEW", new Privilege[]{Privilege.SELECT}, new Privilege[]{Privilege.CREATE}),
   CREATE_MATERIALIZED_VIEW("CREATE_MATERIALIZED_VIEW", new Privilege[]{Privilege.SELECT}, new
       Privilege[]{Privilege.CREATE}),
+  CREATE_MATERIALIZED_VIEW_WITH_LOCATION("CREATE_MATERIALIZED_VIEW_WITH_LOCATION", new Privilege[]{Privilege.SELECT}, new
+      Privilege[]{Privilege.CREATE}),
   DROPVIEW("DROPVIEW", null, new Privilege[]{Privilege.DROP}),
   DROP_MATERIALIZED_VIEW("DROP_MATERIALIZED_VIEW", null, new Privilege[]{Privilege.DROP}),
   ALTER_MATERIALIZED_VIEW_REWRITE("ALTER_MATERIALIZED_VIEW_REWRITE",
@@ -108,8 +110,10 @@ public enum HiveOperation {
   ALTERTABLE_LOCATION("ALTERTABLE_LOCATION", new Privilege[]{Privilege.ALTER_DATA}, null),
   ALTERPARTITION_LOCATION("ALTERPARTITION_LOCATION", new Privilege[]{Privilege.ALTER_DATA}, null),
   CREATETABLE("CREATETABLE", null, new Privilege[]{Privilege.CREATE}),
+  CREATETABLE_WITH_LOCATION("CREATETABLE_WITH_LOCATION", null, new Privilege[]{Privilege.CREATE}),
   TRUNCATETABLE("TRUNCATETABLE", null, new Privilege[]{Privilege.DROP}),
   CREATETABLE_AS_SELECT("CREATETABLE_AS_SELECT", new Privilege[]{Privilege.SELECT}, new Privilege[]{Privilege.CREATE}),
+  CREATETABLE_AS_SELECT_WITH_LOCATION("CREATETABLE_AS_SELECT_WITH_LOCATION", new Privilege[]{Privilege.SELECT}, new Privilege[]{Privilege.CREATE}),
   QUERY("QUERY", new Privilege[]{Privilege.SELECT}, new Privilege[]{Privilege.ALTER_DATA, Privilege.CREATE}, true, false),
   ALTERDATABASE("ALTERDATABASE", null, null),
   ALTERDATABASE_OWNER("ALTERDATABASE_OWNER", null, null),

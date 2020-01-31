@@ -22,6 +22,7 @@ package org.apache.hive.hcatalog.storagehandler;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.AuthorizationException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -80,6 +81,20 @@ class DummyHCatAuthProvider implements HiveAuthorizationProvider {
   public void authorize(Privilege[] readRequiredPriv,
               Privilege[] writeRequiredPriv) throws HiveException,
     AuthorizationException {
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see
+   * org.apache.hadoop.hive.ql.security.authorization.HiveAuthorizationProvider
+   * #authorize(Path, org.apache.hadoop.hive.ql.security.authorization.Privilege[],
+   * org.apache.hadoop.hive.ql.security.authorization.Privilege[])
+   */
+  @Override
+  public void authorize(Path path, Privilege[] readRequiredPriv,
+      Privilege[] writeRequiredPriv) throws HiveException,
+      AuthorizationException {
   }
 
   /*
