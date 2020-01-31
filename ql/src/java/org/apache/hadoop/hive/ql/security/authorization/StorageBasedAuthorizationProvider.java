@@ -170,8 +170,8 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
 
     // if CREATE or DROP priv requirement is there, the owner should have WRITE permission on
     // the database directory
-    if (privExtractor.hasDropPrivilege || requireCreatePrivilege(readRequiredPriv)
-        || requireCreatePrivilege(writeRequiredPriv)) {
+    if ((privExtractor.hasDropPrivilege || requireCreatePrivilege(readRequiredPriv)
+        || requireCreatePrivilege(writeRequiredPriv)) && !table.isSetLocationUri()) {
       authorize(hive_db.getDatabase(table.getDbName()), new Privilege[] {},
           new Privilege[] { Privilege.ALTER_DATA });
     }
@@ -336,6 +336,7 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
    * @param writeRequiredPriv
    *          a list of privileges needed for outputs.
    */
+  @Override
   public void authorize(Path path, Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv)
       throws HiveException, AuthorizationException {
     try {

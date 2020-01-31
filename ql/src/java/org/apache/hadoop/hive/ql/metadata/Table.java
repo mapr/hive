@@ -128,6 +128,10 @@ public class Table implements Serializable {
     this(getEmptyTable(databaseName, tableName));
   }
 
+  public Table(String databaseName, String tableName, String location) {
+    this(getEmptyTable(databaseName, tableName, location));
+  }
+
   public boolean isDummyTable() {
     return tTable.getTableName().equals(SemanticAnalyzer.DUMMY_TABLE);
   }
@@ -153,6 +157,14 @@ public class Table implements Serializable {
    */
   public static org.apache.hadoop.hive.metastore.api.Table
   getEmptyTable(String databaseName, String tableName) {
+   return getEmptyTable(databaseName, tableName, null);
+  }
+
+  /**
+   * Initialize an empty table with custom location.
+   */
+  public static org.apache.hadoop.hive.metastore.api.Table
+  getEmptyTable(String databaseName, String tableName, String location) {
     StorageDescriptor sd = new StorageDescriptor();
     {
       sd.setSerdeInfo(new SerDeInfo());
@@ -173,6 +185,7 @@ public class Table implements Serializable {
       skewInfo.setSkewedColValues(new ArrayList<List<String>>());
       skewInfo.setSkewedColValueLocationMaps(new HashMap<List<String>, String>());
       sd.setSkewedInfo(skewInfo);
+      sd.setLocation(location);
     }
 
     org.apache.hadoop.hive.metastore.api.Table t = new org.apache.hadoop.hive.metastore.api.Table();
@@ -262,6 +275,10 @@ public class Table implements Serializable {
       path = getPath();
     }
     return path;
+  }
+
+  public boolean isSetLocationUri() {
+    return tTable.getSd().getLocation() != null;
   }
 
   final public Deserializer getDeserializer() {

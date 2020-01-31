@@ -308,6 +308,11 @@ public class Operation2Privilege {
         new PrivRequirement(INS_SEL_DEL_NOGRANT_AR, HivePrivilegeObjectType.DFS_URI),
         new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
 
+    op2Priv.put(HiveOperationType.CREATETABLE_AS_SELECT_WITH_LOCATION, PrivRequirement.newPrivRequirementList(
+        new PrivRequirement(SEL_NOGRANT_AR, IOType.INPUT),
+        new PrivRequirement(INS_SEL_DEL_NOGRANT_AR, HivePrivilegeObjectType.DFS_URI),
+        new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
+
     // QUERY,LOAD op can contain an insert & overwrite,
     // require delete privilege if this is an insert-overwrite
     op2Priv.put(HiveOperationType.QUERY,
@@ -345,6 +350,10 @@ public class Operation2Privilege {
         new PrivRequirement(SEL_GRANT_AR, IOType.INPUT),
         new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
 
+    op2Priv.put(HiveOperationType.CREATE_MATERIALIZED_VIEW_WITH_LOCATION, PrivRequirement.newPrivRequirementList(
+        new PrivRequirement(SEL_GRANT_AR, IOType.INPUT),
+        new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
+    
     op2Priv.put(HiveOperationType.SHOWFUNCTIONS, PrivRequirement.newIOPrivRequirement
 (null, null));
     op2Priv.put(HiveOperationType.SHOWINDEXES, PrivRequirement.newIOPrivRequirement
@@ -377,6 +386,10 @@ public class Operation2Privilege {
 
     // require db ownership, if there is a file require SELECT , INSERT, and DELETE
     op2Priv.put(HiveOperationType.CREATETABLE, PrivRequirement.newPrivRequirementList(
+        new PrivRequirement(INS_SEL_DEL_NOGRANT_AR, IOType.INPUT),
+        new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
+
+    op2Priv.put(HiveOperationType.CREATETABLE_WITH_LOCATION, PrivRequirement.newPrivRequirementList(
         new PrivRequirement(INS_SEL_DEL_NOGRANT_AR, IOType.INPUT),
         new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
 

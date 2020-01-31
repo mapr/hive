@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -40,6 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.common.metrics.common.Metrics;
 import org.apache.hadoop.hive.common.metrics.common.MetricsConstant;
@@ -49,6 +51,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveVariableSource;
 import org.apache.hadoop.hive.conf.VariableSubstitution;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Schema;
 import org.apache.hadoop.hive.ql.exec.ConditionalTask;
@@ -96,7 +99,6 @@ import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHookContext;
 import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHookContextImpl;
 import org.apache.hadoop.hive.ql.parse.ImportSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
-import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
 import org.apache.hadoop.hive.ql.parse.PrunedPartitionList;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
@@ -777,13 +779,15 @@ public class Driver implements CommandProcessor {
     }
     HiveAuthorizationProvider authorizer = ss.getAuthorizer();
     if (op.equals(HiveOperation.CREATEDATABASE)) {
-      authorizer.authorize(
-          op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
-    } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT)
-        || op.equals(HiveOperation.CREATETABLE)) {
-      authorizer.authorize(
-          db.getDatabase(SessionState.get().getCurrentDatabase()), null,
+      authorizer.authorize(getDbFrom(outputs), op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
+    } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT) || op.equals(HiveOperation.CREATETABLE)) {
+      authorizer.authorize(db.getDatabase(SessionState.get().getCurrentDatabase()), null,
           HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
+    }
+    if (op.equals(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION) || op
+        .equals(HiveOperation.CREATETABLE_WITH_LOCATION)) {
+      authorizer.authorize(getLocationFrom(outputs), null,
+          HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION.getOutputRequiredPrivileges());
     } else {
       if (op.equals(HiveOperation.IMPORT)) {
         ImportSemanticAnalyzer isa = (ImportSemanticAnalyzer) sem;
@@ -794,13 +798,17 @@ public class Driver implements CommandProcessor {
         }
       }
     }
+    Set<HiveOperation> exceptions = new HashSet<>(
+        Arrays.asList(HiveOperation.IMPORT, HiveOperation.CREATETABLE_WITH_LOCATION,
+            HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION, HiveOperation.CREATE_MATERIALIZED_VIEW_WITH_LOCATION));
+
     if (outputs != null && outputs.size() > 0) {
       for (WriteEntity write : outputs) {
         if (write.isDummy() || write.isPathType()) {
           continue;
         }
         if (write.getType() == Entity.Type.DATABASE) {
-          if (!op.equals(HiveOperation.IMPORT)){
+          if (!exceptions.contains(op)) {
             // We skip DB check for import here because we already handle it above
             // as a CTAS check.
             authorizer.authorize(write.getDatabase(),
@@ -909,6 +917,25 @@ public class Driver implements CommandProcessor {
 
     }
   }
+
+  private static Database getDbFrom(Set<WriteEntity> outputs) throws HiveException {
+    for (WriteEntity write : outputs) {
+      if (write.getType() == Entity.Type.DATABASE) {
+        return write.getDatabase();
+      }
+    }
+    throw new HiveException("No database in the output");
+  }
+
+  private static Path getLocationFrom(Set<WriteEntity> outputs) throws HiveException {
+    for (WriteEntity write : outputs) {
+      if (write.getType() == Entity.Type.TABLE) {
+        return new Path(write.getT().getSd().getLocation());
+      }
+    }
+    throw new HiveException("No table object in the output");
+  }
+
 
   private static void getTablePartitionUsedColumns(HiveOperation op, BaseSemanticAnalyzer sem,
       Map<Table, List<String>> tab2Cols, Map<Partition, List<String>> part2Cols,

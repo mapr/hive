@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.ql.security.authorization;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.hive.metastore.HiveMetaStore.HMSHandler;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -46,6 +47,12 @@ public class MetaStoreAuthzAPIAuthorizerEmbedOnly extends HiveAuthorizationProvi
 
   @Override
   public void authorize(Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv)
+      throws HiveException, AuthorizationException {
+    // not authorized by this implementation, ie operation is allowed by it
+  }
+
+  @Override
+  public void authorize(Path path, Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv)
       throws HiveException, AuthorizationException {
     // not authorized by this implementation, ie operation is allowed by it
   }

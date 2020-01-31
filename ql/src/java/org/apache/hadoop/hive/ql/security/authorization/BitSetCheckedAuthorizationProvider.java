@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.HiveObjectType;
 import org.apache.hadoop.hive.metastore.api.PrincipalPrivilegeSet;
@@ -64,6 +65,21 @@ public abstract class BitSetCheckedAuthorizationProvider extends
 
   @Override
   public void authorize(Privilege[] inputRequiredPriv,
+      Privilege[] outputRequiredPriv) throws HiveException, AuthorizationException {
+
+    BitSetChecker checker = BitSetChecker.getBitSetChecker(inputRequiredPriv,
+        outputRequiredPriv);
+    boolean[] inputCheck = checker.inputCheck;
+    boolean[] outputCheck = checker.outputCheck;
+
+    authorizeUserPriv(inputRequiredPriv, inputCheck, outputRequiredPriv,
+        outputCheck);
+    checkAndThrowAuthorizationException(inputRequiredPriv, outputRequiredPriv,
+        inputCheck, outputCheck, null, null, null, null);
+  }
+
+  @Override
+  public void authorize(Path path, Privilege[] inputRequiredPriv,
       Privilege[] outputRequiredPriv) throws HiveException, AuthorizationException {
 
     BitSetChecker checker = BitSetChecker.getBitSetChecker(inputRequiredPriv,

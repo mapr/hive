@@ -2212,7 +2212,10 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               // If the CTAS query does specify a location, use the table location, else use the db location
               if (qb.getTableDesc() != null && qb.getTableDesc().getLocation() != null) {
                 location = new Path(qb.getTableDesc().getLocation());
-              } else {
+              } else if (qb.getViewDesc() != null && qb.getViewDesc().getLocation() != null) {
+                location = new Path(qb.getViewDesc().getLocation());
+              }
+              else {
                 // allocate a temporary output dir on the location of the table
                 String tableName = getUnescapedName((ASTNode) ast.getChild(0));
                 String[] names = Utilities.getDbTableName(tableName);
@@ -12125,9 +12128,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     if (command_type == CREATE_TABLE || command_type == CTLT) {
+      if (location == null) {
         queryState.setCommandType(HiveOperation.CREATETABLE);
+      } else {
+        queryState.setCommandType(HiveOperation.CREATETABLE_WITH_LOCATION);
+      }
     } else if (command_type == CTAS) {
+      if (location == null) {
         queryState.setCommandType(HiveOperation.CREATETABLE_AS_SELECT);
+      } else {
+        queryState.setCommandType(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION);
+      }
     } else {
         throw new SemanticException("Unrecognized command.");
     }
@@ -12147,7 +12158,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
     }
 
-    addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE);
+    if (location == null) {
+      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE);
+    } else {
+      addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, location);
+    }
 
     if (isTemporary) {
       if (partCols.size() > 0) {
@@ -12293,6 +12308,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return null;
   }
 
+  private void addTabWithLocationToOutputs(String[] qualifiedTabName, TableType type, String location) {
+    Table t = new Table(qualifiedTabName[0], qualifiedTabName[1], location);
+    t.setTableType(type);
+    outputs.add(new WriteEntity(t, WriteEntity.WriteType.DDL_NO_LOCK));
+  }
+
   private void addDbAndTabToOutputs(String[] qualifiedTabName, TableType type) throws SemanticException {
     Database database  = getDatabase(qualifiedTabName[0]);
     outputs.add(new WriteEntity(database, WriteEntity.WriteType.DDL_SHARED));
@@ -12398,8 +12419,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           storageFormat.getInputFormat(), storageFormat.getOutputFormat(),
           location, storageFormat.getSerde(), storageFormat.getStorageHandler(),
           storageFormat.getSerdeProps());
-      addDbAndTabToOutputs(qualTabName, TableType.MATERIALIZED_VIEW);
-      queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW);
+      if (location == null) {
+        queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW);
+        addDbAndTabToOutputs(qualTabName, TableType.MATERIALIZED_VIEW);
+      } else {
+        queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW_WITH_LOCATION);
+        addTabWithLocationToOutputs(qualTabName, TableType.MATERIALIZED_VIEW, location);
+      }
     } else {
       createVwDesc = new CreateViewDesc(
           dbDotTable, cols, comment, tblProps, partColNames,
