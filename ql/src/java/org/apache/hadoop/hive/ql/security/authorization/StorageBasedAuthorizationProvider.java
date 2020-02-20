@@ -77,7 +77,7 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
    * @throws MetaException if unable to instantiate
    */
   private void initWh() throws MetaException, HiveException {
-    if (wh == null){
+    if (wh == null) {
       if(!isRunFromMetaStore){
         // Note, although HiveProxy has a method that allows us to check if we're being
         // called from the metastore or from the client, we don't have an initialized HiveProxy
@@ -95,7 +95,18 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
         // this means handler.getWh() is returning null. Error out.
         throw new IllegalStateException("Uninitialized Warehouse from MetastoreHandler");
       }
+    } else if (!isRunFromMetaStore && isWarehouseChanged()) {
+      wh = new Warehouse(getConf());
+      hive_db = new HiveProxy(Hive.get(getConf(), StorageBasedAuthorizationProvider.class));
     }
+  }
+
+  private boolean isWarehouseChanged() throws MetaException {
+    return !normalize(wh.getWhRoot().toString()).equals(normalize(HiveConf.getVar(getConf(), HiveConf.ConfVars.METASTOREWAREHOUSE)));
+  }
+
+  private static String normalize(String path) {
+    return path.replace("///", "/").replace("//", "/").replace("maprfs:", "").replace("file:", "");
   }
 
   @Override
