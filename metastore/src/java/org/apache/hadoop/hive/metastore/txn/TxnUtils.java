@@ -129,6 +129,14 @@ public class TxnUtils {
     return tableIsTransactional != null && tableIsTransactional.equalsIgnoreCase("true");
   }
 
+  public static boolean isTransactionalTable(Map<String, String> parameters) {
+    if (parameters == null) {
+      return false;
+    }
+    String tableIsTransactional = parameters.get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL);
+    return tableIsTransactional != null && tableIsTransactional.equalsIgnoreCase("true");
+  }
+
   /**
    * Build a query (or queries if one query is too big) with specified "prefix" and "suffix",
    * while populating the IN list into multiple OR clauses, e.g. id in (1,2,3) OR id in (4,5,6)

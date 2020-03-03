@@ -150,6 +150,7 @@ import org.apache.hadoop.hive.metastore.model.MVersionTable;
 import org.apache.hadoop.hive.metastore.parser.ExpressionTree;
 import org.apache.hadoop.hive.metastore.parser.ExpressionTree.FilterBuilder;
 import org.apache.hadoop.hive.metastore.partition.spec.PartitionSpecProxy;
+import org.apache.hadoop.hive.metastore.txn.TxnUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.shims.ShimLoader;
@@ -1871,14 +1872,28 @@ public class ObjectStore implements RawStore, Configurable {
   @Override
   public Partition getPartition(String dbName, String tableName,
       List<String> part_vals) throws NoSuchObjectException, MetaException {
-    openTransaction();
-    Partition part = convertToPart(getMPartition(dbName, tableName, part_vals));
-    commitTransaction();
-    if(part == null) {
-      throw new NoSuchObjectException("partition values="
-          + part_vals.toString());
+    Partition part = null;
+    boolean committed = false;
+    try {
+      openTransaction();
+      MTable table = this.getMTable(dbName, tableName);
+      MPartition mpart = getMPartition(dbName, tableName, part_vals);
+      part = convertToPart(mpart);
+      committed = commitTransaction();
+      if (part == null) {
+        throw new NoSuchObjectException("partition values=" + part_vals.toString());
+      }
+      part.setValues(part_vals);
+      // If transactional table partition, check whether the current version partition
+      // statistics in the metastore comply with the client query's snapshot isolation.
+      if (TxnUtils.isTransactionalTable(table.getParameters())) {
+        // Do not make persistent the following state since it is query specific (not global).
+        StatsSetupConst.setBasicStatsState(part.getParameters(), StatsSetupConst.FALSE);
+        LOG.info("Removed COLUMN_STATS_ACCURATE from Partition object's parameters.");
+      }
+    } finally {
+      rollbackAndCleanup(committed, (Query) null);
     }
-    part.setValues(part_vals);
     return part;
   }
 

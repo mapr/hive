@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -91,6 +92,9 @@ import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.ReflectionUtil;
 
 import javax.annotation.Nullable;
+import javax.security.auth.login.LoginException;
+
+import static org.apache.hadoop.hive.shims.Utils.getUGI;
 
 public class MetaStoreUtils {
 
@@ -331,6 +335,19 @@ public class MetaStoreUtils {
       return true;
     }
     return false;
+  }
+
+  /**
+   * @return the user name set in hadoop.job.ugi param or the current user from System
+   * @throws IOException if underlying Hadoop call throws LoginException
+   */
+  public static String getUser() throws IOException {
+    try {
+      UserGroupInformation ugi = getUGI();
+      return ugi.getUserName();
+    } catch (LoginException le) {
+      throw new IOException(le);
+    }
   }
 
   public static boolean updatePartitionStatsFast(Partition part, Warehouse wh, EnvironmentContext environmentContext)
