@@ -48,7 +48,35 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_METRICS_JSON_FILE_LOCATION;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_METRICS_ENABLED;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_PAM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_WEBUI_USE_SSL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_ZOOKEEPER_QUORUM;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_METRICS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.USERS_IN_ADMIN_ROLE;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_CONF_RESTRICTED_LIST;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.PREEXECHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.POSTEXECHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.ONFAILUREHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.QUERYREDACTORHOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_DRIVER_RUN_HOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SESSION_HOOK;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_QUERY_LIFETIME_HOOKS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHORIZATION_MANAGER;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_METRICS_JSON_FILE_LOCATION;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METRICS_REPORTER;
 
 /**
  *  Helper for configuring Hive.
@@ -75,6 +103,8 @@ public final class ConfTool {
   private static final String OPTIONS_AS_LIST = getDefaultList() + "," + buildMapRList(IMMUTABLE_OPTIONS);
   private static final String FALLBACK_HIVE_AUTHORIZER_FACTORY =
       "org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory";
+  private static final String METASTORE_AUTH_PRE_EVENT_LISTENER =
+       "org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener";
   private static final String EMPTY = "";
 
   /**
@@ -612,6 +642,45 @@ public final class ConfTool {
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     setEncryption(doc, authMethod);
     saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Enabled AuthorizationPreEventListener in hive-site.xml.
+   *
+   * @param pathToHiveSite hive-site location
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  static void setMetaStoreAuthPreEventListener(String pathToHiveSite, AuthMethod authMethod)
+          throws IOException, SAXException, ParserConfigurationException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
+    setMetaStoreAuthPreEventListener(doc, authMethod);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  /**
+   * Enabled AuthorizationPreEventListener in hive-site.xml.
+   *
+   * @param doc xml document
+   * @param authMethod true if Mapr Sasl security is enabled on the cluster
+   */
+  static void setMetaStoreAuthPreEventListener(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
+      case CUSTOM:
+        return;
+      case MAPRSASL:
+      case KERBEROS:
+        set(doc, METASTORE_PRE_EVENT_LISTENERS, METASTORE_AUTH_PRE_EVENT_LISTENER);
+        break;
+      case NONE:
+        remove(doc, METASTORE_PRE_EVENT_LISTENERS);
+        break;
+      default:
+        return;
+    }
   }
 
   /**

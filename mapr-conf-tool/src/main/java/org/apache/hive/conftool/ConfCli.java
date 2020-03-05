@@ -33,7 +33,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
-import static org.apache.hive.conftool.ConfToolUtil.*;
+import static org.apache.hive.conftool.ConfToolUtil.printBool;
+import static org.apache.hive.conftool.ConfToolUtil.isTrueOrFalse;
+import static org.apache.hive.conftool.ConfToolUtil.isValid;
+import static org.apache.hive.conftool.ConfToolUtil.isNotNullNotEmpty;
 
 /**
  CLI manager to configure Hive components.
@@ -441,6 +444,7 @@ public final class ConfCli {
     ConfTool.setEncryption(pathToHiveSite, authMethod);
     ConfTool.setMetaStoreUgi(pathToHiveSite, authMethod);
     ConfTool.setMetaStoreAuthManager(pathToHiveSite, authMethod);
+    ConfTool.setMetaStoreAuthPreEventListener(pathToHiveSite, authMethod);
   }
 
   private static AuthMethod getAuthMethod(CommandLine line) {

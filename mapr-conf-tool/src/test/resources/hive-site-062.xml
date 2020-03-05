@@ -1,0 +1,6 @@
+<configuration>
+    <property>
+        <name>hive.metastore.pre.event.listeners</name>
+        <value>org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener</value>
+    </property>
+</configuration>

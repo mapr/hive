@@ -883,4 +883,48 @@ public class ConfCliTest {
     ConfCli.main(new String[] { "--authMethod", "none", "--webui_headers", "/opt/mapr/conf/headers.xml", "--path", pathToHivetSite });
     Assert.assertFalse(ConfTool.exists(pathToHivetSite, "hive.server2.webui.jetty.response.headers.file"));
   }
+
+  @Test
+  public void setMetaStorePreEventListenerMaprSASL() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-061.xml");
+    ConfCli.main(new String[] { "--authMethod", "maprsasl", "--path", pathToHiveSite });
+    Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener",
+            ConfTool.getProperty(pathToHiveSite, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerKrb() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-061.xml");
+    ConfCli.main(new String[] { "--authMethod", "kerberos", "--path", pathToHiveSite });
+    Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener",
+            ConfTool.getProperty(pathToHiveSite, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerNoneRemoveProperty() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-062.xml");
+    ConfCli.main(new String[] { "--authMethod", "none", "--path", pathToHiveSite });
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerNoneNotSetProperty() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-061.xml");
+    ConfCli.main(new String[] { "--authMethod", "none", "--path", pathToHiveSite });
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerCustomNoRemoveProperty() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-062.xml");
+    ConfCli.main(new String[] { "--authMethod", "custom", "--path", pathToHiveSite });
+    Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerCustomNoSetProperty() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+    String pathToHiveSite = getPath("hive-site-063.xml");
+    ConfCli.main(new String[] { "--authMethod", "custom", "--path", pathToHiveSite });
+    Assert.assertFalse(ConfTool.exists(pathToHiveSite, "hive.metastore.pre.event.listeners"));
+  }
 }
