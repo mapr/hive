@@ -692,4 +692,48 @@ public class ConfToolTest {
     ConfTool.setWebUiHeaders(doc, NONE, "/opt/mapr/conf/headers.xml");
     Assert.assertFalse(ConfTool.propertyExists(doc, "hive.server2.webui.jetty.response.headers.file"));
   }
+
+  @Test
+  public void setMetaStorePreEventListenerMaprSASL() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-061.xml");
+    ConfTool.setMetaStoreAuthPreEventListener(doc, MAPRSASL);
+    Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener",
+            ConfTool.getProperty(doc, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerKrb() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-061.xml");
+    ConfTool.setMetaStoreAuthPreEventListener(doc, KERBEROS);
+    Assert.assertEquals("org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener",
+            ConfTool.getProperty(doc, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerNoneRemoveProperty() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-062.xml");
+    ConfTool.setMetaStoreAuthPreEventListener(doc, NONE);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerNoneNotSetProperty() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-061.xml");
+    ConfTool.setMetaStoreAuthPreEventListener(doc, NONE);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerCustomNotRemoveProperty() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-062.xml");
+    ConfTool.setMetaStoreAuthPreEventListener(doc, CUSTOM);
+    Assert.assertTrue(ConfTool.propertyExists(doc, "hive.metastore.pre.event.listeners"));
+  }
+
+  @Test
+  public void setMetaStorePreEventListenerCustomNotSetProperty() throws ParserConfigurationException, SAXException, IOException {
+    Document doc = parseFrom("hive-site-063.xml");
+    ConfTool.setMetaStoreAuthPreEventListener(doc, CUSTOM);
+    Assert.assertFalse(ConfTool.propertyExists(doc, "hive.metastore.pre.event.listeners"));
+  }
 }
