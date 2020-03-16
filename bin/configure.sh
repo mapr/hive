@@ -91,6 +91,7 @@ has_metastore(){
 if [ -f "$ROLES_DIR/hivemetastore" ]; then
   return 0; # 0 = true
 else
+  logError "Hive Metastore is not installed"
   return 1;
 fi
 }
@@ -102,6 +103,7 @@ has_webhcat(){
 if [ -f "$ROLES_DIR/hivewebhcat" ]; then
   return 0; # 0 = true
 else
+  logError "WebHCat is not installed"
   return 1;
 fi
 }
@@ -124,6 +126,7 @@ fi
 if [ -z "$MAPR_GROUP" ] ; then
   MAPR_GROUP=mapr
 fi
+logInfo "Mapr User = ['$MAPR_USER'], Mapr Group = ['$MAPR_GROUP']"
 }
 
 #
@@ -147,6 +150,7 @@ else
   authMethod=$(. "${HIVE_BIN}"/conftool -getAuthMethod)
   echo "$authMethod" > "$HIVE_CONF"/.authMethod
 fi
+logInfo "Authentication method ['$authMethod'] has been saved to file ['$HIVE_CONF'/.authMethod]"
 }
 
 #
@@ -158,6 +162,7 @@ if [ -f "$HIVE_CONF"/.authMethod ] ; then
 else
   touch "$HIVE_CONF"/.authMethod.backup
 fi
+logInfo "Backuped authentication method ['$HIVE_CONF'/.authMethod] to file ['$HIVE_CONF'/.authMethod.backup]"
 }
 
 #
@@ -206,11 +211,12 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -authMethod "$authMethod"
+  logInfo "Configured security for '$authMethod' cluster"
 fi
 }
 
 #
-# Configures PAM an SSL encryption for HiveServer2 Web UI on MapR SASL cluster
+# Configures PAM and SSL encryption for HiveServer2 Web UI on MapR SASL cluster
 #
 configure_hs2_webui_pam_and_ssl(){
 HIVE_SITE="$1"
@@ -218,6 +224,7 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-webuipamssl" -authMethod "$authMethod"
+  logInfo "Configured PAM and SSL encryption for HS2 Web UI with authorization method '$authMethod'"
 fi
 }
 
@@ -230,6 +237,7 @@ authMethod="$2"
 
 if security_has_to_be_configured ;  then
   . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" "-webhcatssl" -authMethod "$authMethod"
+  logInfo "Configured SSL encryption for webHCat on '$authMethod' cluster"
 fi
 }
 
@@ -243,6 +251,7 @@ authMethod="$2"
 headers="$3"
 if security_has_to_be_configured ;  then
   . "${HIVE_BIN}"/conftool -path "$WEBHCAT_SITE" -webhcat_headers "$headers" -authMethod "$authMethod"
+  logInfo "Configured security headers for webHCat service"
 fi
 }
 
@@ -255,6 +264,7 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hs2ssl" -authMethod "$authMethod"
+  logInfo "Configured SSL encryption by default for HS2"
 fi
 }
 
@@ -267,6 +277,7 @@ authMethod="$2"
 headers="$3"
 if security_has_to_be_configured ;  then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -webui_headers "$headers" -authMethod "$authMethod"
+  logInfo "Configured security headers for HS2 Web UI service"
 fi
 }
 
@@ -279,6 +290,7 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" "-hmetassl" -authMethod "$authMethod"
+  logInfo "Configured SSL encryption by default for Hive Metastore"
 fi
 }
 
@@ -333,6 +345,7 @@ for FILE in "${FILES[@]}" ; do
     if is_check_sum_changed_for ${FILE}; then
       backup_all_files
       save_all_checksums
+      logInfo "Saved current configuration file ['$FILE']"
       break
     fi
   fi
@@ -347,6 +360,7 @@ local file=$1
 local old_checksum=$(read_checksum_for "$file")
 local new_checksum=$(cksum "$file" | cut -d ' ' -f 1)
 if [ "$old_checksum" != "$new_checksum" ]; then
+  logInfo "Check sum has been changed for file ['$file']"
   return 0 # true
 else
   return 1;
@@ -374,6 +388,7 @@ else
   beforeConfigurationFileCksum=$(cksum "$HPLSQL_SITE" "$HIVE_SITE" "$WEBHCAT_SITE" | cut -d' ' -f 1,3)
 fi
 echo "$beforeConfigurationFileCksum" > "$HIVE_CONF"/.configuration_file_check_sum
+logInfo "Save all checksums into configuration file ['$HIVE_CONF'/.configuration_file_check_sum]"
 }
 
 #
@@ -434,6 +449,7 @@ fi
 EOF
 chmod a+x "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
+logInfo "Created restart file ['$RESTART_DIR'/'$ROLE'-'$HIVE_VERSION'.restart] for role ['$ROLE']"
 }
 
 #
@@ -441,6 +457,7 @@ chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/$ROLE-$HIVE_VERSION.restart"
 #
 grant_write_permission_in_logs_dir() {
   chmod -R g+w "$HIVE_LOGS"
+  logInfo "Granted write permission for group in hive logs dir"
 }
 
 #
@@ -454,6 +471,7 @@ function copy_log4j_for_hadoop_common_classpath() {
     HADOOP_SHARE_COMMON_PATH="${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/"
     if [ -f "$LOG4J_API_JAR_PATH" ] && [ ! -L "$HADOOP_SHARE_COMMON_PATH/$LOG4J_API_JAR_NAME" ] ; then
       ln -s "$LOG4J_API_JAR_PATH" "$HADOOP_SHARE_COMMON_PATH"
+      logInfo "Copy log4j api lib ['$LOG4J_API_JAR_PATH'] to ['$HADOOP_SHARE_COMMON_PATH']"
     fi
   fi
 }
@@ -478,6 +496,7 @@ fi
 EOF
 chmod a+x "$RESTART_DIR/${service}.restart"
 chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/${service}.restart"
+logInfo "Created restart file ['$RESTART_DIR'/'$service'.restart] for service ['$service']"
 }
 
 #
@@ -506,6 +525,7 @@ if [ -f "$path_to_warden_conf" ]; then
   if [ ! -z "$MAPR_GROUP" ]; then
     chgrp "$MAPR_GROUP" "$path_to_warden_conf"
   fi
+  logInfo 'Set admin permissions for warden configuration file ['$path_to_warden_conf'] according to ['$ROLE'] role'
 fi
 }
 
@@ -527,6 +547,7 @@ fi
 #
 configure_roles(){
 ROLES=(hivemetastore hiveserver2 hivewebhcat)
+logInfo "Configuring Hive roles ..."
 for ROLE in "${ROLES[@]}"; do
   if hasRole "${ROLE}"; then
     check_port_for "${ROLE}"
@@ -551,6 +572,7 @@ for ROLE in "${ROLES[@]}"; do
     fi
   fi
 done
+logInfo "Hive roles has been configured"
 }
 
 #
@@ -586,6 +608,7 @@ if [ "$isHS2HA" = "true" ]; then
     zk_hosts=$(cat "$HIVE_CONF/zk_hosts")
   fi
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -hs2ha -zkquorum "$zk_hosts"
+  logInfo "Enabled HiveServer2 High Availability"
   set_num_h2_in_warden_file "$num_hs2"
 fi
 }
@@ -604,6 +627,7 @@ if [ -f "$warden_file" ]; then
   if [ "$beforeWardenCksum" != "$afterWardenCksum" ]; then
     configChanged=1
   fi
+  logInfo "HS2 warden file has been updated with HS2 quantity: ['$num_hs2']"
 fi
 }
 
@@ -648,18 +672,23 @@ fi
 #
 init_derby_schema(){
 if ! is_meta_db_initialized && is_hive_not_configured_yet; then
+  logInfo "Initializing of Derby DB schema for mapr admin user ..."
   if [ -d "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME" ]; then
     rm -Rf "$HIVE_BIN/$DEFAULT_DERBY_DB_NAME"
   fi
   if ! is_connection_url_configured ;  then
     . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -connurl "$DERBY_CONNECTION_URL"
+    logInfo "Set Derby Connection URL ['$DERBY_CONNECTION_URL'] to hive-site.xml"
   fi
   cd "$HIVE_BIN" || return
   set_admin_user_group_to "$HIVE_BIN"
   nohup sudo -bnu "$MAPR_USER" "${HIVE_BIN}"/schematool -dbType derby -initSchema > "$HIVE_LOGS"/init_derby_db_$(date +%s)_$$.log 2>&1 < /dev/null &
+  logInfo "Initialize Derby DB schema"
   if has_metastore && ! is_metastore_uris_configured; then
     . "${HIVE_BIN}"/conftool -initMetastoreUri -path "$HIVE_SITE"
+    logInfo "Initialize metastore URI"
   fi
+  logInfo "Initialized Derby DB schema"
 fi
 }
 
@@ -688,10 +717,14 @@ if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
     export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
   fi
   if is_hive_not_configured_yet ; then
+    logInfo "Configuring impersonation ..."
     if ! exists_in_mapr_fs "$METASTOREWAREHOUSE" ; then
       sudo -u "$MAPR_USER" -E hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
+      logInfo "Create warehouse folder ['$METASTOREWAREHOUSE'] in MapR-FS"
     fi
     sudo -u "$MAPR_USER" -E hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
+    logInfo "Set 777 permissions to warehouse folder ['$METASTOREWAREHOUSE']"
+    logInfo "Impersonation has been configured"
   fi
 fi
 }
@@ -702,6 +735,7 @@ fi
 grant_permissions_to_hive_site(){
 if security_has_to_be_configured ; then
   chmod 0644 "$HIVE_SITE"
+  logInfo "Set default 0644 permissions to hive-site.xml"
 fi
 }
 
@@ -716,6 +750,7 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -restrictedList -authMethod "$authMethod"
+  logInfo "Configured restricted list [hive.conf.restricted.list]"
 fi
 }
 
@@ -729,6 +764,7 @@ authMethod="$2"
 
 if security_has_to_be_configured ; then
   . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -fallBackAuthorizer -authMethod "$authMethod"
+  logInfo "Fallback Authorization has been configured"
 fi
 }
 
@@ -747,6 +783,7 @@ fi
 if [ ! -z "$MAPR_GROUP" ]; then
   chgrp ${option} "$MAPR_GROUP" "$path"
 fi
+logInfo "Set admin user group to ['$path']"
 }
 
 
@@ -782,12 +819,14 @@ done
 # Configures owner/group and read/write permissions of Hive components
 #
 configure_permissions(){
+logInfo "Configuring owner/group and read/write permissions of Hive components ..."
 set_all_dirs_owner_group
 set_log_dir_owner_group
 set_admin_user_group_to "$HIVE_VERSION_FILE"
 set_admin_user_group_to "$HIVE_HOME"
 grant_permissions_to_hive_site
 grant_write_permission_in_logs_dir
+logInfo "Permissions has been configured"
 }
 
 #Adds mapr user to the property "hive.users.in.admin.role" in hive-site.xml.
@@ -798,6 +837,7 @@ configure_users_in_admin_role(){
   authMethod="$3"
   if security_has_to_be_configured ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -adminUser "$ADMIN_USER" -authMethod "$authMethod"
+  logInfo "MapR user has been added to the property hive.users.in.admin.role"
   fi
 }
 
@@ -809,7 +849,9 @@ configure_hs2_metrics() {
 HIVE_SITE="$1"
 if is_hive_not_configured_yet ; then
 . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hiveserver2_metrics_enabled true
+logInfo "Enabled HS2 metrics"
 . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hs2_report_file "$HIVE_SERVER2_REPORTER_FILE_LOCATION" -reporter_enabled true
+logInfo "Configured HS2 metrics with report file location ['$HIVE_SERVER2_REPORTER_FILE_LOCATION']"
 fi
 }
 
@@ -821,7 +863,9 @@ configure_metastore_metrics() {
 HIVE_SITE="$1"
 if is_hive_not_configured_yet ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -metastore_metrics_enabled true
+  logInfo "Enabled metastore metrics"
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -hmeta_report_file "$HIVE_METASTORE_REPORTER_FILE_LOCATION" -reporter_enabled true
+  logInfo "Configured metastore metrics with report file location ['$HIVE_METASTORE_REPORTER_FILE_LOCATION']"
 fi
 }
 
@@ -836,6 +880,7 @@ configure_reporter_type_and_file_location() {
 HIVE_SITE="$1"
 if is_hive_not_configured_yet ; then
   . ${HIVE_BIN}/conftool -path "$HIVE_SITE" -reporter_type "$REPORTER_TYPE" -reporter_enabled true
+  logInfo "Set reporter type to ['$REPORTER_TYPE'] for metric class org.apache.hadoop.hive.common.metrics.metrics2.CodahaleMetrics"
 fi
 }
 
@@ -917,6 +962,12 @@ if [ $# -gt 0 ]; then
           ;;
     esac
   done
+fi
+
+if is_hive_not_configured_yet ; then
+  logInfo "Hive is not configured"
+else
+  logInfo "Hive has been already configured"
 fi
 
 init_backup
