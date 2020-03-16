@@ -14,8 +14,16 @@ function registerNetworkPort() {
   return 0;
 }
 
+function logError() {
+  true
+}
+
 function logWarn() {
  true
+}
+
+function logInfo() {
+  true
 }
 
 function checkNetworkPortAvailability() {
