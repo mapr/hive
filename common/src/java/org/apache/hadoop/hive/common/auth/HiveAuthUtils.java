@@ -46,6 +46,8 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getSslProtocolVersion;
+
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
  * given configuration as well as helps with authenticating requests.
@@ -57,17 +59,10 @@ public class HiveAuthUtils {
     return new TSocket(host, port, loginTimeout);
   }
 
-  public static TTransport getSSLSocket(String host, int port, int loginTimeout)
-    throws TTransportException {
-    // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT
-    TSocket tSSLSocket = TSSLTransportFactory.getClientSocket(host, port, loginTimeout);
-    return getSSLSocketWithHttps(tSSLSocket);
-  }
-
   public static TTransport getSSLSocket(String host, int port, int loginTimeout,
-    String trustStorePath, String trustStorePassWord) throws TTransportException {
+    String trustStorePath, String trustStorePassWord, String sslProtocolVersion) throws TTransportException {
     TSSLTransportFactory.TSSLTransportParameters params =
-      new TSSLTransportFactory.TSSLTransportParameters();
+        new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     params.setTrustStore(trustStorePath, trustStorePassWord);
     params.requireClientAuth(true);
     // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT and
@@ -99,10 +94,10 @@ public class HiveAuthUtils {
   }
 
   public static TServerSocket getServerSSLSocket(String hiveHost, int portNum, String keyStorePath,
-      String keyStorePassWord, List<String> sslVersionBlacklist) throws TTransportException,
+      String keyStorePassWord, List<String> sslVersionBlacklist, String sslProtocolVersion) throws TTransportException,
       UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
-        new TSSLTransportFactory.TSSLTransportParameters();
+        new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     params.setKeyStore(keyStorePath, keyStorePassWord);
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {
@@ -164,7 +159,7 @@ public class HiveAuthUtils {
     };
     SSLSocket socket;
     try {
-      SSLContext sslContext = SSLContext.getInstance("SSL");
+      SSLContext sslContext = SSLContext.getInstance(getSslProtocolVersion());
       sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
       SSLSocketFactory factory = sslContext.getSocketFactory();
       socket = (SSLSocket) factory.createSocket(host, port);

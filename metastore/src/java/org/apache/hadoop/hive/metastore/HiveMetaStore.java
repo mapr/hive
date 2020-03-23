@@ -7226,8 +7226,10 @@ public class HiveMetaStore extends ThriftHiveMetastore {
           }
           String keyStorePassword = ShimLoader.getHadoopShims().getPassword(conf,
               HiveConf.ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD.varname);
+          String sslProtocolVersion = conf.getVar(ConfVars.HIVE_SSL_PROTOCOL_VERSION);
           serverSocket = HiveAuthUtils.getServerSSLSocket(null, port, keyStorePath,
-              keyStorePassword, sslVersionBlacklist);
+              keyStorePassword, sslVersionBlacklist, sslProtocolVersion);
+          LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));
         }
       }
 

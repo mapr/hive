@@ -32,7 +32,8 @@ import java.nio.file.Paths;
 public final class MapRSecurityUtil {
   private static final Logger LOG = LoggerFactory.getLogger(MapRSecurityUtil.class.getName());
   private static String authMethod = "not-defined";
-  private static final String MAPR_HOME = findMapRHome();
+  private static String mapRHome = null;
+  private static HiveConf hiveConf = null;
 
   private MapRSecurityUtil() {
   }
@@ -107,6 +108,21 @@ public final class MapRSecurityUtil {
     return "";
   }
 
+
+
+  /**
+   * Returns SSL protocol version.
+   *
+   * @return SSL protocol version
+   */
+  public static String getSslProtocolVersion() {
+    if (hiveConf == null) {
+      hiveConf = new HiveConf();
+    }
+    return HiveConf.getVar(hiveConf, HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION);
+  }
+
+
   /**
    * Checks for no security.
    *
@@ -126,7 +142,7 @@ public final class MapRSecurityUtil {
    * @return true if file mapr-clusters.conf contains string
    */
   private static boolean mapRClusterConfContains(String value) {
-    String path = MAPR_HOME + "/conf/mapr-clusters.conf";
+    String path = getMapRHome() + "/conf/mapr-clusters.conf";
     if (exists(path)) {
       return readFile(path).contains(value);
     }
@@ -140,7 +156,7 @@ public final class MapRSecurityUtil {
    * @return true if exists
    */
   private static boolean isCustomSecureFlagExists() {
-    return exists(MAPR_HOME + "/conf/.customSecure");
+    return exists(getMapRHome() + "/conf/.customSecure");
   }
 
   /**
@@ -149,17 +165,30 @@ public final class MapRSecurityUtil {
    * @return MapR Home folder as string
    */
   private static String findMapRHome() {
-    String maprHome = System.getProperty("mapr.home.dir");
+    String maprHome = System.getenv("MAPR_HOME");
     if (maprHome == null) {
-      LOG.warn("System property mapr.home.dir is null");
-      maprHome = System.getenv("MAPR_HOME");
+      LOG.warn("Environment variable MAPR_HOME is null");
+      maprHome = System.getProperty("mapr.home.dir");
       if (maprHome == null) {
-        LOG.warn("Environment variable MAPR_HOME is null");
+        LOG.warn("System property mapr.home.dir is null");
         maprHome = "/opt/mapr/";
         LOG.warn("Setting MapR home as /opt/mapr/ by default");
       }
     }
     return maprHome;
+  }
+
+  /**
+   * Lazy initialization for MapR Home.
+   *
+   * @return MAPR_HOME value
+   */
+
+  private static String getMapRHome() {
+    if (mapRHome == null) {
+      mapRHome = findMapRHome();
+    }
+    return mapRHome;
   }
 
   /**

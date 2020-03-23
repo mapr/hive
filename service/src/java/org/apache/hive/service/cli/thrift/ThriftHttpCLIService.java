@@ -106,6 +106,9 @@ public class ThriftHttpCLIService extends ThriftCLIService {
           Arrays.toString(sslContextFactory.getExcludeProtocols()));
         sslContextFactory.setKeyStorePath(keyStorePath);
         sslContextFactory.setKeyStorePassword(keyStorePassword);
+        String sslProtocolVersion = hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_VERSION);
+        sslContextFactory.setProtocol(sslProtocolVersion);
+        LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));
         connector = new ServerConnector(httpServer, sslContextFactory, http);
       } else {
         connector = new ServerConnector(httpServer, http);

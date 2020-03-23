@@ -460,8 +460,10 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
                     HiveConf.ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD.varname);
 
                 // Create an SSL socket and connect
-                transport = HiveAuthUtils.getSSLSocket(store.getHost(), store.getPort(), clientSocketTimeout, trustStorePath, trustStorePassword );
+                String sslProtocolVersion = conf.getVar(ConfVars.HIVE_SSL_PROTOCOL_VERSION);
+                transport = HiveAuthUtils.getSSLSocket(store.getHost(), store.getPort(), clientSocketTimeout, trustStorePath, trustStorePassword, sslProtocolVersion);
                 LOG.info("Opened an SSL connection to metastore, current connections: " + connCount.incrementAndGet());
+                LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));
               } catch(IOException e) {
                 throw new IllegalArgumentException(e);
               } catch(TTransportException e) {
