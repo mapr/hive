@@ -454,8 +454,9 @@ public class HiveMetaStoreClientPreCatalog implements IMetaStoreClient, AutoClos
                   MetastoreConf.getPassword(conf, MetastoreConf.ConfVars.SSL_TRUSTSTORE_PASSWORD);
 
               // Create an SSL socket and connect
+              String sslProtocolVersion = MetastoreConf.getVar(conf, ConfVars.SSL_PROTOCOL_VERSION);
               transport = SecurityUtils.getSSLSocket(store.getHost(), store.getPort(), clientSocketTimeout,
-                  trustStorePath, trustStorePassword );
+                  trustStorePath, trustStorePassword, sslProtocolVersion);
               LOG.info("Opened an SSL connection to metastore, current connections: " + connCount.incrementAndGet());
             } catch(IOException e) {
               throw new IllegalArgumentException(e);

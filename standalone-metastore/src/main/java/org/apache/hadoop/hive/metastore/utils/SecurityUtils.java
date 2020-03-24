@@ -254,10 +254,10 @@ public class SecurityUtils {
   }
 
   public static TServerSocket getServerSSLSocket(String hiveHost, int portNum, String keyStorePath,
-                                                 String keyStorePassWord, List<String> sslVersionBlacklist) throws TTransportException,
+      String keyStorePassWord, List<String> sslVersionBlacklist, String sslProtocolVersion) throws TTransportException,
       UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
-        new TSSLTransportFactory.TSSLTransportParameters();
+        new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     params.setKeyStore(keyStorePath, keyStorePassWord);
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {
@@ -290,9 +290,9 @@ public class SecurityUtils {
   }
 
   public static TTransport getSSLSocket(String host, int port, int loginTimeout,
-                                        String trustStorePath, String trustStorePassWord) throws TTransportException {
+                                        String trustStorePath, String trustStorePassWord, String sslProtocolVersion) throws TTransportException {
     TSSLTransportFactory.TSSLTransportParameters params =
-        new TSSLTransportFactory.TSSLTransportParameters();
+        new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     params.setTrustStore(trustStorePath, trustStorePassWord);
     params.requireClientAuth(true);
     // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT and

@@ -467,6 +467,9 @@ public class HttpServer {
       sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(
           new String[excludedSSLProtocols.size()]));
       sslContextFactory.setKeyStorePassword(b.keyStorePassword);
+      String sslProtocolVersion = b.conf.getVar(ConfVars.HIVE_SSL_PROTOCOL_VERSION);
+      sslContextFactory.setProtocol(sslProtocolVersion);
+      LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));
       connector = new ServerConnector(webServer, sslContextFactory, http);
     }
 

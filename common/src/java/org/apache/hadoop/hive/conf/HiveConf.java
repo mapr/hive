@@ -3005,8 +3005,11 @@ public class HiveConf extends Configuration {
         "table. From 0.12 onwards, they are displayed separately. This flag will let you\n" +
         "get old behavior, if desired. See, test-case in patch for HIVE-6689."),
 
-    HIVE_SSL_PROTOCOL_BLACKLIST("hive.ssl.protocol.blacklist", "SSLv2,SSLv3",
+    HIVE_SSL_PROTOCOL_BLACKLIST("hive.ssl.protocol.blacklist", "SSLv2,SSLv3,SSLv2Hello,TLSv1,TLSv1.1",
         "SSL Versions to disable for all Hive Servers"),
+
+    HIVE_SSL_PROTOCOL_VERSION("hive.ssl.protocol.version", "TLSv1.2",
+        "SSL protocol versions for all Hive Servers"),
 
     HIVE_PRIVILEGE_SYNCHRONIZER_INTERVAL("hive.privilege.synchronizer.interval",
         "1800s", new TimeValidator(TimeUnit.SECONDS),

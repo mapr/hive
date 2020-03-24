@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.http.CustomHeadersFilter;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -76,7 +75,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
+import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.getSslProtocolVersion;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
@@ -279,6 +278,13 @@ import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
       Set<String> excludedSSLProtocols = Sets.newHashSet(Splitter.on(",").trimResults().omitEmptyStrings()
           .split(Strings.nullToEmpty(conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
       sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(new String[excludedSSLProtocols.size()]));
+      String sslProtocolVersion = getSslProtocolVersion();
+      String keyStorePath = getClientKeystoreLocation();
+      String keyStorePassword = getClientKeystorePassword();
+      sslContextFactory.setProtocol(sslProtocolVersion);
+      sslContextFactory.setKeyStorePath(keyStorePath);
+      sslContextFactory.setKeyStorePassword(keyStorePassword);
+      LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));
       connector = new ServerConnector(server, sslContextFactory, http);
     } else {
       connector = new ServerConnector(server, http);
