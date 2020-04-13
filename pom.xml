@@ -183,7 +183,7 @@
     <orc.version>1.5.1</orc.version>
     <mockito-all.version>1.10.19</mockito-all.version>
     <mina.version>2.0.0-M5</mina.version>
-    <netty.version>4.1.17.Final</netty.version>
+    <netty.version>4.1.48.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.9.0</parquet.version>
     <pig.version>0.16.0</pig.version>
@@ -561,8 +561,8 @@
             <artifactId>httpclient</artifactId>
           </exclusion>
          <exclusion>
-            <groupId>org.jboss.netty</groupId>
-            <artifactId>netty</artifactId>
+           <groupId>io.netty</groupId>
+           <artifactId>netty-all</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
