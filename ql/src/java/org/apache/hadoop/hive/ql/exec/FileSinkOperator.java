@@ -211,23 +211,7 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
           if (finalPaths[idx] != null && !fs.exists(finalPaths[idx].getParent())) {
             fs.mkdirs(finalPaths[idx].getParent());
           }
-          boolean needToRename = true;
-          if (conf.getWriteType() == AcidUtils.Operation.UPDATE ||
-              conf.getWriteType() == AcidUtils.Operation.DELETE) {
-            // If we're updating or deleting there may be no file to close.  This can happen
-            // because the where clause strained out all of the records for a given bucket.  So
-            // before attempting the rename below, check if our file exists.  If it doesn't,
-            // then skip the rename.  If it does try it.  We could just blindly try the rename
-            // and avoid the extra stat, but that would mask other errors.
-            try {
-              if (outPaths[idx] != null) {
-                FileStatus stat = fs.getFileStatus(outPaths[idx]);
-              }
-            } catch (FileNotFoundException fnfe) {
-              needToRename = false;
-            }
-          }
-          if (needToRename && outPaths[idx] != null && !fs.rename(outPaths[idx], finalPaths[idx])) {
+          if (needToRename(outPaths[idx]) && outPaths[idx] != null && !fs.rename(outPaths[idx], finalPaths[idx])) {
             FileStatus fileStatus = FileUtils.getFileStatusOrNull(fs, finalPaths[idx]);
             if (fileStatus != null) {
               LOG.warn("Target path " + finalPaths[idx] + " with a size " + fileStatus.getLen() + " exists. Trying to delete it.");
@@ -236,7 +220,7 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
               }
             }
 
-            if (!fs.rename(outPaths[idx], finalPaths[idx])) {
+            if (needToRename(outPaths[idx]) && !fs.rename(outPaths[idx], finalPaths[idx])) {
               throw new HiveException("Unable to rename output from: " +
                 outPaths[idx] + " to: " + finalPaths[idx]);
             }
@@ -247,6 +231,27 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
               outPaths[idx] + " to: " + finalPaths[idx], e);
         }
       }
+    }
+
+    /**
+     * If we're updating or deleting there may be no file to close.  This can happen
+     * because the where clause strained out all of the records for a given bucket.  So
+     * before attempting the rename below, check if our file exists.  If it doesn't,
+     * then skip the rename.  If it does try it.  We could just blindly try the rename
+     * and avoid the extra stat, but that would mask other errors.     *
+     * @param path path to verify
+     * @return true if file exists
+     */
+    private synchronized boolean needToRename(Path path) {
+      if (path == null) {
+        return false;
+      }
+      try {
+        fs.getFileStatus(path);
+      } catch (IOException fnfe) {
+        return false;
+      }
+      return true;
     }
 
     public void abortWriters(FileSystem fs, boolean abort, boolean delete) throws HiveException {
