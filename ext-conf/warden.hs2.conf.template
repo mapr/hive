@@ -1,12 +1,12 @@
 services=hs2:1:cldb
 service.displayname=HiveServer2
-service.command.start=/opt/mapr/hive/hive-2.3.6/bin/hive --start --service hiveserver2
-service.command.stop=/opt/mapr/hive/hive-2.3.6/bin/hive --stop --service hiveserver2
+service.command.start=/opt/mapr/hive/hive-2.3/bin/hive --start --service hiveserver2
+service.command.stop=/opt/mapr/hive/hive-2.3/bin/hive --stop --service hiveserver2
 service.command.type=BACKGROUND
-service.command.monitorcommand=/opt/mapr/hive/hive-2.3.6/bin/status status hiveserver2
+service.command.monitorcommand=/opt/mapr/hive/hive-2.3/bin/status status hiveserver2
 service.port=10000
 service.ui.port=10000
 service.uri=about
-service.logs.location=/opt/mapr/hive/hive-2.3.6/logs/mapr
+service.logs.location=/opt/mapr/hive/hive-2.3/logs/mapr
 service.process.type=JAVA
 service.env="MAPR_MAPREDUCE_MODE=default"
