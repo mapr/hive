@@ -42,7 +42,7 @@
     <dependency>
     <groupId>com.mapr.security</groupId>
     <artifactId>mapr-security-web</artifactId>
-    <version>${mapr.release.version}</version>
+    <version>${mapr.core.version}</version>
     <exclusions>
       <exclusion>
         <groupId>com.mapr.hadoop</groupId>

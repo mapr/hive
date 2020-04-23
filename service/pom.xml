@@ -89,7 +89,7 @@
     <dependency>
       <groupId>com.mapr.hadoop</groupId>
       <artifactId>maprfs</artifactId>
-      <version>${mapr.release.version}</version>
+      <version>${mapr.core.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
