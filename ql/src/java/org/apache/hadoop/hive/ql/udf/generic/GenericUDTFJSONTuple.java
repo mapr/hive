@@ -35,11 +35,11 @@ import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.io.Text;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser.Feature;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.TypeFactory;
-import org.codehaus.jackson.type.JavaType;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.JavaType;
 
 /**
  * GenericUDTFJSONTuple: this
@@ -61,7 +61,7 @@ public class GenericUDTFJSONTuple extends GenericUDTF {
     JSON_FACTORY.enable(Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER);
   }
   private static final ObjectMapper MAPPER = new ObjectMapper(JSON_FACTORY);
-  private static final JavaType MAP_TYPE = TypeFactory.fromClass(Map.class);
+  private static final JavaType MAP_TYPE = TypeFactory.defaultInstance().constructType(Map.class);
 
   int numCols;    // number of output columns
   String[] paths; // array of path expressions, each of which corresponds to a column

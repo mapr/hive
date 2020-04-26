@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hive.hcatalog.templeton.tool.TempletonUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.http.HttpStatus;
 
 /**
