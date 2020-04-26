@@ -29,8 +29,8 @@ import java.util.TreeMap;
 
 import org.apache.hadoop.hive.common.jsonexplain.tez.Op.OpType;
 import org.apache.hadoop.util.hash.Hash;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

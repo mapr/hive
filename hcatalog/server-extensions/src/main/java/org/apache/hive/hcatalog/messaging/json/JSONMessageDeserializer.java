@@ -19,6 +19,7 @@
 
 package org.apache.hive.hcatalog.messaging.json;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.hive.hcatalog.messaging.AddPartitionMessage;
 import org.apache.hive.hcatalog.messaging.AlterIndexMessage;
 import org.apache.hive.hcatalog.messaging.AlterPartitionMessage;
@@ -34,8 +35,7 @@ import org.apache.hive.hcatalog.messaging.DropPartitionMessage;
 import org.apache.hive.hcatalog.messaging.DropTableMessage;
 import org.apache.hive.hcatalog.messaging.InsertMessage;
 import org.apache.hive.hcatalog.messaging.MessageDeserializer;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * MessageDeserializer implementation, for deserializing from JSON strings.
@@ -45,7 +45,7 @@ public class JSONMessageDeserializer extends MessageDeserializer {
   static ObjectMapper mapper = new ObjectMapper(); // Thread-safe.
 
   static {
-    mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   @Override

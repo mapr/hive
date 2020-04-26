@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hive.ql;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskResult;
@@ -25,9 +26,9 @@ import org.apache.hadoop.hive.ql.plan.api.StageType;
 import java.io.Serializable;
 import java.util.*;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Some limited query information to save for WebUI.
@@ -61,7 +62,7 @@ public class QueryDisplay {
     EXECUTION,
   }
 
-  @JsonWriteNullProperties(false)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class TaskDisplay {
 

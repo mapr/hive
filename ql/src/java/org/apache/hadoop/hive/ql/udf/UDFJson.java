@@ -30,11 +30,11 @@ import com.google.common.collect.Iterators;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.io.Text;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser.Feature;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.TypeFactory;
-import org.codehaus.jackson.type.JavaType;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.JavaType;
 
 /**
  * UDFJson.
@@ -61,8 +61,8 @@ import org.codehaus.jackson.type.JavaType;
 public class UDFJson extends UDF {
   private static final Pattern patternKey = Pattern.compile("^([a-zA-Z0-9_\\-\\:\\s]+).*");
   private static final Pattern patternIndex = Pattern.compile("\\[([0-9]+|\\*)\\]");
-  private static final JavaType MAP_TYPE = TypeFactory.fromClass(Map.class);
-  private static final JavaType LIST_TYPE = TypeFactory.fromClass(List.class);
+  private static final JavaType MAP_TYPE = TypeFactory.defaultInstance().constructType(Map.class);
+  private static final JavaType LIST_TYPE = TypeFactory.defaultInstance().constructType(List.class);
 
   private final JsonFactory jsonFactory = new JsonFactory();
   private final ObjectMapper objectMapper = new ObjectMapper(jsonFactory);

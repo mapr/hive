@@ -42,8 +42,8 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hive.common.util.HiveVersionInfo;
 import org.apache.hive.http.HttpServer;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
