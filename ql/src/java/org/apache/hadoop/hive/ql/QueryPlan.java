@@ -59,6 +59,8 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.transport.TMemoryBuffer;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * QueryPlan can be serialized to disk so that we can restart/resume the
  * progress of it in the future, either within or outside of the current
@@ -613,7 +615,7 @@ public class QueryPlan implements Serializable {
       e.printStackTrace();
       return q.toString();
     }
-    return tmb.toString("UTF-8");
+    return tmb.toString(UTF_8);
   }
 
   public String toBinaryString() throws IOException {
