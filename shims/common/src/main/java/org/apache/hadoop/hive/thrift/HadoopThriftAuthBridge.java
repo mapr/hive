@@ -556,7 +556,7 @@ public abstract class HadoopThriftAuthBridge {
 
 
       @Override
-      public boolean process(final TProtocol inProt, final TProtocol outProt) throws TException {
+      public void process(final TProtocol inProt, final TProtocol outProt) throws TException {
         TTransport trans = inProt.getTransport();
         if (!(trans instanceof TSaslServerTransport)) {
           throw new TException("Unexpected non-SASL transport " + trans.getClass());
@@ -574,7 +574,8 @@ public abstract class HadoopThriftAuthBridge {
         userAuthMechanism.set(mechanismName);
         if (AuthMethod.PLAIN.getMechanismName().equalsIgnoreCase(mechanismName)) {
           remoteUser.set(endUser);
-          return wrapped.process(inProt, outProt);
+          wrapped.process(inProt, outProt);
+          return;
         }
 
         authenticationMethod.set(AuthenticationMethod.KERBEROS);
@@ -596,10 +597,11 @@ public abstract class HadoopThriftAuthBridge {
                 endUser, UserGroupInformation.getLoginUser());
             remoteUser.set(clientUgi.getShortUserName());
             LOG.debug("Set remoteUser :" + remoteUser.get());
-            return clientUgi.doAs(new PrivilegedExceptionAction<Boolean>() {
+            clientUgi.doAs(new PrivilegedExceptionAction<Void>() {
               @Override
-              public Boolean run() throws TException {
-                return wrapped.process(inProt, outProt);
+              public Void run() throws TException {
+                wrapped.process(inProt, outProt);
+                return null;
               }
             });
           } else {
@@ -607,7 +609,7 @@ public abstract class HadoopThriftAuthBridge {
             UserGroupInformation endUserUgi = UserGroupInformation.createRemoteUser(endUser);
             remoteUser.set(endUserUgi.getShortUserName());
             LOG.debug("Set remoteUser :" + remoteUser.get() + ", from endUser :" + endUser);
-            return wrapped.process(inProt, outProt);
+            wrapped.process(inProt, outProt);
           }
         } catch (TTransportException tte) {
           throw new RuntimeException(tte);
