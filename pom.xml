@@ -215,6 +215,9 @@
     <curator.version>2.7.1</curator.version>
     <jsr305.version>3.0.0</jsr305.version>
     <tephra.version>0.6.0</tephra.version>
+    <tomcat-catalina.version>10.0.0-M4</tomcat-catalina.version>
+    <tomcat-jasper.version>10.0.0-M4</tomcat-jasper.version>
+    <tomcat-embed-jasper.version>10.0.0-M4</tomcat-embed-jasper.version>
     <gson.version>2.2.4</gson.version>
     <mapr.core.version>6.1.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
   </properties>
@@ -517,6 +520,21 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpcore</artifactId>
         <version>${httpcomponents.core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-catalina</artifactId>
+        <version>${tomcat-catalina.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-jasper</artifactId>
+        <version>${tomcat-jasper.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-jasper</artifactId>
+        <version>${tomcat-embed-jasper.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.velocity</groupId>
