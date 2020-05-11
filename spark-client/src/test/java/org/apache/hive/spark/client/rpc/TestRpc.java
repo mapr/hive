@@ -57,6 +57,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class TestRpc {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestRpc.class);

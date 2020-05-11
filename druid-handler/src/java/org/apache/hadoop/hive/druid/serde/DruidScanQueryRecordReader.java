@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.google.common.collect.Iterators;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class DruidScanQueryRecordReader
 
   private ScanResultValue current;
 
-  private Iterator<List<Object>> compactedValues = Iterators.emptyIterator();
+  private Iterator<List<Object>> compactedValues = Collections.emptyIterator();
 
   @Override
   protected JavaType getResultTypeDef() {

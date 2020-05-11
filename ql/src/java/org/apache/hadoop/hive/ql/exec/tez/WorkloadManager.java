@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hive.ql.exec.tez;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.hadoop.hive.metastore.api.WMPoolSchedulingPolicy;
 import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 
@@ -1093,7 +1094,7 @@ public class WorkloadManager extends TezSessionPoolSession.AbstractTriggerValida
   }
 
   private void failOnFutureFailure(ListenableFuture<?> future) {
-    Futures.addCallback(future, FATAL_ERROR_CALLBACK);
+    Futures.addCallback(future, FATAL_ERROR_CALLBACK, MoreExecutors.directExecutor());
   }
 
   private void queueGetRequestOnMasterThread(
@@ -1926,7 +1927,7 @@ public class WorkloadManager extends TezSessionPoolSession.AbstractTriggerValida
 
     public void start() throws Exception {
       ListenableFuture<WmTezSession> getFuture = tezAmPool.getSessionAsync();
-      Futures.addCallback(getFuture, this);
+      Futures.addCallback(getFuture, this, MoreExecutors.directExecutor());
     }
 
     @Override
@@ -1980,7 +1981,7 @@ public class WorkloadManager extends TezSessionPoolSession.AbstractTriggerValida
       case GETTING: {
         ListenableFuture<WmTezSession> waitFuture = session.waitForAmRegistryAsync(
             amRegistryTimeoutMs, timeoutPool);
-        Futures.addCallback(waitFuture, this);
+        Futures.addCallback(waitFuture, this, MoreExecutors.directExecutor());
         break;
       }
       case WAITING_FOR_REGISTRY: {

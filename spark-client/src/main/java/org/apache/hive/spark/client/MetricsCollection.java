@@ -103,6 +103,10 @@ public class MetricsCollection {
       public boolean apply(TaskInfo input) {
         return jobId == input.jobId && stageId == input.stageId && taskId == input.taskId;
       }
+      @Override
+      public boolean test(TaskInfo input) {
+        return apply(input);
+      }
     };
     lock.readLock().lock();
     try {
@@ -266,6 +270,10 @@ public class MetricsCollection {
       return jobId == input.jobId;
     }
 
+    @Override
+    public boolean test(TaskInfo input) {
+      return apply(input);
+    }
   }
 
   private static class StageFilter implements Predicate<TaskInfo> {
@@ -281,6 +289,11 @@ public class MetricsCollection {
     @Override
     public boolean apply(TaskInfo input) {
       return jobId == input.jobId && stageId == input.stageId;
+    }
+
+    @Override
+    public boolean test(TaskInfo input) {
+      return apply(input);
     }
 
   }
