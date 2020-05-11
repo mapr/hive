@@ -298,6 +298,10 @@ public class DruidStorageHandler extends DefaultHiveMetaHook implements HiveStor
           public boolean apply(@Nullable Throwable input) {
             return input instanceof IOException;
           }
+          @Override
+          public boolean test(@Nullable Throwable input) {
+            return apply(input);
+          }
         }, maxTries);
       } catch (Exception e) {
         console.printInfo(
@@ -351,6 +355,10 @@ public class DruidStorageHandler extends DefaultHiveMetaHook implements HiveStor
               LOG.error(String.format("Error while checking URL [%s]", input), e);
               return true;
             }
+          }
+          @Override
+          public boolean test(URL input) {
+            return apply(input);
           }
         }));
 

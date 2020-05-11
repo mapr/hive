@@ -2416,6 +2416,10 @@ public class SubstitutionVisitor {
           public boolean apply(Filter input) {
             return input.getCondition() instanceof RexInputRef;
           }
+          @Override
+          public boolean test(Filter input) {
+            return apply(input);
+          }
         };
 
     public static final FilterOnProjectRule INSTANCE =

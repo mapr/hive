@@ -247,6 +247,10 @@ public class HdfsUtils {
         }
         return false;
       }
+      @Override
+      public boolean test(AclEntry acl) {
+        return apply(acl);
+      }
     });
 
     return defaults;

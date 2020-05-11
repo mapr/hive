@@ -40,6 +40,7 @@ import io.netty.util.concurrent.Future;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.After;
@@ -48,6 +49,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class TestRpc {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestRpc.class);

@@ -256,6 +256,10 @@ public class ReplicationSpec {
         }
         return (allowEventReplacementInto(partition));
       }
+      @Override
+      public boolean test(@Nullable Partition partition) {
+        return apply(partition);
+      }
     };
   }
 
