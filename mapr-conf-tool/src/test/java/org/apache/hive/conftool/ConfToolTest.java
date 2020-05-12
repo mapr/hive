@@ -725,7 +725,7 @@ public class ConfToolTest {
 
   @Test
   public void setMetaStorePreEventListenerCustomNotRemoveProperty() throws ParserConfigurationException, SAXException, IOException {
-    Document doc = parseFrom("hive-site-062.xml");
+    Document doc = parseFrom("hive-site-064.xml");
     ConfTool.setMetaStoreAuthPreEventListener(doc, CUSTOM);
     Assert.assertTrue(ConfTool.propertyExists(doc, "hive.metastore.pre.event.listeners"));
   }

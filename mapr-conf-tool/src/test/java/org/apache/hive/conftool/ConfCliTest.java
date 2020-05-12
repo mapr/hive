@@ -898,7 +898,7 @@ public class ConfCliTest {
 
   @Test
   public void setMetaStorePreEventListenerCustomNoRemoveProperty() throws ParserConfigurationException, TransformerException, SAXException, IOException {
-    String pathToHiveSite = getPath("hive-site-062.xml");
+    String pathToHiveSite = getPath("hive-site-064.xml");
     ConfCli.main(new String[] { "--authMethod", "custom", "--path", pathToHiveSite });
     Assert.assertTrue(ConfTool.exists(pathToHiveSite, "hive.metastore.pre.event.listeners"));
   }
