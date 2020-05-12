@@ -239,7 +239,7 @@
     <repository>
       <id>mapr</id>
       <name>MapR Maven repository</name>
-      <url>http://repository.mapr.com/nexus/content/repositories/releases/</url>
+      <url>https://repository.mapr.com/nexus/content/repositories/releases/</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
