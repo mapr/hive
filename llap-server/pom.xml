@@ -73,7 +73,6 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>${commons-codec.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
@@ -88,12 +87,10 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
-      <version>${avro.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.thrift</groupId>
       <artifactId>libthrift</artifactId>
-      <version>${libthrift.version}</version>
     </dependency>
     <dependency>
       <groupId>com.tdunning</groupId>
@@ -102,7 +99,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-      <version>${hadoop.version}</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
@@ -118,7 +114,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-mapreduce-client-core</artifactId>
-      <version>${hadoop.version}</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
@@ -142,7 +137,6 @@
     <dependency>
       <groupId>org.apache.tez</groupId>
       <artifactId>tez-runtime-internals</artifactId>
-      <version>${tez.version}</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
@@ -158,7 +152,6 @@
     <dependency>
       <groupId>org.apache.tez</groupId>
       <artifactId>tez-runtime-library</artifactId>
-      <version>${tez.version}</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
@@ -252,14 +245,13 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
-      <version>${hadoop.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-llap-common</artifactId>
       <version>${project.version}</version>
-      <type>test-jar</type>
+      <classifier>tests</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -271,20 +263,17 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-servlet</artifactId>
-      <version>${jersey.version}</version>
       <scope>test</scope>
     </dependency>
 <!-- HBase dependencies to call the API to localize the JARs -->
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-hadoop2-compat</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -294,7 +283,6 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-server</artifactId>
-      <version>${hbase.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -309,12 +297,10 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-hadoop-compat</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
   </dependencies>
 
@@ -322,15 +308,15 @@
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
     <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
     <resources>
-    <resource>
-      <directory>src/main/resources</directory>
-      <excludes>
-        <exclude>*.py</exclude>
-        <exclude>*.pyc</exclude>
-        <exclude>llap-daemon-log4j.properties</exclude>
-      </excludes>
-      <filtering>false</filtering>
-    </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>*.py</exclude>
+          <exclude>*.pyc</exclude>
+          <exclude>llap-daemon-log4j.properties</exclude>
+        </excludes>
+        <filtering>false</filtering>
+      </resource>
     </resources>
     <plugins>
       <plugin>

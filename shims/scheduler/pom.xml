@@ -44,31 +44,26 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-      <version>${hadoop.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-mapreduce-client-core</artifactId>
-      <version>${hadoop.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-yarn-api</artifactId>
-      <version>${hadoop.version}</version>
       <optional>true</optional>
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
      <artifactId>hadoop-yarn-common</artifactId>
-     <version>${hadoop.version}</version>
      <optional>true</optional>
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
      <artifactId>hadoop-yarn-client</artifactId>
-     <version>${hadoop.version}</version>
      <optional>true</optional>
    </dependency>
    <dependency>
@@ -81,8 +76,8 @@
      <groupId>org.apache.hadoop</groupId>
      <artifactId>hadoop-yarn-server-tests</artifactId>
      <version>${hadoop.version}</version>
-      <optional>true</optional>
-     <type>test-jar</type>
+     <optional>true</optional>
+     <classifier>tests</classifier>
    </dependency>
   </dependencies>
 </project>
