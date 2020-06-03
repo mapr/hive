@@ -81,7 +81,7 @@ def start_hcat():
   if 'HADOOP_OPTS' not in os.environ:
     os.environ['HADOOP_OPTS'] = ''
 
-  os.environ['HADOOP_OPTS'] += " -server -XX:+UseConcMarkSweepGC -XX:ErrorFile=" + os.path.join(os.environ['HCAT_LOG_DIR'], 'hcat_err_pid%p.log') + " -Xloggc:" + os.path.join(os.environ['HCAT_LOG_DIR'], 'hcat_gc.log-') + strftime("%Y%m%d%H%M") + " -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps"
+  os.environ['HADOOP_OPTS'] += " -server -XX:+UseConcMarkSweepGC -XX:ErrorFile=" + os.path.join(os.environ['HCAT_LOG_DIR'], 'hcat_err_pid%p.log') + " -Xloggc:" + os.path.join(os.environ['HCAT_LOG_DIR'], 'hcat_gc.log-') + strftime("%Y%m%d%H%M") + " -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
   os.environ['HADOOP_HEAPSIZE'] = '2048' # 8G is better if you have it
 
   if os.name == "posix":
