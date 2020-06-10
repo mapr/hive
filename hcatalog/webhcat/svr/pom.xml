@@ -187,6 +187,16 @@
                   <artifactId>xercesImpl</artifactId>
                   <version>${xerces.version}</version>
                 </docletArtifact>
+              <docletArtifact>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${jakarta.xml.bind-api.version}</version>
+              </docletArtifact>
+              <docletArtifact>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-impl</artifactId>
+                <version>${jaxb-impl.version}</version>
+              </docletArtifact>
               </docletArtifacts>
               <additionalOptions>
                 <additionalOption>-output ${project.build.outputDirectory}/resourcedoc.xml</additionalOption>
