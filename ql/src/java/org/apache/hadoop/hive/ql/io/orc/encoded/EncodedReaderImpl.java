@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.ql.io.orc.encoded;
 
 import java.io.IOException;
+import java.lang.ref.Cleaner;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.OrcEncodedColumnBatch;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.PoolFactory;
 import org.apache.orc.OrcProto;
 
-import sun.misc.Cleaner;
+import org.apache.hadoop.util.CleanerUtil;
 
 
 /**
@@ -1412,18 +1413,21 @@ class EncodedReaderImpl implements EncodedReader {
       return;
     }
     Field localCf = cleanerField;
-    if (!bb.isDirect() || localCf == null) return;
-    try {
-      Cleaner cleaner = (Cleaner) localCf.get(bb);
-      if (cleaner != null) {
-        cleaner.clean();
-      } else {
-        LOG.debug("Unable to clean a buffer using cleaner - no cleaner");
+    if (!bb.isDirect() || localCf == null)
+      return;
+    if (CleanerUtil.UNMAP_SUPPORTED) {
+      try {
+        Cleaner cleaner = (Cleaner) localCf.get(bb);
+        if (cleaner != null) {
+          CleanerUtil.getCleaner().freeBuffer(bb);
+        } else {
+          LOG.debug("Unable to clean a buffer using cleaner - no cleaner");
+        }
+      } catch (Exception e) {
+        // leave it for GC to clean up
+        LOG.warn("Unable to clean direct buffers using Cleaner.");
+        cleanerField = null;
       }
-    } catch (Exception e) {
-      // leave it for GC to clean up
-      LOG.warn("Unable to clean direct buffers using Cleaner.");
-      cleanerField = null;
     }
   }
 
