@@ -38,8 +38,9 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -112,9 +113,9 @@ public class TestDummyTxnManager {
     LockedDriverState lDrvInp = new LockedDriverState();
     lDrvInp.abort();
     LockException lEx = new LockException(ErrorMsg.LOCK_ACQUIRE_CANCELLED.getMsg());
-    when(mockLockManager.lock(anyListOf(HiveLockObj.class), eq(false), eq(lDrvState))).thenReturn(expectedLocks);
-    when(mockLockManager.lock(anyListOf(HiveLockObj.class), eq(false), eq(lDrvInp))).thenThrow(lEx);
-    doNothing().when(mockLockManager).setContext(any(HiveLockManagerCtx.class));
+    when(mockLockManager.lock(ArgumentMatchers.<HiveLockObj>anyList(), eq(false), eq(lDrvState))).thenReturn(expectedLocks);
+    when(mockLockManager.lock(ArgumentMatchers.<HiveLockObj>anyList(), eq(false), eq(lDrvInp))).thenThrow(lEx);
+    lenient().doNothing().when(mockLockManager).setContext(any(HiveLockManagerCtx.class));
     doNothing().when(mockLockManager).close();
     ArgumentCaptor<List> lockObjsCaptor = ArgumentCaptor.forClass(List.class);
 

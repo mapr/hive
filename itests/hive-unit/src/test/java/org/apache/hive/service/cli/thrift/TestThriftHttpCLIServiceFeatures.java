@@ -20,7 +20,7 @@ package org.apache.hive.service.cli.thrift;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
@@ -46,6 +46,8 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hive.jdbc.HttpBasicAuthInterceptor;
 import org.apache.hive.service.auth.HiveAuthConstants;
 import org.apache.hive.service.auth.HiveAuthConstants.AuthTypes;
+import org.apache.hive.service.auth.HiveAuthFactory.AuthTypes;
+import org.apache.hive.service.auth.HiveAuthConstants;
 import org.apache.hive.service.rpc.thrift.TCLIService;
 import org.apache.hive.service.rpc.thrift.TExecuteStatementReq;
 import org.apache.hive.service.rpc.thrift.TOpenSessionReq;
@@ -67,7 +69,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Joiner;
@@ -358,8 +360,8 @@ public class TestThriftHttpCLIServiceFeatures  {
         .forClass(HiveAuthzContext.class);
 
     verify(mockedAuthorizer).checkPrivileges(any(HiveOperationType.class),
-        Matchers.anyListOf(HivePrivilegeObject.class),
-        Matchers.anyListOf(HivePrivilegeObject.class), contextCapturer.capture());
+        ArgumentMatchers.<HivePrivilegeObject>anyList(),
+        ArgumentMatchers.<HivePrivilegeObject>anyList(), contextCapturer.capture());
 
     HiveAuthzContext context = contextCapturer.getValue();
     System.err.println("Forwarded IP Addresses " + context.getForwardedAddresses());

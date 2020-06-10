@@ -191,15 +191,15 @@
     <log4j2.version>2.17.1</log4j2.version>
     <opencsv.version>2.3</opencsv.version>
     <orc.version>1.5.8</orc.version>
-    <mockito-core.version>1.10.19</mockito-core.version>
+    <mockito-core.version>3.3.3</mockito-core.version>
+    <powermock.version>2.0.2</powermock.version>
     <mina.version>2.0.0-M5</mina.version>
     <netty.version>4.1.17.Final</netty.version>
     <netty3.version>3.10.5.Final</netty3.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.10.0</parquet.version>
     <pig.version>0.16.0</pig.version>
-    <plexus.version>1.5.6</plexus.version>
-    <powermock.version>1.6.2</powermock.version>
+    <plexus.utils.version>3.3.0</plexus.utils.version>
     <protobuf.version>2.5.0</protobuf.version>
     <stax.version>1.0.1</stax.version>
     <slf4j.version>1.7.10</slf4j.version>
@@ -1012,7 +1012,7 @@
       </dependency>
       <dependency>
         <groupId>org.powermock</groupId>
-        <artifactId>powermock-api-mockito</artifactId>
+        <artifactId>powermock-api-mockito2</artifactId>
         <version>${powermock.version}</version>
       </dependency>
       <dependency>

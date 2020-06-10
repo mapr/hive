@@ -143,7 +143,7 @@ public class TestQueryHooks {
     return driver;
   }
 
-  private static final class QueryLifeTimeHookContextMatcher extends ArgumentMatcher<QueryLifeTimeHookContext> {
+  private static final class QueryLifeTimeHookContextMatcher implements ArgumentMatcher<QueryLifeTimeHookContext> {
 
     private final String command;
 
@@ -152,8 +152,8 @@ public class TestQueryHooks {
     }
 
     @Override
-    public boolean matches(Object o) {
-      return ((QueryLifeTimeHookContext) o).getCommand().equals(this.command);
+    public boolean matches(QueryLifeTimeHookContext queryLifeTimeHookContext) {
+      return queryLifeTimeHookContext.getCommand().equals(this.command);
     }
   }
 }

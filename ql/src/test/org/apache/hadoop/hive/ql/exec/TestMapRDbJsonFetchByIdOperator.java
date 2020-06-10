@@ -17,9 +17,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,6 +40,8 @@ public class TestMapRDbJsonFetchByIdOperator {
   @Before
   public void setUp() throws Exception {
     when(fetchWork.getTblDesc()).thenReturn(tableDesc);
+    when(fetchWork.getMapRDbTableName()).thenReturn("test_table");
+    when(fetchWork.getSearchValue()).thenReturn("test_value");
     when(tableDesc.getDeserializer(any(Configuration.class), anyBoolean()))
         .thenReturn(mapRDBSerDe);
     when(mapRDBSerDe.getObjectInspector()).thenReturn(objectInspector);

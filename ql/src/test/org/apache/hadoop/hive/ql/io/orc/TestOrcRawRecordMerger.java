@@ -73,6 +73,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class TestOrcRawRecordMerger {
 
@@ -170,16 +172,16 @@ public class TestOrcRawRecordMerger {
     Mockito.when(reader.rowsOptions(Mockito.any(Reader.Options.class), Mockito.any(HiveConf.class)))
         .thenReturn(recordReader);
 
-    Mockito.when(recordReader.hasNext()).
+    when(recordReader.hasNext()).
         thenReturn(true, true, true, true, true, false);
 
-    Mockito.when(recordReader.getProgress()).thenReturn(1.0f);
+    when(recordReader.getProgress()).thenReturn(1.0f);
 
-    Mockito.when(recordReader.next(null)).thenReturn(row1);
-    Mockito.when(recordReader.next(row1)).thenReturn(row2);
-    Mockito.when(recordReader.next(row2)).thenReturn(row3);
-    Mockito.when(recordReader.next(row3)).thenReturn(row4);
-    Mockito.when(recordReader.next(row4)).thenReturn(row5);
+    when(recordReader.next(null)).thenReturn(row1);
+    when(recordReader.next(row1)).thenReturn(row2);
+    when(recordReader.next(row2)).thenReturn(row3);
+    when(recordReader.next(row3)).thenReturn(row4);
+    when(recordReader.next(row4)).thenReturn(row5);
 
     return reader;
   }
@@ -273,16 +275,17 @@ public class TestOrcRawRecordMerger {
     OrcStruct row4 = createOriginalRow("fourth");
     OrcStruct row5 = createOriginalRow("fifth");
 
-    Mockito.when(reader.rowsOptions(Mockito.any(Reader.Options.class), Mockito.any(HiveConf.class)))
+    // HiveConf argument of rowsOptions can be null
+    when(reader.rowsOptions(any(Reader.Options.class), any()))
         .thenReturn(recordReader);
-    Mockito.when(recordReader.hasNext()).
+    when(recordReader.hasNext()).
         thenReturn(true, true, true, true, true, false);
-    Mockito.when(recordReader.getRowNumber()).thenReturn(0L, 1L, 2L, 3L, 4L);
-    Mockito.when(recordReader.next(null)).thenReturn(row1);
-    Mockito.when(recordReader.next(row1)).thenReturn(row2);
-    Mockito.when(recordReader.next(row2)).thenReturn(row3);
-    Mockito.when(recordReader.next(row3)).thenReturn(row4);
-    Mockito.when(recordReader.next(row4)).thenReturn(row5);
+    when(recordReader.getRowNumber()).thenReturn(0L, 1L, 2L, 3L, 4L);
+    when(recordReader.next(null)).thenReturn(row1);
+    when(recordReader.next(row1)).thenReturn(row2);
+    when(recordReader.next(row2)).thenReturn(row3);
+    when(recordReader.next(row3)).thenReturn(row4);
+    when(recordReader.next(row4)).thenReturn(row5);
     return reader;
   }
 
@@ -409,7 +412,7 @@ public class TestOrcRawRecordMerger {
     types.add(typeBuilder.build());
 
     Mockito.when(reader.getTypes()).thenReturn(types);
-    Mockito.when(reader.rowsOptions(Mockito.any(Reader.Options.class), Mockito.any(HiveConf.class)))
+    Mockito.when(reader.rowsOptions(any(), any()))
         .thenReturn(recordReader);
 
     OrcStruct row1 = new OrcStruct(OrcRecordUpdater.FIELDS);
@@ -423,20 +426,21 @@ public class TestOrcRawRecordMerger {
     OrcStruct row5 = new OrcStruct(OrcRecordUpdater.FIELDS);
     setRow(row5, OrcRecordUpdater.INSERT_OPERATION, 40, 50, 61, 140, "fifth");
 
-    Mockito.when(recordReader.hasNext()).
+    when(recordReader.hasNext()).
         thenReturn(true, true, true, true, true, false);
 
-    Mockito.when(recordReader.getProgress()).thenReturn(1.0f);
+    when(recordReader.getProgress()).thenReturn(1.0f);
 
-    Mockito.when(recordReader.next(null)).thenReturn(row1, row4);
-    Mockito.when(recordReader.next(row1)).thenReturn(row2);
-    Mockito.when(recordReader.next(row2)).thenReturn(row3);
-    Mockito.when(recordReader.next(row3)).thenReturn(row5);
+    when(recordReader.next(null)).thenReturn(row1, row4);
+    when(recordReader.next(row1)).thenReturn(row2);
+    when(recordReader.next(row2)).thenReturn(row3);
+    when(recordReader.next(row3)).thenReturn(row5);
+
 
     Mockito.when(reader.getMetadataValue(OrcRecordUpdater.ACID_KEY_INDEX_NAME))
         .thenReturn(ByteBuffer.wrap("10,20,30;40,50,60;40,50,61"
             .getBytes("UTF-8")));
-    Mockito.when(reader.getStripes())
+    when(reader.getStripes())
         .thenReturn(createStripes(2, 2, 1));
 
     OrcRawRecordMerger merger = new OrcRawRecordMerger(conf, false, reader,

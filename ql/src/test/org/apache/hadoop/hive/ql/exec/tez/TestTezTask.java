@@ -20,18 +20,14 @@ package org.apache.hadoop.hive.ql.exec.tez;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 
 import org.apache.hadoop.yarn.api.records.URL;
 import org.apache.hive.common.util.Ref;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -50,7 +46,6 @@ import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.TezEdgeProperty;
 import org.apache.hadoop.hive.ql.plan.TezEdgeProperty.EdgeType;
 import org.apache.hadoop.hive.ql.plan.TezWork;
-import org.apache.hadoop.hive.ql.plan.TezWork.VertexType;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.mapred.JobConf;
@@ -70,6 +65,17 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class TestTezTask {
 
@@ -92,12 +98,12 @@ public class TestTezTask {
     utils = mock(DagUtils.class);
     fs = mock(FileSystem.class);
     path = mock(Path.class);
-    when(path.getFileSystem(any(Configuration.class))).thenReturn(fs);
-    when(utils.getTezDir(any(Path.class))).thenReturn(path);
+    when(path.getFileSystem(any())).thenReturn(fs);
+    when(utils.getTezDir(any())).thenReturn(path);
     when(
-        utils.createVertex(any(JobConf.class), any(BaseWork.class), any(Path.class),
+        utils.createVertex(any(), any(BaseWork.class), any(Path.class),
             any(FileSystem.class), any(Context.class),
-            anyBoolean(), any(TezWork.class), any(VertexType.class), any(Map.class))).thenAnswer(
+            anyBoolean(), any(TezWork.class), any(), any())).thenAnswer(
         new Answer<Vertex>() {
 
           @Override
@@ -108,8 +114,8 @@ public class TestTezTask {
           }
         });
 
-    when(utils.createEdge(any(JobConf.class), any(Vertex.class), any(Vertex.class),
-            any(TezEdgeProperty.class), any(BaseWork.class), any(TezWork.class)))
+    when(utils.createEdge(any(), any(Vertex.class), any(Vertex.class),
+            any(), any(), any()))
             .thenAnswer(new Answer<Edge>() {
           @Override
           public Edge answer(InvocationOnMock invocation) throws Throwable {
@@ -229,7 +235,7 @@ public class TestTezTask {
   @Test
   public void testClose() throws HiveException {
     task.close(work, 0, null);
-    verify(op, times(4)).jobClose(any(Configuration.class), eq(true));
+    verify(op, times(4)).jobClose(any(), eq(true));
   }
 
   @Test
@@ -238,13 +244,13 @@ public class TestTezTask {
     LocalResource res = createResource(inputOutputJars[0]);
     final List<LocalResource> resources = Collections.singletonList(res);
 
-    when(utils.localizeTempFiles(anyString(), any(Configuration.class), eq(inputOutputJars),
+    when(utils.localizeTempFiles(anyString(), any(), eq(inputOutputJars),
         any(String[].class))).thenReturn(resources);
     when(sessionState.isOpen()).thenReturn(true);
     when(sessionState.isOpening()).thenReturn(false);
     task.ensureSessionHasResources(sessionState, inputOutputJars);
     // TODO: ideally we should have a test for session itself.
-    verify(sessionState).ensureLocalResources(any(Configuration.class), eq(inputOutputJars));
+    verify(sessionState).ensureLocalResources(any(), eq(inputOutputJars));
   }
 
   private static LocalResource createResource(String url) {
