@@ -38,6 +38,7 @@ import org.apache.hadoop.hive.metastore.api.FileMetadataExprType;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -104,7 +105,7 @@ public class MockUtils {
       }
     });
 
-    Mockito.when(htable.get(Mockito.anyListOf(Get.class))).thenAnswer(new Answer<Result[]>() {
+    Mockito.when(htable.get(ArgumentMatchers.<Get>anyList())).thenAnswer(new Answer<Result[]>() {
       @Override
       public Result[] answer(InvocationOnMock invocation) throws Throwable {
         @SuppressWarnings("unchecked")

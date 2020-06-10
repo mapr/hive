@@ -17,15 +17,15 @@
  */
 package org.apache.hive.hcatalog.streaming.mutate.worker;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -40,8 +40,9 @@ import org.apache.hive.hcatalog.streaming.mutate.client.AcidTable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TestMutatorCoordinator {
@@ -93,7 +94,7 @@ public class TestMutatorCoordinator {
         mockMutator);
     when(mockPartitionHelper.getPathForPartition(any(List.class))).thenReturn(PATH_A);
     when(mockRecordInspector.extractRecordIdentifier(RECORD)).thenReturn(ROW__ID_INSERT);
-    when(mockSequenceValidator.isInSequence(any(RecordIdentifier.class))).thenReturn(true);
+    lenient().when(mockSequenceValidator.isInSequence(any(RecordIdentifier.class))).thenReturn(true);
     when(mockGroupingValidator.isInSequence(any(List.class), anyInt())).thenReturn(true);
 
     coordinator = new MutatorCoordinator(configuration, mockMutatorFactory, mockPartitionHelper, mockGroupingValidator,
@@ -187,7 +188,7 @@ public class TestMutatorCoordinator {
     coordinator.delete(PARTITION_B, RECORD); /* PbB0 */
     coordinator.insert(PARTITION_B, RECORD); /* PbB0 */
 
-    verify(mockPartitionHelper, never()).createPartitionIfNotExists(anyList());
+    verify(mockPartitionHelper, never()).createPartitionIfNotExists(ArgumentMatchers.<String>anyList());
   }
 
   @Test(expected = RecordSequenceException.class)
@@ -248,7 +249,7 @@ public class TestMutatorCoordinator {
     coordinator.close();
 
     // No mutator created
-    verifyZeroInteractions(mockMutator);
+    verifyNoMoreInteractions(mockMutator);
   }
 
   @Test

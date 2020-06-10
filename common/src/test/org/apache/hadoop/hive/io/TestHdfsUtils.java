@@ -21,7 +21,6 @@ package org.apache.hadoop.hive.io;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -37,9 +36,9 @@ import org.apache.hadoop.fs.permission.FsPermission;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -92,10 +91,10 @@ public class TestHdfsUtils {
     when(mockHadoopFileStatus.getFileStatus()).thenReturn(mockSourceStatus);
     when(mockHadoopFileStatus.getAclEntries()).thenReturn(acls);
     when(mockHadoopFileStatus.getAclStatus()).thenReturn(mockAclStatus);
-    doThrow(RuntimeException.class).when(mockFs).setAcl(any(Path.class), any(List.class));
+    doThrow(RuntimeException.class).when(mockFs).setAcl(any(Path.class), ArgumentMatchers.<AclEntry>anyList());
 
     HdfsUtils.setFullFileStatus(conf, mockHadoopFileStatus, mockFs, new Path("fakePath"), false);
-    verify(mockFs).setAcl(any(Path.class), any(List.class));
+    verify(mockFs).setAcl(any(Path.class), ArgumentMatchers.<AclEntry>anyList());
   }
 
   /**
@@ -205,7 +204,7 @@ public class TestHdfsUtils {
     verify(fs, never()).getFileStatus(any(Path.class));
     verify(fs, never()).listStatus(any(Path[].class));
     verify(fs, never()).setPermission(any(Path.class), any(FsPermission.class));
-    verify(fs, never()).setAcl(any(Path.class), anyList());
+    verify(fs, never()).setAcl(any(Path.class), ArgumentMatchers.<AclEntry>anyList());
     verify(fs, never()).setOwner(any(Path.class), any(String.class), any(String.class));
   }
 }
