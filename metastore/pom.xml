@@ -391,6 +391,7 @@
       <plugin>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-maven-plugin</artifactId>
+        <version>${datanucleus.maven.plugin.version}</version>
         <configuration>
           <api>JDO</api>
           <verbose>true</verbose>
