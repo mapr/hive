@@ -34,8 +34,6 @@
     <properties>
         <!-- Build properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
         <maven.repo.local>${settings.localRepository}</maven.repo.local>
         <maven.assembly.plugin.version>2.3</maven.assembly.plugin.version>
