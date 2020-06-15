@@ -254,6 +254,13 @@
       </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jasper</artifactId>
+            <version>9.0.36</version>
+          </dependency>
+        </dependencies>
         <executions>
           <!-- Generate web app sources -->
           <execution>
