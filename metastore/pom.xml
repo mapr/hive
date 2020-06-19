@@ -390,6 +390,7 @@
         <configuration>
           <api>JDO</api>
           <verbose>true</verbose>
+          <log4jConfiguration>${basedir}/src/main/resources/log4j.properties</log4jConfiguration>
           <metadataIncludes>**/*.jdo</metadataIncludes>
           <fork>false</fork>
         </configuration>
