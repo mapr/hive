@@ -707,8 +707,8 @@
       <version>${ojai.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-servlet</artifactId>
+        <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-server</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

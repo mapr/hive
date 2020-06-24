@@ -166,7 +166,7 @@
     <javolution.version>5.5.1</javolution.version>
     <jettison.version>1.1</jettison.version>
     <jetty.version>9.4.19.v20190610</jetty.version>
-    <jersey.version>1.19</jersey.version>
+    <jersey.version>2.22.2</jersey.version>
     <!-- Glassfish jersey is included for Spark client test only -->
     <glassfish.jersey.version>2.22.2</glassfish.jersey.version>
     <jline.version>2.12</jline.version>
@@ -340,17 +340,17 @@
         <version>${snakeyaml.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.sun.jersey</groupId>
+        <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-core</artifactId>
         <version>${jersey.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-json</artifactId>
+        <groupId>org.glassfish.jersey.core</groupId>
+        <artifactId>jersey-common</artifactId>
         <version>${jersey.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.sun.jersey</groupId>
+        <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-server</artifactId>
         <version>${jersey.version}</version>
       </dependency>
@@ -358,11 +358,6 @@
         <groupId>com.sun.jersey.contribs</groupId>
         <artifactId>wadl-resourcedoc-doclet</artifactId>
         <version>${wadl-resourcedoc-doclet.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-servlet</artifactId>
-        <version>${jersey.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>

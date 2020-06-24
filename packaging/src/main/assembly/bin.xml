@@ -51,6 +51,11 @@
         <exclude>org.apache.zookeeper:*</exclude>
         <exclude>org.apache.pig:*</exclude>
         <exclude>com.mapr.hadoop:*</exclude>
+        <exclude>com.sun.jersey:jersey-server:*</exclude>
+        <exclude>com.sun.jersey:jersey-json:*</exclude>
+        <exclude>com.sun.jersey:jersey-client:*</exclude>
+        <exclude>com.sun.jersey:jersey-core:*</exclude>
+        <exclude>com.sun.jersey:jersey-servlet:*</exclude>
       </excludes>
     </dependencySet>
     <dependencySet>
