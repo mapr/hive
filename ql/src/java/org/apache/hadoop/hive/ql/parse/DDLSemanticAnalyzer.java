@@ -48,7 +48,6 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.exec.ArchiveUtils;
 import org.apache.hadoop.hive.ql.exec.ColumnStatsUpdateTask;
-import org.apache.hadoop.hive.ql.exec.FunctionInfo;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
@@ -166,6 +165,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import static org.apache.hadoop.hive.ql.io.TableUtils.verifyLocation;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_DATABASELOCATION;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_DATABASEPROPERTIES;
 
@@ -727,6 +727,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private void analyzeAlterDatabaseLocation(ASTNode ast) throws SemanticException {
     String dbName = getUnescapedName((ASTNode) ast.getChild(0));
     String newLocation = unescapeSQLString(ast.getChild(1).getText());
+    verifyLocation(newLocation);
     addLocationToOutputs(newLocation);
     AlterDatabaseDesc alterDesc = new AlterDatabaseDesc(dbName, newLocation);
     addAlterDbDesc(alterDesc);
@@ -817,6 +818,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case TOK_DATABASELOCATION:
         dbLocation = unescapeSQLString(childNode.getChild(0).getText());
+        verifyLocation(dbLocation);
         addLocationToOutputs(dbLocation);
         break;
       default:
@@ -1151,6 +1153,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case HiveParser.TOK_TABLELOCATION:
         location = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(location);
         addLocationToOutputs(location);
         break;
       case HiveParser.TOK_TABLEPROPERTIES:
@@ -1563,6 +1566,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       HashMap<String, String> partSpec) throws SemanticException {
 
     String newLocation = unescapeSQLString(ast.getChild(0).getText());
+    verifyLocation(newLocation);
     try {
       // To make sure host/port pair is valid, the status of the location
       // does not matter
@@ -2883,6 +2887,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
           throw new SemanticException("LOCATION clause illegal for view partition");
         }
         currentLocation = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(currentLocation);
         inputs.add(toReadEntity(currentLocation));
         break;
       default:
@@ -3572,6 +3577,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private void validateSkewedLocationString(String newLocation) throws SemanticException {
     /* Validate location string. */
     try {
+      verifyLocation(newLocation);
       URI locUri = new URI(newLocation);
       if (!locUri.isAbsolute() || locUri.getScheme() == null
           || locUri.getScheme().trim().equals("")) {

@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.parse;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVESTATSDBCLASS;
+import static org.apache.hadoop.hive.ql.io.TableUtils.verifyLocation;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12093,6 +12094,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case HiveParser.TOK_TABLELOCATION:
         location = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(location);
         location = EximUtil.relativeToAbsolutePath(conf, location);
         inputs.add(toReadEntity(location));
         break;
@@ -12382,6 +12384,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case HiveParser.TOK_TABLELOCATION:
         location = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(location);
         location = EximUtil.relativeToAbsolutePath(conf, location);
         inputs.add(toReadEntity(location));
         break;
