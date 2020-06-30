@@ -92,4 +92,15 @@ public final class TableUtils {
     }
     return mTable;
   }
+
+  /**
+   * Verify if file system is acceptable for location token
+   * @param location path in file system
+   */
+
+  public static void verifyLocation(String location) {
+    if(location != null && location.contains("hdfs")) {
+      LOG.warn("hdfs:// is deprecated filesystem and will be removed in future releases. Use maprfs:// instead");
+    }
+  }
 }
