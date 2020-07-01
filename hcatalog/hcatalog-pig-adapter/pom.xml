@@ -63,7 +63,6 @@
       <groupId>org.apache.pig</groupId>
       <artifactId>pig</artifactId>
       <version>${pig.version}</version>
-      <classifier>h2</classifier>
         <exclusions>
           <exclusion>
             <groupId>org.mortbay.jetty</groupId>
