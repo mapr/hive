@@ -123,7 +123,7 @@
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>${jersey.version}</version>
+      <version>${glassfish.jersey.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

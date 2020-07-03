@@ -21,8 +21,9 @@ package org.apache.hive.hcatalog.templeton;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-import com.sun.jersey.api.core.PackagesResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -345,15 +346,13 @@ public class Main {
     return authFilter;
   }
 
-  public PackagesResourceConfig makeJerseyConfig() {
-    PackagesResourceConfig rc
-      = new PackagesResourceConfig("org.apache.hive.hcatalog.templeton");
-    HashMap<String, Object> props = new HashMap<String, Object>();
-    props.put("com.sun.jersey.api.json.POJOMappingFeature", "true");
-    props.put("com.sun.jersey.config.property.WadlGeneratorConfig",
-      "org.apache.hive.hcatalog.templeton.WadlConfig");
-    rc.setPropertiesAndFeatures(props);
-
+  public ResourceConfig makeJerseyConfig() {
+    ResourceConfig rc = new ResourceConfig();
+    rc.packages(getClass().getPackageName());
+    rc.registerClasses(org.glassfish.jersey.jackson.JacksonFeature.class);
+    HashMap<String, Object> props = new HashMap<>();
+    props.put(ServerProperties.WADL_GENERATOR_CONFIG, WadlConfig.class.getCanonicalName());
+    rc.setProperties(props);
     return rc;
   }
 

@@ -156,6 +156,7 @@
     <!-- httpcomponents are not always in version sync -->
     <httpcomponents.client.version>4.4</httpcomponents.client.version>
     <httpcomponents.core.version>4.4</httpcomponents.core.version>
+    <hk2.version>2.6.1</hk2.version>
     <ivy.version>2.4.0</ivy.version>
     <jackson.version>2.10.3</jackson.version>
     <jamon.plugin.version>2.3.4</jamon.plugin.version>
@@ -166,9 +167,8 @@
     <javolution.version>5.5.1</javolution.version>
     <jettison.version>1.1</jettison.version>
     <jetty.version>9.4.19.v20190610</jetty.version>
-    <jersey.version>2.22.2</jersey.version>
-    <!-- Glassfish jersey is included for Spark client test only -->
-    <glassfish.jersey.version>2.22.2</glassfish.jersey.version>
+    <glassfish.jersey.version>2.29</glassfish.jersey.version>
+    <glassfish.jersey.guava.version>2.25.1</glassfish.jersey.guava.version>
     <jline.version>2.12</jline.version>
     <jms.version>2.0.2</jms.version>
     <joda.version>2.10.3</joda.version>
@@ -206,7 +206,7 @@
     <snakeyaml.version>1.26</snakeyaml.version>
     <tempus-fugit.version>1.1</tempus-fugit.version>
     <snappy.version>0.2</snappy.version>
-    <wadl-resourcedoc-doclet.version>1.4</wadl-resourcedoc-doclet.version>
+    <wadl-resourcedoc-doclet.version>1.19.4</wadl-resourcedoc-doclet.version>
     <velocity.version>1.5</velocity.version>
     <xerces.version>2.9.1</xerces.version>
     <zookeeper.version>3.5.6-mapr-SNAPSHOT</zookeeper.version>
@@ -342,17 +342,17 @@
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-core</artifactId>
-        <version>${jersey.version}</version>
+        <version>${glassfish.jersey.version}</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-common</artifactId>
-        <version>${jersey.version}</version>
+        <version>${glassfish.jersey.version}</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-server</artifactId>
-        <version>${jersey.version}</version>
+        <version>${glassfish.jersey.version}</version>
       </dependency>
       <dependency>
         <groupId>com.sun.jersey.contribs</groupId>
@@ -810,12 +810,22 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-hdfs</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -877,6 +887,12 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-yarn-common</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
