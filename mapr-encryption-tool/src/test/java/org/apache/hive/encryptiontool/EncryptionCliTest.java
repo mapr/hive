@@ -2,8 +2,10 @@ package org.apache.hive.encryptiontool;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.BasicConfigurator;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,7 +20,18 @@ import java.io.PrintStream;
 
 public class EncryptionCliTest {
   private static final Logger LOG = LoggerFactory.getLogger(EncryptionCliTest.class.getName());
-  private static String tmp = System.getProperty("java.io.tmpdir");
+  private static final String tmp = System.getProperty("java.io.tmpdir");
+
+  static {
+    BasicConfigurator.configure();
+  }
+
+  private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+  @Before
+  public void init() {
+    System.setOut(new PrintStream(baos));
+  }
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -35,17 +48,12 @@ public class EncryptionCliTest {
 
   @Test
   public void printHelpTest() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     EncryptionCli.main(new String[]{"--help"});
-    String output = baos.toString();
-    Assert.assertTrue(output.contains("Print help information"));
+    Assert.assertTrue(output().contains("Print help information"));
   }
 
   @Test
   public void createKeyStoreTest() throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     String jceksFileName = "test.jceks";
     String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
     LOG.info("Path to jcek file: " + pathToJceks);
@@ -57,14 +65,11 @@ public class EncryptionCliTest {
     Assert.assertTrue(jceksFile.exists());
     Assert.assertFalse(jceksFile.isDirectory());
     Assert.assertEquals(value, EncryptionTool.getProperty(property, pathToJceks, true));
-    String output = baos.toString();
-    Assert.assertFalse(output.contains("Print help information"));
+    Assert.assertFalse(output().contains("Print help information"));
   }
 
   @Test
   public void createKeyStoreOverwriteTest() throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     String jceksFileName = "testOverwrite.jceks";
     String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
     LOG.info("Path to jcek file: " + pathToJceks);
@@ -80,14 +85,11 @@ public class EncryptionCliTest {
     EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--property", property + "=" +
         newValue, "--inTestMode", "--overwrite"});
     Assert.assertEquals(newValue, EncryptionTool.getProperty(property, pathToJceks, true));
-    String output = baos.toString();
-    Assert.assertFalse(output.contains("Print help information"));
+    Assert.assertFalse(output().contains("Print help information"));
   }
 
   @Test
   public void aliasExistsTrueTest() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     String jceksFileName = "aliasExists.jceks";
     String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
     LOG.info("Path to jcek file: " + pathToJceks);
@@ -96,21 +98,17 @@ public class EncryptionCliTest {
     EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--property", property + "=" +
         value, "--inTestMode", "--overwrite"});
     EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--aliasExists", property, "--inTestMode"});
-    String output = baos.toString();
-    Assert.assertEquals("true", output);
+    Assert.assertEquals("true", output());
   }
 
   @Test
   public void aliasExistsFalseTest() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     String jceksFileName = "aliasExistsFalse.jceks";
     String pathToJceks = tmp + Path.SEPARATOR + jceksFileName;
     LOG.info("Path to jcek file: " + pathToJceks);
     String property = "test.property";
     EncryptionCli.main(new String[]{"--keyStorePath", pathToJceks, "--aliasExists", property, "--inTestMode"});
-    String output = baos.toString();
-    Assert.assertEquals("false", output);
+    Assert.assertEquals("false", output());
   }
 
 
@@ -124,20 +122,14 @@ public class EncryptionCliTest {
 
   @Test
   public void noArgumentsTest() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     EncryptionCli.main(new String[]{""});
-    String output = baos.toString();
-    Assert.assertTrue(output.contains("Print help information"));
+    Assert.assertTrue(output().contains("Print help information"));
   }
 
   @Test
   public void nullArgumentsTest() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos));
     EncryptionCli.main(null);
-    String output = baos.toString();
-    Assert.assertTrue(output.contains("Print help information"));
+    Assert.assertTrue(output().contains("Print help information"));
   }
 
 
@@ -180,5 +172,9 @@ public class EncryptionCliTest {
   @AfterClass
   public static void cleanUp() throws IOException {
     FileUtils.deleteDirectory(new File(tmp));
+  }
+
+  private String output() {
+    return baos.toString();
   }
 }
