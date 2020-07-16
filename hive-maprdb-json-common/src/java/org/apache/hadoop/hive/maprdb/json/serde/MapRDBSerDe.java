@@ -125,7 +125,7 @@ public class MapRDBSerDe extends AbstractSerDe {
 
         value = deserializeField(doc.getValue(mapRMapping), fieldTypeInfo);
       } catch (Exception e) {
-        LOG.warn(String.format("Could not find the appropriate field for name %s", fieldName));
+        LOG.debug(String.format("Could not find the appropriate field for name %s", fieldName));
         value = null;
       }
       row.add(value);
