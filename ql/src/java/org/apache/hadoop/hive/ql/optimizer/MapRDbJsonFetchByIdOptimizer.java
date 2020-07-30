@@ -348,7 +348,7 @@ public class MapRDbJsonFetchByIdOptimizer extends Transform {
     private boolean hasIdComparisonAmongChildren(List<ExprNodeDesc> children) throws SemanticException {
       for (ExprNodeDesc child : children) {
         // Check if _id = <constant_string_value> is present
-        if (isIdComparedToConstant(child)) {
+        if (isEquals(child) && isIdComparedToConstant(child)) {
           return true;
         }
       }
