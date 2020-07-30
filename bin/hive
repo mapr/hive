@@ -562,6 +562,8 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
     MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
     -Dcom.sun.management.jmxremote.password.file=$MAPR_HOME/conf/jmxremote.password \
     -Dcom.sun.management.jmxremote.access.file=$MAPR_HOME/conf/jmxremote.access"
+  else
+    MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
   fi
 
   if [ "$MAPR_JMXLOCALHOST" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
