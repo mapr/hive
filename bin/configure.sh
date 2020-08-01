@@ -813,6 +813,12 @@ for dir in "$HIVE_HOME"/* ; do
 done
 }
 
+#
+# Set 444 permissions for a set of files
+#
+set_read_only_permissions(){
+  chmod 444 "$HIVE_HOME"/scripts/llap/sql/serviceCheckScript.sql
+}
 
 #
 # Configures owner/group and read/write permissions of Hive components
@@ -821,6 +827,7 @@ configure_permissions(){
 logInfo "Configuring owner/group and read/write permissions of Hive components ..."
 set_all_dirs_owner_group
 set_log_dir_owner_group
+set_read_only_permissions
 set_admin_user_group_to "$HIVE_VERSION_FILE"
 set_admin_user_group_to "$HIVE_HOME"
 grant_permissions_to_hive_site
