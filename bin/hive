@@ -633,6 +633,8 @@ if isJmxNeeded; then
   configureJmx
 fi
 
+export HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS --add-opens java.base/java.net=ALL-UNNAMED"
+
 if [ "$TORUN" = "" ] ; then
   echo "Service $SERVICE not found"
   echo "Available Services: $SERVICE_LIST"

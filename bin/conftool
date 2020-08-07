@@ -17,7 +17,7 @@
 
 conftool() {
   CLASS=org.apache.hive.conftool.ConfCli
-  java -Dlog4j.configurationFile=${HIVE_CONF}/${LOG_FILE} -cp ${HADOOP_CLASSPATH} $CLASS "$@"
+  java ${MAPR_COMMON_JAVA_OPTS} -Dlog4j.configurationFile=${HIVE_CONF}/${LOG_FILE} -cp ${HADOOP_CLASSPATH} $CLASS "$@"
 }
 
 HIVE_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}" )/.." && pwd)"

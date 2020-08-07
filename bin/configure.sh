@@ -25,7 +25,21 @@ if [ "$MAPR_ENABLE_LOGS" == "true" ]; then
 fi
 }
 
-source "$MAPR_HOME"/server/common-ecosystem.sh 2>/dev/null
+#
+# Executes bash script and log error if file does not exit. Hides the output.
+#
+run_bash() {
+path_to_bash="$1"
+if [ -f ${path_to_bash} ]; then
+  source ${path_to_bash} 2>/dev/null
+else
+  echo "File does not exist ${path_to_bash}"
+fi
+}
+
+run_bash "$MAPR_HOME"/conf/env.sh
+run_bash "$MAPR_HOME"/server/common-ecosystem.sh
+
 configure_logging
 if [ $? -ne 0 ]; then
   logError "MAPR_HOME seems to not be set correctly or mapr-core not installed"
