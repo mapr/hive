@@ -33,6 +33,7 @@ import org.apache.directory.server.core.integ.FrameworkRunner;
 import org.apache.hive.service.auth.ldap.LdapAuthenticationTestCase;
 import org.apache.hive.service.auth.ldap.User;
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.assertTrue;
@@ -72,6 +73,7 @@ import static org.junit.Assert.assertTrue;
     "ldap/microsoft.schema.ldif",
     "ldap/ad.example.com.ldif"
 })
+@Ignore
 public class TestLdapAtnProviderWithMiniDS extends AbstractLdapTestUnit {
 
   private static final String GROUP1_NAME = "group1";
