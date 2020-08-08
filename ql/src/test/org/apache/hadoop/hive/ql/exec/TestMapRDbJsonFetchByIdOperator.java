@@ -40,6 +40,8 @@ public class TestMapRDbJsonFetchByIdOperator {
   @Before
   public void setUp() throws Exception {
     when(fetchWork.getTblDesc()).thenReturn(tableDesc);
+    when(fetchWork.getMapRDbTableName()).thenReturn("test_table");
+    when(fetchWork.getSearchValue()).thenReturn("test_value");
     when(tableDesc.getDeserializer(any(Configuration.class), anyBoolean()))
         .thenReturn(mapRDBSerDe);
     when(mapRDBSerDe.getObjectInspector()).thenReturn(objectInspector);
