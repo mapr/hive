@@ -65,10 +65,8 @@ import static org.mockito.Mockito.when;
   @Test public void hasActiveJobsTestTrue() throws IOException {
     Path activeJobsPath = new Path(FileTestUtil.getPathFromResources("cleaning/active_jobs"));
     JobID jobID_0 = JobID.forName("job_1551963414414_0004");
-    JobID jobID_1 = JobID.forName("job_1551963414418_0005");
     when(runningJob.isComplete()).thenReturn(false);
     when(jobClient.getJob(jobID_0)).thenReturn(runningJob);
-    when(jobClient.getJob(jobID_1)).thenReturn(runningJob);
     Assert.assertTrue(ClearScratchDirUtil.hasActiveJobs(fs, activeJobsPath, jobClient));
   }
 
@@ -85,10 +83,8 @@ import static org.mockito.Mockito.when;
   @Test public void hasActiveAppsTestTrue() throws IOException, YarnException {
     Path activeAppsPath = new Path(FileTestUtil.getPathFromResources("cleaning/active_apps"));
     ApplicationId applicationId_0 = ClearScratchDirUtil.parseFrom("application_1551963414414_0046");
-    ApplicationId applicationId_1 = ClearScratchDirUtil.parseFrom("application_1551963414428_0056");
     when(applicationReport.getYarnApplicationState()).thenReturn(YarnApplicationState.RUNNING);
     when(yarnClient.getApplicationReport(applicationId_0)).thenReturn(applicationReport);
-    when(yarnClient.getApplicationReport(applicationId_1)).thenReturn(applicationReport);
     Assert.assertTrue(ClearScratchDirUtil.hasActiveApps(fs, activeAppsPath, yarnClient));
   }
 
