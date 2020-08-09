@@ -103,7 +103,7 @@ public class TestLock {
     when(mockLockResponse.getState()).thenReturn(ACQUIRED);
     //  Transaction IDs can also be null
     when(mockHeartbeatFactory.newInstance(
-        any(IMetaStoreClient.class), any(LockFailureListener.class), any(Long.class), ArgumentMatchers.<Table>anyCollection(),  any(Long.class), anyInt())
+        any(IMetaStoreClient.class), any(LockFailureListener.class), any(), ArgumentMatchers.<Table>anyCollection(),  any(Long.class), anyInt())
     ).thenReturn(mockHeartbeat);
 
     readLock = new Lock(mockMetaStoreClient, mockHeartbeatFactory, configuration, mockListener, USER, SOURCES,
@@ -141,7 +141,7 @@ public class TestLock {
     configuration.set("hive.txn.timeout", "100s");
     readLock.acquire();
 
-    verify(mockHeartbeatFactory).newInstance(eq(mockMetaStoreClient), eq(mockListener), any(Long.class), eq(SOURCES),
+    verify(mockHeartbeatFactory).newInstance(eq(mockMetaStoreClient), eq(mockListener), any(), eq(SOURCES),
         eq(LOCK_ID), eq(75));
   }
 
