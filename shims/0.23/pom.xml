@@ -74,6 +74,16 @@
       <version>${hadoop.version}</version>
       <type>test-jar</type>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty-util</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -163,6 +173,12 @@
      <artifactId>hadoop-yarn-common</artifactId>
      <version>${hadoop.version}</version>
      <optional>true</optional>
+     <exclusions>
+       <exclusion>
+         <groupId>org.mortbay.jetty</groupId>
+         <artifactId>jetty-util</artifactId>
+       </exclusion>
+     </exclusions>
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
@@ -178,6 +194,14 @@
        <exclusion>
          <groupId>javax.servlet</groupId>
          <artifactId>servlet-api</artifactId>
+       </exclusion>
+       <exclusion>
+         <groupId>org.mortbay.jetty</groupId>
+         <artifactId>jetty</artifactId>
+       </exclusion>
+       <exclusion>
+         <groupId>org.mortbay.jetty</groupId>
+         <artifactId>jetty-util</artifactId>
        </exclusion>
      </exclusions>
    </dependency>
