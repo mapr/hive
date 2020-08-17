@@ -159,7 +159,7 @@
     <hbase.version>1.4.14.200-eep-900-SNAPSHOT</hbase.version>
     <hppc.version>0.7.2</hppc.version>
     <!-- required for logging test to avoid including hbase which pulls disruptor transitively -->
-    <disruptor.version>3.3.7</disruptor.version>
+    <disruptor.version>3.4.2</disruptor.version>
     <hikaricp.version>2.6.1</hikaricp.version>
     <!-- httpcomponents are not always in version sync -->
     <httpcomponents.client.version>4.5.13</httpcomponents.client.version>
@@ -350,6 +350,11 @@
         <groupId>com.jolbox</groupId>
         <artifactId>bonecp</artifactId>
         <version>${bonecp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.lmax</groupId>
+        <artifactId>disruptor</artifactId>
+        <version>${disruptor.version}</version>
       </dependency>
       <dependency>
         <groupId>com.zaxxer</groupId>
