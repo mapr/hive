@@ -40,7 +40,7 @@
     <dependency>
       <groupId>com.mapr.db</groupId>
       <artifactId>maprdb-mapreduce</artifactId>
-      <version>${mapr.release.version}</version>
+      <version>${mapr.core.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
