@@ -111,7 +111,6 @@
     <maven.build-helper.plugin.version>1.8</maven.build-helper.plugin.version>
 
     <!-- Library Dependency Versions -->
-    <mapr.release.version>6.2.0-mapr-SNAPSHOT</mapr.release.version>
     <accumulo.version>1.6.0</accumulo.version>
     <activemq.version>5.5.0</activemq.version>
     <ant.version>1.9.1</ant.version>
