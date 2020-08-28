@@ -282,6 +282,10 @@
           <groupId>javax.servlet</groupId>
           <artifactId>servlet-api</artifactId>
         </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+          </exclusion>
       </exclusions>
       <optional>true</optional>
     </dependency>
@@ -703,6 +707,10 @@
         <exclusion>
           <groupId>commmons-logging</groupId>
           <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
