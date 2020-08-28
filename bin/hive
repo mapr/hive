@@ -249,6 +249,11 @@ if [[ -n $SENTRY_HOME ]] ; then
   done
 fi
 
+JMX_JAR=$(echo ${MAPR_HOME:-/opt/mapr}/lib/jmxagent*)
+if [ -n "$JMX_JAR" ] && [ -f ${JMX_JAR} ]; then
+  CLASSPATH=${CLASSPATH}:${JMX_JAR};
+fi
+
 # add the auxillary jars such as serdes
 if [ -d "${HIVE_AUX_JARS_PATH}" ]; then
   hive_aux_jars_abspath=`cd ${HIVE_AUX_JARS_PATH} && pwd`
@@ -579,7 +584,6 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
   fi
 
   if [ "$isSecure" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
-    JMX_JAR=$(echo ${MAPR_HOME:-/opt/mapr}/lib/jmxagent*)
     if [ -n "$JMX_JAR" ] && [ -f ${JMX_JAR} ]; then
       MAPR_JMX_OPTS="-javaagent:$JMX_JAR -Dmapr.jmx.agent.login.config=$MAPR_JMX_LOGIN_CONFIG"
       MAPR_JMXAUTH="true"
