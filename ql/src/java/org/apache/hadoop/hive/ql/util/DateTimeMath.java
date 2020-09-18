@@ -19,6 +19,10 @@ package org.apache.hadoop.hive.ql.util;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -269,11 +273,36 @@ public class DateTimeMath {
 
     nanosResult.addNanos(ts.getNanos(), interval.getNanos());
 
-    long newMillis = ts.getTime()
-        + TimeUnit.SECONDS.toMillis(interval.getTotalSeconds() + nanosResult.seconds);
-    result.setTime(newMillis);
+    // Convert timestamp to LocalDateTime
+    LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(ts.getTime()), ZoneId.systemDefault());
+    // Calculate time using LocalDateTime object and converting it to timestamp
+    result.setTime(dateTime.plus(interval.getTotalSeconds() + nanosResult.seconds, ChronoUnit.SECONDS)
+        .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+    // Required to correctly determine the time zone by the Timestamp object
+    result.setTime(Timestamp.valueOf(result.toString()).getTime());
+
+    adjustDaylightSaving(interval, result);
+
     result.setNanos(nanosResult.nanos);
     return true;
+  }
+
+  /* If you want to subtract the time and it falls within an hour when Daylight Saving Time changes
+     LocalDateTime will create an additional hour after converting to Timestamp. This method is needed to fix it.
+  */
+  private static void adjustDaylightSaving(HiveIntervalDayTime interval, Timestamp result) {
+    // Check if the result in daylight saving
+    boolean isResultInDaylight = ZoneId.systemDefault().getRules().isDaylightSavings(result.toInstant());
+
+    // Check if the result is in the daylight saving after subtracting an 1 hour
+    Timestamp timestampForCheckDaylightSaving = Timestamp.from(result.toInstant().minus(1, ChronoUnit.HOURS));
+    boolean isTimestampForCheckInDaylight = ZoneId.systemDefault().getRules().isDaylightSavings(timestampForCheckDaylightSaving.toInstant());
+
+    // Checking that the results have the same status and the operation is a subtracting.
+    // Corrections are needed only if the operation is subtraction
+    if (isResultInDaylight != isTimestampForCheckInDaylight && (interval.getTotalSeconds() < 0 || interval.getNanos() < 0)) {
+      result.setTime(result.toInstant().minus(1, ChronoUnit.HOURS).toEpochMilli());
+    }
   }
 
   public Timestamp add(HiveIntervalDayTime interval, Timestamp ts) {
