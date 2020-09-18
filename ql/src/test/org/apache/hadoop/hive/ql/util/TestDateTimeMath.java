@@ -228,6 +228,14 @@ public class TestDateTimeMath {
           "2015-11-01 01:59:59");
       checkTsIntervalDayTimeArithmetic("2015-11-01 01:59:59", plus, "0 0:0:01",
           "2015-11-01 02:00:00");
+      checkTsIntervalDayTimeArithmetic("2015-03-08 06:00:00", minus, "1 0:0:00",
+          "2015-03-07 06:00:00");
+      checkTsIntervalDayTimeArithmetic("2015-11-01 06:00:00", minus, "1 0:0:00",
+          "2015-10-31 06:00:00");
+      checkTsIntervalDayTimeArithmetic("2015-03-07 06:00:00", plus, "1 0:0:00",
+          "2015-03-08 06:00:00");
+      checkTsIntervalDayTimeArithmetic("2015-10-31 06:00:00", plus, "1 0:0:00",
+          "2015-11-01 06:00:00");
 
       // UTC has no such adjustment
       TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
