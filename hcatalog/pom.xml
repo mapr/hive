@@ -70,6 +70,16 @@
       <artifactId>pig</artifactId>
       <version>${pig.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-runtime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-compiler</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>

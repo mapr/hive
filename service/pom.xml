@@ -38,11 +38,39 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-exec</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.glassfish.web</groupId>
+          <artifactId>javax.servlet.jsp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.containers</groupId>
+          <artifactId>jersey-container-servlet-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-metastore</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-compiler</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-runtime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.web</groupId>
+          <artifactId>javax.servlet.jsp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.containers</groupId>
+          <artifactId>jersey-container-servlet-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
@@ -53,6 +81,28 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-llap-server</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-compiler</artifactId>
+        </exclusion>
+         <exclusion>
+           <groupId>tomcat</groupId>
+           <artifactId>jasper-runtime</artifactId>
+         </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.web</groupId>
+          <artifactId>javax.servlet</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.web</groupId>
+          <artifactId>javax.servlet.jsp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.containers</groupId>
+          <artifactId>jersey-container-servlet-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>javax.servlet.jsp</groupId>
