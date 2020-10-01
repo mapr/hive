@@ -890,6 +890,14 @@
         <artifactId>hbase-server</artifactId>
         <version>${hbase.version}</version>
         <exclusions> <!-- DO NOT REMOVE -->
+	  <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jsp-2.1</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jsp-api-2.1</artifactId>
+          </exclusion>	  
           <exclusion>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
@@ -943,7 +951,15 @@
         <artifactId>hbase-server</artifactId>
         <version>${hbase.version}</version>
         <type>test-jar</type>
-        <exclusions>
+	<exclusions>
+	  <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jsp-2.1</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jsp-api-2.1</artifactId>
+          </exclusion>	
           <exclusion>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
