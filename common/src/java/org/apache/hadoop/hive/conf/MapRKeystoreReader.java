@@ -18,9 +18,7 @@
 
 package org.apache.hadoop.hive.conf;
 
-import com.mapr.web.security.SslConfig.SslConfigScope;
-import com.mapr.web.security.SslConfig;
-import com.mapr.web.security.WebSecurityManager;
+import com.mapr.web.security.ClientXmlSslConfig;
 
 /**
  * Utility class for ssl default configuration.
@@ -36,8 +34,8 @@ public final class MapRKeystoreReader {
    */
 
   public static String getClientKeystoreLocation() {
-    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
-      return sslConfig.getClientKeystoreLocation();
+    try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
+      return clientXmlSslConfig.getClientKeystoreLocation();
     }
   }
 
@@ -47,8 +45,8 @@ public final class MapRKeystoreReader {
    */
 
   public static String getClientTruststoreLocation() {
-    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
-      return sslConfig.getClientTruststoreLocation();
+    try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
+      return clientXmlSslConfig.getClientTruststoreLocation();
     }
   }
 
@@ -59,8 +57,8 @@ public final class MapRKeystoreReader {
    */
 
   public static String getClientKeystorePassword() {
-    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
-      return new String(sslConfig.getClientKeystorePassword());
+    try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
+      return new String(clientXmlSslConfig.getClientKeystorePassword());
     }
   }
 
@@ -70,8 +68,8 @@ public final class MapRKeystoreReader {
    */
 
   public static String getClientTruststorePassword() {
-    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfigScope.SCOPE_CLIENT_ONLY)) {
-      return new String(sslConfig.getClientTruststorePassword());
+    try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
+      return new String(clientXmlSslConfig.getClientTruststorePassword());
     }
   }
 }

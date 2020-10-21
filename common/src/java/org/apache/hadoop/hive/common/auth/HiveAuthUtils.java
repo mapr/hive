@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.common.auth;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -39,6 +40,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TSocket;
@@ -47,6 +49,11 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.hive.conf.HiveConf.applySystemProperties;
+import static org.apache.hadoop.hive.conf.HiveConf.findConfigFile;
+import static org.apache.hadoop.hive.conf.HiveConf.isLoadHiveServer2Config;
+import static org.apache.hadoop.hive.conf.HiveConf.isLoadMetastoreConfig;
+
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
  * given configuration as well as helps with authenticating requests.
@@ -54,6 +61,13 @@ import org.slf4j.LoggerFactory;
 public class HiveAuthUtils {
   private static final Logger LOG = LoggerFactory.getLogger(HiveAuthUtils.class);
   private static HiveConf hiveConf = null;
+  private static ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+  static {
+    if (classLoader == null) {
+      classLoader = HiveAuthUtils.class.getClassLoader();
+    }
+  }
 
   public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
     return new TSocket(host, port, loginTimeout);
@@ -172,15 +186,47 @@ public class HiveAuthUtils {
   }
 
   /**
+   * Builds Configuration object and initializes it from default files:
+   *  - hive-site.xml
+   *  - hivemetastore-site.xml
+   *  - hiveserver2-site.xml
+   *  Does not use restricted parser and does not require UserGroupInformation calls. This is
+   *  lightweight analog of HiveConf object but more simpler and faster.
+   *
+   * @return initialized Configuration object
+   */
+  public static Configuration buildConfigurationFromDefaultFiles(){
+    Configuration conf = new Configuration();
+    // Look for hive-site.xml on the CLASSPATH and log its location if found.
+    URL hiveSiteURL = findConfigFile(classLoader, "hive-site.xml", true);
+    URL hivemetastoreSiteUrl = findConfigFile(classLoader, "hivemetastore-site.xml", false);
+    URL hiveServer2SiteUrl = findConfigFile(classLoader, "hiveserver2-site.xml", false);
+
+    if (hiveSiteURL != null) {
+      conf.addResource(hiveSiteURL, false);
+    }
+
+    if (hivemetastoreSiteUrl != null && isLoadMetastoreConfig()) {
+      conf.addResource(hivemetastoreSiteUrl, false);
+    }
+
+    if (hiveServer2SiteUrl != null && isLoadHiveServer2Config()) {
+      conf.addResource(hiveServer2SiteUrl, false);
+    }
+
+    applySystemProperties(conf);
+    return conf;
+  }
+
+
+  /**
    * Returns SSL protocol version.
    *
    * @return SSL protocol version
    */
   public static String getSslProtocolVersion() {
-    if (hiveConf == null) {
-      hiveConf = new HiveConf();
-    }
-    return HiveConf.getVar(hiveConf, HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION);
+    return buildConfigurationFromDefaultFiles().get(HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION.varname,
+        HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION.defaultStrVal);
   }
 
 

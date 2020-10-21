@@ -18,6 +18,7 @@
 
 package org.apache.hive.common.util;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ import java.nio.file.Paths;
 public final class MapRSecurityUtil {
   private static final Logger LOG = LoggerFactory.getLogger(MapRSecurityUtil.class.getName());
   private static String authMethod = "not-defined";
-  private static final String MAPR_HOME = findMapRHome();
+  private static String mapRHome = null;
 
   private MapRSecurityUtil() {
   }
@@ -126,7 +127,7 @@ public final class MapRSecurityUtil {
    * @return true if file mapr-clusters.conf contains string
    */
   private static boolean mapRClusterConfContains(String value) {
-    String path = MAPR_HOME + "/conf/mapr-clusters.conf";
+    String path = getMapRHome() + "/conf/mapr-clusters.conf";
     if (exists(path)) {
       return readFile(path).contains(value);
     }
@@ -140,7 +141,7 @@ public final class MapRSecurityUtil {
    * @return true if exists
    */
   private static boolean isCustomSecureFlagExists() {
-    return exists(MAPR_HOME + "/conf/.customSecure");
+    return exists(getMapRHome() + "/conf/.customSecure");
   }
 
   /**
@@ -148,18 +149,31 @@ public final class MapRSecurityUtil {
    *
    * @return MapR Home folder as string
    */
-  private static String findMapRHome() {
-    String maprHome = System.getProperty("mapr.home.dir");
+  public static String findMapRHome() {
+    String maprHome = System.getenv("MAPR_HOME");
     if (maprHome == null) {
-      LOG.warn("System property mapr.home.dir is null");
-      maprHome = System.getenv("MAPR_HOME");
+      LOG.warn("Environment variable MAPR_HOME is null");
+      maprHome = System.getProperty("mapr.home.dir");
       if (maprHome == null) {
-        LOG.warn("Environment variable MAPR_HOME is null");
-        maprHome = "/opt/mapr/";
-        LOG.warn("Setting MapR home as /opt/mapr/ by default");
+        LOG.warn("System property mapr.home.dir is null");
+        maprHome = SystemUtils.IS_OS_WINDOWS ? "C:/opt/mapr" : "/opt/mapr";
+        LOG.warn("Setting MapR home as {} by default", maprHome);
       }
     }
     return maprHome;
+  }
+
+  /**
+   * Lazy initialization for MapR Home.
+   *
+   * @return MAPR_HOME value
+   */
+
+  private static String getMapRHome() {
+    if (mapRHome == null) {
+      mapRHome = findMapRHome();
+    }
+    return mapRHome;
   }
 
   /**
