@@ -167,7 +167,7 @@ public class HiveConf extends Configuration {
     llapDaemonVarsSet = Collections.unmodifiableSet(llapDaemonConfVarsSetLocal);
   }
 
-  private static URL findConfigFile(ClassLoader classLoader, String name, boolean doLog) {
+  public static URL findConfigFile(ClassLoader classLoader, String name, boolean doLog) {
     URL result = classLoader.getResource(name);
     if (result == null) {
       String confPath = System.getenv("HIVE_CONF_DIR");
@@ -4360,7 +4360,7 @@ public class HiveConf extends Configuration {
     }
 
     // Overlay the values of any system properties whose names appear in the list of ConfVars
-    applySystemProperties();
+    applySystemProperties(this);
 
     if ((this.get("hive.metastore.ds.retry.attempts") != null) ||
       this.get("hive.metastore.ds.retry.interval") != null) {
@@ -4590,10 +4590,10 @@ public class HiveConf extends Configuration {
    * Apply system properties to this object if the property name is defined in ConfVars
    * and the value is non-null and not an empty string.
    */
-  private void applySystemProperties() {
+  public static void applySystemProperties(Configuration conf) {
     Map<String, String> systemProperties = getConfSystemProperties();
     for (Entry<String, String> systemProperty : systemProperties.entrySet()) {
-      this.set(systemProperty.getKey(), systemProperty.getValue());
+      conf.set(systemProperty.getKey(), systemProperty.getValue());
     }
   }
 

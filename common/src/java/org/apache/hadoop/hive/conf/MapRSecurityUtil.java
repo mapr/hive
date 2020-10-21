@@ -18,13 +18,21 @@
 
 package org.apache.hadoop.hive.conf;
 
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import static org.apache.hadoop.hive.conf.HiveConf.applySystemProperties;
+import static org.apache.hadoop.hive.conf.HiveConf.findConfigFile;
+import static org.apache.hadoop.hive.conf.HiveConf.isLoadHiveServer2Config;
+import static org.apache.hadoop.hive.conf.HiveConf.isLoadMetastoreConfig;
 
 /**
  * Utility class for reading security configuration from cluster configuration files.
@@ -33,7 +41,13 @@ public final class MapRSecurityUtil {
   private static final Logger LOG = LoggerFactory.getLogger(MapRSecurityUtil.class.getName());
   private static String authMethod = "not-defined";
   private static String mapRHome = null;
-  private static HiveConf hiveConf = null;
+  private static ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+  static {
+    if (classLoader == null) {
+      classLoader = MapRSecurityUtil.class.getClassLoader();
+    }
+  }
 
   private MapRSecurityUtil() {
   }
@@ -108,7 +122,38 @@ public final class MapRSecurityUtil {
     return "";
   }
 
+  /**
+   * Builds Configuration object and initializes it from default files:
+   *  - hive-site.xml
+   *  - hivemetastore-site.xml
+   *  - hiveserver2-site.xml
+   *  Does not use restricted parser and does not require UserGroupInformation calls. This is
+   *  lightweight analog of HiveConf object but more simpler and faster.
+   *
+   * @return initialized Configuration object
+   */
+  public static Configuration buildConfigurationFromDefaultFiles(){
+    Configuration conf = new Configuration();
+    // Look for hive-site.xml on the CLASSPATH and log its location if found.
+    URL hiveSiteURL = findConfigFile(classLoader, "hive-site.xml", true);
+    URL hivemetastoreSiteUrl = findConfigFile(classLoader, "hivemetastore-site.xml", false);
+    URL hiveServer2SiteUrl = findConfigFile(classLoader, "hiveserver2-site.xml", false);
 
+    if (hiveSiteURL != null) {
+      conf.addResource(hiveSiteURL, false);
+    }
+
+    if (hivemetastoreSiteUrl != null && isLoadMetastoreConfig()) {
+      conf.addResource(hivemetastoreSiteUrl, false);
+    }
+
+    if (hiveServer2SiteUrl != null && isLoadHiveServer2Config()) {
+      conf.addResource(hiveServer2SiteUrl, false);
+    }
+
+    applySystemProperties(conf);
+    return conf;
+  }
 
   /**
    * Returns SSL protocol version.
@@ -116,10 +161,8 @@ public final class MapRSecurityUtil {
    * @return SSL protocol version
    */
   public static String getSslProtocolVersion() {
-    if (hiveConf == null) {
-      hiveConf = new HiveConf();
-    }
-    return HiveConf.getVar(hiveConf, HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION);
+    return buildConfigurationFromDefaultFiles().get(HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION.varname,
+        HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION.defaultStrVal);
   }
 
 
@@ -164,15 +207,15 @@ public final class MapRSecurityUtil {
    *
    * @return MapR Home folder as string
    */
-  private static String findMapRHome() {
+  public static String findMapRHome() {
     String maprHome = System.getenv("MAPR_HOME");
     if (maprHome == null) {
       LOG.warn("Environment variable MAPR_HOME is null");
       maprHome = System.getProperty("mapr.home.dir");
       if (maprHome == null) {
         LOG.warn("System property mapr.home.dir is null");
-        maprHome = "/opt/mapr/";
-        LOG.warn("Setting MapR home as /opt/mapr/ by default");
+        maprHome = SystemUtils.IS_OS_WINDOWS ? "C:/opt/mapr" : "/opt/mapr";
+        LOG.warn("Setting MapR home as {} by default", maprHome);
       }
     }
     return maprHome;
