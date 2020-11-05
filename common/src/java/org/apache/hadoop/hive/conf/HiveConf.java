@@ -996,7 +996,8 @@ public class HiveConf extends Configuration {
         "When used in conjunction with the org.apache.hadoop.hive.ql.parse.MetaDataExportListener pre event listener, \n" +
         "this setting determines if the metadata that is exported will subsequently be moved to the user's trash directory \n" +
         "alongside the dropped table data. This ensures that the metadata will be cleaned up along with the dropped table data."),
-
+    HIVE_VALIDATE_EXPIRY_TIME_FOR_MAPR_TICKET("hive.validate.expiry.time.for.mapr.ticket", true,
+        "Check expiration time for MapR ticket of the current user."),
     // CLI
     CLIIGNOREERRORS("hive.cli.errors.ignore", false, ""),
     CLIPRINTCURRENTDB("hive.cli.print.current.db", false,
