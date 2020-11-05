@@ -156,6 +156,16 @@ public final class MapRSecurityUtil {
   }
 
   /**
+   * Reads hive.validate.expiry.time.for.mapr.ticket and returns default value if not in hive-site.xml.
+   *
+   * @return hive.validate.expiry.time.for.mapr.ticket
+   */
+  public static boolean isExpiryTimeValidation() {
+    return buildConfigurationFromDefaultFiles().getBoolean(HiveConf.ConfVars.HIVE_VALIDATE_EXPIRY_TIME_FOR_MAPR_TICKET.varname,
+        HiveConf.ConfVars.HIVE_VALIDATE_EXPIRY_TIME_FOR_MAPR_TICKET.defaultBoolVal);
+  }
+
+  /**
    * Returns SSL protocol version.
    *
    * @return SSL protocol version

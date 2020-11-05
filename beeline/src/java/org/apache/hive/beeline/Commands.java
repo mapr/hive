@@ -55,17 +55,17 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.hive.common.cli.ShellCmdExecutor;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveVariableSource;
+import org.apache.hadoop.hive.conf.MapRSecurityUtil;
 import org.apache.hadoop.hive.conf.SystemVariables;
 import org.apache.hadoop.hive.conf.VariableSubstitution;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hive.beeline.logs.BeelineInPlaceUpdateStream;
 import org.apache.hive.common.util.HiveStringUtils;
+import org.apache.hive.common.util.MapRTicketUtil;
 import org.apache.hive.jdbc.HiveStatement;
 import org.apache.hive.jdbc.Utils;
 import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.hive.jdbc.logs.InPlaceUpdateStream;
 
 public class Commands {
@@ -1610,6 +1610,10 @@ public class Commands {
           new Character('*'));
       }
       props.setProperty(JdbcConnectionParams.AUTH_PASSWD, password);
+    }
+
+    if (JdbcConnectionParams.AUTH_MAPRSASL.equals(auth) && MapRSecurityUtil.isExpiryTimeValidation()) {
+      MapRTicketUtil.validateExpiryTime();
     }
 
     try {
