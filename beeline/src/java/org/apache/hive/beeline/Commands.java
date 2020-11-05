@@ -61,6 +61,7 @@ import org.apache.hadoop.hive.conf.VariableSubstitution;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hive.beeline.logs.BeelineInPlaceUpdateStream;
 import org.apache.hive.common.util.HiveStringUtils;
+import org.apache.hive.common.util.MapRTicketUtil;
 import org.apache.hive.jdbc.HiveStatement;
 import org.apache.hive.jdbc.Utils;
 import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
@@ -1633,6 +1634,11 @@ public class Commands {
           new Character('*'));
       }
       props.setProperty(JdbcConnectionParams.AUTH_PASSWD, password);
+    }
+
+    if (JdbcConnectionParams.AUTH_MAPRSASL.equals(auth) && getHiveConf(true).getBoolVar(
+        HiveConf.ConfVars.HIVE_VALIDATE_EXPIRY_TIME_FOR_MAPR_TICKET)) {
+      MapRTicketUtil.validateExpiryTime();
     }
 
     try {
