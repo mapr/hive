@@ -273,7 +273,7 @@ class AvroDeserializer {
 
       int scale = 0;
       try {
-        scale = (int) fileSchema.getObjectProp(AvroSerDe.AVRO_PROP_SCALE);
+        scale = AvroSerdeUtils.getIntFromSchema(fileSchema, AvroSerDe.AVRO_PROP_SCALE);
       } catch(Exception ex) {
         throw new AvroSerdeException("Failed to obtain scale value from file schema: " + fileSchema, ex);
       }
@@ -289,7 +289,7 @@ class AvroDeserializer {
 
       int maxLength = 0;
       try {
-        maxLength = (int) fileSchema.getObjectProp(AvroSerDe.AVRO_PROP_MAX_LENGTH);
+        maxLength = AvroSerdeUtils.getIntFromSchema(fileSchema, AvroSerDe.AVRO_PROP_MAX_LENGTH);
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain maxLength value for char field from file schema: " + fileSchema, ex);
       }
@@ -304,7 +304,7 @@ class AvroDeserializer {
 
       maxLength = 0;
       try {
-        maxLength = (int) fileSchema.getObjectProp(AvroSerDe.AVRO_PROP_MAX_LENGTH);
+        maxLength = AvroSerdeUtils.getIntFromSchema(fileSchema, AvroSerDe.AVRO_PROP_MAX_LENGTH);
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain maxLength value for varchar field from file schema: " + fileSchema, ex);
       }
