@@ -12147,6 +12147,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     storageFormat.fillDefaultStorageFormat(isExt, false);
 
+    if (location == null) {
+      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE);
+    } else {
+      addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, location);
+    }
+    
     // check for existence of table
     if (ifNotExists) {
       try {
@@ -12160,11 +12166,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
     }
 
-    if (location == null) {
-      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE);
-    } else {
-      addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, location);
-    }
 
     if (isTemporary) {
       if (partCols.size() > 0) {
