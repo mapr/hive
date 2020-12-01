@@ -74,7 +74,7 @@ public class TypeInfoToSchema {
   }
 
   private Schema.Field createAvroField(String name, TypeInfo typeInfo, String comment) {
-    return new Schema.Field(name, createAvroSchema(typeInfo), comment, null);
+    return new Schema.Field(name, createAvroSchema(typeInfo), comment, JsonProperties.NULL_VALUE);
   }
 
   private Schema createAvroSchema(TypeInfo typeInfo) {
