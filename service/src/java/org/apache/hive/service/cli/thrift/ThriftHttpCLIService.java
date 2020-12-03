@@ -77,6 +77,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       ServerConnector connector;
 
       final HttpConfiguration conf = new HttpConfiguration();
+      conf.setSendServerVersion(false);
       // Configure header size
       int requestHeaderSize =
           hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_REQUEST_HEADER_SIZE);
