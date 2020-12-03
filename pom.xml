@@ -125,10 +125,10 @@
     <datanucleus-rdbms.version>5.2.3</datanucleus-rdbms.version>
     <datanucleus-jdo.version>3.2.0-m13</datanucleus-jdo.version>
     <commons-beanutils.version>1.9.4</commons-beanutils.version>
-    <commons-beanutils-core.version>1.8.3</commons-beanutils-core.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-codec.version>1.4</commons-codec.version>
     <commons-collections.version>3.2.2</commons-collections.version>
+    <commons-configuration.version>1.8</commons-configuration.version>
     <commons-compress.version>1.9</commons-compress.version>
     <commons-exec.version>1.1</commons-exec.version>
     <commons-httpclient.version>3.0.1</commons-httpclient.version>
@@ -266,9 +266,9 @@
         <version>${commons-beanutils.version}</version>
       </dependency>
       <dependency>
-        <groupId>commons-beanutils</groupId>
-        <artifactId>commons-beanutils-core</artifactId>
-        <version>${commons-beanutils-core.version}</version>
+        <groupId>commons-configuration</groupId>
+        <artifactId>commons-configuration</artifactId>
+        <version>${commons-configuration.version}</version>
       </dependency>
       <dependency>
         <groupId>com.esotericsoftware</groupId>
