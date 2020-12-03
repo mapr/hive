@@ -275,6 +275,7 @@ import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
   private Connector createChannelConnector() throws IOException {
     ServerConnector connector;
     final HttpConfiguration httpConf = new HttpConfiguration();
+    httpConf.setSendServerVersion(false);
     httpConf.setRequestHeaderSize(1024 * 64);
     final HttpConnectionFactory http = new HttpConnectionFactory(httpConf);
 

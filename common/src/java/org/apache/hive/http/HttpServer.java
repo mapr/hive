@@ -463,6 +463,7 @@ public class HttpServer {
 
     final HttpConfiguration conf = new HttpConfiguration();
     conf.setRequestHeaderSize(1024*64);
+    conf.setSendServerVersion(false);
     final HttpConnectionFactory http = new HttpConnectionFactory(conf);
 
     if (!b.useSSL) {
