@@ -268,7 +268,7 @@ public class Main {
 
     if (conf.getBoolean(AppConfig.USE_SSL, false)) {
       LOG.info("Using SSL for templeton.");
-      SslContextFactory sslContextFactory = new SslContextFactory();
+      SslContextFactory sslContextFactory = new SslContextFactory.Server();
       initializeMapRSll(sslContextFactory);
       Set<String> excludedSSLProtocols = Sets.newHashSet(Splitter.on(",").trimResults().omitEmptyStrings()
           .split(Strings.nullToEmpty(conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
