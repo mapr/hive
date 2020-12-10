@@ -94,6 +94,7 @@ import org.apache.hadoop.hive.ql.optimizer.ppr.PartitionPruner;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.ColumnAccessInfo;
+import org.apache.hadoop.hive.ql.parse.ExplainSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHook;
 import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHookContext;
 import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHookContextImpl;
@@ -944,10 +945,14 @@ public class Driver implements CommandProcessor {
     // (par2Cols) or
     // table to columns mapping (tab2Cols)
     if (op.equals(HiveOperation.CREATETABLE_AS_SELECT) || op.equals(HiveOperation.QUERY)) {
-      SemanticAnalyzer querySem = (SemanticAnalyzer) sem;
-      ParseContext parseCtx = querySem.getParseContext();
+      ParseContext parseCtx;
+      if (sem instanceof ExplainSemanticAnalyzer) {
+        parseCtx = ((ExplainSemanticAnalyzer) sem).getParseContext();
+      } else {
+        parseCtx = ((SemanticAnalyzer) sem).getParseContext();
+      }
 
-      for (Map.Entry<String, TableScanOperator> topOpMap : querySem.getParseContext().getTopOps()
+      for (Map.Entry<String, TableScanOperator> topOpMap : parseCtx.getTopOps()
           .entrySet()) {
         TableScanOperator tableScanOp = topOpMap.getValue();
         if (!tableScanOp.isInsideView()) {
