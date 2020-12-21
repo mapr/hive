@@ -111,7 +111,7 @@
     <maven.build-helper.plugin.version>1.8</maven.build-helper.plugin.version>
 
     <!-- Library Dependency Versions -->
-    <accumulo.version>1.6.0</accumulo.version>
+    <accumulo.version>1.7.3</accumulo.version>
     <activemq.version>5.5.0</activemq.version>
     <ant.version>1.10.9</ant.version>
     <antlr.version>3.5.2</antlr.version>
@@ -142,6 +142,7 @@
     <dropwizard.version>3.1.0</dropwizard.version>
     <dropwizard-metrics-hadoop-metrics2-reporter.version>0.1.2</dropwizard-metrics-hadoop-metrics2-reporter.version>
     <druid.version>0.10.0</druid.version>
+    <eigenbase-properties.version>1.1.5</eigenbase-properties.version>
     <guava.version>28.2-jre</guava.version>
     <groovy.version>2.4.11</groovy.version>
     <h2database.version>1.3.166</h2database.version>
@@ -160,6 +161,7 @@
     <jackson.version>2.10.3</jackson.version>
     <jamon.plugin.version>2.3.4</jamon.plugin.version>
     <jamon-runtime.version>2.3.1</jamon-runtime.version>
+    <janino.version>2.7.6</janino.version>
     <javaewah.version>0.3.2</javaewah.version>
     <javax-servlet.version>3.1.0</javax-servlet.version>
     <javax-servlet-jsp.version>2.3.1</javax-servlet-jsp.version>
@@ -190,6 +192,7 @@
     <netty.version>3.10.6.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.9.0</parquet.version>
+    <pentaho-aggdesigner.version>5.1.5-jhyde</pentaho-aggdesigner.version>
     <pig.version>0.17.0.0-mapr-SNAPSHOT</pig.version>
     <protobuf.version>3.11.1</protobuf.version>
     <plexus.utils.version>3.3.0</plexus.utils.version>
@@ -255,6 +258,17 @@
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+    </repository>
+    <repository>
+      <id>conjars</id>
+      <name>Conjars</name>
+      <url>http://conjars.org/repo</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
         <checksumPolicy>warn</checksumPolicy>
       </releases>
     </repository>
@@ -439,6 +453,11 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.hydromatic</groupId>
+        <artifactId>eigenbase-properties</artifactId>
+        <version>${eigenbase-properties.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
@@ -723,6 +742,16 @@
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jaxb-annotations</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.janino</groupId>
+        <artifactId>commons-compiler</artifactId>
+        <version>${janino.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.janino</groupId>
+        <artifactId>janino</artifactId>
+        <version>${janino.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jettison</groupId>
@@ -1058,6 +1087,11 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
         <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.pentaho</groupId>
+        <artifactId>pentaho-aggdesigner-algorithm</artifactId>
+        <version>${pentaho-aggdesigner.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
