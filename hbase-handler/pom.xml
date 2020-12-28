@@ -136,6 +136,13 @@
       <classifier>tests</classifier>
     </dependency>
     <dependency>
+      <groupId>org.apache.hive.maprminicluster</groupId>
+      <artifactId>mapr-mini-cluster</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
       <version>${hbase.version}</version>

@@ -199,6 +199,8 @@
           <artifactId>jetty-sslengine</artifactId>
         </exclusion>
       </exclusions>
+      <scope>test</scope>
+      <classifier>tests</classifier>
     </dependency>
   </dependencies>
 
