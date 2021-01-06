@@ -510,6 +510,7 @@ declare -A IS_SERVICE_CMD=(["metastore_start"]=1 ["metastore_stop"]=1 ["metastor
 
 MAPR_HOME="${BASEMAPR:-/opt/mapr}"
 MAPR_CONF="$MAPR_HOME"/conf
+export HIVE_LOCAL_TASK_CHILD_OPTS=${HIVE_LOCAL_TASK_CHILD_OPTS}
 
 source "$MAPR_HOME"/server/common-ecosystem.sh 2>/dev/null
 
