@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
@@ -244,7 +245,7 @@ class AvroDeserializer {
 
       int scale = 0;
       try {
-        scale = fileSchema.getJsonProp(AvroSerDe.AVRO_PROP_SCALE).asInt();
+        scale = ((JsonNode)fileSchema.getObjectProp(AvroSerDe.AVRO_PROP_SCALE)).asInt();
       } catch(Exception ex) {
         throw new AvroSerdeException("Failed to obtain scale value from file schema: " + fileSchema, ex);
       }
@@ -260,7 +261,7 @@ class AvroDeserializer {
 
       int maxLength = 0;
       try {
-        maxLength = fileSchema.getJsonProp(AvroSerDe.AVRO_PROP_MAX_LENGTH).getValueAsInt();
+        maxLength = ((JsonNode)fileSchema.getObjectProp(AvroSerDe.AVRO_PROP_MAX_LENGTH)).asInt();
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain maxLength value for char field from file schema: " + fileSchema, ex);
       }
@@ -275,7 +276,7 @@ class AvroDeserializer {
 
       maxLength = 0;
       try {
-        maxLength = fileSchema.getJsonProp(AvroSerDe.AVRO_PROP_MAX_LENGTH).getValueAsInt();
+        maxLength = ((JsonNode)fileSchema.getObjectProp(AvroSerDe.AVRO_PROP_MAX_LENGTH)).asInt();
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain maxLength value for varchar field from file schema: " + fileSchema, ex);
       }

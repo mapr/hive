@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.typeinfo.HiveDecimalUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -136,8 +137,8 @@ class SchemaToTypeInfo {
       int precision = 0;
       int scale = 0;
       try {
-        precision = schema.getJsonProp(AvroSerDe.AVRO_PROP_PRECISION).getIntValue();
-        scale = schema.getJsonProp(AvroSerDe.AVRO_PROP_SCALE).getIntValue();
+        precision = ((JsonNode)schema.getObjectProp(AvroSerDe.AVRO_PROP_PRECISION)).asInt();
+        scale = ((JsonNode)schema.getObjectProp(AvroSerDe.AVRO_PROP_SCALE)).asInt();
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain scale value from file schema: " + schema, ex);
       }
@@ -155,7 +156,7 @@ class SchemaToTypeInfo {
       AvroSerDe.CHAR_TYPE_NAME.equalsIgnoreCase(schema.getProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE))) {
       int maxLength = 0;
       try {
-        maxLength = schema.getJsonProp(AvroSerDe.AVRO_PROP_MAX_LENGTH).getValueAsInt();
+        maxLength = ((JsonNode)schema.getObjectProp(AvroSerDe.AVRO_PROP_MAX_LENGTH)).asInt();
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain maxLength value from file schema: " + schema, ex);
       }
@@ -166,7 +167,7 @@ class SchemaToTypeInfo {
       .equalsIgnoreCase(schema.getProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE))) {
       int maxLength = 0;
       try {
-        maxLength = schema.getJsonProp(AvroSerDe.AVRO_PROP_MAX_LENGTH).getValueAsInt();
+        maxLength = ((JsonNode)schema.getObjectProp(AvroSerDe.AVRO_PROP_MAX_LENGTH)).asInt();
       } catch (Exception ex) {
         throw new AvroSerdeException("Failed to obtain maxLength value from file schema: " + schema, ex);
       }
