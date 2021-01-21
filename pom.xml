@@ -125,7 +125,7 @@
     <!-- Include arrow for LlapOutputFormatService -->
     <arrow.version>0.8.0</arrow.version>
     <avatica.version>1.11.0</avatica.version>
-    <avro.version>1.8.2</avro.version>
+     <avro.version>1.10.1</avro.version>
     <bonecp.version>0.8.0.RELEASE</bonecp.version>
     <calcite.version>1.16.0</calcite.version>
     <bouncycastle.version>1.0.2.1</bouncycastle.version>
@@ -172,7 +172,7 @@
     <javolution.version>5.5.1</javolution.version>
     <jdo-api.version>3.0.1</jdo-api.version>
     <jettison.version>1.1</jettison.version>
-    <jetty.version>9.4.33.v20201020</jetty.version>
+    <jetty.version>9.4.35.v20201120</jetty.version>
     <jersey.version>1.19</jersey.version>
     <!-- Glassfish jersey is included for Spark client test only -->
     <glassfish.jersey.version>2.22.2</glassfish.jersey.version>
@@ -515,7 +515,6 @@
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-mapred</artifactId>
-        <classifier>hadoop2</classifier>
         <version>${avro.version}</version>
         <exclusions>
           <exclusion>
@@ -711,6 +710,12 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-runner</artifactId>
         <version>${jetty.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.eclipse.jetty.toolchain</groupId>
+            <artifactId>jetty-schemas</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
