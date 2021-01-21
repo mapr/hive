@@ -103,6 +103,10 @@
           <groupId>com.fasterxml.jackson.module</groupId>
           <artifactId>jackson-module-scala_${scala.binary.version}</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+        </exclusion>
       </exclusions>
    </dependency>
     <dependency>
