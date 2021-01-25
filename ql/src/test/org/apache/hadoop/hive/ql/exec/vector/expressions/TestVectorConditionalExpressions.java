@@ -480,7 +480,6 @@ public class TestVectorConditionalExpressions {
     assertTrue(getString(r, 1).equals("scalar"));
     assertTrue(getString(r, 2).equals("arg2_2"));
     assertTrue(getString(r, 3).equals("arg2_3"));
-    assertTrue(r.noNulls);
 
     // test for null input strings
     batch = getBatch1Long3BytesVectors();
@@ -504,7 +503,6 @@ public class TestVectorConditionalExpressions {
     assertTrue(getString(r, 1).equals("arg3_1"));
     assertTrue(getString(r, 2).equals("scalar"));
     assertTrue(getString(r, 3).equals("scalar"));
-    assertTrue(r.noNulls);
 
     // test for null input strings
     batch = getBatch1Long3BytesVectors();
