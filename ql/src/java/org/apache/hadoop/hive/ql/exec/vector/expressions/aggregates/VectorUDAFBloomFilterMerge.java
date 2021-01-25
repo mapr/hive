@@ -127,7 +127,7 @@ public class VectorUDAFBloomFilterMerge extends VectorAggregateExpression {
     else if (!batch.selectedInUse) {
       iterateNoSelectionHasNulls(myagg, inputColumn, batchSize);
     }
-    else if (inputColumn.noNulls){
+    else if (inputColumn.noNulls || !inputColumn.isNull[0]){
       iterateSelectionNoNulls(myagg, inputColumn, batchSize, batch.selected);
     }
     else {
@@ -215,7 +215,11 @@ public class VectorUDAFBloomFilterMerge extends VectorAggregateExpression {
       }
     } else {
       if (inputColumn.isRepeating) {
-        // All nulls, no-op for min/max
+        if (!inputColumn.isNull[0]) {
+          iterateNoNullsRepeatingWithAggregationSelection(
+              aggregationBufferSets, aggregateIndex,
+              inputColumn, batchSize);
+        }
       } else {
         if (batch.selectedInUse) {
           iterateHasNullsSelectionWithAggregationSelection(

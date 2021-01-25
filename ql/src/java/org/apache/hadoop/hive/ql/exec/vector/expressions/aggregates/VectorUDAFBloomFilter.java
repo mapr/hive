@@ -152,7 +152,7 @@ public class VectorUDAFBloomFilter extends VectorAggregateExpression {
     Aggregation myagg = (Aggregation) agg;
 
     if (inputColumn.isRepeating) {
-      if (inputColumn.noNulls) {
+      if (inputColumn.noNulls || !inputColumn.isNull[0]) {
         valueProcessor.processValue(myagg, inputColumn, 0);
       }
       return;
@@ -234,7 +234,7 @@ public class VectorUDAFBloomFilter extends VectorAggregateExpression {
 
     ColumnVector inputColumn = batch.cols[this.inputExpression.getOutputColumn()];
 
-    if (inputColumn.noNulls) {
+    if (inputColumn.noNulls || !inputColumn.isNull[0]) {
       if (inputColumn.isRepeating) {
         iterateNoNullsRepeatingWithAggregationSelection(
           aggregationBufferSets, aggregateIndex,
