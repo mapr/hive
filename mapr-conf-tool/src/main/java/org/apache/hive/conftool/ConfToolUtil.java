@@ -70,4 +70,23 @@ public final class ConfToolUtil {
     }
     return false;
   }
+
+  /**
+   * Get path of file in resources.
+   *
+   * @param fileName file in resources
+   * @return path of file in resources
+   */
+  static String getPath(String fileName) {
+    return Thread.currentThread().getContextClassLoader().getResource(fileName).toExternalForm();
+  }
+  
+  /**
+   * Finds document transformer file location.
+   *
+   * @return transformer file location from conf dir
+   */
+  static String getTransformerLocation() {
+    return getPath("docTransformer.xslt");
+  }
 }
