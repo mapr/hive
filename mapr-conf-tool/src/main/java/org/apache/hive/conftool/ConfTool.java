@@ -41,6 +41,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -1225,7 +1226,7 @@ public final class ConfTool {
 
   private static void saveToFile(Document doc, String filepath) throws TransformerException {
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
-    Transformer transformer = transformerFactory.newTransformer();
+    Transformer transformer = transformerFactory.newTransformer(new StreamSource(ConfToolUtil.getTransformerLocation()));
     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
     transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
     DOMSource source = new DOMSource(doc);
