@@ -974,6 +974,38 @@ fi
 }
 
 #
+# This is helper method for checking existence of Tez in the node.
+#
+is_tez_installed() {
+  if [ -n "$(ls "${MAPR_HOME}"/roles | grep "tez")" ] ; then
+    logInfo "Tez is installed in the node."
+    return 0 # 0= true
+  else
+    logInfo "Tez is not installed in the node."
+    return 1;
+  fi
+}
+
+#
+# HIVE-869: missing Hive Queries page configuration while installing hive on tez via UI Installer.
+#
+# This is to add TEZ-UI execution hook properties when tez role package exists.
+#
+configure_tez_execution_hook_properties() {
+  if is_tez_installed ; then
+    logInfo "Tez role package has been found! Execution hook properties will be added into hive-site.xml"
+    . "${HIVE_BIN}"/conftool -path "${HIVE_SITE}" -addProperty hive.exec.pre.hooks=org.apache.hadoop.hive.ql.hooks.ATSHook
+    . "${HIVE_BIN}"/conftool -path "${HIVE_SITE}" -addProperty hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.ATSHook
+    . "${HIVE_BIN}"/conftool -path "${HIVE_SITE}" -addProperty hive.exec.failure.hooks=org.apache.hadoop.hive.ql.hooks.ATSHook
+  else
+    logInfo "Tez role package could not be found! Execution hook properties will be removed from hive-site.xml"
+    . "${HIVE_BIN}"/conftool -path "${HIVE_SITE}" -delProperty hive.exec.pre.hooks
+    . "${HIVE_BIN}"/conftool -path "${HIVE_SITE}" -delProperty hive.exec.post.hooks
+    . "${HIVE_BIN}"/conftool -path "${HIVE_SITE}" -delProperty hive.exec.failure.hooks
+  fi
+}
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -1104,6 +1136,8 @@ configure_hs2_metrics "$HIVE_SITE"
 configure_metastore_metrics "$HIVE_SITE"
 
 configure_reporter_type_and_file_location "$HIVE_SITE"
+
+configure_tez_execution_hook_properties
 
 configure_roles
 
