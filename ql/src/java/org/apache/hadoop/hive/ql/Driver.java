@@ -782,7 +782,7 @@ public class Driver implements CommandProcessor {
     if (op.equals(HiveOperation.CREATEDATABASE)) {
       authorizer.authorize(getDbFrom(outputs), op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
     } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT) || op.equals(HiveOperation.CREATETABLE)) {
-      authorizer.authorize(db.getDatabase(SessionState.get().getCurrentDatabase()), null,
+      authorizer.authorize(getDbFrom(outputs), null,
           HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
     }
     if (op.equals(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION) || op
