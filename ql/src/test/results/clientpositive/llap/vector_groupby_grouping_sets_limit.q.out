@@ -374,7 +374,7 @@ STAGE PLANS:
 
   Stage: Stage-0
     Fetch Operator
-      limit: 10
+      limit: -1
       Processor Tree:
         ListSink
 
