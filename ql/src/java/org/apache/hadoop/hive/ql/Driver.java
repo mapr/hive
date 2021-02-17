@@ -143,6 +143,7 @@ public class Driver implements IDriver {
 
   static final private String CLASS_NAME = Driver.class.getName();
   private static final Logger LOG = LoggerFactory.getLogger(CLASS_NAME);
+  private static final Logger AUDIT_LOG = LoggerFactory.getLogger(CLASS_NAME + ".audit");
   static final private LogHelper console = new LogHelper(LOG);
   static final int SHUTDOWN_HOOK_PRIORITY = 0;
   private final QueryInfo queryInfo;
@@ -2147,12 +2148,26 @@ public class Driver implements IDriver {
         LOG.info("Executing command(queryId=" + queryId + ") has been interrupted after " + duration + " seconds");
       } else {
         LOG.info("Completed executing command(queryId=" + queryId + "); Time taken: " + duration + " seconds");
+        logAudit();
       }
     }
 
     if (console != null) {
       console.printInfo("OK");
     }
+  }
+
+  private void logAudit(){
+    String queryId = queryState.getQueryId();
+    String queryStr = queryState.getQueryString().replace("\n", " ");
+    String cmdType = queryState.getCommandType();
+
+    String address = "unknown-ip-addr";
+    if (SessionState.get() != null && SessionState.get().getUserIpAddress() != null){
+      address = SessionState.get().getUserIpAddress();
+    }
+
+    AUDIT_LOG.info("user={} ip={} queryId={} query type={} queryStr={}", userName, address, queryId, cmdType, queryStr);
   }
 
   private void releasePlan(QueryPlan plan) {
