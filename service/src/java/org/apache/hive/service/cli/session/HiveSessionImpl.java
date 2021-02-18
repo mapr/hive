@@ -120,6 +120,7 @@ public class HiveSessionImpl implements HiveSession {
   private volatile long lastAccessTime = System.currentTimeMillis();
   private volatile boolean lockedByUser;
   private final Semaphore operationLock;
+  private static final Logger AUDIT_LOG = LoggerFactory.getLogger(HiveSessionImpl.class.getName() + ".audit");
 
 
   public HiveSessionImpl(SessionHandle sessionHandle, TProtocolVersion protocol,
@@ -189,6 +190,8 @@ public class HiveSessionImpl implements HiveSession {
       configureSession(sessionConfMap);
     }
     lastAccessTime = System.currentTimeMillis();
+    AUDIT_LOG.info("Connected: sessionId={} user={} ip={}  auth={}", getSessionConf().getVar(ConfVars.HIVESESSIONID),
+        getUserName(), getIpAddress(), getSessionConf().getVar(ConfVars.HIVE_JDBC_CLIENT_AUTHENTICATION));
   }
 
 /**
@@ -491,7 +494,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public HiveConf getSessionConf() throws HiveSQLException {
+  public HiveConf getSessionConf() {
 	  return this.sessionConf;
   }
 
@@ -750,6 +753,8 @@ public class HiveSessionImpl implements HiveSession {
         sessionState.resetThreadName();
         sessionState.close();
       } finally {
+        AUDIT_LOG.info("Disconnected: sessionId={} user={} ip={}  auth={}", getSessionConf().getVar(ConfVars.HIVESESSIONID),
+            getUserName(), getIpAddress(), getSessionConf().getVar(ConfVars.HIVE_JDBC_CLIENT_AUTHENTICATION));
         sessionState = null;
       }
     } catch (IOException ioe) {

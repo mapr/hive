@@ -25,6 +25,7 @@ import org.apache.hive.service.rpc.thrift.TSetClientInfoResp;
 import org.apache.hive.service.rpc.thrift.TSetClientInfoReq;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.auth.HiveAuthUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
 import org.apache.hive.service.auth.HiveAuthConstants;
 import org.apache.hive.service.auth.KerberosSaslHelper;
@@ -728,6 +729,7 @@ public class HiveConnection implements java.sql.Connection {
       openConf.put(HiveAuthConstants.HS2_PROXY_USER,
           sessVars.get(HiveAuthConstants.HS2_PROXY_USER));
     }
+    openConf.put("set:hiveconf:" + HiveConf.ConfVars.HIVE_JDBC_CLIENT_AUTHENTICATION.varname, Utils.getAuthTypeFromJdbc(sessVars));
     openReq.setConfiguration(openConf);
 
     // Store the user name in the open request in case no non-sasl authentication

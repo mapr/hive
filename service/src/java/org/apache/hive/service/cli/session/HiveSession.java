@@ -188,9 +188,8 @@ public interface HiveSession extends HiveSessionBase {
   /**
    *
    * @return
-   * @throws HiveSQLException
    */
-  HiveConf getSessionConf() throws HiveSQLException;
+  HiveConf getSessionConf();
 
   /**
    * close the session
