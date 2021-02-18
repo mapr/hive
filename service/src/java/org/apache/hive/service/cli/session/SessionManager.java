@@ -29,8 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -64,6 +66,7 @@ public class SessionManager extends CompositeService {
 
   public static final String HIVERCFILE = ".hiverc";
   private static final Logger LOG = LoggerFactory.getLogger(CompositeService.class);
+  private static final Logger AUDIT_LOG = LoggerFactory.getLogger(SessionManager.class.getName() + ".audit");
   private HiveConf hiveConf;
   private final Map<SessionHandle, HiveSession> handleToSession =
       new ConcurrentHashMap<SessionHandle, HiveSession>();
@@ -81,6 +84,8 @@ public class SessionManager extends CompositeService {
   private final HiveServer2 hiveServer2;
   private String sessionImplWithUGIclassName;
   private String sessionImplclassName;
+
+  private static final ScheduledExecutorService EXEC = Executors.newSingleThreadScheduledExecutor();
 
   public SessionManager(HiveServer2 hiveServer2) {
     super(SessionManager.class.getSimpleName());
@@ -103,6 +108,34 @@ public class SessionManager extends CompositeService {
       registerActiveSesssionMetrics(metrics);
     }
     super.init(hiveConf);
+    scheduleLogging(hiveConf);
+  }
+
+  /**
+   * Schedules logging of available users at fixed rate.
+   *
+   * @param hiveConf configuration object
+   */
+  private void scheduleLogging(final HiveConf hiveConf){
+    EXEC.scheduleAtFixedRate(new Runnable() {
+      @Override
+      public void run() {
+        if (hiveConf.getBoolVar(ConfVars.HIVE_ENABLE_FULL_LIST_OF_CONNECTED_USERS)) {
+          long currentTime = System.currentTimeMillis();
+          Collection<HiveSession> hiveSessions = getSessions();
+          AUDIT_LOG.info("Start of the connected users list");
+          for (HiveSession hiveSession : hiveSessions) {
+            AUDIT_LOG.info("sessionId={} user={} ip={} operationCount={} activeTime(s)={} IdleTime(s)={}, auth={}",
+                hiveSession.getSessionConf().getVar(ConfVars.HIVESESSIONID), hiveSession.getUserName(),
+                hiveSession.getIpAddress(), hiveSession.getOpenOperationCount(),
+                (currentTime - hiveSession.getCreationTime()) / 1000,
+                (currentTime - hiveSession.getLastAccessTime()) / 1000,
+                hiveSession.getSessionConf().getVar(ConfVars.HIVE_JDBC_CLIENT_AUTHENTICATION));
+          }
+          AUDIT_LOG.info("End of the connected users list");
+        }
+      }
+    }, 0, hiveConf.getIntVar(ConfVars.HIVE_FULL_LIST_OF_CONNECTED_USERS_UPDATE_INTERVAL), TimeUnit.SECONDS);
   }
 
   private void registerOpenSesssionMetrics(Metrics metrics) {

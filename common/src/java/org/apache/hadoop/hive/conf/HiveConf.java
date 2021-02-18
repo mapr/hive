@@ -2559,6 +2559,16 @@ public class HiveConf extends Configuration {
         "          (Use with property hive.server2.custom.authentication.class)\n" +
         "  PAM: Pluggable authentication module\n" +
         "  NOSASL:  Raw transport"),
+    HIVE_JDBC_CLIENT_AUTHENTICATION("hive.jdbc.client.authentication", "NONE",
+        "Authentication type that comes from jdbc client. Since HiveServer2 supports both"
+            + "MAPRSASL and PAM at the same time, we get certain value from jdbc connection string and use this"
+            + "hidden variable to transfer auth type from jdbc client to Hive session. Only for internal usage."
+            + " Do not set it manually. Hive processes the property by its own"),
+    HIVE_ENABLE_FULL_LIST_OF_CONNECTED_USERS("hive.enable.full.list.of.connected.users", false,
+        "For debug purpose only. Enables logging of all users connected to Hive"),
+    HIVE_FULL_LIST_OF_CONNECTED_USERS_UPDATE_INTERVAL("hive.full.list.of.connected.users.update.interval", 5,
+        "For debug purpose only. Update interval in seconds for logging of all users connected to Hive. "
+            + "It is used only with hive.enable.full.list.of.connected.users"),
     HIVE_SERVER2_ALLOW_USER_SUBSTITUTION("hive.server2.allow.user.substitution", true,
         "Allow alternate user to be specified as part of HiveServer2 open connection request."),
     HIVE_SERVER2_KERBEROS_KEYTAB("hive.server2.authentication.kerberos.keytab", "",

@@ -29,6 +29,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.rpc.thrift.TStatus;
 import org.apache.hive.service.rpc.thrift.TStatusCode;
@@ -36,6 +37,14 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.cookie.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.hive.jdbc.Utils.JdbcConnectionParams.AUTH_KERBEROS;
+import static org.apache.hive.jdbc.Utils.JdbcConnectionParams.AUTH_MAPRSASL;
+import static org.apache.hive.jdbc.Utils.JdbcConnectionParams.AUTH_PASSWD;
+import static org.apache.hive.jdbc.Utils.JdbcConnectionParams.AUTH_PRINCIPAL;
+import static org.apache.hive.jdbc.Utils.JdbcConnectionParams.AUTH_TYPE;
+import static org.apache.hive.jdbc.Utils.JdbcConnectionParams.AUTH_USER;
 
 public class Utils {
   static final Logger LOG = LoggerFactory.getLogger(Utils.class.getName());
@@ -86,6 +95,7 @@ public class Utils {
     public static final String AUTH_PRINCIPAL = "principal";
     public static final String AUTH_MAPRSASL = "maprsasl";
     public static final String AUTH_PASSWD = "password";
+    public static final String AUTH_KERBEROS = "kerberos";
     public static final String AUTH_KERBEROS_AUTH_TYPE = "kerberosAuthType";
     public static final String AUTH_KERBEROS_AUTH_TYPE_FROM_SUBJECT = "fromSubject";
     public static final String ANONYMOUS_USER = "anonymous";
@@ -396,20 +406,20 @@ public class Utils {
     }
     // Extract user/password from JDBC connection properties if its not supplied
     // in the connection URL
-    if (!connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_USER)) {
-        if (info.containsKey(JdbcConnectionParams.AUTH_USER)) {
-            connParams.getSessionVars().put(JdbcConnectionParams.AUTH_USER,
-              info.getProperty(JdbcConnectionParams.AUTH_USER));
+    if (!connParams.getSessionVars().containsKey(AUTH_USER)) {
+        if (info.containsKey(AUTH_USER)) {
+            connParams.getSessionVars().put(AUTH_USER,
+              info.getProperty(AUTH_USER));
         }
-        if (info.containsKey(JdbcConnectionParams.AUTH_PASSWD)) {
-          connParams.getSessionVars().put(JdbcConnectionParams.AUTH_PASSWD,
-              info.getProperty(JdbcConnectionParams.AUTH_PASSWD));
+        if (info.containsKey(AUTH_PASSWD)) {
+          connParams.getSessionVars().put(AUTH_PASSWD,
+              info.getProperty(AUTH_PASSWD));
         }
     }
 
-    if (info.containsKey(JdbcConnectionParams.AUTH_TYPE)) {
-      connParams.getSessionVars().put(JdbcConnectionParams.AUTH_TYPE,
-          info.getProperty(JdbcConnectionParams.AUTH_TYPE));
+    if (info.containsKey(AUTH_TYPE)) {
+      connParams.getSessionVars().put(AUTH_TYPE,
+          info.getProperty(AUTH_TYPE));
     }
 
     // Handle all deprecations here:
@@ -648,5 +658,23 @@ public class Utils {
       }
     }
     return null;
+  }
+
+  /**
+   * Gets user authentication type from jdbc session variables.
+   * @param sessVars map with jdbc session variables.
+   * @return
+   */
+  public static String getAuthTypeFromJdbc(Map<String, String> sessVars) {
+    if (AUTH_MAPRSASL.equals(sessVars.get(AUTH_TYPE))) {
+      return "MAPRSASL";
+    }
+    if (AUTH_KERBEROS.equals(sessVars.get(AUTH_TYPE)) || isNotBlank(sessVars.get(AUTH_PRINCIPAL))) {
+      return "KERBEROS";
+    }
+    if (isNotBlank(sessVars.get(AUTH_USER)) && isNotBlank(sessVars.get(AUTH_PASSWD))) {
+      return "PAM";
+    }
+    return "NONE";
   }
 }
