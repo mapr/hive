@@ -199,7 +199,7 @@
     <netty.version>4.1.17.Final</netty.version>
     <netty3.version>3.10.5.Final</netty3.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
-    <parquet.version>1.10.0</parquet.version>
+    <parquet.version>1.11.0</parquet.version>
     <pig.version>0.16.0</pig.version>
     <plexus.utils.version>3.3.0</plexus.utils.version>
     <protobuf.version>3.11.1</protobuf.version>
