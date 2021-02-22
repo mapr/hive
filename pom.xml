@@ -191,7 +191,7 @@
     <netty-all.version>4.1.49.Final</netty-all.version>
     <netty.version>3.10.6.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
-    <parquet.version>1.9.0</parquet.version>
+    <parquet.version>1.11.0</parquet.version>
     <pentaho-aggdesigner.version>5.1.5-jhyde</pentaho-aggdesigner.version>
     <pig.version>0.17.0.0-mapr-SNAPSHOT</pig.version>
     <protobuf.version>3.11.1</protobuf.version>
