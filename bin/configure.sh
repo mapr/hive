@@ -80,6 +80,7 @@ HEADERS="$HIVE_CONF"/headers.xml
 MIN_NUM_CONF_BACKUPS=3
 MAX_NUM_CONF_BACKUPS=10
 CONF_BACKUPS_SAVING_TIME=30  # 30 days
+BKP_PATTERN="${HIVE_HOME}/conf.backup.*_*"
 
 NOW=$(date "+%Y%m%d_%H%M%S")
 DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
@@ -383,7 +384,8 @@ fi
 # Check if number of available backups is greater than minimal backups amount that should always be.
 #
 has_min_backups() {
-numConfBackups=$(find "${HIVE_HOME}"/conf.backup.*_* -type d | wc -l)
+numConfBackups=0
+[ "$(compgen -G ${BKP_PATTERN})" ] && numConfBackups=$(find ${BKP_PATTERN} -type d | wc -l)
 if [ "${numConfBackups}" -gt "${MIN_NUM_CONF_BACKUPS}" ]; then
   return 0; # 0 = true
 else
@@ -397,13 +399,14 @@ fi
 remove_oldest_backups() {
 local i total_num_files num_files_to_remove to_remove_dirs
 i=0
-total_num_files=$(ls -d1 "${HIVE_HOME}"/conf.backup.*_* -t | wc -l)
+total_num_files=0
+[ "$(compgen -G ${BKP_PATTERN})" ] && total_num_files=$(ls -d1 ${BKP_PATTERN} -t | wc -l)
 if [ "${total_num_files}" -gt "${MAX_NUM_CONF_BACKUPS}" ]; then
   num_files_to_remove=$((total_num_files - MAX_NUM_CONF_BACKUPS))
   while read -r line; do
     to_remove_dirs[$i]="$line"
     ((i++))
-  done < <(ls -d1 "${HIVE_HOME}"/conf.backup.*_* -t | tail -n "${num_files_to_remove}")
+  done < <(ls -d1 ${BKP_PATTERN} -t | tail -n "${num_files_to_remove}")
   for dir in "${to_remove_dirs[@]}"; do
    rm -Rf "$dir"
    logInfo "Removed outdated configuration backup: $dir"
@@ -417,8 +420,10 @@ fi
 remove_backups_that_stored_more_than_N_days(){
 local i to_remove_dirs num_files_to_remove num_outdated_files
 i=0
-total_num_files=$(ls -d1 "${HIVE_HOME}"/conf.backup.*_* -t | wc -l)
-num_outdated_files=$(find "${HIVE_HOME}"/conf.backup.*_* -type d -mtime +"${CONF_BACKUPS_SAVING_TIME}" -print | wc -l)
+total_num_files=0
+num_outdated_files=0
+[ "$(compgen -G ${BKP_PATTERN})" ] && total_num_files=$(ls -d1 ${BKP_PATTERN} -t | wc -l)
+[ "$(compgen -G ${BKP_PATTERN})" ] && num_outdated_files=$(find ${BKP_PATTERN} -type d -mtime +"${CONF_BACKUPS_SAVING_TIME}" -print | wc -l)
 if [ $((total_num_files - num_outdated_files)) -lt "${MIN_NUM_CONF_BACKUPS}" ]; then
   num_files_to_remove=$((total_num_files - MIN_NUM_CONF_BACKUPS))
 else
@@ -427,7 +432,7 @@ fi
 while read -r line; do
   to_remove_dirs[$i]="$line"
   ((i++))
-done < <(find "${HIVE_HOME}"/conf.backup.*_* -type d -mtime +"${CONF_BACKUPS_SAVING_TIME}" -print | tail -n "${num_files_to_remove}")
+done < <(find ${BKP_PATTERN} -type d -mtime +"${CONF_BACKUPS_SAVING_TIME}" -print | tail -n "${num_files_to_remove}")
 for dir in "${to_remove_dirs[@]}"; do
  rm -Rf "$dir"
  logInfo "Removed outdated configuration backup: $dir"
