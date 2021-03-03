@@ -918,6 +918,7 @@
                   <include>org.codehaus.jackson:jackson-core-asl</include>
                   <include>org.codehaus.jackson:jackson-mapper-asl</include>
                   <include>com.google.guava:guava</include>
+                  <include>com.google.guava:failureaccess</include>
                   <include>net.sf.opencsv:opencsv</include>
                   <include>org.apache.hive:spark-client</include>
                   <include>org.apache.hive:hive-storage-api</include>
