@@ -909,6 +909,11 @@ public class MetastoreConf {
         "hive.metastore.allow.new.db.in.existing.directory", true, "Whether Hive allows to create "
         + "new data base in existing directory"),
 
+    HIVE_METASTORE_STATUS_PORT("hive.metastore.status.port", "hive.metastore.status.port", 3200,
+        "The port HiveMetastore status server will listen on. For internal usage only. Change the default "
+            + "value if it conflicts with any of existing services"),
+
+
     // Hive values we have copied and use as is
     // These two are used to indicate that we are running tests
     HIVE_IN_TEST("hive.in.test", "hive.in.test", false, "internal usage only, true in test mode"),

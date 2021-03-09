@@ -168,6 +168,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hive.http.SimpleHttpStatusServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.thrift.TException;
@@ -213,6 +214,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
   static boolean TEST_TIMEOUT_ENABLED = false;
   @VisibleForTesting
   static long TEST_TIMEOUT_VALUE = -1;
+
+  private static SimpleHttpStatusServer statusServer; // indicates if Metastore is up and running
 
   private static ShutdownHookManager shutdownHookMgr;
 
@@ -600,6 +603,23 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       }
       expressionProxy = PartFilterExprUtil.createExpressionProxy(conf);
       fileMetadataManager = new FileMetadataManager(this.getMS(), conf);
+      if (statusServer == null) {
+        SimpleHttpStatusServer.Builder builder = new SimpleHttpStatusServer.Builder("metastore-status");
+        int hmsServerPort = MetastoreConf.getIntVar(conf, ConfVars.HIVE_METASTORE_STATUS_PORT);
+        String hmsStatusServerHost = "0.0.0.0";
+        int hmsMaxThreads = 50;
+        builder.setPort(hmsServerPort);
+        builder.setHost(hmsStatusServerHost);
+        builder.setMaxThreads(hmsMaxThreads);
+        builder.setConf(conf);
+        // indicates if Metastore is up and running
+        try {
+          statusServer = builder.build();
+        } catch (IOException e) {
+          throw new MetaException(e.getMessage());
+        }
+        statusServer.addServlet("service_status", "/status", MetastoreStatusServlet.class);
+      }
     }
 
     private static String addPrefix(String s) {
@@ -9059,6 +9079,16 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       HMSHandler.LOG.info("TCP keepalive = " + tcpKeepAlive);
       HMSHandler.LOG.info("Enable SSL = " + useSSL);
 
+      if (statusServer != null && !statusServer.isRunning()) {
+        try {
+          statusServer.start();
+          HMSHandler.LOG.info("Metastore status server has started on port " + statusServer.getPort());
+        } catch (Exception e) {
+          HMSHandler.LOG.error("Error starting Metastore status server: ", e);
+          throw new MetaException(e.getMessage());
+        }
+      }
+
       if (startLock != null) {
         signalOtherThreadsToStart(tServer, startLock, startCondition, startedServing);
       }
@@ -9076,7 +9106,12 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       if (rs != null) {
         HMSHandler.logInfo("Cleaning up thread local RawStore...");
         rs.shutdown();
+        if (statusServer != null) {
+          statusServer.stop();
+        }
       }
+    } catch (Exception e) {
+      HMSHandler.logInfo(e.getMessage());
     } finally {
       HMSHandler handler = HMSHandler.threadLocalHMSHandler.get();
       if (handler != null) {

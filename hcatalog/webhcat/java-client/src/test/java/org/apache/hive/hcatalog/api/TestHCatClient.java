@@ -85,7 +85,6 @@ import org.apache.hadoop.util.Shell;
 
 import javax.annotation.Nullable;
 
-@Ignore//FIXME
 public class TestHCatClient {
   private static final Logger LOG = LoggerFactory.getLogger(TestHCatClient.class);
   private static int msPort;
@@ -184,7 +183,7 @@ public class TestHCatClient {
     } else {
       String expectedDir = warehouseDir.replaceFirst("pfile:///", "pfile:/")
           + "/" + msPort;
-      assertEquals(expectedDir + "/" + db + ".db", testDb.getLocation());
+      assertEquals(normalize(expectedDir + "/" + db + ".db"), testDb.getLocation());
     }
     ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
     cols.add(new HCatFieldSchema("id", Type.INT, "id comment"));
@@ -1349,4 +1348,7 @@ public class TestHCatClient {
     }
   }
 
+  private static String normalize(String path){
+    return path == null ? null : path.replaceAll("///", "/");
+  }
 }

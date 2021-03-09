@@ -52,9 +52,6 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.curator.framework.recipes.nodes.PersistentEphemeralNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.JvmPauseMonitor;
 import org.apache.hadoop.hive.common.LogUtils;
@@ -95,6 +92,7 @@ import org.apache.hive.common.util.ShutdownHookManager;
 import org.apache.hive.http.HttpServer;
 import org.apache.hive.http.JdbcJarDownloadServlet;
 import org.apache.hive.http.LlapServlet;
+import org.apache.hive.http.SimpleHttpStatusServer;
 import org.apache.hive.http.security.PamAuthenticator;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.ServiceException;
@@ -113,6 +111,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.hive.service.servlet.HiveServer2StatusServlet;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -146,6 +145,7 @@ public class HiveServer2 extends CompositeService {
   private CuratorFramework zKClientForPrivSync = null;
   private boolean deregisteredWithZooKeeper = false; // Set to true only when deregistration happens
   private HttpServer webServer; // Web UI
+  private SimpleHttpStatusServer statusServer; // indicates if HiveServer2 is up and running
   private TezSessionPoolManager tezSessionPoolManager;
   private WorkloadManager wm;
   private PamAuthenticator pamAuthenticator;
@@ -396,6 +396,17 @@ public class HiveServer2 extends CompositeService {
 
           webServer = builder.build();
           webServer.addServlet("query_page", "/query_page", QueryProfileServlet.class);
+
+          SimpleHttpStatusServer.Builder statusServerBuilder = new SimpleHttpStatusServer.Builder("hiveserver2-status");
+          int hs2StatusServerPort = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_STATUS_PORT);
+          String hs2StatusServerHost = "0.0.0.0";
+          int hs2MaxThreads = 50;
+          statusServerBuilder.setPort(hs2StatusServerPort);
+          statusServerBuilder.setHost(hs2StatusServerHost);
+          statusServerBuilder.setMaxThreads(hs2MaxThreads);
+          statusServerBuilder.setConf(hiveConf);
+          statusServer = statusServerBuilder.build();
+          statusServer.addServlet("service_status", "/status", HiveServer2StatusServlet.class);
         }
       }
     } catch (IOException ie) {
@@ -751,6 +762,15 @@ public class HiveServer2 extends CompositeService {
         LOG.info("HS2 interactive HA enabled. Tez sessions will be started/reconnected by the leader.");
       }
     }
+    if (statusServer != null && !statusServer.isRunning()) {
+      try {
+        statusServer.start();
+        LOG.info("HiveServer2 status server has started on port " + statusServer.getPort());
+      } catch (Exception e) {
+        LOG.error("Error starting HiveServer2 status server: ", e);
+        throw new ServiceException(e);
+      }
+    }
   }
 
   private static boolean isTezEngine(HiveConf hiveConf){
@@ -924,6 +944,14 @@ public class HiveServer2 extends CompositeService {
         LOG.info("Web UI has stopped");
       } catch (Exception e) {
         LOG.error("Error stopping Web UI: ", e);
+      }
+    }
+    if (statusServer != null){
+      try {
+        statusServer.stop();
+        LOG.info("HiveServer2 status server has stopped");
+      } catch (Exception e) {
+        LOG.error("Error stopping HiveServer2: ", e);
       }
     }
     // Shutdown Metrics
