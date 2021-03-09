@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MAPR_HOME=${MAPR_HOME:-/opt/mapr}
+ROLES_DIR="$MAPR_HOME/roles"
+HS2_PID_FILE="$MAPR_HOME"/pid/hive-mapr-hiveserver2.pid
+HMS_PID_FILE="$MAPR_HOME"/pid/hive-mapr-metastore.pid
+WHCT_PID_FILE="$MAPR_HOME"/pid/hive-mapr-webhcat.pid
+HIVE_VERSION_FILE="$MAPR_HOME"/hive/hiveversion
+HIVE_VERSION=$(cat "$HIVE_VERSION_FILE")
+HIVE_HOME="$MAPR_HOME"/hive/hive-"$HIVE_VERSION"
+HS2_STATUS_PORT=3100
+HMS_STATUS_PORT=3200
+WHCT_STATUS_PORT=3300
+EXIT_SUCCESS=0
+EXIT_NOT_RUNNING=1
+EXIT_RUNNING_NOT_RESPONDING=2
+
+
+#
+# Define a timestamp function.
+#
+timestamp() {
+  date +"[%Y-%m-%d %H:%M:%S]" # current time
+}
+
+LOG_FILE="$HIVE_HOME"/logs/verify_service.log
+
+#
+# Log with Info level
+#
+logInfo() {
+  message="$1"
+  echo "$(timestamp) [INFO] $message" >>"$LOG_FILE"
+}
+
+#
+# Log with Error level
+#
+logError() {
+  message="$1"
+  echo "$(timestamp) [ERROR] $message" >>"$LOG_FILE"
+}
+
+#
+# Checks if HiveServer2 is installed.
+#
+has_hive_server2() {
+  if [ -f "$ROLES_DIR/hiveserver2" ]; then
+    return 0 # 0 = true
+  else
+    logError "HiveServer2 is not installed"
+    return 1
+  fi
+
+}
+
+#
+# Checks if metastore is installed.
+#
+has_metastore() {
+  if [ -f "$ROLES_DIR/hivemetastore" ]; then
+    return 0 # 0 = true
+  else
+    logError "Hive Metastore is not installed"
+    return 1
+  fi
+}
+
+#
+# Checks if webhcat is installed.
+#
+has_webhcat() {
+  if [ -f "$ROLES_DIR/hivewebhcat" ]; then
+    return 0 # 0 = true
+  else
+    logError "WebHCat is not installed"
+    return 1
+  fi
+}
+
+#
+# Check if the process is running
+#
+is_running() {
+  SERVICE="$1"
+  PID_FILE="$2"
+  logInfo "Starting $SERVICE verifier at $(timestamp)"
+  if [ -e "$PID_FILE" ] || [ -h "$PID_FILE" ]; then
+    process_pid=$(cat $PID_FILE 2>/dev/null)
+    if [ $? -ne 0 ]; then
+      PID_FILE=$(ls -l $PID_FILE | awk '{print $11}')
+      process_pid=$(cat $PID_FILE 2>/dev/null)
+    fi
+    if [ -z "$process_pid" ]; then
+      logError "ERROR - could not get pid for $SERVICE"
+      return $EXIT_NOT_RUNNING
+    fi
+    logInfo "checking to see if pid $process_pid is alive"
+    if kill -s 0 "$process_pid" 2>/dev/null; then
+      logInfo "pid $process_pid is alive"
+      return $EXIT_SUCCESS
+    else
+      logInfo "pid $process_pid is NOT running"
+      return $EXIT_NOT_RUNNING
+    fi
+  else
+    logInfo "no pid file, service $SERVICE is NOT running"
+    return $EXIT_NOT_RUNNING
+  fi
+}
+
+#
+# Check if the process is responding.
+#
+is_responding() {
+  PID_FILE="$1"
+  SERVICE="$2"
+  PORT="$3"
+  logInfo "checking to see if $SERVICE pid $PID_FILE is responsive"
+  return $(curl -s "http://localhost:$PORT/status")
+}
+
+#
+# Main method.
+#
+
+HMS_STATUS="$EXIT_SUCCESS"
+if has_metastore; then
+  logInfo "Metastore is installed"
+  if is_running metastore "$HMS_PID_FILE"; then
+    if is_responding metastore "$HMS_PID_FILE" "$HMS_STATUS_PORT"; then
+        HMS_STATUS="$EXIT_SUCCESS"
+        logInfo "Metastore is responsive"
+      else
+        HMS_STATUS="$EXIT_RUNNING_NOT_RESPONDING"
+        logInfo "Metastore is running but not responsive"
+    fi
+  else
+    HMS_STATUS="$EXIT_NOT_RUNNING"
+    logInfo "Metastore is not running"
+  fi
+else
+  logInfo "Metastore is not installed"
+fi
+
+HS2_STATUS="$EXIT_SUCCESS"
+if has_hive_server2; then
+  logInfo "HiveServer2 is installed"
+  if is_running hiveserver2 "$HS2_PID_FILE"; then
+    if is_responding "$HS2_PID_FILE" hiveserver2 "$HS2_STATUS_PORT"; then
+      HS2_STATUS="$EXIT_SUCCESS"
+      logInfo "HiveServer2 is responsive"
+    else
+      HS2_STATUS="$EXIT_RUNNING_NOT_RESPONDING"
+      logInfo "HiveServer2 is running but not responsive"
+    fi
+  else
+    HS2_STATUS="$EXIT_NOT_RUNNING"
+    logInfo "HiveServer2 is not running"
+  fi
+else
+  logInfo "HiveServer2 is not installed"
+fi
+
+WHCT_STATUS="$EXIT_SUCCESS"
+if has_webhcat; then
+  logInfo "WebHCat is installed"
+  if is_running webhcat "$WHCT_PID_FILE"; then
+    if is_responding "$WHCT_PID_FILE" webhcat "$WHCT_STATUS_PORT"; then
+      WHCT_STATUS="$EXIT_SUCCESS"
+      logInfo "WebHCat is responsive"
+    else
+      WHCT_STATUS="$EXIT_RUNNING_NOT_RESPONDING"
+      logInfo "WebHCat is running but not responsive"
+    fi
+  else
+    WHCT_STATUS="$EXIT_NOT_RUNNING"
+    logInfo "WebHCat is not running"
+  fi
+else
+  logInfo "WebHCat is not installed"
+fi
+
+if [ "$HMS_STATUS" = "$EXIT_SUCCESS" ] && [ "$HS2_STATUS" = "$EXIT_SUCCESS" ] && [ "$WHCT_STATUS" = "$EXIT_SUCCESS" ] ; then
+ exit "$EXIT_SUCCESS"
+fi
+
+if [ "$HMS_STATUS" = "$EXIT_RUNNING_NOT_RESPONDING" ] || [ "$HS2_STATUS" = "$EXIT_RUNNING_NOT_RESPONDING" ] || [ "$WHCT_STATUS" = "$EXIT_RUNNING_NOT_RESPONDING" ] ; then
+ exit "$EXIT_RUNNING_NOT_RESPONDING"
+fi
+
+exit "$EXIT_NOT_RUNNING"

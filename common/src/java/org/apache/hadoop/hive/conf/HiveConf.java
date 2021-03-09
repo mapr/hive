@@ -2378,6 +2378,11 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_PARALLEL_OPS_IN_SESSION("hive.server2.parallel.ops.in.session", true,
         "Whether to allow several parallel operations (such as SQL statements) in one session."),
 
+    HIVE_SERVER2_STATUS_PORT("hive.server2.status.port", 3100, "The port HiveServer2 status server"
+        + "will listen on. For internal usage only. Change the default value if it conflicts with any of existing services"),
+    HIVE_METASTORE_STATUS_PORT("hive.metastore.status.port", 3200, "The port HiveMetastore status server"
+        + "will listen on. For internal usage only. Change the default value if it conflicts with any of existing services"),
+
     // HiveServer2 WebUI
     HIVE_SERVER2_WEBUI_BIND_HOST("hive.server2.webui.host", "0.0.0.0", "The host address the HiveServer2 WebUI will listen on"),
     HIVE_SERVER2_WEBUI_PORT("hive.server2.webui.port", 10002, "The port the HiveServer2 WebUI will listen on. This can be"

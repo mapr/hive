@@ -46,9 +46,6 @@ import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorEventType;
 import org.apache.curator.framework.recipes.nodes.PersistentEphemeralNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.common.JvmPauseMonitor;
 import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
@@ -67,7 +64,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveMaterializedViewsRegistry;
 import org.apache.hadoop.hive.ql.session.ClearDanglingScratchDir;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
 import org.apache.hadoop.hive.shims.ShimLoader;
-import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.HiveVersionInfo;
@@ -82,6 +78,7 @@ import org.apache.hive.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIService;
 import org.apache.hive.service.cli.thrift.ThriftHttpCLIService;
 import org.apache.hive.service.servlet.QueryProfileServlet;
+import org.apache.hive.service.servlet.HiveServer2StatusServlet;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -96,7 +93,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 
 /**
  * HiveServer2.
@@ -112,6 +108,7 @@ public class HiveServer2 extends CompositeService {
   private CuratorFramework zooKeeperClient;
   private boolean deregisteredWithZooKeeper = false; // Set to true only when deregistration happens
   private HttpServer webServer; // Web UI
+  private HttpServer statusServer; // indicates if HiveServer2 is up and running
   private PamAuthenticator pamAuthenticator;
 
   public HiveServer2() {
@@ -251,6 +248,16 @@ public class HiveServer2 extends CompositeService {
           builder.setContextRootRewriteTarget("/hiveserver2.jsp");
           webServer = builder.build();
           webServer.addServlet("query_page", "/query_page", QueryProfileServlet.class);
+          builder = new HttpServer.Builder("hiveserver2-status");
+          int hs2StatusServerPort = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_STATUS_PORT);
+          String hs2StatusServerHost = "0.0.0.0";
+          int hs2MaxThreads = 50;
+          builder.setPort(hs2StatusServerPort);
+          builder.setHost(hs2StatusServerHost);
+          builder.setMaxThreads(hs2MaxThreads);
+          builder.setConf(hiveConf);
+          statusServer = builder.build();
+          statusServer.addServlet("service_status", "/status", HiveServer2StatusServlet.class);
         }
       }
     } catch (IOException ie) {
@@ -537,6 +544,16 @@ public class HiveServer2 extends CompositeService {
         throw new ServiceException(e);
       }
     }
+    if (statusServer != null) {
+      try {
+        statusServer.start();
+        LOG.info("HiveServer2 status server has started on port " + statusServer.getPort());
+      } catch (Exception e) {
+        LOG.error("Error starting HiveServer2 status server: ", e);
+        throw new ServiceException(e);
+      }
+    }
+
   }
 
   @Override
@@ -550,6 +567,14 @@ public class HiveServer2 extends CompositeService {
         LOG.info("Web UI has stopped");
       } catch (Exception e) {
         LOG.error("Error stopping Web UI: ", e);
+      }
+    }
+    if (statusServer != null){
+      try {
+        statusServer.stop();
+        LOG.info("HiveServer2 status server has stopped");
+      } catch (Exception e) {
+        LOG.error("Error stopping HiveServer2: ", e);
       }
     }
     // Shutdown Metrics

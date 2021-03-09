@@ -21,6 +21,10 @@ package org.apache.hive.hcatalog.templeton;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import org.apache.hadoop.hive.metastore.HiveMetaStore;
+import org.apache.hadoop.hive.metastore.MetastoreStatusServlet;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hive.http.HttpServer;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -84,9 +88,11 @@ public class Main {
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
   public static final int DEFAULT_PORT = 8080;
+  public static final int DEFAULT_STATUS_PORT = 3300;
   public static final String DEFAULT_HOST = "0.0.0.0";
   public static final String DEFAULT_SSL_PROTOCOL_BLACKLIST = "SSLv2,SSLv3";
   private Server server;
+  private HttpServer statusServer;
 
   private static volatile AppConfig conf;
 
@@ -143,9 +149,11 @@ public class Main {
 
   public void run() {
     int port = conf.getInt(AppConfig.PORT, DEFAULT_PORT);
+    int statusPort = conf.getInt(AppConfig.STATUS_SERVER_PORT, DEFAULT_STATUS_PORT);
     try {
       checkEnv();
       runServer(port);
+      runStatusServer(statusPort);
       // Currently only print the first port to be consistent with old behavior
       port = ArrayUtils.isEmpty(server.getConnectors()) ? -1 : ((ServerConnector) (server.getConnectors()[0]))
           .getLocalPort();
@@ -170,6 +178,29 @@ public class Main {
     }
   }
 
+
+  private void runStatusServer(int webHCatStatusServerPort) throws Exception {
+    HttpServer.Builder builder = new HttpServer.Builder("webhcat-status");
+    String webHCatStatusServerHost = "0.0.0.0";
+    int webHCatMaxThreads = 50;
+    builder.setPort(webHCatStatusServerPort);
+    builder.setHost(webHCatStatusServerHost);
+    builder.setMaxThreads(webHCatMaxThreads);
+    builder.setConf(new HiveConf());
+    try {
+      statusServer = builder.build();
+    } catch (IOException e) {
+      throw new Exception(e);
+    }
+    statusServer.addServlet("service_status", "/status", WebHCatStatusServlet.class);
+    try {
+      statusServer.start();
+      LOG.info("WebHCat status server has started on port " + statusServer.getPort());
+    } catch (Exception e) {
+      LOG.error("Error starting WebHCat status server: ", e);
+      throw new MetaException(e.getMessage());
+    }
+  }
 
   private void checkEnv() {
     checkCurrentDirPermissions();

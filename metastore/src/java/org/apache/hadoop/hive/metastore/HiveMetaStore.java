@@ -134,6 +134,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.ShutdownHookManager;
+import org.apache.hive.http.HttpServer;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -198,6 +199,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
 
   public static final String NO_FILTER_STRING = "";
   public static final int UNLIMITED_MAX_PARTITIONS = -1;
+
+  private static HttpServer statusServer; // indicates if Metastore is up and running
 
   private static final class ChainedTTransportFactory extends TTransportFactory {
     private final TTransportFactory parentTransFactory;
@@ -506,6 +509,21 @@ public class HiveMetaStore extends ThriftHiveMetastore {
 
       expressionProxy = PartFilterExprUtil.createExpressionProxy(hiveConf);
       fileMetadataManager = new FileMetadataManager((ThreadLocalRawStore)this, hiveConf);
+
+      HttpServer.Builder builder = new HttpServer.Builder("metastore-status");
+      int hmsServerPort = hiveConf.getIntVar(ConfVars.HIVE_METASTORE_STATUS_PORT);
+      String hmsStatusServerHost = "0.0.0.0";
+      int hmsMaxThreads = 50;
+      builder.setPort(hmsServerPort);
+      builder.setHost(hmsStatusServerHost);
+      builder.setMaxThreads(hmsMaxThreads);
+      builder.setConf(hiveConf);
+      try {
+        statusServer = builder.build();
+      } catch (IOException e) {
+        throw new MetaException(e.getMessage());
+      }
+      statusServer.addServlet("service_status", "/status", MetastoreStatusServlet.class);
     }
 
     private static String addPrefix(String s) {
@@ -7306,6 +7324,15 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       HMSHandler.LOG.info("Options.maxWorkerThreads = "
           + maxWorkerThreads);
       HMSHandler.LOG.info("TCP keepalive = " + tcpKeepAlive);
+      if (statusServer != null) {
+        try {
+          statusServer.start();
+          HMSHandler.LOG.info("Metastore status server has started on port " + statusServer.getPort());
+        } catch (Exception e) {
+          HMSHandler.LOG.error("Error starting Metastore status server: ", e);
+          throw new MetaException(e.getMessage());
+        }
+      }
 
       if (startLock != null) {
         signalOtherThreadsToStart(tServer, startLock, startCondition, startedServing);

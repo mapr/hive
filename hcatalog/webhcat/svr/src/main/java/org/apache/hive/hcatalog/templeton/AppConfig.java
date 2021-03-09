@@ -116,6 +116,7 @@ public class AppConfig extends Configuration {
   public static final String SSL_PROTOCOL_BLACKLIST  = "templeton.ssl.protocol.blacklist";
   public static final String HOST                = "templeton.host";
   public static final String HEADERS_FILE = "templeton.jetty.response.headers.file";
+  public static final String STATUS_SERVER_PORT  = "templeton.status.server.port";
 
   /*
    * These parameters controls the maximum number of concurrent job submit/status/list
