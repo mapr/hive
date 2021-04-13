@@ -59,6 +59,7 @@ public class JavaTimestampObjectInspector
       return null;
     }
     ((Timestamp) o).setTime(value.getTime());
+    ((Timestamp) o).setNanos(value.getNanos());
     return o;
   }
 
