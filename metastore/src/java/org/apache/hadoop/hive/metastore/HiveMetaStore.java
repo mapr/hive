@@ -7351,6 +7351,11 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       HMSHandler.logInfo("Cleaning up thread local RawStore...");
       try {
         rs.shutdown();
+        if (statusServer != null) {
+          statusServer.stop();
+        }
+      } catch (Exception e) {
+        HMSHandler.logInfo(e.getMessage());
       } finally {
         HMSHandler.threadLocalConf.remove();
         HMSHandler.removeRawStore();
