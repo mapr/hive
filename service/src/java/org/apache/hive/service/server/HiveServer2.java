@@ -544,7 +544,7 @@ public class HiveServer2 extends CompositeService {
         throw new ServiceException(e);
       }
     }
-    if (statusServer != null) {
+    if (statusServer != null && !statusServer.isRunning()) {
       try {
         statusServer.start();
         LOG.info("HiveServer2 status server has started on port " + statusServer.getPort());

@@ -236,6 +236,10 @@ public class HttpServer {
     webServer.stop();
   }
 
+  public boolean isRunning() {
+    return webServer.isRunning();
+  }
+
   public int getPort() {
     return ((ServerConnector)(webServer.getConnectors()[0])).getLocalPort();
   }

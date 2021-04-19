@@ -168,6 +168,15 @@ public class Main {
   }
 
   void stop() {
+    if(statusServer != null) {
+      try {
+        statusServer.stop();
+      }
+      catch(Exception ex) {
+        LOG.warn("Failed to stop status Server", ex);
+      }
+    }
+
     if(server != null) {
       try {
         server.stop();
@@ -194,8 +203,10 @@ public class Main {
     }
     statusServer.addServlet("service_status", "/status", WebHCatStatusServlet.class);
     try {
-      statusServer.start();
-      LOG.info("WebHCat status server has started on port " + statusServer.getPort());
+      if (!statusServer.isRunning()) {
+        statusServer.start();
+        LOG.info("WebHCat status server has started on port " + statusServer.getPort());
+      }
     } catch (Exception e) {
       LOG.error("Error starting WebHCat status server: ", e);
       throw new MetaException(e.getMessage());

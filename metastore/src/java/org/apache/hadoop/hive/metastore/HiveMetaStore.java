@@ -510,20 +510,23 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       expressionProxy = PartFilterExprUtil.createExpressionProxy(hiveConf);
       fileMetadataManager = new FileMetadataManager((ThreadLocalRawStore)this, hiveConf);
 
-      HttpServer.Builder builder = new HttpServer.Builder("metastore-status");
-      int hmsServerPort = hiveConf.getIntVar(ConfVars.HIVE_METASTORE_STATUS_PORT);
-      String hmsStatusServerHost = "0.0.0.0";
-      int hmsMaxThreads = 50;
-      builder.setPort(hmsServerPort);
-      builder.setHost(hmsStatusServerHost);
-      builder.setMaxThreads(hmsMaxThreads);
-      builder.setConf(hiveConf);
-      try {
-        statusServer = builder.build();
-      } catch (IOException e) {
-        throw new MetaException(e.getMessage());
+
+      if (statusServer == null) {
+        HttpServer.Builder builder = new HttpServer.Builder("metastore-status");
+        int hmsServerPort = hiveConf.getIntVar(ConfVars.HIVE_METASTORE_STATUS_PORT);
+        String hmsStatusServerHost = "0.0.0.0";
+        int hmsMaxThreads = 50;
+        builder.setPort(hmsServerPort);
+        builder.setHost(hmsStatusServerHost);
+        builder.setMaxThreads(hmsMaxThreads);
+        builder.setConf(hiveConf);
+        try {
+          statusServer = builder.build();
+        } catch (IOException e) {
+          throw new MetaException(e.getMessage());
+        }
+        statusServer.addServlet("service_status", "/status", MetastoreStatusServlet.class);
       }
-      statusServer.addServlet("service_status", "/status", MetastoreStatusServlet.class);
     }
 
     private static String addPrefix(String s) {
@@ -7324,7 +7327,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       HMSHandler.LOG.info("Options.maxWorkerThreads = "
           + maxWorkerThreads);
       HMSHandler.LOG.info("TCP keepalive = " + tcpKeepAlive);
-      if (statusServer != null) {
+      if (statusServer != null && !statusServer.isRunning()) {
         try {
           statusServer.start();
           HMSHandler.LOG.info("Metastore status server has started on port " + statusServer.getPort());
