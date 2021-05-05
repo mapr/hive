@@ -132,6 +132,7 @@ public final class HiveMaterializedViewsRegistry {
     @Override
     public void run() {
       try {
+        SessionState.start(db.getConf());
         List<Table> materializedViews = new ArrayList<Table>();
         for (String dbName : db.getAllDatabases()) {
           materializedViews.addAll(db.getAllMaterializedViewObjects(dbName));
@@ -332,6 +333,7 @@ public final class HiveMaterializedViewsRegistry {
       return analyzer.genLogicalPlan(node);
     } catch (Exception e) {
       // We could not parse the view
+      LOG.error("Error parsing original query for materialized view", e);
       return null;
     }
   }
