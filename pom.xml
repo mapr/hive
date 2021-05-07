@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.hive</groupId>
   <artifactId>hive</artifactId>
-  <version>2.3.8-mapr-SNAPSHOT</version>
+  <version>2.3.8-mapr-2104</version>
   <packaging>pom</packaging>
 
   <name>Hive</name>
@@ -147,10 +147,10 @@
     <guava.version>28.2-jre</guava.version>
     <groovy.version>2.4.11</groovy.version>
     <h2database.version>1.3.166</h2database.version>
-    <hadoop.version>2.7.5.0-mapr-710-SNAPSHOT</hadoop.version>
+    <hadoop.version>2.7.5.0-mapr-710</hadoop.version>
     <hadoop.bin.path>${basedir}/${hive.path.to.root}/testutils/hadoop</hadoop.bin.path>
     <hamcrest.version>1.3</hamcrest.version>
-    <hbase.version>1.4.13.0-mapr-SNAPSHOT</hbase.version>
+    <hbase.version>1.4.13.0-mapr-710</hbase.version>
     <!-- required for logging test to avoid including hbase which pulls disruptor transitively -->
     <disruptor.version>3.4.2</disruptor.version>
     <hikaricp.version>2.5.1</hikaricp.version>
@@ -194,14 +194,14 @@
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.11.0</parquet.version>
     <pentaho-aggdesigner.version>5.1.5-jhyde</pentaho-aggdesigner.version>
-    <pig.version>0.17.0.0-mapr-SNAPSHOT</pig.version>
+    <pig.version>0.17.0.0-mapr-700</pig.version>
     <protobuf.version>3.11.1</protobuf.version>
     <plexus.utils.version>3.3.0</plexus.utils.version>
     <stax.version>1.0.1</stax.version>
     <slf4j.version>1.7.10</slf4j.version>
     <ST4.version>4.0.4</ST4.version>
-    <storage-api.version>2.4.0-mapr-SNAPSHOT</storage-api.version>
-    <tez.version>0.9.2-mapr-SNAPSHOT</tez.version>
+    <storage-api.version>2.4.0-mapr-2104</storage-api.version>
+    <tez.version>0.9.2.200-mapr-710</tez.version>
     <slider.version>0.90.2-incubating</slider.version>
     <super-csv.version>2.2.0</super-csv.version>
     <spark.version>2.3.0</spark.version>
@@ -215,7 +215,7 @@
     <wadl-resourcedoc-doclet.version>1.19.4</wadl-resourcedoc-doclet.version>
     <velocity.version>1.5</velocity.version>
     <xerces.version>2.12.0</xerces.version>
-    <zookeeper.version>3.5.6.0-mapr-SNAPSHOT</zookeeper.version>
+    <zookeeper.version>3.5.6.0-mapr-2009</zookeeper.version>
     <jpam.version>1.1</jpam.version>
     <felix.version>2.4.0</felix.version>
     <curator.version>4.2.0</curator.version>
@@ -223,7 +223,7 @@
     <tephra.version>0.6.0</tephra.version>
     <tomcat.version>10.0.4</tomcat.version>
     <gson.version>2.2.4</gson.version>
-    <mapr.core.version>6.2.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
+    <mapr.core.version>6.2.0.0-mapr</mapr.core.version>
   </properties>
 
   <repositories>
