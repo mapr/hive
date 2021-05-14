@@ -82,7 +82,7 @@ public class HiveProjectSortTransposeRule extends RelOptRule {
     // In Hive, Sort is always based on RexInputRef
     // We only need to check if project can contain all the positions that sort needs.
     final Mappings.TargetMapping map =
-        RelOptUtil.permutationIgnoreCast(
+        RelOptUtil.permutation(
             project.getProjects(), project.getInput().getRowType()).inverse();
     Set<Integer> needed = new HashSet<>();
     for (RelFieldCollation fc : sort.getCollation().getFieldCollations()) {

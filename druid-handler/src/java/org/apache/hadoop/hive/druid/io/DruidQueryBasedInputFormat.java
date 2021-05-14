@@ -170,8 +170,7 @@ public class DruidQueryBasedInputFormat extends InputFormat<NullWritable, DruidW
     // Create Select query
     SelectQueryBuilder builder = new Druids.SelectQueryBuilder();
     builder.dataSource(dataSource);
-    final List<Interval> intervals = Arrays.asList();
-    builder.intervals(intervals);
+    builder.intervals(Arrays.asList(DruidTable.DEFAULT_INTERVAL));
     builder.pagingSpec(PagingSpec.newSpec(1));
     Map<String, Object> context = new HashMap<>();
     context.put(Constants.DRUID_QUERY_FETCH, false);
@@ -414,15 +413,11 @@ public class DruidQueryBasedInputFormat extends InputFormat<NullWritable, DruidW
 
   private static List<List<Interval>> createSplitsIntervals(List<Interval> intervals, int numSplits
   ) {
-
+    final long totalTime = DruidDateTimeUtils.extractTotalTime(intervals);
     long startTime = intervals.get(0).getStartMillis();
     long endTime = startTime;
     long currTime = 0;
     List<List<Interval>> newIntervals = new ArrayList<>();
-    long totalTime = 0;
-    for (Interval interval: intervals) {
-      totalTime += interval.getEndMillis() - interval.getStartMillis();
-    }
     for (int i = 0, posIntervals = 0; i < numSplits; i++) {
       final long rangeSize = Math.round((double) (totalTime * (i + 1)) / numSplits) -
               Math.round((double) (totalTime * i) / numSplits);
