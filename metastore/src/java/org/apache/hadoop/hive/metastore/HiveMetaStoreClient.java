@@ -121,7 +121,6 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   // for thrift connects
   private int retries = 5;
   private long retryDelaySeconds = 0;
-  private final ClientCapabilities version;
 
   static final protected Logger LOG = LoggerFactory.getLogger("hive.metastore");
 
@@ -143,7 +142,6 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     } else {
       this.conf = new HiveConf(conf);
     }
-    version = HiveConf.getBoolVar(conf, ConfVars.HIVE_IN_TEST) ? TEST_VERSION : VERSION;
     filterHook = loadFilterHooks();
     fileMetadataBatchSize = HiveConf.getIntVar(
         conf, HiveConf.ConfVars.METASTORE_BATCH_RETRIEVE_OBJECTS_MAX);
@@ -1356,9 +1354,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   @Override
   public Table getTable(String dbname, String name) throws MetaException,
       TException, NoSuchObjectException {
-    GetTableRequest req = new GetTableRequest(dbname, name);
-    req.setCapabilities(version);
-    Table t = client.get_table_req(req).getTable();
+    Table t = client.get_table(dbname, name);
     return fastpath ? t : deepCopy(filterHook.filterTable(t));
   }
 
@@ -1375,10 +1371,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   @Override
   public List<Table> getTableObjectsByName(String dbName, List<String> tableNames)
       throws MetaException, InvalidOperationException, UnknownDBException, TException {
-    GetTablesRequest req = new GetTablesRequest(dbName);
-    req.setTblNames(tableNames);
-    req.setCapabilities(version);
-    List<Table> tabs = client.get_table_objects_by_name_req(req).getTables();
+    List<Table> tabs = client.get_table_objects_by_name(dbName, tableNames);
     return fastpath ? tabs : deepCopyTables(filterHook.filterTables(tabs));
   }
 
@@ -1470,9 +1463,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   public boolean tableExists(String databaseName, String tableName) throws MetaException,
       TException, UnknownDBException {
     try {
-      GetTableRequest req = new GetTableRequest(databaseName, tableName);
-      req.setCapabilities(version);
-      return filterHook.filterTable(client.get_table_req(req).getTable()) != null;
+      return filterHook.filterTable(client.get_table(databaseName, tableName)) != null;
     } catch (NoSuchObjectException e) {
       return false;
     }
