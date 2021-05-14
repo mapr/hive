@@ -117,7 +117,7 @@
     <ant.version>1.10.9</ant.version>
     <antlr.version>3.5.2</antlr.version>
     <apache-directory-server.version>1.5.7</apache-directory-server.version>
-    <avatica.version>1.17.0</avatica.version>
+    <avatica.version>1.8.0</avatica.version>
     <avro.version>1.10.1</avro.version>
     <bonecp.version>0.8.0.RELEASE</bonecp.version>
     <calcite.version>1.10.0</calcite.version>
