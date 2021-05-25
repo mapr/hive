@@ -917,6 +917,10 @@
                   <include>org.threeten:threetenbp</include>
                   <include>org.apache.calcite:*</include>
                   <include>org.apache.calcite.avatica:avatica</include>
+                  <include>com.fasterxml.jackson.core:jackson-databind</include>
+                  <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                  <include>com.fasterxml.jackson.core:jackson-core</include>
+                  <include>org.xerial.snappy:snappy-java</include>
                 </includes>
               </artifactSet>
               <relocations>
