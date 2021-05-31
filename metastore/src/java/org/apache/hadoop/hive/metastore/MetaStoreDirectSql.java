@@ -134,7 +134,7 @@ class MetaStoreDirectSql {
     this.schema = schema;
     DatabaseProduct dbType = null;
     try {
-      dbType = DatabaseProduct.determineDatabaseProduct(getProductName());
+      dbType = DatabaseProduct.determineDatabaseProduct(getProductName(pm));
     } catch (SQLException e) {
       LOG.warn("Cannot determine database product; assuming OTHER", e);
       dbType = DatabaseProduct.OTHER;
@@ -188,7 +188,7 @@ class MetaStoreDirectSql {
     this(pm, conf, "");
   }
 
-  private String getProductName() {
+  public static String getProductName(PersistenceManager pm) {
     JDOConnection jdoConn = pm.getDataStoreConnection();
     try {
       return ((Connection)jdoConn.getNativeConnection()).getMetaData().getDatabaseProductName();
