@@ -63,6 +63,11 @@ public class TestVectorizedColumnReader extends VectorizedColumnReaderTestBase {
   }
 
   @Test
+  public void testDateRead() throws Exception {
+    dateRead(isDictionaryEncoding);
+  }
+
+  @Test
   public void testTimestamp() throws Exception {
     timestampRead(isDictionaryEncoding);
     stringReadTimestamp(isDictionaryEncoding);

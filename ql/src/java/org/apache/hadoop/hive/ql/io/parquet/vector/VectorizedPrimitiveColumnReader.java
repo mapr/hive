@@ -81,9 +81,9 @@ public class VectorizedPrimitiveColumnReader extends BaseVectorizedColumnReader 
     case INT:
     case BYTE:
     case SHORT:
+    case DATE:
       readIntegers(num, (LongColumnVector) column, rowId);
       break;
-    case DATE:
     case INTERVAL_YEAR_MONTH:
     case LONG:
       readLongs(num, (LongColumnVector) column, rowId);
