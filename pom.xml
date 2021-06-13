@@ -66,7 +66,7 @@
   </modules>
 
   <properties>
-    <hive.version.shortname>2.3.0-mapr</hive.version.shortname>
+    <hive.version.shortname>2.3.6-mapr</hive.version.shortname>
 
     <!-- Build Properties -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
