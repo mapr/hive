@@ -39,6 +39,7 @@ public class TestMetaStoreSchemaInfo {
     // check equivalent versions, should be compatible
     Assert.assertTrue(MetaStoreSchemaInfo.isVersionCompatible("0.13.0", "0.13.1"));
     Assert.assertTrue(MetaStoreSchemaInfo.isVersionCompatible("0.13.1", "0.13.0"));
+    Assert.assertTrue(MetaStoreSchemaInfo.isVersionCompatible("2.3.9", "2.3.0"));
 
     // check incompatible versions
     Assert.assertFalse(MetaStoreSchemaInfo.isVersionCompatible("0.1.1", "0.1.0"));
