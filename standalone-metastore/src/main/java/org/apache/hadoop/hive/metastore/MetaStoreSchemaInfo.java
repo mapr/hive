@@ -52,12 +52,15 @@ public class MetaStoreSchemaInfo implements IMetaStoreSchemaInfo {
   // a version
   // that has a corresponding schema. eg "0.13.1" is equivalent to "0.13.0"
   private static final Map<String, String> EQUIVALENT_VERSIONS =
-      ImmutableMap.of("0.13.1", "0.13.0",
-          "1.0.0", "0.14.0",
-          "1.0.1", "1.0.0",
-          "1.1.1", "1.1.0",
-          "1.2.1", "1.2.0"
-      );
+      ImmutableMap.<String, String>builder().
+          put("0.13.1", "0.13.0").
+          put("1.0.0", "0.14.0").
+          put("1.0.1", "1.0.0").
+          put("1.1.1", "1.1.0").
+          put("1.2.1", "1.2.0").
+          put("2.3.9", "2.3.0").
+          put("3.1.3", "3.1.0").
+          build();
 
   public MetaStoreSchemaInfo(String metastoreHome, String dbType) throws HiveMetaException {
     this.metastoreHome = metastoreHome;
@@ -173,10 +176,9 @@ public class MetaStoreSchemaInfo implements IMetaStoreSchemaInfo {
 
   @Override
   public String getHiveSchemaVersion() {
-    String hiveVersion = MetastoreVersionInfo.getShortVersion();
-    //Assume the version is of pattern 0.13.0-mapr-<ReleaseNumber>. Ex: 0.13.0-mapr-1405
+    //Assume the version is of pattern xxx.yyy.zzz-eep-<MepNumber>. Ex: 3.1.3-eep-800
     String versionFromJar = MetastoreVersionInfo.getShortVersion();
-    hiveVersion = versionFromJar.substring(0, versionFromJar.indexOf("-mapr"));
+    String hiveVersion = versionFromJar.substring(0, versionFromJar.indexOf("-eep"));
     return getEquivalentVersion(hiveVersion);
   }
 
