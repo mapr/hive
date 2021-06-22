@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.conf;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -46,10 +47,14 @@ public final class XmlUtil {
    *
    * @param url hive-site location
    * @param confVars property name
-   * @return true if property is in hive-site.xml
+   * @return true if property is in hive-site.xml, false if URL is null
    */
 
   static boolean existsIn(URL url, HiveConf.ConfVars confVars) {
+    if (url == null) {
+      LOG.warn("URL is null or blank");
+      return false;
+    }
     try {
       Document doc = readDocument(url);
       return propertyExists(doc, confVars);
