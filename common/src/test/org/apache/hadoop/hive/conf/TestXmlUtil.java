@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.conf;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTHENTICATION;
@@ -32,6 +33,12 @@ public class TestXmlUtil {
   public void existsInPositiveTest() {
     URL url = getClass().getClassLoader().getResource("hive-site-xml-util-test.xml");
     Assert.assertTrue(existsIn(url, METASTORE_USE_THRIFT_SASL));
+  }
+
+  @Test
+  public void existsInUrlIsNullTest() {
+    URL url = null;
+    Assert.assertFalse(existsIn(url, METASTORE_USE_THRIFT_SASL));
   }
 
   @Test
