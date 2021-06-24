@@ -93,10 +93,10 @@ pipeline {
                       rm -rf ${PROJECT}; git clone git@github.com:mapr/private-pkg.git ${PROJECT}; \
                       cd ${PROJECT}; \
                       git checkout MEP-4.0.0 ; \
-                      make ${PROJECT} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
-                      make mapr-hiveserver2-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
-                      make mapr-hivemetastore-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
-                      make mapr-hivewebhcat-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
+                      make mapr-hive-2.3 TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
+                      make mapr-hiveserver2-2.3 ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
+                      make mapr-hivemetastore-2.3 ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
+                      make mapr-hivewebhcat-2.3 ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
                     """
                   }
                 }
@@ -155,11 +155,11 @@ pipeline {
                       rm -rf ${PROJECT}; git clone git@github.com:mapr/private-pkg.git ${PROJECT}; \
                       cd ${PROJECT}; \
                       git checkout MEP-4.0.0 ; \
-                      make ${PROJECT} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
-                      make mapr-hiveserver2-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
-                      make mapr-hivemetastore-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
-                      make mapr-hivewebhcat-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
-                      make ${PROJECT}-deploy ${MAKEFILE_ARGS} TIMESTAMP=${ID} ; \
+                      make mapr-hive-2.3 TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
+                      make mapr-hiveserver2-2.3 ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
+                      make mapr-hivemetastore-2.3 ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
+                      make mapr-hivewebhcat-2.3 ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
+                      make mapr-hive-2.3-deploy ${MAKEFILE_ARGS} TIMESTAMP=${ID} ; \
                     """
                   }
                 }
