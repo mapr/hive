@@ -629,6 +629,7 @@ public class VectorizedColumnReaderTestBase {
 
   protected void dateRead(boolean isDictionaryEncoding) throws InterruptedException, HiveException, IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
     conf.set(IOConstants.COLUMNS,"date_field");
     conf.set(IOConstants.COLUMNS_TYPES,"date");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
