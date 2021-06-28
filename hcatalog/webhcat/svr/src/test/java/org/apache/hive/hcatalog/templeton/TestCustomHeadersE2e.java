@@ -61,8 +61,9 @@ public class TestCustomHeadersE2e {
           webhcatPort = MetaStoreUtils.findFreePort();
         }
         templetonBaseUrl = templetonBaseUrl.replace("50111", Integer.toString(webhcatPort));
-        templetonServer = new Main(new String[] { "-D" + AppConfig.UNIT_TEST_MODE + "=true",
-            "-D" + AppConfig.PORT + "=" + webhcatPort });
+        templetonServer = new Main(
+            new String[] { "-D" + AppConfig.UNIT_TEST_MODE + "=true", "-D" + AppConfig.PORT + "=" + webhcatPort,
+                "-D" + AppConfig.HEADERS_FILE + "=" + getPath("headers.xml") });
         LOG.info("Starting Main; WebHCat using port: " + webhcatPort);
         templetonServer.run();
         LOG.info("Main started");
