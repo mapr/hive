@@ -128,6 +128,7 @@ public abstract class BaseSemanticAnalyzer {
   protected Context ctx;
   protected HashMap<String, String> idToTableNameMap;
   protected QueryProperties queryProperties;
+  ParseContext pCtx = null;
 
   /**
    * A set of FileSinkOperators being written to in an ACID compliant way.  We need to remember
@@ -2295,5 +2296,9 @@ public abstract class BaseSemanticAnalyzer {
 
   public DDLDescWithWriteId getAcidDdlDesc() {
     return null;
+  }
+
+  public ParseContext getParseContext() {
+    return pCtx;
   }
 }
