@@ -25,16 +25,28 @@ import org.apache.hadoop.hive.ql.plan.api.StageType;
 import java.io.Serializable;
 import java.util.*;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Some limited query information to save for WebUI.
  *
  * The class is synchronized, as WebUI may access information about a running query.
  */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class QueryDisplay {
+
+  /**
+   * Preffered objectmapper for this class.
+   *
+   * It must be used to have things work in shaded environment (and its also more performant).
+   */
+  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   // Member variables
   private String queryStr;
@@ -62,8 +74,9 @@ public class QueryDisplay {
     EXECUTION,
   }
 
-  @JsonWriteNullProperties(false)
+  @JsonInclude(Include.NON_NULL)
   @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
   public static class TaskDisplay {
 
     private Integer returnValue;  //if set, determines that task is complete.
@@ -197,6 +210,7 @@ public class QueryDisplay {
     this.queryStr = queryStr;
   }
 
+  @JsonIgnore
   public synchronized String getQueryString() {
     return returnStringOrUnknown(queryStr);
   }

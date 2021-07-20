@@ -40,10 +40,12 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHook;
 import org.apache.hadoop.hive.ql.parse.HiveSemanticAnalyzerHookContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.plan.api.StageType;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -381,7 +383,7 @@ public abstract class CLIServiceTest {
 
     int THREAD_COUNT = 3;
     @SuppressWarnings("unchecked")
-    FutureTask<Void>[] tasks = (FutureTask<Void>[])new FutureTask[THREAD_COUNT];
+    FutureTask<Void>[] tasks = new FutureTask[THREAD_COUNT];
     long longPollingTimeoutMs = 10 * 60 * 1000; // Larger than max compile duration used in test
 
     // 1st query acquires the lock and takes 20 secs to compile

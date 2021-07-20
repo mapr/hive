@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hive.llap.cli.LlapStatusServiceDriver;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class LlapStatusHelpers {
   public enum State {

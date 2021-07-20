@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivilegedExceptionAction;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -76,9 +77,6 @@ import org.apache.hive.service.cli.RowSetFactory;
 import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.session.HiveSession;
 import org.apache.hive.service.server.ThreadWithGarbageCleanup;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * SQLOperation.
@@ -475,26 +473,11 @@ public class SQLOperation extends ExecuteStatementOperation {
     if (driver != null) {
       List<QueryDisplay.TaskDisplay> statuses = driver.getQueryDisplay().getTaskDisplays();
       if (statuses != null) {
-        ByteArrayOutputStream out = null;
-        try {
-          ObjectMapper mapper = new ObjectMapper();
-          out = new ByteArrayOutputStream();
-          mapper.writeValue(out, statuses);
-          return out.toString("UTF-8");
-        } catch (JsonGenerationException e) {
+        try (final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+          QueryDisplay.OBJECT_MAPPER.writeValue(out, statuses);
+          return out.toString(StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
           throw new HiveSQLException(e);
-        } catch (JsonMappingException e) {
-          throw new HiveSQLException(e);
-        } catch (IOException e) {
-          throw new HiveSQLException(e);
-        } finally {
-          if (out != null) {
-            try {
-              out.close();
-            } catch (IOException e) {
-              throw new HiveSQLException(e);
-            }
-          }
         }
       }
     }

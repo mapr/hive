@@ -21,6 +21,8 @@ package org.apache.hadoop.hive.ql.io;
 import static org.apache.hadoop.hive.ql.exec.Utilities.COPY_KEYWORD;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -68,10 +70,10 @@ import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hive.common.util.Ref;
 import org.apache.orc.FileFormatException;
 import org.apache.orc.impl.OrcAcidUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
@@ -1664,7 +1666,7 @@ public class AcidUtils {
       metaData.put(Field.VERSION, CURRENT_VERSION);
       metaData.put(Field.DATA_FORMAT, Value.COMPACTED);
       try (FSDataOutputStream strm = fs.create(formatFile, false)) {
-        new ObjectMapper().writeValue(strm, metaData);
+        new ObjectMapper().writeValue((OutputStream)strm, metaData);
       } catch (IOException ioe) {
         String msg = "Failed to create " + baseOrDeltaDir + "/" + METADATA_FILE
             + ": " + ioe.getMessage();
@@ -1678,7 +1680,7 @@ public class AcidUtils {
         return false;
       }
       try (FSDataInputStream strm = fs.open(formatFile)) {
-        Map<String, String> metaData = new ObjectMapper().readValue(strm, Map.class);
+        Map<String, String> metaData = new ObjectMapper().readValue((InputStream)strm, Map.class);
         if(!CURRENT_VERSION.equalsIgnoreCase(metaData.get(Field.VERSION))) {
           throw new IllegalStateException("Unexpected Meta Data version: "
               + metaData.get(Field.VERSION));

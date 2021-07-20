@@ -73,10 +73,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.TimestampParser;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,9 +159,6 @@ public class JsonSerDe extends AbstractSerDe {
         // iterate through each token, and create appropriate object here.
         populateRecord(r, token, p, schema);
       }
-    } catch (JsonParseException e) {
-      LOG.warn("Error [{}] parsing json text [{}].", e, t);
-      throw new SerDeException(e);
     } catch (IOException e) {
       LOG.warn("Error [{}] parsing json text [{}].", e, t);
       throw new SerDeException(e);
@@ -228,9 +224,8 @@ public class JsonSerDe extends AbstractSerDe {
    * a schema/type for. Thus, this field is to be ignored.
    *
    * @throws IOException
-   * @throws JsonParseException
    */
-  private void skipValue(JsonParser p) throws JsonParseException, IOException {
+  private void skipValue(JsonParser p) throws IOException {
     JsonToken valueToken = p.nextToken();
 
     if ((valueToken == JsonToken.START_ARRAY) || (valueToken == JsonToken.START_OBJECT)) {

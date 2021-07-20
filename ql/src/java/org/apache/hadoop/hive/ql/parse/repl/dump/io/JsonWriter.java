@@ -21,8 +21,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.parse.ReplicationSpec;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class JsonWriter implements Closeable {
 
   public JsonWriter(FileSystem fs, Path writePath) throws IOException {
     OutputStream out = fs.create(writePath);
-    jsonGenerator = new JsonFactory().createJsonGenerator(out);
+    jsonGenerator = new JsonFactory().createGenerator(out);
     jsonGenerator.writeStartObject();
     jsonGenerator.writeStringField("version", METADATA_FORMAT_VERSION);
   }
