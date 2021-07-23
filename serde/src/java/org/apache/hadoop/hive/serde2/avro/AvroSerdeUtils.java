@@ -19,6 +19,7 @@ package org.apache.hadoop.hive.serde2.avro;
 
 
 import org.apache.avro.Schema;
+import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -36,6 +37,8 @@ import org.apache.hadoop.mapred.JobConf;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -54,7 +57,8 @@ import java.util.Properties;
  */
 public class AvroSerdeUtils {
   private static final Logger LOG = LoggerFactory.getLogger(AvroSerdeUtils.class);
-
+  private static final boolean GET_JSON_PROP_EXISTS = isGetJsonPropExists();
+  private static final boolean GET_OBJECT_PROP_EXISTS = isGetObjectPropExists();
   /**
    * Enum container for all avro table properties.
    * If introducing a new avro-specific table property,
@@ -309,8 +313,8 @@ public class AvroSerdeUtils {
     }
   }
 
-  public static int getIntFromSchema(Schema schema, String name) {
-    Object obj = schema.getObjectProp(name);
+  public static int getIntFromSchema(Schema schema, String name) throws AvroSerdeException {
+    Object obj = getObjectProp(schema, name);
     if (obj instanceof String) {
       return Integer.parseInt((String) obj);
     } else if (obj instanceof Integer) {
@@ -320,6 +324,68 @@ public class AvroSerdeUtils {
         + " but found type " + obj.getClass().getName());
     }
   }
+
+  /**
+   * Returns object from scheme.
+   *
+   * @param schema Avro schema
+   * @param name name of the field
+   * @return object from scheme.
+   * @throws AvroSerdeException
+   */
+  private static Object getObjectProp(Schema schema, String name) throws AvroSerdeException {
+    if (GET_JSON_PROP_EXISTS) {
+      try {
+        Method getObjectProp = Schema.class.getMethod("getJsonProp", String.class);
+        Object result = getObjectProp.invoke(schema, name);
+        if (result instanceof JsonNode) {
+          return ((JsonNode) result).asInt();
+        } else {
+          throw new AvroSerdeException("Unable to read Json properties from schema");
+        }
+      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        throw new AvroSerdeException("Unable to read Json properties from schema");
+      }
+    }
+    if (GET_OBJECT_PROP_EXISTS) {
+      try {
+        Method getObjectProp = Schema.class.getMethod("getObjectProp", String.class);
+        return getObjectProp.invoke(schema, name);
+      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        throw new AvroSerdeException("Unable to read object properties from schema");
+      }
+    }
+    throw new AvroSerdeException("Unable to read object properties from schema");
+  }
+
+  /**
+   * Returns true if method getJsonProp() exists in Schema class.
+   *
+   * @return true if method getJsonProp() exists in Schema class.
+   */
+  private static boolean isGetJsonPropExists() {
+    try {
+      Schema.class.getMethod("getJsonProp", String.class);
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Returns true if method getObjectProp() exists in Schema class.
+   *
+   * @return true if method getObjectProp() exists in Schema class.
+   */
+  private static boolean isGetObjectPropExists() {
+    try {
+      Schema.class.getMethod("getObjectProp", String.class);
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+    return true;
+  }
+
 
   /**
    * Called on specific alter table events, removes schema url and schema literal from given tblproperties
