@@ -587,6 +587,10 @@
         <artifactId>pig</artifactId>
         <version>${pig.version}</version>
          <exclusions>
+           <exclusion>
+             <groupId>commons-httpclient</groupId>
+             <artifactId>commons-httpclient</artifactId>
+           </exclusion>
           <exclusion>
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>jetty-util</artifactId>
@@ -804,6 +808,10 @@
         <artifactId>hadoop-common</artifactId>
         <version>${hadoop.version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+          </exclusion>
            <exclusion>
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>jetty-sslengine</artifactId>
@@ -951,6 +959,10 @@
         <artifactId>hbase-hadoop2-compat</artifactId>
         <version>${hbase.version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
