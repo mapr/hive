@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.exec;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -34,7 +36,6 @@ import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
-
 /**
  * Abstract Map operator. Common code of MapOperator and VectorMapOperator.
  **/
@@ -43,6 +44,7 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
     implements Serializable, Cloneable {
 
   private static final long serialVersionUID = 1L;
+  private Configuration internalConf;
 
   /**
    * Initialization call sequence:
@@ -101,6 +103,13 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
     boolean schemaless = fpath.toUri().getScheme() == null;
     for (Path onefile : conf.getPathToAliases().keySet()) {
       Path onepath = normalizePath(onefile, schemaless);
+      try {
+        onepath = FileUtil.checkPathForSymlink(onepath, internalConf).path;
+      } catch (IOException e) {
+        // can be ignored, because above method will check file status before attempting to fix it
+        // the exception can be thrown only when it is attempted to fix non-symlink as symlink
+      }
+
       Path curfpath = fpath;
       if(!schemaless && onepath.toUri().getScheme() == null) {
         curfpath = new Path(fpath.toUri().getPath());
@@ -141,6 +150,9 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
   public void initializeMapOperator(Configuration hconf) throws HiveException {
     // set that parent initialization is done and call initialize on children
     state = State.INIT;
+
+    // gets the conf to use for symlink check in nominal path method
+    this.internalConf = hconf;
 
     statsMap.put(Counter.DESERIALIZE_ERRORS.toString(), deserialize_error_count);
 

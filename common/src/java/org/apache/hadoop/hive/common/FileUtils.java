@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.Trash;
 import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.io.HdfsUtils;
 import org.apache.hadoop.hive.shims.HadoopShims;
@@ -535,24 +536,30 @@ public final class FileUtils {
    */
   public static boolean mkdir(FileSystem fs, Path f, boolean inheritPerms, Configuration conf) throws IOException {
     LOG.info("Creating directory if it doesn't exist: " + f);
+    Path fixedPath = f;
+    if (fs.exists(f) && fs.getFileStatus(f).isSymlink()) {
+      fixedPath = FileUtil.fixSymlinkPath(new PathData(f.toString(), fs.getConf()));
+    }
     if (!inheritPerms) {
       //just create the directory
-      return fs.mkdirs(f);
+      return fs.mkdirs(fixedPath);
     } else {
       //Check if the directory already exists. We want to change the permission
       //to that of the parent directory only for newly created directories.
       try {
-        return fs.getFileStatus(f).isDir();
-      } catch (FileNotFoundException ignore) {
+        FileStatus fileStatus = fs.getFileStatus(f);
+        return fileStatus.isSymlink() ? fs.getFileStatus(FileUtil.fixSymlinkFileStatus(fileStatus)).isDirectory() : fs
+            .getFileStatus(f).isDirectory();
+      } catch (Exception ignore) {
       }
       //inherit perms: need to find last existing parent path, and apply its permission on entire subtree.
-      Path lastExistingParent = f;
+      Path lastExistingParent = fixedPath;
       Path firstNonExistentParent = null;
       while (!fs.exists(lastExistingParent)) {
         firstNonExistentParent = lastExistingParent;
         lastExistingParent = lastExistingParent.getParent();
       }
-      boolean success = fs.mkdirs(f);
+      boolean success = fs.mkdirs(fixedPath);
       if (!success) {
         return false;
       } else {

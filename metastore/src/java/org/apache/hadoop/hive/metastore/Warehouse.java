@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -517,7 +518,10 @@ public class Warehouse {
     FileSystem fs = null;
     try {
       fs = getFs(f);
-      FileStatus fstatus = fs.getFileStatus(f);
+      FileStatus fstatus = fs.getFileStatus(f);;
+      if (fstatus.isSymlink()) {
+        fstatus = fs.getFileStatus(FileUtil.fixSymlinkFileStatus(fstatus));
+      }
       if (!fstatus.isDir()) {
         return false;
       }
