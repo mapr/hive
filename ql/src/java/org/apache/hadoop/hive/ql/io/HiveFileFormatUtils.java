@@ -400,17 +400,35 @@ public final class HiveFileFormatUtils {
       part = doGetPartitionDescFromPath(newPathToPartitionInfo, dir);
     }
 
-    // if still null, consider symlink case and fix the path
+    // if still null, consider symlink cases
     if (part == null) {
       FileSystem maprFs = MapRFileSystem.get(CONF);
       Map<Path, PartitionDesc> symlinkPathToPartitionInfo = new HashMap<>();
       for (Map.Entry<Path, PartitionDesc> entry : pathToPartitionInfo.entrySet()) {
+        boolean isFound = false;
+        // symlink can be a case of dir-to-dir or file-to-file
         FileStatus fileStatus = maprFs.getFileStatus(entry.getKey());
-        if (fileStatus.isSymlink()){
+        if (fileStatus.isSymlink()) { // dir-to-dir case; MAPR-HIVE-880
           Path p = FileUtil.fixSymlinkFileStatus(fileStatus);
           entry.getValue().setBaseFileName(p.getName());
           symlinkPathToPartitionInfo.put(p, entry.getValue());
-        }else{
+          isFound = true;
+        } else { // file-to-file case; MAPR-HIVE-884
+          FileStatus[] candidates = maprFs.listStatus(entry.getKey());
+          for (FileStatus file : candidates) {
+            if (file.isSymlink()) {
+              Path p = FileUtil.fixSymlinkFileStatus(file);
+              if (maprFs.getFileStatus(p).compareTo(maprFs.getFileStatus(dir)) == 0) {
+                p = p.getParent();
+                entry.getValue().setBaseFileName(p.getName());
+                symlinkPathToPartitionInfo.put(p, entry.getValue());
+                isFound = true;
+                break;
+              }
+            }
+          }
+        }
+        if (!isFound) {
           symlinkPathToPartitionInfo.put(entry.getKey(), entry.getValue());
         }
       }
