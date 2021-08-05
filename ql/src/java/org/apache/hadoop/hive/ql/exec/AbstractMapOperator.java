@@ -18,14 +18,19 @@
 
 package org.apache.hadoop.hive.ql.exec;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
+import com.mapr.fs.MapRFileSystem;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
@@ -103,10 +108,26 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
     boolean schemaless = fpath.toUri().getScheme() == null;
     for (Path onefile : conf.getPathToAliases().keySet()) {
       Path onepath = normalizePath(onefile, schemaless);
+      // onepath can be a symlink, we need to check and fix it
       try {
-        onepath = FileUtil.checkPathForSymlink(onepath, internalConf).path;
+        FileSystem maprFS = MapRFileSystem.get(internalConf);
+        FileStatus fileStatus = maprFS.getFileStatus(onepath);
+        if (fileStatus.isSymlink()) { // symlink to a dir; MAPR-HIVE-880
+          onepath = FileUtil.fixSymlinkFileStatus(fileStatus);
+        } else { // symlink to a file; MAPR-HIVE-884
+          FileStatus[] fileStatuses = maprFS.listStatus(onepath);
+          for (FileStatus each : fileStatuses) {
+            if (each.isSymlink()) {
+              Path p = FileUtil.fixSymlinkFileStatus(each);
+              if (maprFS.getFileStatus(p).compareTo(maprFS.getFileStatus(fpath)) == 0) {
+                onepath = p.getParent();
+                break;
+              }
+            }
+          }
+        }
       } catch (IOException e) {
-        // can be ignored, because above method will check file status before attempting to fix it
+        // can be ignored, because we check file status before attempting to fix symlink
         // the exception can be thrown only when it is attempted to fix non-symlink as symlink
       }
 
