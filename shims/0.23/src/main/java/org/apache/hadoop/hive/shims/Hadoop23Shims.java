@@ -49,6 +49,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
@@ -57,6 +58,7 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.TrashPolicy;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -130,11 +132,21 @@ public class Hadoop23Shims extends HadoopShimsSecure {
       @Override
       protected List<FileStatus> listStatus(JobContext job) throws IOException {
         List<FileStatus> result = super.listStatus(job);
+        List<FileStatus> links =  new ArrayList<>();
         Iterator<FileStatus> it = result.iterator();
         while (it.hasNext()) {
           FileStatus stat = it.next();
+          // After symlink support, we need to consider the symlink case as well for MR jobs
+          if (stat.isSymlink()) {
+            links.add(new PathData(FileUtil.fixSymlinkFileStatus(stat).toString(), job.getConfiguration()).stat);
+          }
           if (!stat.isFile() || (stat.getLen() == 0 && !stat.getPath().toUri().getScheme().equals("nullscan"))) {
             it.remove();
+          }
+        }
+        for (FileStatus f : links) {
+          if (f.isFile() || !(f.getLen() == 0 && !f.getPath().toUri().getScheme().equals("nullscan"))) {
+            result.add(f);
           }
         }
         return result;
