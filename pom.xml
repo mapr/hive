@@ -338,6 +338,11 @@
         <version>${hikaricp.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.htrace</groupId>
+        <artifactId>htrace-core4</artifactId>
+        <version>4.2.0-mapr-incubating</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet</artifactId>
         <version>${parquet.version}</version>
