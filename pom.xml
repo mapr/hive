@@ -492,6 +492,12 @@
         <groupId>org.apache.accumulo</groupId>
         <artifactId>accumulo-core</artifactId>
         <version>${accumulo.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.accumulo</groupId>
@@ -512,6 +518,12 @@
         <groupId>org.apache.accumulo</groupId>
         <artifactId>accumulo-trace</artifactId>
         <version>${accumulo.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>

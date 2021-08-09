@@ -71,6 +71,10 @@
           <artifactId>jsp-api</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.htrace</groupId>
+          <artifactId>htrace-core</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.avro</groupId>
           <artifactId>avro</artifactId>
         </exclusion>
