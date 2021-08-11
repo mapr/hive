@@ -401,7 +401,7 @@ public final class HiveFileFormatUtils {
     }
 
     // if still null, consider symlink cases
-    if (part == null) {
+    if (part == null && FileSystem.get(CONF) instanceof MapRFileSystem) {
       FileSystem maprFs = MapRFileSystem.get(CONF);
       Map<Path, PartitionDesc> symlinkPathToPartitionInfo = new HashMap<>();
       for (Map.Entry<Path, PartitionDesc> entry : pathToPartitionInfo.entrySet()) {
