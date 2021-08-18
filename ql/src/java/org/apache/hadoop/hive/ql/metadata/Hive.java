@@ -77,6 +77,7 @@ import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Options;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -4020,6 +4021,9 @@ private void constructOneLBLocationMap(FileStatus fSta,
                                   boolean isOverwrite, List<Path> newFiles, boolean isBucketed,
                                   boolean isFullAcidTable, boolean isManaged) throws HiveException {
     try {
+      // try to fix the destination first in case it is symlink
+      destf = FileUtil.checkPathForSymlink(destf, conf).path;
+
       // create the destination if it does not exist
       if (!fs.exists(destf)) {
         FileUtils.mkdir(fs, destf, conf);
