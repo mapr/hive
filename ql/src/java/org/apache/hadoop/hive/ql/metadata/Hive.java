@@ -62,6 +62,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.common.BlobStorageUtils;
@@ -3492,6 +3493,9 @@ private void constructOneLBLocationMap(FileStatus fSta,
         HiveConf.ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
 
     try {
+      // try to fix the destination first in case it is symlink
+      destf = FileUtil.checkPathForSymlink(destf, conf).path;
+
       // create the destination if it does not exist
       if (!fs.exists(destf)) {
         FileUtils.mkdir(fs, destf, inheritPerms, conf);
