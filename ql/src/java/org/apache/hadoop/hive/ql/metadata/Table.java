@@ -39,6 +39,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.maprdb.json.shims.MapRDbJsonException;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
+import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -923,6 +924,10 @@ public class Table implements Serializable {
 
   public void setLastAccessTime(int lastAccessTime) {
     tTable.setLastAccessTime(lastAccessTime);
+  }
+
+  public String getFullyQualifiedName() {
+    return Warehouse.getQualifiedName(tTable);
   }
 
   public boolean isNonNative() {
