@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.common.HiveStatsUtils;
@@ -306,7 +307,18 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
           ArrayList<FileStatus> files;
           FileSystem srcFs; // source filesystem
           try {
+            // fix the load-file path in case it is symlink (better do it here in the file check phase)
             srcFs = tbd.getSourcePath().getFileSystem(conf);
+            FileStatus sourceFileStatus = srcFs.getFileStatus(tbd.getSourcePath());
+            if (sourceFileStatus.isSymlink()) {
+              Path p = FileUtil.fixSymlinkFileStatus(sourceFileStatus);
+              // set fixed path as source path
+              tbd.setSourcePath(p);
+              // setting again fixed path as symlink in file-status
+              // we need absolute path to avoid any issue for multi-threading
+              // otherwise when one thread move the file, other thread loses its reference since it is relative path
+              sourceFileStatus.setSymlink(p);
+            }
             dirs = srcFs.globStatus(tbd.getSourcePath());
             files = new ArrayList<FileStatus>();
             for (int i = 0; (dirs != null && i < dirs.length); i++) {
