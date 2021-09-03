@@ -943,6 +943,12 @@
         <groupId>org.apache.hbase</groupId>
         <artifactId>hbase-common</artifactId>
         <version>${hbase.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.mapr.security</groupId>
+            <artifactId>mapr-security-web</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
      <dependency>
         <groupId>org.apache.hbase</groupId>
@@ -1022,6 +1028,10 @@
           <exclusion>
             <groupId>com.codahale.metrics</groupId>
             <artifactId>metrics-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.mapr.security</groupId>
+            <artifactId>mapr-security-web</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

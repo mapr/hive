@@ -90,12 +90,22 @@
             <groupId>commmons-logging</groupId>
             <artifactId>commons-logging</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.mapr.security</groupId>
+            <artifactId>mapr-security-web</artifactId>
+          </exclusion>
       </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
+        <exclusions>
+          <exclusion>
+            <groupId>com.mapr.security</groupId>
+            <artifactId>mapr-security-web</artifactId>
+          </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
