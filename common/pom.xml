@@ -37,11 +37,13 @@
     <dependency>
       <groupId>com.mapr.hadoop</groupId>
       <artifactId>maprfs</artifactId>
+      <scope>provided</scope>
       <version>${mapr.core.version}</version>
     </dependency>
     <dependency>
     <groupId>com.mapr.security</groupId>
     <artifactId>mapr-security-web</artifactId>
+    <scope>provided</scope>
     <version>${mapr.core.version}</version>
     <exclusions>
       <exclusion>

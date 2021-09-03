@@ -75,6 +75,12 @@
       <version>${hbase.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.mapr.security</groupId>
+          <artifactId>mapr-security-web</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -89,6 +95,10 @@
         <exclusion>
           <groupId>tomcat</groupId>
           <artifactId>jasper-compiler</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.mapr.security</groupId>
+          <artifactId>mapr-security-web</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
