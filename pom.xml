@@ -193,7 +193,7 @@
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.11.0</parquet.version>
     <pentaho-aggdesigner.version>5.1.5-jhyde</pentaho-aggdesigner.version>
-    <pig.version>0.17.0.0-mapr-SNAPSHOT</pig.version>
+    <pig.version>0.17.0.0-eep-SNAPSHOT</pig.version>
     <protobuf.version>3.11.1</protobuf.version>
     <plexus.utils.version>3.3.0</plexus.utils.version>
     <stax.version>1.0.1</stax.version>
