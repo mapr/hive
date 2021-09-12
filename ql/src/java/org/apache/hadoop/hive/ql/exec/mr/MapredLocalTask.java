@@ -192,8 +192,12 @@ public class MapredLocalTask extends Task<MapredLocalWork> implements Serializab
 
       jarCmd = hiveJar + " " + ExecDriver.class.getName();
       String hiveConfArgs = ExecDriver.generateCmdLine(conf, ctx);
-      String cmdLine = hadoopExec + " jar " + jarCmd + " -localtask -plan " + planPath.toString()
-          + " " + isSilent + " " + hiveConfArgs;
+      String addLibJar = "";
+      if (StringUtils.isNotEmpty(conf.getVar(ConfVars.HIVEADDEDJARS))) {
+        addLibJar = "-libjars " + conf.getVar(ConfVars.HIVEADDEDJARS);
+      }
+      String cmdLine = hadoopExec + " jar " + jarCmd + " -localtask -plan " + planPath.toString() + " " + isSilent + " "
+          + hiveConfArgs + " " + addLibJar;
 
       String workDir = (new File(".")).getCanonicalPath();
       String files = Utilities.getResourceFiles(conf, SessionState.ResourceType.FILE);
