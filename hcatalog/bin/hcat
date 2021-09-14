@@ -175,7 +175,7 @@ MAPR_HBASE_TEST_JAR=$(find $BASEMAPR/hbase -regextype posix-extended -regex ".*\
 MAPR_HBASE_CONF_DIR=${MAPR_HBASE_CONF_DIR:-"${MAPR_HBASE_HOME}/conf"}
 
 if [ -d ${MAPR_HBASE_HOME} ] ; then
-   for jar in $(find $MAPR_HBASE_HOME -name '*.jar' -not -name '*thrift*'); do
+   for jar in $(find $MAPR_HBASE_HOME \! \( -path $MAPR_HBASE_HOME/tmp -prune \) -name '*.jar' -not -name '*thrift*'); do
       HBASE_CLASSPATH=$HBASE_CLASSPATH:${jar}
    done
    export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${HBASE_CLASSPATH}"
