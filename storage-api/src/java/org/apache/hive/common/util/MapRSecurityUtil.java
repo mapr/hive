@@ -23,9 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Properties;
 
 /**
  * Utility class for reading security configuration from cluster configuration files.
@@ -162,6 +165,39 @@ public final class MapRSecurityUtil {
     }
     return maprHome;
   }
+
+  /**
+   * Checks if the process is run under cluster admin.
+   *
+   * @return true if the process is run under cluster admin.
+   */
+
+  public static boolean isClusterAdminProcess() {
+    String currentUser = System.getProperty("user.name");
+    String clusterAdmin = findAdminUser();
+    if (currentUser != null && !currentUser.isBlank() && clusterAdmin != null && !clusterAdmin.isBlank()) {
+      return currentUser.equals(clusterAdmin);
+    }
+    return false;
+  }
+
+  /**
+   * Find admin user of the cluster
+   *
+   * @return admin user of the cluster
+   */
+  public static String findAdminUser() {
+    String pathToDaemonConf = findMapRHome() + File.separator + "conf" + File.separator + "daemon.conf";
+    try (InputStream is = new FileInputStream(pathToDaemonConf)) {
+      Properties properties = new Properties();
+      properties.load(is);
+      return properties.getProperty("mapr.daemon.user");
+    } catch (IOException e) {
+      LOG.error(e.toString());
+    }
+    return "";
+  }
+
 
   /**
    * Lazy initialization for MapR Home.

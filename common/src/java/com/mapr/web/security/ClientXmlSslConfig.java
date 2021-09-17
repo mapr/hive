@@ -23,11 +23,15 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 
+import com.mapr.baseutils.Installation;
+import com.mapr.security.FipsLoader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.common.util.MapRSecurityUtil;
+
+import static org.apache.hive.common.util.MapRSecurityUtil.isClusterAdminProcess;
 
 /**
  * All configuration regarding Ssl as separate class. Unlike the sources from MapR which uses
@@ -43,6 +47,7 @@ import org.apache.hive.common.util.MapRSecurityUtil;
  */
 public class ClientXmlSslConfig implements Closeable {
   private static final String SSL_CLIENT_XML = "ssl-client.xml";
+  private static final String SSL_SERVER_XML = "ssl-server.xml";
   private final String clientTruststoreLocation;
   private final String clientKeystoreLocation;
   private final char[] clientKeystorePassword;
@@ -50,17 +55,24 @@ public class ClientXmlSslConfig implements Closeable {
 
   public ClientXmlSslConfig() {
     String maprConfDir = MapRSecurityUtil.findMapRHome() + "/conf/";
+    File sslServerXml = new File(maprConfDir, SSL_SERVER_XML);
     File sslClientXml = new File(maprConfDir, SSL_CLIENT_XML);
-    InputStream inStreamServer = null;
     FileInputStream inStreamClient = null;
+    FileInputStream inStreamServer = null;
 
     try {
       Configuration conf = new Configuration(true);
+      URL coreSiteXmlURL = Installation.getCoreSiteXmlURL();
+      conf.addResource(coreSiteXmlURL, false);
       inStreamClient = new FileInputStream(sslClientXml);
+      conf.addResource(inStreamClient, false);
       // This is the reason I am creating ClientXmlSslConfig: to avoid default value for restrictedParser
       // evaluation which leads to 'Unable to determine current user' if there is no MapR ticket even
       // if PAM is used.
-      conf.addResource(inStreamClient, false);
+      if (isClusterAdminProcess()) {
+        inStreamServer = new FileInputStream(sslServerXml);
+        conf.addResource(inStreamServer, false);
+      }
 
       this.clientTruststoreLocation = conf.get("ssl.client.truststore.location");
       this.clientKeystoreLocation = conf.get("ssl.client.keystore.location");
