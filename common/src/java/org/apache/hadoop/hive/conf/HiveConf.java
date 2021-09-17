@@ -75,6 +75,7 @@ import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePa
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getAuthMethod;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isClusterAdminProcess;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isCustomSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isKerberosEnabled;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isMapRSecurityEnabled;
@@ -4300,7 +4301,7 @@ public class HiveConf extends Configuration {
       logVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
     }
 
-    if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+    if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
       setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
     }
   }
@@ -4312,7 +4313,7 @@ public class HiveConf extends Configuration {
       logVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
     }
 
-    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+    if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
       setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
     }
   }
@@ -4324,7 +4325,7 @@ public class HiveConf extends Configuration {
       logVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH);
     }
 
-    if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD).isEmpty()) {
+    if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
       setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
     }
 

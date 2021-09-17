@@ -29,6 +29,8 @@ import java.util.Arrays;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.MapRSecurityUtil;
 
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isClusterAdminProcess;
+
 /**
  * All configuration regarding Ssl as separate class. Unlike the sources from MapR which uses
  *
@@ -43,6 +45,7 @@ import org.apache.hadoop.hive.conf.MapRSecurityUtil;
  */
 public class ClientXmlSslConfig implements Closeable {
   private static final String SSL_CLIENT_XML = "ssl-client.xml";
+  private static final String SSL_SERVER_XML = "ssl-server.xml";
   private final String clientTruststoreLocation;
   private final String clientKeystoreLocation;
   private final char[] clientKeystorePassword;
@@ -50,9 +53,10 @@ public class ClientXmlSslConfig implements Closeable {
 
   public ClientXmlSslConfig() {
     String maprConfDir = MapRSecurityUtil.findMapRHome() + "/conf/";
+    File sslServerXml = new File(maprConfDir, SSL_SERVER_XML);
     File sslClientXml = new File(maprConfDir, SSL_CLIENT_XML);
-    InputStream inStreamServer = null;
     FileInputStream inStreamClient = null;
+    FileInputStream inStreamServer = null;
 
     try {
       Configuration conf = new Configuration(true);
@@ -60,6 +64,10 @@ public class ClientXmlSslConfig implements Closeable {
       // This is the reason I am creating ClientXmlSslConfig: to avoid default value for restrictedParser
       // evaluation which leads to 'Unable to determine current user' if there is no MapR ticket even
       // if PAM is used.
+      if (isClusterAdminProcess()) {
+        inStreamServer = new FileInputStream(sslServerXml);
+        conf.addResource(inStreamServer, false);
+      }
       conf.addResource(inStreamClient, false);
 
       this.clientTruststoreLocation = conf.get("ssl.client.truststore.location");
