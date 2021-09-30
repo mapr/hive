@@ -1268,7 +1268,7 @@
                   <onlyWhenRelease>true</onlyWhenRelease>
                 </requireReleaseDeps>
               </rules>
-              <fail>true</fail>
+              <fail>false</fail>
             </configuration>
           </execution>
           <execution>
@@ -1473,7 +1473,7 @@
                       <property>thrift.home</property>
                     </requireProperty>
                   </rules>
-                  <fail>true</fail>
+                  <fail>false</fail>
                 </configuration>
               </execution>
             </executions>
