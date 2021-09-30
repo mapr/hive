@@ -189,7 +189,7 @@
     <netty.version>3.10.6.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.11.0</parquet.version>
-    <pig.version>0.16.0-mapr-SNAPSHOT</pig.version>
+    <pig.version>0.16.0-mapr-2110</pig.version>
     <powermock.version>1.6.2</powermock.version>
     <protobuf.version>2.5.0</protobuf.version>
     <plexus.utils.version>3.3.0</plexus.utils.version>
@@ -1473,7 +1473,7 @@
                       <property>thrift.home</property>
                     </requireProperty>
                   </rules>
-                  <fail>false</fail>
+                  <fail>true</fail>
                 </configuration>
               </execution>
             </executions>
