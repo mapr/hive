@@ -288,7 +288,7 @@
     <repository>
       <id>conjars</id>
       <name>Conjars</name>
-      <url>http://conjars.org/repo</url>
+      <url>https://conjars.org/repo</url>
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
