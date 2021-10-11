@@ -46,6 +46,12 @@
       <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <scope>test</scope>
+      <version>${mapr.core.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
