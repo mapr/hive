@@ -226,15 +226,40 @@
   </properties>
 
   <repositories>
-    <!-- Temporary repo -->
+    <!-- Common MapR repo -->
     <repository>
-      <id>mapr.release</id>
+      <id>mapr.common</id>
       <url>${env.MAPR_MAVEN_REPO}</url>
       <releases>
         <enabled>true</enabled>
       </releases>
       <snapshots>
         <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <!-- Snapshot MapR repo -->
+    <repository>
+      <id>mapr.snapshot</id>
+      <name>MapR Snapshot Maven repository</name>
+      <url>${env.MAPR_SNAPSHOTS_REPO}</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <!-- Release MapR repo -->
+    <repository>
+      <id>mapr.release</id>
+      <name>MapR Release Maven repository</name>
+      <url>${env.MAPR_RELEASES_REPO}</url>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
       </snapshots>
     </repository>
    <!-- This needs to be removed before checking in-->
