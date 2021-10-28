@@ -25,6 +25,8 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of a pre execute hook that updates the access
@@ -33,6 +35,8 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 public class UpdateInputAccessTimeHook {
 
   private static final String LAST_ACCESS_TIME = "lastAccessTime";
+
+  private static Logger LOG = LoggerFactory.getLogger(UpdateInputAccessTimeHook.class);
 
   public static class PreExec implements PreExecute {
     public void run(SessionState sess, Set<ReadEntity> inputs,
@@ -43,6 +47,7 @@ public class UpdateInputAccessTimeHook {
       try {
         db = Hive.get(sess.getConf());
       } catch (HiveException e) {
+        LOG.debug(" Table update ignored as get hive failed with exception ", e);
         // ignore
         db = null;
         return;
@@ -53,33 +58,39 @@ public class UpdateInputAccessTimeHook {
       for(ReadEntity re: inputs) {
         // Set the last query time
         ReadEntity.Type typ = re.getType();
-        switch(typ) {
-        // It is possible that read and write entities contain a old version
-        // of the object, before it was modified by StatsTask.
-        // Get the latest versions of the object
-        case TABLE: {
-          String dbName = re.getTable().getDbName();
-          String tblName = re.getTable().getTableName();
-          Table t = db.getTable(dbName, tblName);
-          t.setLastAccessTime(lastAccessTime);
-          db.alterTable(dbName + "." + tblName, t, null);
-          break;
-        }
-        case PARTITION: {
-          String dbName = re.getTable().getDbName();
-          String tblName = re.getTable().getTableName();
-          Partition p = re.getPartition();
-          Table t = db.getTable(dbName, tblName);
-          p = db.getPartition(t, p.getSpec(), false);
-          p.setLastAccessTime(lastAccessTime);
-          db.alterPartition(dbName, tblName, p, null);
-          t.setLastAccessTime(lastAccessTime);
-          db.alterTable(dbName + "." + tblName, t, null);
-          break;
-        }
-        default:
-          // ignore dummy inputs
-          break;
+        try {
+          switch(typ) {
+          // It is possible that read and write entities contain an old version
+          // of the object, before it was modified by StatsTask.
+          // Get the latest versions of the object
+          case TABLE: {
+            String dbName = re.getTable().getDbName();
+            String tblName = re.getTable().getTableName();
+            Table t = db.getTable(dbName, tblName);
+            t.setLastAccessTime(lastAccessTime);
+            db.alterTable(dbName + "." + tblName, t, null);
+            break;
+          }
+          case PARTITION: {
+            String dbName = re.getTable().getDbName();
+            String tblName = re.getTable().getTableName();
+            Partition p = re.getPartition();
+            Table t = db.getTable(dbName, tblName);
+            p = db.getPartition(t, p.getSpec(), false);
+            p.setLastAccessTime(lastAccessTime);
+            db.alterPartition(dbName, tblName, p, null);
+            t.setLastAccessTime(lastAccessTime);
+            db.alterTable(dbName + "." + tblName, t, null);
+            break;
+          }
+          default:
+            // ignore dummy inputs
+            break;
+          }
+        } catch (HiveException e) {
+          LOG.debug(" Table update ignored as alter table failed with exception ", e);
+          // ignore this table alter, as the user might not have write access on the table.
+          continue;
         }
       }
     }
