@@ -36,19 +36,21 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class) public class TestClearScratchDirUtil {
   private FileSystem fs;
+  private HiveConf conf;
   @Mock private YarnClient yarnClient;
   @Mock private ApplicationReport applicationReport;
   @Mock private JobClient jobClient;
   @Mock private RunningJob runningJob;
 
   @Before public void setup() throws IOException {
-    HiveConf conf = new HiveConf();
+    conf = new HiveConf();
     conf.set("fs.default.name", "file:///");
     fs = FileSystem.get(conf);
   }
@@ -96,5 +98,50 @@ import static org.mockito.Mockito.when;
     when(yarnClient.getApplicationReport(applicationId_0)).thenReturn(applicationReport);
     when(yarnClient.getApplicationReport(applicationId_1)).thenReturn(applicationReport);
     Assert.assertFalse(ClearScratchDirUtil.hasActiveApps(fs, activeAppsPath, yarnClient));
+  }
+
+  /**
+   * Testing behaviour of ClearDanglingScratchDir service over local tmp files/dirs
+   * @throws Exception
+   */
+  @Test public void localDanglingFilesCleaning() throws Exception {
+    // constants
+    String appId = "appId_" + System.currentTimeMillis();
+    String userName = System.getProperty("user.name");
+    String hdfs = "hdfs";
+    String inuse = "inuse.lck";
+    String l = File.separator;
+
+    // simulating hdfs dangling dir and its inuse.lck file
+    Path hdfsRootDir = new Path( HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIR) + l + userName + l + hdfs);
+    Path hdfsSessionDir = new Path(hdfsRootDir + l + userName + l + appId);
+    Path hdfsSessionLock = new Path(hdfsSessionDir + l + inuse);
+    fs.create(hdfsSessionLock);
+
+    // simulating local dangling files
+    String localTmpDir = HiveConf.getVar(conf, HiveConf.ConfVars.LOCALSCRATCHDIR);
+    Path localSessionDir = new Path(localTmpDir + l + appId);
+    Path localPipeOutFileRemove = new Path(localTmpDir + l
+        + appId + "-started-with-session-name.pipeout");
+    Path localPipeOutFileNotRemove = new Path(localTmpDir + l
+        + "not-started-with-session-name" + appId + ".pipeout");
+    fs.mkdirs(localSessionDir);
+    fs.create(localPipeOutFileRemove);
+    fs.create(localPipeOutFileNotRemove);
+
+    // running service
+    ClearDanglingScratchDir clearDanglingScratchDirMain = new ClearDanglingScratchDir(false,
+        false, true, hdfsRootDir.toString(), conf);
+    clearDanglingScratchDirMain.run();
+
+    // should remove all except localPipeOutFileNotRemove, because it does not start with session name
+    Assert.assertFalse("HDFS session dir '" + hdfsSessionDir
+        + "' still exists, should have been removed!", fs.exists(hdfsSessionDir));
+    Assert.assertFalse("Local session dir '" + localSessionDir
+        + "' still exists, should have been removed!", fs.exists(localSessionDir));
+    Assert.assertFalse("Local .pipeout file '" + localPipeOutFileRemove
+        + "' still exists, should have been removed!", fs.exists(localPipeOutFileRemove));
+    Assert.assertTrue("Local .pipeout file '" + localPipeOutFileNotRemove
+        + "' does not exist, should have not been removed!", fs.exists(localPipeOutFileNotRemove));
   }
 }
