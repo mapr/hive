@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.hive.ql.session;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,10 @@ import static org.apache.hadoop.hive.ql.session.ClearScratchDirUtil.hasActiveJob
  * 3. cleardanglingscratchDir checks list of all active YARN applications in the scratch_dir/active_apps
  *    folder. If there is an application that is running, then the utility does not remove scratch dir.
  *    If there is no application or all applications are finished, then it removes scratch dir.
+ *
+ * 4. Additional functionality; once it is decided which session scratch dirs are residual,
+ *    while removing them from hdfs, we will remove them from local tmp location as well.
+ *    Please see {@link ClearDanglingScratchDir#removeLocalTmpFiles(String, String)}
  */
 public class ClearDanglingScratchDir implements Runnable {
   private static final Logger LOG = LoggerFactory.getLogger(ClearDanglingScratchDir.class);
@@ -154,6 +159,7 @@ public class ClearDanglingScratchDir implements Runnable {
         return;
       }
       consoleMessage("Removing " + scratchDirToRemove.size() + " scratch directories");
+      String localTmpDir = HiveConf.getVar(conf, HiveConf.ConfVars.LOCALSCRATCHDIR);
       for (Path scratchDir : scratchDirToRemove) {
         if (dryRun) {
           System.out.println(scratchDir);
@@ -168,6 +174,8 @@ public class ClearDanglingScratchDir implements Runnable {
             }
           }
         }
+        // cleaning up on local file system as well
+        removeLocalTmpFiles(scratchDir.getName(), localTmpDir);
       }
     } catch (IOException | YarnException e) {
       consoleMessage("Unexpected exception " + e.getMessage());
@@ -210,5 +218,30 @@ public class ClearDanglingScratchDir implements Runnable {
         .create('h'));
 
     return result;
+  }
+
+  /**
+   * While deleting dangling scratch dirs from hdfs, we can clean corresponding local files as well
+   * @param sessionName prefix to determine removable tmp files
+   * @param localTmpdir local tmp file location
+   */
+  private void removeLocalTmpFiles(String sessionName, String localTmpdir) {
+    File[] files = new File(localTmpdir).listFiles();
+    boolean success;
+    if (files != null) {
+      for (File file : files) {
+        success = false;
+        if (file.getName().startsWith(sessionName)) {
+          success = file.delete();
+        }
+        if (success) {
+          consoleMessage("While removing '" + sessionName + "' dangling scratch dir from MaprFS, "
+              + "local tmp session file '" + file.getPath() + "' has been cleaned as well.");
+        } else if (file.getName().startsWith(sessionName)) {
+          consoleMessage("Even though '" + sessionName + "' is marked as dangling session dir, "
+              + "local tmp session file '" + file.getPath() + "' could not be removed.");
+        }
+      }
+    }
   }
 }
