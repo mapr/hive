@@ -72,12 +72,18 @@ public class ClientXmlSslConfig implements Closeable {
       if (isClusterAdminProcess()) {
         inStreamServer = new FileInputStream(sslServerXml);
         conf.addResource(inStreamServer, false);
+        if (KeystoreFileType.fromName(conf.get("ssl.server.keystore.type")) == KeystoreFileType.BCFKS) {
+          FipsLoader.loadFipsProviders();
+        }
       }
 
       this.clientTruststoreLocation = conf.get("ssl.client.truststore.location");
       this.clientKeystoreLocation = conf.get("ssl.client.keystore.location");
       this.clientKeystorePassword = conf.getPassword("ssl.client.keystore.password");
       this.clientTruststorePassword = conf.getPassword("ssl.client.truststore.password");
+      if (KeystoreFileType.fromName(conf.get("ssl.client.keystore.type")) == KeystoreFileType.BCFKS) {
+        FipsLoader.loadFipsProviders();
+      }
     } catch (IOException e) {
       throw new SecurityException("Unable to read SSL configuration from XML files", e);
     } finally {
@@ -105,6 +111,20 @@ public class ClientXmlSslConfig implements Closeable {
   public char[] getClientKeystorePassword() throws SecurityException {
     return this.clientKeystorePassword == null ? null : Arrays
         .copyOf(this.clientKeystorePassword, this.clientKeystorePassword.length);
+  }
+
+  public static String getClientKeystoreType(){
+    try (SslConfig sslConfig = getSslConfig()) {
+      return sslConfig.getClientKeystoreType();
+    }
+  }
+
+  public static SslConfig getSslConfig() throws SecurityException {
+    return getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL);
+  }
+
+  public static SslConfig getSslConfig(SslConfig.SslConfigScope scope) throws SecurityException {
+    return new XmlSslConfig(scope);
   }
 
   @Override

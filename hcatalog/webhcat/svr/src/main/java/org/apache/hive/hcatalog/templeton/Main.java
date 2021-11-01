@@ -27,6 +27,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -76,10 +77,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.getSslProtocolVersion;
+import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
+
+import org.apache.zookeeper.common.KeyStoreFileType;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
 /**
  * The main executable that starts up and runs the Server.
@@ -91,6 +97,7 @@ import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
   public static final int DEFAULT_PORT = 8080;
   public static final String DEFAULT_HOST = "0.0.0.0";
   public static final String DEFAULT_SSL_PROTOCOL_BLACKLIST = "SSLv2,SSLv3";
+  private static final String BCFKS_KEYSTORE_TYPE = "bcfks";
   private Server server;
 
   private static volatile AppConfig conf;
@@ -284,6 +291,13 @@ import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
       sslContextFactory.setProtocol(sslProtocolVersion);
       sslContextFactory.setKeyStorePath(keyStorePath);
       sslContextFactory.setKeyStorePassword(keyStorePassword);
+      // if fips mode is enabled, key store type should be configured
+      if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+        Security.addProvider(new BouncyCastleFipsProvider());
+        Security.addProvider(new BouncyCastleJsseProvider());
+        sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
+        sslContextFactory.setKeyStoreType(BCFKS_KEYSTORE_TYPE);
+      }
       LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));
       connector = new ServerConnector(server, sslContextFactory, http);
     } else {

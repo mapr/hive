@@ -128,6 +128,7 @@
     <avro.version>1.8.2</avro.version>
     <bonecp.version>0.8.0.RELEASE</bonecp.version>
     <calcite.version>1.16.0</calcite.version>
+    <bouncycastle.version>1.0.2.1</bouncycastle.version>
     <datanucleus-api-jdo.version>5.2.4</datanucleus-api-jdo.version>
     <datanucleus-core.version>5.2.3</datanucleus-core.version>
     <datanucleus-rdbms.version>5.2.3</datanucleus-rdbms.version>
