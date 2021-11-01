@@ -18,6 +18,7 @@
 
 package org.apache.hive.service.cli.thrift;
 
+import java.security.Security;
 import java.util.Arrays;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -36,6 +37,9 @@ import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServlet;
+import org.apache.zookeeper.common.KeyStoreFileType;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
@@ -45,9 +49,11 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 
+import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 
 public class ThriftHttpCLIService extends ThriftCLIService {
   private final Runnable oomHook;
+  private static final String BCFKS_KEYSTORE_TYPE = "bcfks";
 
   public ThriftHttpCLIService(CLIService cliService, Runnable oomHook) {
     super(cliService, ThriftHttpCLIService.class.getSimpleName());
@@ -107,6 +113,13 @@ public class ThriftHttpCLIService extends ThriftCLIService {
           Arrays.toString(sslContextFactory.getExcludeProtocols()));
         sslContextFactory.setKeyStorePath(keyStorePath);
         sslContextFactory.setKeyStorePassword(keyStorePassword);
+        // if fips mode is enabled, key store type should be configured
+        if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+          Security.addProvider(new BouncyCastleFipsProvider());
+          Security.addProvider(new BouncyCastleJsseProvider());
+          sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
+          sslContextFactory.setKeyStoreType(BCFKS_KEYSTORE_TYPE);
+        }
         String sslProtocolVersion = hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_VERSION);
         sslContextFactory.setProtocol(sslProtocolVersion);
         LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));

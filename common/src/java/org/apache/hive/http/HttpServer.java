@@ -21,6 +21,7 @@ package org.apache.hive.http;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.security.Security;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -57,6 +58,9 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender;
 import org.apache.logging.log4j.core.appender.FileManager;
 import org.apache.logging.log4j.core.appender.OutputStreamManager;
+import org.apache.zookeeper.common.KeyStoreFileType;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.rewrite.handler.RewriteRegexRule;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -87,6 +91,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.slf4j.LoggerFactory;
 
+import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 /**
@@ -98,6 +103,7 @@ public class HttpServer {
 
   public static final String CONF_CONTEXT_ATTRIBUTE = "hive.conf";
   public static final String ADMINS_ACL = "admins.acl";
+  private static final String BCFKS_KEYSTORE_TYPE = "bcfks";
 
   private final String name;
   private String appDir;
@@ -393,6 +399,13 @@ public class HttpServer {
       sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(
           new String[excludedSSLProtocols.size()]));
       sslContextFactory.setKeyStorePassword(b.keyStorePassword);
+      // if fips mode is enabled, key store type should be configured
+      if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+        Security.addProvider(new BouncyCastleFipsProvider());
+        Security.addProvider(new BouncyCastleJsseProvider());
+        sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
+        sslContextFactory.setKeyStoreType(BCFKS_KEYSTORE_TYPE);
+      }
       String sslProtocolVersion = b.conf.getVar(ConfVars.HIVE_SSL_PROTOCOL_VERSION);
       sslContextFactory.setProtocol(sslProtocolVersion);
       LOG.info(String.format("Current SSL protocol version is %s", sslProtocolVersion));

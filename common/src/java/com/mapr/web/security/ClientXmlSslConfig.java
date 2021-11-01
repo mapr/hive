@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
@@ -101,6 +100,20 @@ public class ClientXmlSslConfig implements Closeable {
   public char[] getClientKeystorePassword() throws SecurityException {
     return this.clientKeystorePassword == null ? null : Arrays
         .copyOf(this.clientKeystorePassword, this.clientKeystorePassword.length);
+  }
+
+  public static String getClientKeystoreType(){
+    try (SslConfig sslConfig = getSslConfig()) {
+      return sslConfig.getClientKeystoreType();
+    }
+  }
+
+  public static SslConfig getSslConfig() throws SecurityException {
+    return getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL);
+  }
+
+  public static SslConfig getSslConfig(SslConfig.SslConfigScope scope) throws SecurityException {
+    return new XmlSslConfig(scope);
   }
 
   @Override

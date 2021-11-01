@@ -75,6 +75,12 @@
       <artifactId>javax.servlet.jsp-api</artifactId>
       <version>${javax-servlet-jsp.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bc-fips</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+
 
     <!-- inter-project -->
     <dependency>

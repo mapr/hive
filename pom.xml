@@ -120,6 +120,7 @@
     <avatica.version>1.8.0</avatica.version>
     <avro.version>1.10.1</avro.version>
     <bonecp.version>0.8.0.RELEASE</bonecp.version>
+    <bouncycastle.version>1.0.2.1</bouncycastle.version>
     <calcite.version>1.10.0-eep</calcite.version>
     <datanucleus-api-jdo.version>5.2.4</datanucleus-api-jdo.version>
     <datanucleus-core.version>5.2.3</datanucleus-core.version>
@@ -295,11 +296,6 @@
         <updatePolicy>always</updatePolicy>
         <checksumPolicy>warn</checksumPolicy>
       </releases>
-    </repository>
-    <repository>
-      <id>pentaho-repo</id>
-      <name>pentaho-repo</name>
-      <url>https://public.nexus.pentaho.org/content/groups/omni/</url>
     </repository>
   </repositories>
 
