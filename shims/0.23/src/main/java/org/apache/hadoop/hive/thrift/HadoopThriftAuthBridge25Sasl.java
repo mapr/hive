@@ -97,7 +97,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         }
       }
       transFactory
-          .addServerDefinition(AuthMethod.DIGEST.getMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
+          .addServerDefinition(AuthMethod.TOKEN.getMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
               new SaslDigestCallbackHandler(secretManager));
       return transFactory;
     }

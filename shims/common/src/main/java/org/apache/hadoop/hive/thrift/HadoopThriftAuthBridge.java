@@ -371,7 +371,7 @@ public abstract class HadoopThriftAuthBridge {
           names[0], names[1],  // two parts of kerberos principal
           saslProps,
           new SaslRpcServer.SaslGssCallbackHandler());
-      transFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
+      transFactory.addServerDefinition(AuthMethod.TOKEN.getMechanismName(),
           null, SaslRpcServer.SASL_DEFAULT_REALM,
           saslProps, new SaslDigestCallbackHandler(secretManager));
 

@@ -100,7 +100,7 @@ public class TestHadoopAuthBridge23 {
       throws TTransportException {
         TSaslServerTransport.Factory transFactory =
           new TSaslServerTransport.Factory();
-        transFactory.addServerDefinition(AuthMethod.DIGEST.getMechanismName(),
+        transFactory.addServerDefinition(AuthMethod.TOKEN.getMechanismName(),
             null, SaslRpcServer.SASL_DEFAULT_REALM,
             saslProps,
             new SaslDigestCallbackHandler(secretManager));
