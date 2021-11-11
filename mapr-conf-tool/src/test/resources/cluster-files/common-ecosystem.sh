@@ -14,7 +14,7 @@ function registerNetworkPort() {
   return 0;
 }
 
-function logError() {
+function logErr() {
   true
 }
 
