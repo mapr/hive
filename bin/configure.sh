@@ -42,7 +42,7 @@ run_bash "$MAPR_HOME"/server/common-ecosystem.sh
 
 configure_logging
 if [ $? -ne 0 ]; then
-  logError "MAPR_HOME seems to not be set correctly or mapr-core not installed"
+  echo "MAPR_HOME seems to not be set correctly or mapr-core not installed"
   exit 1
 fi
 
@@ -109,7 +109,7 @@ has_metastore(){
 if [ -f "$ROLES_DIR/hivemetastore" ]; then
   return 0; # 0 = true
 else
-  logError "Hive Metastore is not installed"
+  logInfo "Hive Metastore is not installed"
   return 1;
 fi
 }
@@ -121,7 +121,7 @@ has_webhcat(){
 if [ -f "$ROLES_DIR/hivewebhcat" ]; then
   return 0; # 0 = true
 else
-  logError "WebHCat is not installed"
+  logInfo "WebHCat is not installed"
   return 1;
 fi
 }
