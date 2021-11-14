@@ -1520,6 +1520,7 @@ public class HiveConf extends Configuration {
         "Used only if hive.tez.java.opts is used to configure Java options."),
     HIVETEZHS2USERACCESS("hive.tez.hs2.user.access", true,
         "Whether to grant access to the hs2/hive user for queries"),
+    HIVETEZHOMEINMAPRFS("hive.tez.home.in.mapr.fs", "/apps/tez/tez-0.9", "Default location of Tez jars in MapR FS"),
     HIVEQUERYNAME ("hive.query.name", null,
         "This named is used by Tez to set the dag name. This name in turn will appear on \n" +
         "the Tez UI representing the work that was done."),

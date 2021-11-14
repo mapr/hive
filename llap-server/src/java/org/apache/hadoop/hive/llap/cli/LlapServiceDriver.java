@@ -84,6 +84,8 @@ import org.joda.time.DateTime;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVETEZHOMEINMAPRFS;
+
 public class LlapServiceDriver {
   protected static final Logger LOG = LoggerFactory.getLogger(LlapServiceDriver.class.getName());
 
@@ -354,18 +356,15 @@ public class LlapServiceDriver {
         @Override
         public Void call() throws Exception {
           synchronized (fs) {
-            String tezLibs = conf.get(TezConfiguration.TEZ_LIB_URIS);
-            if (tezLibs == null) {
-              LOG.warn("Missing tez.lib.uris in tez-site.xml");
+            String tezHomeInMapRFs = conf.getVar(ConfVars.HIVETEZHOMEINMAPRFS);
+            if (tezHomeInMapRFs == null) {
+              LOG.warn(String.format("Missing %s in hive-site.xml"), HIVETEZHOMEINMAPRFS.varname);
             }
             if (LOG.isDebugEnabled()) {
-              LOG.debug("Copying tez libs from " + tezLibs);
+              LOG.debug("Copying tez libs from " + tezHomeInMapRFs);
             }
             lfs.mkdirs(tezDir);
-            fs.copyToLocalFile(new Path(tezLibs), new Path(libDir, "tez.tar.gz"));
-            CompressionUtils.unTar(new Path(libDir, "tez.tar.gz").toString(), tezDir.toString(),
-                true);
-            lfs.delete(new Path(libDir, "tez.tar.gz"), false);
+            fs.copyToLocalFile(new Path(tezHomeInMapRFs), new Path(libDir, "tez.tar.gz"));
           }
           return null;
         }
