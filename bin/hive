@@ -20,6 +20,13 @@ case "`uname`" in
    CYGWIN*) cygwin=true;;
 esac
 
+#
+# Initialize globals
+#
+MAPR_HOME="${BASEMAPR:-/opt/mapr}"
+MAPR_CONF="$MAPR_HOME"/conf
+ROLES_DIR="$MAPR_HOME/roles"
+
 function get_canonical_dir() {
   target="$1"
   canonical_name=`readlink -f ${target} 2>/dev/null`
@@ -43,6 +50,17 @@ function get_canonical_dir() {
   canonical_dir=`pwd -P`
   ret=${canonical_dir}
   echo $ret
+}
+
+#
+# Checks if slider is installed
+#
+has_slider(){
+if [ -f "$ROLES_DIR/slider" ]; then
+  return 0; # 0 = true
+else
+  return 1;
+fi
 }
 
 function find_spark_home() {
@@ -228,6 +246,15 @@ fi
 for f in ${HIVE_LIB}/*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
+
+if has_slider; then
+  SLIDER_VERSION_FILE="$MAPR_HOME"/slider/sliderversion
+  SLIDER_VERSION=$(cat "$SLIDER_VERSION_FILE")
+  export SLIDER_HOME="$MAPR_HOME"/slider/slider-"$SLIDER_VERSION"
+  SLIDER_LIB="$SLIDER_HOME"/lib
+  SLIDER_CONF="$SLIDER_HOME"/conf
+  CLASSPATH="$CLASSPATH":"$SLIDER_LIB/*":"$SLIDER_CONF/*"
+fi
 
 
 # Add hbase conf, hbase jars and zookeeper jar to classpath
@@ -508,8 +535,6 @@ fi
 
 declare -A IS_SERVICE_CMD=(["metastore_start"]=1 ["metastore_stop"]=1 ["metastore_status"]=1 ["hiveserver2_start"]=1 ["hiveserver2_stop"]=1 ["hiveserver2_status"]=1)
 
-MAPR_HOME="${BASEMAPR:-/opt/mapr}"
-MAPR_CONF="$MAPR_HOME"/conf
 export HIVE_LOCAL_TASK_CHILD_OPTS=${HIVE_LOCAL_TASK_CHILD_OPTS}
 
 source "$MAPR_HOME"/server/common-ecosystem.sh 2>/dev/null
