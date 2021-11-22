@@ -29,6 +29,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.apache.hive.conftool.TestConfToolUtil.getPath;
 import static org.apache.hive.conftool.TestConfToolUtil.getStringVal;
@@ -67,6 +71,13 @@ public class SslDefaultTest {
     src = new File(getPath("maprsasl-enabled" + File.separator + "ssl-client.xml"));
     tgt = new File(mapRConfPath + File.separator + "ssl-client.xml");
     FileUtils.copyFile(src, tgt);
+    src = new File(getPath("maprsasl-enabled" + File.separator + "ssl-server.xml"));
+    tgt = new File(mapRConfPath + File.separator + "ssl-server.xml");
+    FileUtils.copyFile(src, tgt);
+    src = new File(getPath("maprsasl-enabled" + File.separator + "daemon.conf"));
+    tgt = new File(mapRConfPath + File.separator + "daemon.conf");
+    FileUtils.copyFile(src, tgt);
+    processClusterAdminUser(tgt);
   }
 
   @After
@@ -140,5 +151,19 @@ public class SslDefaultTest {
         equalTo(getStringVal(sslClient, "ssl.client.truststore.location")));
     assertThat(hiveConf.getVar(HMS_SSL_TRUSTSTORE_PSWD),
         equalTo(getStringVal(sslClient, "ssl.client.truststore.password")));
+  }
+
+  /**
+   * Replaces ${user.name} with current user in provided file
+   *
+   * @param file path to daemon.conf file where to replace ${user.name}
+   * @throws IOException when can't find the file
+   */
+  private static void processClusterAdminUser(File file) throws IOException {
+    Path path = file.toPath();
+    Charset charset = StandardCharsets.UTF_8;
+    String content = Files.readString(path, charset);
+    content = content.replaceAll("\\$\\{user.name\\}", System.getProperty("user.name"));
+    Files.write(path, content.getBytes(charset));
   }
 }
