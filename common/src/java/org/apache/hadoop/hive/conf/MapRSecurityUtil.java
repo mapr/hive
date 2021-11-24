@@ -20,19 +20,21 @@ package org.apache.hadoop.hive.conf;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.zookeeper.common.KeyStoreFileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.HiveConf.applySystemProperties;
 import static org.apache.hadoop.hive.conf.HiveConf.findConfigFile;
 import static org.apache.hadoop.hive.conf.HiveConf.isLoadHiveServer2Config;
@@ -54,6 +56,37 @@ public final class MapRSecurityUtil {
   }
 
   private MapRSecurityUtil() {
+  }
+
+  /**
+   * Checks if KeyStoreFileType class contains filed BCFKS. Returns true only if Zookeeper is
+   * from MEP-8.1.0 or higher
+   *
+   * @return true if KeyStoreFileType supports BCFKS
+   */
+  public static boolean isBcfksSupportedByKeyStore() {
+    Class<?> objectClass = KeyStoreFileType.class;
+    for (Field field : objectClass.getFields()) {
+      if (field.getName().equals("BCFKS")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks if cluster supports and configured for BCFKS
+   *
+   * @return true if cluster supports and configured for BCFKS
+   */
+  public static boolean isBcfks(){
+    if (isBcfksSupportedByKeyStore()) {
+      String clientKeyStoreType = getClientKeystoreType();
+      if (clientKeyStoreType != null && !clientKeyStoreType.isEmpty()) {
+        return clientKeyStoreType.equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue());
+      }
+    }
+    return false;
   }
 
   /**

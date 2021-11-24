@@ -58,7 +58,6 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender;
 import org.apache.logging.log4j.core.appender.FileManager;
 import org.apache.logging.log4j.core.appender.OutputStreamManager;
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
@@ -91,7 +90,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.slf4j.LoggerFactory;
 
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isBcfks;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 /**
@@ -400,7 +399,7 @@ public class HttpServer {
           new String[excludedSSLProtocols.size()]));
       sslContextFactory.setKeyStorePassword(b.keyStorePassword);
       // if fips mode is enabled, key store type should be configured
-      if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+      if (isBcfks()) {
         Security.addProvider(new BouncyCastleFipsProvider());
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);

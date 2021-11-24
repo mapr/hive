@@ -37,7 +37,6 @@ import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServlet;
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -49,7 +48,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isBcfks;
 
 public class ThriftHttpCLIService extends ThriftCLIService {
   private final Runnable oomHook;
@@ -114,7 +113,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
         sslContextFactory.setKeyStorePath(keyStorePath);
         sslContextFactory.setKeyStorePassword(keyStorePassword);
         // if fips mode is enabled, key store type should be configured
-        if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+        if (isBcfks()) {
           Security.addProvider(new BouncyCastleFipsProvider());
           Security.addProvider(new BouncyCastleJsseProvider());
           sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);

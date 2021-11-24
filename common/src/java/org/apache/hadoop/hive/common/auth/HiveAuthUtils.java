@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
@@ -44,12 +43,11 @@ import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getSslProtocolVersion;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isBcfks;
 
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
@@ -103,7 +101,7 @@ public class HiveAuthUtils {
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     String keyStoreType = null;
     String keyManagerType = null;
-    if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+    if (isBcfks()) {
       keyStoreType = "bcfks";
       keyManagerType = "PKIX";
     }

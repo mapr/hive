@@ -71,14 +71,13 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpServletRequest;
 
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
-import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getSslProtocolVersion;
-import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getSslProtocolVersion;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isBcfks;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
@@ -328,7 +327,7 @@ public class Main {
       sslContextFactory.setKeyStorePath(keyStorePath);
       sslContextFactory.setKeyStorePassword(keyStorePassword);
       // if fips mode is enabled, key store type should be configured
-      if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+      if (isBcfks()) {
         Security.addProvider(new BouncyCastleFipsProvider());
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
