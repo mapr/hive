@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.common.auth;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
@@ -30,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
@@ -51,11 +51,11 @@ import org.apache.zookeeper.common.KeyStoreFileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.HiveConf.applySystemProperties;
 import static org.apache.hadoop.hive.conf.HiveConf.findConfigFile;
 import static org.apache.hadoop.hive.conf.HiveConf.isLoadHiveServer2Config;
 import static org.apache.hadoop.hive.conf.HiveConf.isLoadMetastoreConfig;
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
@@ -118,7 +118,7 @@ public class HiveAuthUtils {
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     String keyStoreType = null;
     String keyManagerType = null;
-    if (getClientKeystoreType().equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+    if (isBcfks()) {
       keyStoreType = "bcfks";
       keyManagerType = "PKIX";
     }
@@ -236,6 +236,37 @@ public class HiveAuthUtils {
   public static String getSslProtocolVersion() {
     return buildConfigurationFromDefaultFiles().get(HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION.varname,
         HiveConf.ConfVars.HIVE_SSL_PROTOCOL_VERSION.defaultStrVal);
+  }
+
+  /**
+   * Checks if KeyStoreFileType class contains filed BCFKS. Returns true only if Zookeeper is
+   * from MEP-8.1.0 or higher
+   *
+   * @return true if KeyStoreFileType supports BCFKS
+   */
+  public static boolean isBcfksSupportedByKeyStore() {
+    Class<?> objectClass = KeyStoreFileType.class;
+    for (Field field : objectClass.getFields()) {
+      if (field.getName().equals("BCFKS")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks if cluster supports and configured for BCFKS
+   *
+   * @return true if cluster supports and configured for BCFKS
+   */
+  public static boolean isBcfks(){
+    if (isBcfksSupportedByKeyStore()) {
+      String clientKeyStoreType = getClientKeystoreType();
+      if (clientKeyStoreType != null && !clientKeyStoreType.isEmpty()) {
+        return clientKeyStoreType.equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue());
+      }
+    }
+    return false;
   }
 
 
