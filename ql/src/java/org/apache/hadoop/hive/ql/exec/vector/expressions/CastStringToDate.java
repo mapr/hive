@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hive.common.util.DateParser;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * Casts a string vector to a date vector.
@@ -49,7 +50,6 @@ public class CastStringToDate extends VectorExpression {
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
-
     if (childExpressions != null) {
       super.evaluateChildren(batch);
     }
@@ -58,58 +58,75 @@ public class CastStringToDate extends VectorExpression {
     int[] sel = batch.selected;
     int n = batch.size;
     LongColumnVector outV = (LongColumnVector) batch.cols[outputColumn];
+    boolean[] inputIsNull = inV.isNull;
+    boolean[] outputIsNull = outV.isNull;
 
     if (n == 0) {
-
       // Nothing to do
       return;
     }
 
-    if (inV.noNulls) {
-      outV.noNulls = true;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
+    // We do not need to do a column reset since we are carefully changing the output.
+    outV.isRepeating = false;
+    if (inV.isRepeating) {
+      if (inV.noNulls || !inputIsNull[0]) {
+        outputIsNull[0] = false;
         evaluate(outV, inV, 0);
-      } else if (batch.selectedInUse) {
-        for(int j = 0; j != n; j++) {
-          int i = sel[j];
-          evaluate(outV, inV, i);
-        }
-        outV.isRepeating = false;
       } else {
+        outputIsNull[0] = true;
+        outV.noNulls = false;
+      }
+      outV.isRepeating = true;
+      return;
+    }
+
+    if (inV.noNulls) {
+      if (batch.selectedInUse) {
+        if (!outV.noNulls) {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            outputIsNull[i] = false;
+            evaluate(outV, inV, i);
+          }
+        } else {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            evaluate(outV, inV, i);
+          }
+        }
+      } else {
+        if (!outV.noNulls) {
+          Arrays.fill(outputIsNull, false);
+          outV.noNulls = true;
+        }
         for(int i = 0; i != n; i++) {
           evaluate(outV, inV, i);
         }
-        outV.isRepeating = false;
       }
     } else {
-
-      // Handle case with nulls. Don't do function if the value is null,
-      // because the data may be undefined for a null value.
+      // Do careful maintenance of the outputColVector.noNulls flag.
       outV.noNulls = false;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
-        outV.isNull[0] = inV.isNull[0];
-        if (!inV.isNull[0]) {
-          evaluate(outV, inV, 0);
-        }
-      } else if (batch.selectedInUse) {
+      if (batch.selectedInUse) {
         for(int j = 0; j != n; j++) {
           int i = sel[j];
-          outV.isNull[i] = inV.isNull[i];
-          if (!inV.isNull[i]) {
+          if (!inputIsNull[i]) {
+            outV.isNull[i] = false;
             evaluate(outV, inV, i);
+          } else {
+            outV.isNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       } else {
-        System.arraycopy(inV.isNull, 0, outV.isNull, 0, n);
         for(int i = 0; i != n; i++) {
-          if (!inV.isNull[i]) {
+          if (!inputIsNull[i]) {
+            outV.isNull[i] = false;
             evaluate(outV, inV, i);
+          } else {
+            outV.isNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       }
     }
   }

@@ -25,6 +25,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde.serdeConstants;
 
+import java.util.Arrays;
 
 /**
  * Casts a string vector to a interval year-month vector.
@@ -46,7 +47,6 @@ public class CastStringToIntervalYearMonth extends VectorExpression {
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
-
     if (childExpressions != null) {
       super.evaluateChildren(batch);
     }
@@ -55,58 +55,75 @@ public class CastStringToIntervalYearMonth extends VectorExpression {
     int[] sel = batch.selected;
     int n = batch.size;
     LongColumnVector outV = (LongColumnVector) batch.cols[outputColumn];
+    boolean[] inputIsNull = inV.isNull;
+    boolean[] outputIsNull = outV.isNull;
 
     if (n == 0) {
-
       // Nothing to do
       return;
     }
 
-    if (inV.noNulls) {
-      outV.noNulls = true;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
+    // We do not need to do a column reset since we are carefully changing the output.
+    outV.isRepeating = false;
+    if (inV.isRepeating) {
+      if (inV.noNulls || !inputIsNull[0]) {
+        outputIsNull[0] = false;
         evaluate(outV, inV, 0);
-      } else if (batch.selectedInUse) {
-        for(int j = 0; j != n; j++) {
-          int i = sel[j];
-          evaluate(outV, inV, i);
-        }
-        outV.isRepeating = false;
       } else {
-        for(int i = 0; i != n; i++) {
-          evaluate(outV, inV, i);
-        }
-        outV.isRepeating = false;
+        outputIsNull[0] = true;
+        outV.noNulls = false;
       }
-    } else {
+      outV.isRepeating = true;
+      return;
+    }
 
-      // Handle case with nulls. Don't do function if the value is null,
-      // because the data may be undefined for a null value.
-      outV.noNulls = false;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
-        outV.isNull[0] = inV.isNull[0];
-        if (!inV.isNull[0]) {
-          evaluate(outV, inV, 0);
-        }
-      } else if (batch.selectedInUse) {
-        for(int j = 0; j != n; j++) {
-          int i = sel[j];
-          outV.isNull[i] = inV.isNull[i];
-          if (!inV.isNull[i]) {
+    if (inV.noNulls) {
+      if (batch.selectedInUse) {
+        if (!outV.noNulls) {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            outputIsNull[i] = false;
+            evaluate(outV, inV, i);
+          }
+        } else {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
             evaluate(outV, inV, i);
           }
         }
-        outV.isRepeating = false;
+      } else {
+        if (!outV.noNulls) {
+          Arrays.fill(outputIsNull, false);
+          outV.noNulls = true;
+        }
+        for(int i = 0; i != n; i++) {
+          evaluate(outV, inV, i);
+        }
+      }
+    } else {
+      // Do careful maintenance of the outV.noNulls flag.
+      if (batch.selectedInUse) {
+        for(int j = 0; j != n; j++) {
+          int i = sel[j];
+          if (!inV.isNull[i]) {
+            outputIsNull[i] = false;
+            evaluate(outV, inV, i);
+          } else {
+            outputIsNull[i] = true;
+            outV.noNulls = false;
+          }
+        }
       } else {
         System.arraycopy(inV.isNull, 0, outV.isNull, 0, n);
         for(int i = 0; i != n; i++) {
           if (!inV.isNull[i]) {
+            outputIsNull[i] = false;
             evaluate(outV, inV, i);
+          } else {
+            outputIsNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       }
     }
   }

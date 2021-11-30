@@ -22,6 +22,8 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
+import java.util.Arrays;
+
 /**
  * Cast a decimal to a decimal, accounting for precision and scale changes.
  *
@@ -64,7 +66,6 @@ public class CastDecimalToDecimal extends VectorExpression {
    */
   @Override
   public void evaluate(VectorizedRowBatch batch) {
-
     if (childExpressions != null) {
       super.evaluateChildren(batch);
     }
@@ -73,58 +74,73 @@ public class CastDecimalToDecimal extends VectorExpression {
     int[] sel = batch.selected;
     int n = batch.size;
     DecimalColumnVector outV = (DecimalColumnVector) batch.cols[outputColumn];
+    boolean[] outputIsNull = outV.isNull;
 
     if (n == 0) {
-
       // Nothing to do
       return;
     }
 
-    if (inV.noNulls) {
-      outV.noNulls = true;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
+    // We do not need to do a column reset since we are carefully changing the output.
+    outV.isRepeating = false;
+    if (inV.isRepeating) {
+      outV.isRepeating = true;
+      if (inV.noNulls || !inV.isNull[0]) {
+        outV.isNull[0] = false;
         convert(outV, inV, 0);
-      } else if (batch.selectedInUse) {
-        for(int j = 0; j != n; j++) {
-          int i = sel[j];
-          convert(outV, inV, i);
-        }
-        outV.isRepeating = false;
       } else {
+        outV.isNull[0] = true;
+        outV.noNulls = false;
+      }
+      return;
+    }
+
+    if (inV.noNulls) {
+      if (batch.selectedInUse) {
+        if (!outV.noNulls) {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            outputIsNull[i] = false;
+            convert(outV, inV, i);
+          }
+        } else {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            convert(outV, inV, i);
+          }
+        }
+      } else {
+        if (!outV.noNulls) {
+          Arrays.fill(outputIsNull, false);
+          outV.noNulls = true;
+        }
         for(int i = 0; i != n; i++) {
           convert(outV, inV, i);
         }
-        outV.isRepeating = false;
       }
     } else {
-
-      // Handle case with nulls. Don't do function if the value is null,
-      // because the data may be undefined for a null value.
-      outV.noNulls = false;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
-        outV.isNull[0] = inV.isNull[0];
-        if (!inV.isNull[0]) {
-          convert(outV, inV, 0);
-        }
-      } else if (batch.selectedInUse) {
+      // Do careful maintenance of the outputColVector.noNulls flag.
+      if (batch.selectedInUse) {
         for(int j = 0; j != n; j++) {
           int i = sel[j];
-          outV.isNull[i] = inV.isNull[i];
           if (!inV.isNull[i]) {
+            outV.isNull[i] = false;
             convert(outV, inV, i);
+          } else {
+            outV.isNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       } else {
-        System.arraycopy(inV.isNull, 0, outV.isNull, 0, n);
         for(int i = 0; i != n; i++) {
           if (!inV.isNull[i]) {
+            outV.isNull[i] = false;
             convert(outV, inV, i);
+          } else {
+            outV.isNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       }
     }
   }

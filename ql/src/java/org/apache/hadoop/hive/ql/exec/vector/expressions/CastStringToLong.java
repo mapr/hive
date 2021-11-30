@@ -32,6 +32,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
+import java.util.Arrays;
+
 /**
  * Cast a string to a long.
  *
@@ -163,7 +165,6 @@ public class CastStringToLong extends VectorExpression {
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
-
     if (!integerPrimitiveCategoryKnown) {
       String typeName = getOutputType().toLowerCase();
       TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(typeName);
@@ -179,58 +180,74 @@ public class CastStringToLong extends VectorExpression {
     int[] sel = batch.selected;
     int n = batch.size;
     LongColumnVector outV = (LongColumnVector) batch.cols[outputColumn];
+    boolean[] inputIsNull = inV.isNull;
+    boolean[] outputIsNull = outV.isNull;
 
     if (n == 0) {
-
       // Nothing to do
       return;
     }
 
-    if (inV.noNulls) {
-      outV.noNulls = true;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
+    // We do not need a column reset, we will carefully change the output.
+    outV.isRepeating = false;
+    if (inV.isRepeating) {
+      if (inV.noNulls || !inputIsNull[0]) {
+        outputIsNull[0] = false;
         func(outV, inV, 0);
-      } else if (batch.selectedInUse) {
-        for(int j = 0; j != n; j++) {
-          int i = sel[j];
-          func(outV, inV, i);
-        }
-        outV.isRepeating = false;
       } else {
+        outputIsNull[0] = true;
+        outV.noNulls = false;
+      }
+      outV.isRepeating = true;
+      return;
+    }
+
+    if (inV.noNulls) {
+      if (batch.selectedInUse) {
+        if (!outV.noNulls) {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            outputIsNull[i] = false;
+            func(outV, inV, i);
+          }
+        } else {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            func(outV, inV, i);
+          }
+        }
+      } else {
+        if (!outV.noNulls) {
+          Arrays.fill(outputIsNull, false);
+          outV.noNulls = true;
+        }
         for(int i = 0; i != n; i++) {
           func(outV, inV, i);
         }
-        outV.isRepeating = false;
       }
     } else {
-
-      // Handle case with nulls. Don't do function if the value is null,
-      // because the data may be undefined for a null value.
-      outV.noNulls = false;
-      if (inV.isRepeating) {
-        outV.isRepeating = true;
-        outV.isNull[0] = inV.isNull[0];
-        if (!inV.isNull[0]) {
-          func(outV, inV, 0);
-        }
-      } else if (batch.selectedInUse) {
+      // Do careful maintenance of the outputColVector.noNulls flag.
+      if (batch.selectedInUse) {
         for(int j = 0; j != n; j++) {
           int i = sel[j];
-          outV.isNull[i] = inV.isNull[i];
           if (!inV.isNull[i]) {
+            outV.isNull[i] = false;
             func(outV, inV, i);
+          } else {
+            outV.isNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       } else {
-        System.arraycopy(inV.isNull, 0, outV.isNull, 0, n);
         for(int i = 0; i != n; i++) {
           if (!inV.isNull[i]) {
+            outV.isNull[i] = false;
             func(outV, inV, i);
+          } else {
+            outV.isNull[i] = true;
+            outV.noNulls = false;
           }
         }
-        outV.isRepeating = false;
       }
     }
   }

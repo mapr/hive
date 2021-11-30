@@ -22,6 +22,8 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorExpression;
 import org.apache.hadoop.hive.ql.exec.vector.*;
 import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 
+import java.util.Arrays;
+
 public class CastMillisecondsLongToTimestamp extends VectorExpression {
   private static final long serialVersionUID = 1L;
 
@@ -46,7 +48,6 @@ public class CastMillisecondsLongToTimestamp extends VectorExpression {
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
-
     if (childExpressions != null) {
       this.evaluateChildren(batch);
     }
@@ -56,7 +57,6 @@ public class CastMillisecondsLongToTimestamp extends VectorExpression {
     int[] sel = batch.selected;
     boolean[] inputIsNull = inputColVector.isNull;
     boolean[] outputIsNull = outputColVector.isNull;
-    outputColVector.noNulls = inputColVector.noNulls;
     int n = batch.size;
     long[] vector = inputColVector.vector;
 
@@ -65,39 +65,68 @@ public class CastMillisecondsLongToTimestamp extends VectorExpression {
       return;
     }
 
+    // We do not need to do a column reset since we are carefully changing the output.
+    outputColVector.isRepeating = false;
     if (inputColVector.isRepeating) {
-      //All must be selected otherwise size would be zero
-      //Repeating property will not change.
-      setMilliseconds(outputColVector, vector, 0);
-      // Even if there are no nulls, we always copy over entry 0. Simplifies code.
-      outputIsNull[0] = inputIsNull[0];
+      if (inputColVector.noNulls || !inputIsNull[0]) {
+        outputIsNull[0] = false;
+        setMilliseconds(outputColVector, vector, 0);
+      } else {
+        outputIsNull[0] = true;
+        outputColVector.noNulls = false;
+      }
       outputColVector.isRepeating = true;
-    } else if (inputColVector.noNulls) {
+      return;
+    }
+
+    if (inputColVector.noNulls) {
       if (batch.selectedInUse) {
-        for(int j = 0; j != n; j++) {
-          int i = sel[j];
-          setMilliseconds(outputColVector, vector, i);
+        if (!outputColVector.noNulls) {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            outputIsNull[i] = false;
+            setMilliseconds(outputColVector, vector, i);
+          }
+        } else {
+          for(int j = 0; j != n; j++) {
+            final int i = sel[j];
+            setMilliseconds(outputColVector, vector, i);
+          }
         }
       } else {
+        if (!outputColVector.noNulls) {
+          Arrays.fill(outputIsNull, false);
+          outputColVector.noNulls = true;
+        }
         for(int i = 0; i != n; i++) {
           setMilliseconds(outputColVector, vector, i);
         }
       }
-      outputColVector.isRepeating = false;
-    } else /* there are nulls */ {
+    } else {
+      // Do careful maintenance of the outputColVector.noNulls flag.
       if (batch.selectedInUse) {
         for(int j = 0; j != n; j++) {
           int i = sel[j];
-          setMilliseconds(outputColVector, vector, i);
-          outputIsNull[i] = inputIsNull[i];
+          if (!inputIsNull[i]) {
+            outputIsNull[i] = false;
+            setMilliseconds(outputColVector, vector, i);
+          } else {
+            outputIsNull[i] = true;
+            outputColVector.noNulls = false;
+          }
         }
       } else {
-        for(int i = 0; i != n; i++) {
-          setMilliseconds(outputColVector, vector, i);
-        }
         System.arraycopy(inputIsNull, 0, outputIsNull, 0, n);
+        for(int i = 0; i != n; i++) {
+          if (!inputIsNull[i]) {
+            outputIsNull[i] = false;
+            setMilliseconds(outputColVector, vector, i);
+          } else {
+            outputIsNull[i] = true;
+            outputColVector.noNulls = false;
+          }
+        }
       }
-      outputColVector.isRepeating = false;
     }
   }
 
