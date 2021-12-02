@@ -18,13 +18,15 @@
 package org.apache.hadoop.hive.common.auth;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -47,11 +50,9 @@ import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.HiveConf.applySystemProperties;
 import static org.apache.hadoop.hive.conf.HiveConf.findConfigFile;
 import static org.apache.hadoop.hive.conf.HiveConf.isLoadHiveServer2Config;
@@ -81,7 +82,9 @@ public class HiveAuthUtils {
     String trustStorePath, String trustStorePassWord, String sslProtocolVersion) throws TTransportException {
     TSSLTransportFactory.TSSLTransportParameters params =
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
-    params.setTrustStore(trustStorePath, trustStorePassWord);
+    String trustManagerType = TrustManagerFactory.getDefaultAlgorithm();
+    String trustStoreType =  KeyStore.getDefaultType();
+    params.setTrustStore(trustStorePath, trustStorePassWord, trustManagerType, trustStoreType);
     params.requireClientAuth(true);
     // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT and
     // SSLContext created with the given params
@@ -116,12 +119,8 @@ public class HiveAuthUtils {
       UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
-    String keyStoreType = null;
-    String keyManagerType = null;
-    if (isBcfks()) {
-      keyStoreType = "bcfks";
-      keyManagerType = "PKIX";
-    }
+    String keyManagerType = TrustManagerFactory.getDefaultAlgorithm();
+    String keyStoreType =  KeyStore.getDefaultType();
     params.setKeyStore(keyStorePath, keyStorePassWord, keyManagerType, keyStoreType);
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {
@@ -239,32 +238,15 @@ public class HiveAuthUtils {
   }
 
   /**
-   * Checks if KeyStoreFileType class contains filed BCFKS. Returns true only if Zookeeper is
-   * from MEP-8.1.0 or higher
+   * Checks if cluster supports and configured for FIPS
    *
-   * @return true if KeyStoreFileType supports BCFKS
+   * @return true if cluster supports and configured for FIPS
    */
-  public static boolean isBcfksSupportedByKeyStore() {
-    Class<?> objectClass = KeyStoreFileType.class;
-    for (Field field : objectClass.getFields()) {
-      if (field.getName().equals("BCFKS")) {
+  public static boolean isFips() {
+    Provider[] providers = Security.getProviders();
+    for (Provider provider : providers) {
+      if (provider.getName().toLowerCase().contains("fips"))
         return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Checks if cluster supports and configured for BCFKS
-   *
-   * @return true if cluster supports and configured for BCFKS
-   */
-  public static boolean isBcfks(){
-    if (isBcfksSupportedByKeyStore()) {
-      String clientKeyStoreType = getClientKeystoreType();
-      if (clientKeyStoreType != null && !clientKeyStoreType.isEmpty()) {
-        return clientKeyStoreType.equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue());
-      }
     }
     return false;
   }

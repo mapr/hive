@@ -18,6 +18,7 @@
 
 package org.apache.hive.service.cli.thrift;
 
+import java.security.KeyStore;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 
-import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isBcfks;
+import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isFips;
 
 public class ThriftHttpCLIService extends ThriftCLIService {
   private static final String APPLICATION_THRIFT = "application/x-thrift";
@@ -122,8 +123,9 @@ public class ThriftHttpCLIService extends ThriftCLIService {
             + Arrays.toString(sslContextFactory.getExcludeProtocols()));
         sslContextFactory.setKeyStorePath(keyStorePath);
         sslContextFactory.setKeyStorePassword(keyStorePassword);
+        sslContextFactory.setKeyStoreType(KeyStore.getDefaultType());
         // if fips mode is enabled, key store type should be configured
-        if (isBcfks()) {
+        if (isFips()) {
           Security.addProvider(new BouncyCastleFipsProvider());
           Security.addProvider(new BouncyCastleJsseProvider());
           sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);

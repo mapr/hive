@@ -81,7 +81,7 @@ import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
-import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isBcfks;
+import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isFips;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
@@ -292,7 +292,7 @@ import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
       sslContextFactory.setKeyStorePath(keyStorePath);
       sslContextFactory.setKeyStorePassword(keyStorePassword);
       // if fips mode is enabled, key store type should be configured
-      if (isBcfks()) {
+      if (isFips()) {
         Security.addProvider(new BouncyCastleFipsProvider());
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);

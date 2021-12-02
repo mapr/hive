@@ -21,6 +21,7 @@ package org.apache.hive.http;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.security.KeyStore;
 import java.security.Security;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -93,7 +94,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isBcfks;
+import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isFips;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 /**
@@ -466,6 +467,7 @@ public class HttpServer {
     } else {
       SslContextFactory sslContextFactory = new SslContextFactory();
       sslContextFactory.setKeyStorePath(b.keyStorePath);
+      sslContextFactory.setKeyStoreType(KeyStore.getDefaultType());
       Set<String> excludedSSLProtocols = Sets.newHashSet(
         Splitter.on(",").trimResults().omitEmptyStrings().split(
           Strings.nullToEmpty(b.conf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST))));
@@ -473,7 +475,7 @@ public class HttpServer {
           new String[excludedSSLProtocols.size()]));
       sslContextFactory.setKeyStorePassword(b.keyStorePassword);
       // if fips mode is enabled, key store type should be configured
-      if (isBcfks()) {
+      if (isFips()) {
         Security.addProvider(new BouncyCastleFipsProvider());
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
