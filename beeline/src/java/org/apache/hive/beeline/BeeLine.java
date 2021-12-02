@@ -40,6 +40,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Security;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
@@ -102,6 +103,11 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.hive.jdbc.Utils;
 import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
+
+import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isFips;
 
 /**
  * A console SQL shell with command completion.
@@ -164,6 +170,10 @@ public class BeeLine implements Closeable {
   private static final String HIVE_CONF_PREFIX = "--hiveconf";
   private static final String PROP_FILE_PREFIX = "--property-file";
   static final String PASSWD_MASK = "[passwd stripped]";
+
+  public static final String TRUSTSTORE_PASS_SYSTEM_PROPERTY = "javax.net.ssl.trustStorePassword";
+  public static final String TRUSTSTORE_TYPE_SYSTEM_PROPERTY = "javax.net.ssl.trustStoreType";
+  public static final String BCFKS_KEYSTORE_TYPE = "BCFKS";
 
   private final Map<Object, Object> formats = map(new Object[] {
       "vertical", new VerticalOutputFormat(this),
@@ -514,6 +524,13 @@ public class BeeLine implements Closeable {
    */
   public static void mainWithInputRedirection(String[] args, InputStream inputStream)
       throws IOException {
+    if (isFips()) {
+      String clientTruststorePassword = getClientTruststorePassword();
+      System.setProperty(TRUSTSTORE_TYPE_SYSTEM_PROPERTY, BCFKS_KEYSTORE_TYPE);
+      System.setProperty(TRUSTSTORE_PASS_SYSTEM_PROPERTY, clientTruststorePassword);
+      Security.addProvider(new BouncyCastleFipsProvider());
+      Security.addProvider(new BouncyCastleJsseProvider());
+    }
     BeeLine beeLine = new BeeLine();
     try {
       int status = beeLine.begin(args, inputStream);

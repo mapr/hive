@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -36,6 +37,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.thrift.transport.TSSLTransportFactory;
@@ -47,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getSslProtocolVersion;
-import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isBcfks;
 
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
@@ -64,7 +65,9 @@ public class HiveAuthUtils {
     String trustStorePath, String trustStorePassWord, String sslProtocolVersion) throws TTransportException {
     TSSLTransportFactory.TSSLTransportParameters params =
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
-    params.setTrustStore(trustStorePath, trustStorePassWord);
+    String trustManagerType = TrustManagerFactory.getDefaultAlgorithm();
+    String trustStoreType =  KeyStore.getDefaultType();
+    params.setTrustStore(trustStorePath, trustStorePassWord, trustManagerType, trustStoreType);
     params.requireClientAuth(true);
     // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT and
     // SSLContext created with the given params
@@ -99,12 +102,8 @@ public class HiveAuthUtils {
       UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
-    String keyStoreType = null;
-    String keyManagerType = null;
-    if (isBcfks()) {
-      keyStoreType = "bcfks";
-      keyManagerType = "PKIX";
-    }
+    String keyManagerType = TrustManagerFactory.getDefaultAlgorithm();
+    String keyStoreType =  KeyStore.getDefaultType();
     params.setKeyStore(keyStorePath, keyStorePassWord, keyManagerType, keyStoreType);
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {
