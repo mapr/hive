@@ -4383,9 +4383,6 @@ public class HiveConf extends Configuration {
         + ",fs.s3.awsSecretAccessKey"
         + ",fs.s3n.awsAccessKeyId"
         + ",fs.s3n.awsSecretAccessKey"
-        + ",fs.s3a.access.key"
-        + ",fs.s3a.secret.key"
-        + ",fs.s3a.proxy.password"
         + ",dfs.adls.oauth2.credential"
         + ",fs.adl.oauth2.credential",
         "Comma separated list of configuration options which should not be read by normal user like passwords"),
