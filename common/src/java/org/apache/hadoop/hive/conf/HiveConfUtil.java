@@ -116,17 +116,21 @@ public class HiveConfUtil {
         return ent.getKey().compareTo(ent2.getKey());
       }
     });
+    // do not yield any fs.s3 related property in the log even if it is removed from hidden list
+    String s3Constant = "fs.s3";
     for(Map.Entry<String, String> entry : configVals) {
       //use get() to make sure variable substitution works
-      if(entry.getKey().toLowerCase().contains("path")) {
-        StringTokenizer st = new StringTokenizer(conf.get(entry.getKey()), File.pathSeparator);
-        sb.append(entry.getKey()).append("=\n");
-        while(st.hasMoreTokens()) {
-          sb.append("    ").append(st.nextToken()).append(File.pathSeparator).append('\n');
+      if (!entry.getKey().toLowerCase().contains(s3Constant)) {
+        if(entry.getKey().toLowerCase().contains("path")) {
+          StringTokenizer st = new StringTokenizer(conf.get(entry.getKey()), File.pathSeparator);
+          sb.append(entry.getKey()).append("=\n");
+          while(st.hasMoreTokens()) {
+            sb.append("    ").append(st.nextToken()).append(File.pathSeparator).append('\n');
+          }
         }
-      }
-      else {
-        sb.append(entry.getKey()).append('=').append(conf.get(entry.getKey())).append('\n');
+        else {
+          sb.append(entry.getKey()).append('=').append(conf.get(entry.getKey())).append('\n');
+        }
       }
     }
   }

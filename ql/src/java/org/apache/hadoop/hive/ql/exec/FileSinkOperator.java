@@ -359,7 +359,7 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
       valToPaths = new HashMap<String, FSPaths>();
       taskId = Utilities.getTaskId(hconf);
       initializeSpecPath();
-      fs = specPath.getFileSystem(hconf);
+      fs = FileSystem.get(specPath.toUri(), hconf);
       try {
         createHiveOutputFormat(hconf);
       } catch (HiveException ex) {
