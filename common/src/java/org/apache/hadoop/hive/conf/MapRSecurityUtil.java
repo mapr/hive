@@ -58,20 +58,6 @@ public final class MapRSecurityUtil {
   }
 
   /**
-   * Checks if cluster supports and configured for FIPS
-   *
-   * @return true if cluster supports and configured for FIPS
-   */
-  public static boolean isFips() {
-    Provider[] providers = Security.getProviders();
-    for (Provider provider : providers) {
-      if (provider.getName().toLowerCase().contains("fips"))
-        return true;
-    }
-    return false;
-  }
-
-  /**
    * Check if mapr security is enabled on the cluster.
    * Value auth_method is set in $HIVE_BIN/hive script
    * @return true if mapr security is enabled

@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.metastore;
 
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.DEFAULT_DATABASE_NAME;
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.isIndexTable;
+import static org.apache.hive.FipsUtil.isFips;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -422,10 +423,15 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
               transport = new TSocket(store.getHost(), store.getPort(), clientSocketTimeout);
 
               if(tokenStrForm != null) {
-                // authenticate using delegation tokens via the "DIGEST" mechanism
-                transport = authBridge.createClientTransport(null, store.getHost(),
-                    "DIGEST", tokenStrForm, transport,
-                        MetaStoreUtils.getMetaStoreSaslProperties(conf));
+                if (isFips()) {
+                  // authenticate using delegation tokens via the "SCRAM" mechanism
+                  transport = authBridge.createClientTransport(null, store.getHost(), "SCRAM", tokenStrForm, transport,
+                      MetaStoreUtils.getMetaStoreSaslProperties(conf));
+                } else {
+                  // authenticate using delegation tokens via the "DIGEST" mechanism
+                  transport = authBridge.createClientTransport(null, store.getHost(), "DIGEST", tokenStrForm, transport,
+                      MetaStoreUtils.getMetaStoreSaslProperties(conf));
+                }
               } else {
                 AuthType authType = AuthType.parse(conf.getVar(HiveConf.ConfVars.METASTORE_AUTHENTICATION));
                 switch (authType) {

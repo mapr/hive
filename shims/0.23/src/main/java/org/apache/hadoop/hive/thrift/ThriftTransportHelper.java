@@ -25,13 +25,21 @@ import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.security.scram.ScramClientCallbackHandler;
+import org.apache.hadoop.security.scram.ScramSaslClient;
 import org.apache.hadoop.security.token.Token;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TTransport;
 
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslClientFactory;
 import javax.security.sasl.SaslException;
 import java.io.IOException;
+import java.security.Provider;
+import java.security.Security;
 import java.util.Map;
+
+import static org.apache.hive.FipsUtil.getScramMechanismName;
 
 /**
  * Help class for creating Thrift transport.
@@ -61,6 +69,31 @@ final class ThriftTransportHelper {
     LOG.info(String.format("User authentication with method: %s", SaslRpcServer.AuthMethod.TOKEN.getMechanismName()));
     return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
   }
+
+  /**
+   * Creates Scram thrift transport.
+   *
+   * @param underlyingTransport The underlying transport mechanism, usually a TSocket.
+   * @param tokenStrForm encoded string of the delegation token
+   * @param saslProps map of sasl properties
+   * @return token thrift transport
+   * @throws IOException when can't create thrift transport.
+   */
+  static TTransport createScramTransport(TTransport underlyingTransport, String tokenStrForm,
+      Map<String, String> saslProps) throws IOException {
+    Token<DelegationTokenIdentifier> token = new Token<>();
+    token.decodeFromUrlString(tokenStrForm);
+    String password = new String(ScramClientCallbackHandler.encodePassword(token.getPassword()));
+    String mechanism = getScramMechanismName();
+    SaslClientFactory saslClientFactory = new ScramSaslClient.ScramSaslClientFactory();
+    SaslClient scramSaslClient = saslClientFactory.createSaslClient(new String[] { mechanism }, null, null, null,
+        saslProps, new ScramClientCallbackHandler(password, token));
+    TTransport saslTransport = new TSaslClientTransport(scramSaslClient,
+        underlyingTransport);
+    LOG.info(String.format("User authentication with method: %s", mechanism));
+    return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+  }
+
 
   /**
    * Creates MapRSASL thrift transport.

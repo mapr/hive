@@ -91,7 +91,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isFips;
+import static org.apache.hive.FipsUtil.isFips;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 /**

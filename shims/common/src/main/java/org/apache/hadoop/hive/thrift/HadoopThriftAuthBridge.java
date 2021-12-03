@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.thrift;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.hive.FipsUtil.getScramMechanismName;
 
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -40,13 +41,14 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.hadoop.security.scram.CredentialCache;
+import org.apache.hadoop.security.scram.ScramCredential;
+import org.apache.hadoop.security.scram.ScramCredentialCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.thrift.client.TUGIAssumingTransport;
-import org.apache.hadoop.hive.thrift.DelegationTokenIdentifier;
-import org.apache.hadoop.hive.thrift.DelegationTokenSecretManager;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
@@ -461,6 +463,37 @@ public abstract class HadoopThriftAuthBridge {
     public String getUserAuthMechanism() {
       return userAuthMechanism.get();
     }
+
+    static class SaslScramCallbackHandler implements CallbackHandler {
+      private final CredentialCache.Cache<ScramCredential> credentialCache;
+      private final DelegationTokenSecretManager secretManager;
+
+      public SaslScramCallbackHandler(
+          DelegationTokenSecretManager secretManager) {
+        this.credentialCache = secretManager.getScramCredentialCache();
+        this.secretManager = secretManager;
+      }
+
+      @Override
+      public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+        String defaultName = null;
+        DelegationTokenIdentifier tokenIdentifier = null;
+        for (Callback callback : callbacks) {
+          if (callback instanceof NameCallback) {
+            NameCallback nc = (NameCallback) callback;
+            defaultName = nc.getDefaultName();
+            tokenIdentifier = SaslRpcServer.getIdentifier(defaultName, secretManager);
+          } else if (callback instanceof ScramCredentialCallback) {
+            ScramCredentialCallback scc = (ScramCredentialCallback) callback;
+            String userName = tokenIdentifier.getUser().getUserName();
+            scc.scramCredential(credentialCache.get(userName));
+          } else {
+            throw new UnsupportedCallbackException(callback);
+          }
+        }
+      }
+    }
+
     /** CallbackHandler for SASL DIGEST-MD5 mechanism */
     // This code is pretty much completely based on Hadoop's
     // SaslRpcServer.SaslDigestCallbackHandler - the only reason we could not
@@ -585,6 +618,15 @@ public abstract class HadoopThriftAuthBridge {
                 secretManager);
             endUser = tokenId.getUser().getUserName();
             authenticationMethod.set(AuthenticationMethod.TOKEN);
+          } catch (InvalidToken e) {
+            throw new TException(e.getMessage());
+          }
+        }
+
+        if (getScramMechanismName().equalsIgnoreCase(mechanismName)) {
+          try {
+            TokenIdentifier tokenId = SaslRpcServer.getIdentifier(authId, secretManager);
+            endUser = tokenId.getUser().getUserName();
           } catch (InvalidToken e) {
             throw new TException(e.getMessage());
           }

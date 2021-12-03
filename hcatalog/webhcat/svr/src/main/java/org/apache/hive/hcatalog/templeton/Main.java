@@ -74,8 +74,8 @@ import javax.servlet.http.HttpServletRequest;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.getSslProtocolVersion;
-import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isFips;
 import static org.apache.hadoop.hive.conf.MapRSecurityUtil.isMapRSecurityEnabled;
+import static org.apache.hive.FipsUtil.isFips;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
