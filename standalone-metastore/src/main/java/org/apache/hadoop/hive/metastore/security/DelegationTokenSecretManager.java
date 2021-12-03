@@ -21,11 +21,22 @@ package org.apache.hadoop.hive.metastore.security;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.scram.CredentialCache;
+import org.apache.hadoop.security.scram.ScramCredential;
+import org.apache.hadoop.security.scram.ScramFormatter;
+import org.apache.hadoop.security.scram.ScramMechanism;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.hive.FipsUtil.getScramMechanismName;
+import static org.apache.hive.FipsUtil.isFips;
 
 /**
  * A Hive specific delegation token secret manager.
@@ -34,6 +45,10 @@ import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecret
  */
 public class DelegationTokenSecretManager
     extends AbstractDelegationTokenSecretManager<DelegationTokenIdentifier> {
+  private static final Logger LOG = LoggerFactory.getLogger(DelegationTokenSecretManager.class);
+  private static final boolean isFips = isFips();
+
+  private CredentialCache.Cache<ScramCredential> scramCredentialCache;
 
   /**
    * Create a secret manager
@@ -51,6 +66,12 @@ public class DelegationTokenSecretManager
                                       long delegationTokenRemoverScanInterval) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime,
           delegationTokenRenewInterval, delegationTokenRemoverScanInterval);
+    if(isFips) {
+      CredentialCache credentialCache = new CredentialCache();
+      String mechanismName = getScramMechanismName();
+      credentialCache.createCache(mechanismName, ScramCredential.class);
+      this.scramCredentialCache = credentialCache.cache(mechanismName, ScramCredential.class);
+    }
   }
 
   @Override
@@ -88,6 +109,9 @@ public class DelegationTokenSecretManager
     t.decodeFromUrlString(tokenStrForm);
     String user = UserGroupInformation.getCurrentUser().getUserName();
     cancelToken(t, user);
+    if (isFips) {
+      removeUserFromScramCache(user);
+    }
   }
 
   public synchronized long renewDelegationToken(String tokenStrForm) throws IOException {
@@ -100,6 +124,9 @@ public class DelegationTokenSecretManager
     //shortname during token renewal. Use getShortUserName() until its fixed
     //in HADOOP-15068
     String user = UserGroupInformation.getCurrentUser().getShortUserName();
+    if (isFips) {
+      addUserToScramCache(user, new String(encodePassword(t.getPassword())));
+    }
     return renewToken(t, user);
   }
 
@@ -117,7 +144,32 @@ public class DelegationTokenSecretManager
       new DelegationTokenIdentifier(owner, new Text(renewer), realUser);
     Token<DelegationTokenIdentifier> t = new Token<>(
         ident, this);
+    if (isFips) {
+      addUserToScramCache(owner.toString(), new String(encodePassword(t.getPassword())));
+    }
     return t.encodeToUrlString();
+  }
+
+  public CredentialCache.Cache<ScramCredential> getScramCredentialCache() {
+    return scramCredentialCache;
+  }
+
+  private void addUserToScramCache(String userName, String password){
+    try {
+      ScramFormatter formatter = new ScramFormatter(ScramMechanism.SCRAM_SHA_256);
+      ScramCredential generatedCred = formatter.generateCredential(password, 4096);
+      scramCredentialCache.put(userName, generatedCred);
+    } catch (NoSuchAlgorithmException e) {
+      LOG.error(e.toString());
+    }
+  }
+
+  private void removeUserFromScramCache(String userName) {
+    scramCredentialCache.remove(userName);
+  }
+
+  private static char[] encodePassword(byte[] password) {
+    return new String(Base64.encodeBase64(password)).toCharArray();
   }
 
   public String getUserFromToken(String tokenStr) throws IOException {

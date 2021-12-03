@@ -77,11 +77,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.getSslProtocolVersion;
-import static com.mapr.web.security.ClientXmlSslConfig.getClientKeystoreType;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
-import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isFips;
+import static org.apache.hive.FipsUtil.isFips;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;

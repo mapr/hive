@@ -111,7 +111,7 @@ import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
 import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
-import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isFips;
+import static org.apache.hive.FipsUtil.isFips;
 
 
 /**

@@ -57,7 +57,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 
-import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.isFips;
+import static org.apache.hive.FipsUtil.isFips;
 
 public class ThriftHttpCLIService extends ThriftCLIService {
   private static final String APPLICATION_THRIFT = "application/x-thrift";

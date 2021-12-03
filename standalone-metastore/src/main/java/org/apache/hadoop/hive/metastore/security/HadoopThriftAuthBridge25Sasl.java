@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
@@ -33,6 +35,8 @@ import org.apache.thrift.transport.TTransportException;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
 import static org.apache.hadoop.hive.metastore.security.ThriftTransportHelper.*;
+import static org.apache.hive.FipsUtil.getScramMechanismName;
+import static org.apache.hive.FipsUtil.isFips;
 
 /**
  * Functions that bridge Thrift's SASL transports to Hadoop's SASL callback
@@ -41,8 +45,10 @@ import static org.apache.hadoop.hive.metastore.security.ThriftTransportHelper.*;
  * This is a 0.25/2.x specific implementation and maprsasl enabled
  */
 public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
+  private static final Log LOG = LogFactory.getLog(HadoopThriftAuthBridge25Sasl.class);
 
-  @Override public Server createServer(String keytabFile, String principalConf, String clientConf)
+  @Override
+  public Server createServer(String keytabFile, String principalConf, String clientConf)
       throws TTransportException {
     if (keytabFile.isEmpty() || principalConf.isEmpty()) {
       return new Server();
@@ -51,7 +57,8 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
     }
   }
 
-  @Override public Client createClientWithConf(String authType) {
+  @Override
+  public Client createClientWithConf(String authType) {
     Configuration conf = new Configuration();
     conf.set(HADOOP_SECURITY_AUTHENTICATION, authType);
     UserGroupInformation.setConfiguration(conf);
@@ -78,7 +85,8 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
      *
      * @param saslProps Map of SASL properties
      */
-    @Override public TSaslServerTransport.Factory createSaslServerTransportFactory(Map<String, String> saslProps) {
+    @Override
+    public TSaslServerTransport.Factory createSaslServerTransportFactory(Map<String, String> saslProps) {
       List<RpcAuthMethod> rpcAuthMethods = realUgi.getRpcAuthMethodList();
       TSaslServerTransport.Factory transFactory = new TSaslServerTransport.Factory();
       for (RpcAuthMethod rpcAuthMethod : rpcAuthMethods) {
@@ -100,11 +108,21 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
       transFactory
           .addServerDefinition(AuthMethod.DIGEST.getMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
               new SaslDigestCallbackHandler(secretManager));
+      if (isFips()) {
+        transFactory.addServerDefinition(getScramMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM,
+            saslProps, new SaslScramCallbackHandler(secretManager));
+        LOG.info(String.format("Added SASL Server definition with mechanism %s", getScramMechanismName()));
+      } else {
+        transFactory.addServerDefinition(AuthMethod.TOKEN.getMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM,
+            saslProps, new SaslDigestCallbackHandler(secretManager));
+        LOG.info(String.format("Added SASL Server definition with mechanism %s", AuthMethod.TOKEN.getMechanismName()));
+      }
       return transFactory;
     }
   }
 
-  @Override public Client createClient() {
+  @Override
+  public Client createClient() {
     return new Client();
   }
 
@@ -120,12 +138,15 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
      * @param saslProps the sasl properties to create the client with
      */
 
-    @Override public TTransport createClientTransport(String principalConfig, String host, String methodStr,
+    @Override
+    public TTransport createClientTransport(String principalConfig, String host, String methodStr,
         String tokenStrForm, TTransport underlyingTransport, Map<String, String> saslProps) throws IOException {
       switch (format(methodStr)) {
       case "DIGEST":
       case "TOKEN":
         return createTokenTransport(underlyingTransport, tokenStrForm, saslProps);
+      case "SCRAM":
+        return createScramTransport(underlyingTransport, tokenStrForm, saslProps);
       case "KERBEROS":
         return createKerberosTransport(principalConfig, host, underlyingTransport, saslProps);
       case "MAPRSASL":
