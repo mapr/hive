@@ -304,7 +304,7 @@ public class CompactorMR {
         dirsToSearch.add(baseDir);
       }
     }
-    if (parsedDeltas.size() == 0 && dir.getOriginalFiles().size() == 0) {
+    if (parsedDeltas.isEmpty() && (dir.getOriginalFiles() == null || dir.getOriginalFiles().isEmpty())) {
       // Skip compaction if there's no delta files AND there's no original files
       String minOpenInfo = ".";
       if(writeIds.getMinOpenWriteId() != null) {
