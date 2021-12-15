@@ -72,3 +72,8 @@ export BASEMAPR=${MAPR_HOME:-/opt/mapr}
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
 export LD_LIBRARY_PATH=${BASEMAPR}/lib
+
+
+# Disable the JNDI. This feature has critical RCE vulnerability.
+# when 2.x <= log4j.version <= 2.14.1
+export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Dlog4j2.formatMsgNoLookups=true"
