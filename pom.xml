@@ -160,6 +160,7 @@
     <hk2.version>2.6.1</hk2.version>
     <ivy.version>2.4.0</ivy.version>
     <jackson.version>2.11.1</jackson.version>
+    <jackson-mapper.version>1.9.13-atlassian-5</jackson-mapper.version>
     <jamon.plugin.version>2.3.4</jamon.plugin.version>
     <jamon-runtime.version>2.3.1</jamon-runtime.version>
     <janino.version>2.7.6</janino.version>
@@ -786,6 +787,12 @@
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jaxb-annotations</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+      <!-- to override transitive ones -->
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-mapper-asl</artifactId>
+        <version>${jackson-mapper.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.janino</groupId>
