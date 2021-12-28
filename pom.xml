@@ -63,6 +63,7 @@
     <module>mapr-conf-tool</module>
     <module>mapr-encryption-tool</module>
     <module>mapr-log4j-slf4j-impl</module>
+    <module>mapr-avatica-shaded</module>
     <module>packaging</module>
   </modules>
 
