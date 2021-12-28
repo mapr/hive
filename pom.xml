@@ -64,6 +64,7 @@
     <module>testutils</module>
     <module>mapr-conf-tool</module>
     <module>mapr-encryption-tool</module>
+    <module>mapr-avatica-shaded</module>
     <module>packaging</module>
     <module>storage-api</module>
     <module>standalone-metastore</module>
