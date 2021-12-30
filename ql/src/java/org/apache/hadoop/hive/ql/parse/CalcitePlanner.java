@@ -3019,14 +3019,18 @@ public class CalcitePlanner extends SemanticAnalyzer {
      * @param qb
      * @param srcRel
      * @param outermostOB
-     * @return Pair<RelNode, RelNode> Key- OB RelNode, Value - Input Select for
-     *         top constraining Select
+     * @return RelNode OB RelNode
      * @throws SemanticException
      */
-    private Pair<RelNode, RelNode> genOBLogicalPlan(QB qb, RelNode srcRel, boolean outermostOB)
-        throws SemanticException {
+    private RelNode genOBLogicalPlan(QB qb, Pair<RelNode, RowResolver> selPair,
+        boolean outermostOB) throws SemanticException {
+      // selPair.getKey() is the operator right before OB
+      // selPair.getValue() is RR which only contains columns needed in result
+      // set. Extra columns needed by order by will be absent from it.
+      RelNode srcRel = selPair.getKey();
+      RowResolver selectOutputRR = selPair.getValue();
       RelNode sortRel = null;
-      RelNode originalOBChild = null;
+      RelNode returnRel = null;
 
       QBParseInfo qbp = getQBParseInfo(qb);
       String dest = qbp.getClauseNames().iterator().next();
@@ -3034,7 +3038,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       if (obAST != null) {
         // 1. OB Expr sanity test
-        // in strict mode, in the presence of order by, limit must be specified
+        // in strict mode, in the presence of order by, limit must be
+        // specified
         Integer limit = qb.getParseInfo().getDestLimit(dest);
         if (limit == null) {
           String error = StrictChecks.checkNoLimit(conf);
@@ -3066,11 +3071,28 @@ public class CalcitePlanner extends SemanticAnalyzer {
           obASTExpr = (ASTNode) obASTExprLst.get(i);
           nullObASTExpr = (ASTNode) obASTExpr.getChild(0);
           ASTNode ref = (ASTNode) nullObASTExpr.getChild(0);
-          Map<ASTNode, ExprNodeDesc> astToExprNDescMap = genAllExprNodeDesc(ref, inputRR);
-          ExprNodeDesc obExprNDesc = astToExprNDescMap.get(ref);
-          if (obExprNDesc == null)
+          Map<ASTNode, ExprNodeDesc> astToExprNDescMap = null;
+          ExprNodeDesc obExprNDesc = null;
+          // first try to get it from select
+          // in case of udtf, selectOutputRR may be null.
+          if (selectOutputRR != null) {
+            try {
+              astToExprNDescMap = genAllExprNodeDesc(ref, selectOutputRR);
+              obExprNDesc = astToExprNDescMap.get(ref);
+            } catch (SemanticException ex) {
+              // we can tolerate this as this is the previous behavior
+              LOG.debug("Can not find column in " + ref.getText() + ". The error msg is "
+                  + ex.getMessage());
+            }
+          }
+          // then try to get it from all
+          if (obExprNDesc == null) {
+            astToExprNDescMap = genAllExprNodeDesc(ref, inputRR);
+            obExprNDesc = astToExprNDescMap.get(ref);
+          }
+          if (obExprNDesc == null) {
             throw new SemanticException("Invalid order by expression: " + obASTExpr.toString());
-
+          }
           // 2.2 Convert ExprNode to RexNode
           rnd = converter.convert(obExprNDesc);
 
@@ -3096,8 +3118,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
           } else if (nullObASTExpr.getType() == HiveParser.TOK_NULLS_LAST) {
             nullOrder = RelFieldCollation.NullDirection.LAST;
           } else {
-            throw new SemanticException(
-                "Unexpected null ordering option: " + nullObASTExpr.getType());
+            throw new SemanticException("Unexpected null ordering option: "
+                + nullObASTExpr.getType());
           }
 
           // 2.5 Add to field collations
@@ -3144,7 +3166,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
                   "Duplicates detected when adding columns to RR: see previous message",
                   UnsupportedFeature.Duplicates_in_RR);
             }
-            originalOBChild = srcRel;
           }
         } else {
           if (!RowResolver.add(outputRR, inputRR)) {
@@ -3169,9 +3190,26 @@ public class CalcitePlanner extends SemanticAnalyzer {
             outputRR, sortRel);
         relToHiveRR.put(sortRel, outputRR);
         relToHiveColNameCalcitePosMap.put(sortRel, hiveColNameCalcitePosMap);
-      }
 
-      return (new Pair<RelNode, RelNode>(sortRel, originalOBChild));
+        if (selectOutputRR != null) {
+          List<RexNode> originalInputRefs = Lists.transform(srcRel.getRowType().getFieldList(),
+              new Function<RelDataTypeField, RexNode>() {
+                @Override
+                public RexNode apply(RelDataTypeField input) {
+                  return new RexInputRef(input.getIndex(), input.getType());
+                }
+              });
+          List<RexNode> selectedRefs = Lists.newArrayList();
+          for (int index = 0; index < selectOutputRR.getColumnInfos().size(); index++) {
+            selectedRefs.add(originalInputRefs.get(index));
+          }
+          // We need to add select since order by schema may have more columns than result schema.
+          returnRel = genSelectRelNode(selectedRefs, selectOutputRR, sortRel);
+        } else {
+          returnRel = sortRel;
+        }
+      }
+      return returnRel;
     }
 
     private RelNode genLimitLogicalPlan(QB qb, RelNode srcRel) throws SemanticException {
@@ -4063,9 +4101,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       srcRel = (selectRel == null) ? srcRel : selectRel;
 
       // 6. Build Rel for OB Clause
-      Pair<RelNode, RelNode> obTopProjPair = genOBLogicalPlan(qb, srcRel, outerMostQB);
-      obRel = obTopProjPair.getKey();
-      RelNode topConstrainingProjArgsRel = obTopProjPair.getValue();
+      obRel = genOBLogicalPlan(qb, selPair, outerMostQB);
       srcRel = (obRel == null) ? srcRel : obRel;
 
       // 7. Build Rel for Limit Clause
