@@ -823,12 +823,6 @@ public final class ColumnPrunerProcFactory {
             rs_newsignature.add(rs_oldsignature.get(i));
           }
         }
-        for (FieldNode col : cols) {
-          int index = originalOutputColumnNames.indexOf(col.getFieldName());
-          newOutputColumnNames.add(col.getFieldName());
-          newColList.add(originalColList.get(index));
-          rs_newsignature.add(rs_oldsignature.get(index));
-        }
         op.getSchema().setSignature(rs_newsignature);
         conf.setColList(newColList);
         conf.setOutputColumnNames(newOutputColumnNames);
