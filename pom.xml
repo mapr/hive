@@ -206,10 +206,10 @@
     <tez.version>0.9.2.0-eep-SNAPSHOT</tez.version>
     <slider.version>0.92.0.0-eep-810-incubating-SNAPSHOT</slider.version>
     <super-csv.version>2.2.0</super-csv.version>
-    <spark.version>2.3.0</spark.version>
-    <scala.binary.version>2.11</scala.binary.version>
-    <scala.version>2.11.8</scala.version>
-    <scala-compiler.version>2.11.12</scala-compiler.version>
+    <spark.version>2.4.8</spark.version>
+    <scala.binary.version>2.12</scala.binary.version>
+    <scala.version>2.12.15</scala.version>
+    <scala-compiler.version>2.12.15</scala-compiler.version>
     <snakeyaml.version>1.26</snakeyaml.version>
     <tempus-fugit.version>1.1</tempus-fugit.version>
     <snappy.version>0.2</snappy.version>
