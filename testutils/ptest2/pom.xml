@@ -27,7 +27,7 @@ limitations under the License.
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>2.17.1</log4j2.version>
-    <spring.framework.version>3.2.16.RELEASE</spring.framework.version>
+    <spring.framework.version>4.3.30.RELEASE</spring.framework.version>
     <jclouds.version>2.0.0</jclouds.version>
     <jackson.version>2.9.4</jackson.version>
   </properties>
