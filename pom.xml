@@ -191,7 +191,7 @@
     <mockito-core.version>3.3.3</mockito-core.version>
     <powermock.version>2.0.2</powermock.version>
     <mina.version>2.0.0-M5</mina.version>
-    <netty-all.version>4.1.49.Final</netty-all.version>
+    <netty-all.version>4.1.72.Final</netty-all.version>
     <netty.version>3.10.6.Final</netty.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <parquet.version>1.11.0</parquet.version>
