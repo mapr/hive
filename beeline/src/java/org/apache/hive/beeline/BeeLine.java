@@ -545,11 +545,11 @@ public class BeeLine implements Closeable {
   public static void mainWithInputRedirection(String[] args, InputStream inputStream)
       throws IOException {
     if (isFips()) {
+      Security.addProvider(new BouncyCastleFipsProvider());
+      Security.addProvider(new BouncyCastleJsseProvider());
       String clientTruststorePassword = getClientTruststorePassword();
       System.setProperty(TRUSTSTORE_TYPE_SYSTEM_PROPERTY, BCFKS_KEYSTORE_TYPE);
       System.setProperty(TRUSTSTORE_PASS_SYSTEM_PROPERTY, clientTruststorePassword);
-      Security.addProvider(new BouncyCastleFipsProvider());
-      Security.addProvider(new BouncyCastleJsseProvider());
     }
     BeeLine beeLine = new BeeLine();
     try {
