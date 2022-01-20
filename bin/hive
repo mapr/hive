@@ -719,6 +719,7 @@ if isJmxNeeded; then
 fi
 
 export HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED  --add-opens java.base/java.util.regex=ALL-UNNAMED"
+export HADOOP_OPTS="$HADOOP_OPTS -Ddelegation.token.auth=SCRAM" # possible values are SCRAM, DIGEST, TOKEN
 
 if [ "$TORUN" = "" ] ; then
   echo "Service $SERVICE not found"

@@ -59,4 +59,30 @@ public final class FipsUtil {
     }
     return "SCRAM-SHA-256"; // We use string value for non FIPS clusters and old mapr-cores
   }
+
+  /**
+   * Returns authentication method for Hive delegation tokens. Default value is SCRAM.
+   * Possible values are :
+   *
+   * - SCRAM,
+   * - DIGEST,
+   * - TOKEN.
+   *
+   * TOKEN means the same as DIGEST and created for purposes of readability.
+   * Value delegation.token.auth is Java system property and is set in HIVE_HOME/bin/hive bash script.
+   *
+   * @return authentication method for Hive delegation tokens.
+   */
+  public static String getDelegationTokenAuthMethod() {
+    return System.getProperty("delegation.token.auth", "SCRAM");
+  }
+
+  /**
+   * True if authentication method for Hive delegation tokens is SCRAM.
+   *
+   * @return True if authentication method for Hive delegation tokens is SCRAM
+   */
+  public static boolean isScram() {
+    return "SCRAM".equalsIgnoreCase(getDelegationTokenAuthMethod());
+  }
 }
