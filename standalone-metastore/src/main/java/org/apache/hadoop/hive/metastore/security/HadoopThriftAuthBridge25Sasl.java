@@ -35,6 +35,7 @@ import org.apache.thrift.transport.TTransportException;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
 import static org.apache.hadoop.hive.metastore.security.ThriftTransportHelper.*;
+import static org.apache.hive.FipsUtil.getDelegationTokenAuthMethod;
 import static org.apache.hive.FipsUtil.getScramMechanismName;
 import static org.apache.hive.FipsUtil.isFips;
 
@@ -108,14 +109,20 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
       transFactory
           .addServerDefinition(AuthMethod.DIGEST.getMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
               new SaslDigestCallbackHandler(secretManager));
-      if (isFips()) {
-        transFactory.addServerDefinition(getScramMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM,
-            saslProps, new SaslScramCallbackHandler(secretManager));
+      switch (getDelegationTokenAuthMethod()) {
+      case "SCRAM":
+        transFactory.addServerDefinition(getScramMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
+            new SaslScramCallbackHandler(secretManager));
         LOG.info(String.format("Added SASL Server definition with mechanism %s", getScramMechanismName()));
-      } else {
+        break;
+      case "DIGEST":
+      case "TOKEN":
         transFactory.addServerDefinition(AuthMethod.TOKEN.getMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM,
             saslProps, new SaslDigestCallbackHandler(secretManager));
         LOG.info(String.format("Added SASL Server definition with mechanism %s", AuthMethod.TOKEN.getMechanismName()));
+        break;
+      default:
+        LOG.warn(String.format("Unknown delegation token auth method: %s", getDelegationTokenAuthMethod()));
       }
       return transFactory;
     }

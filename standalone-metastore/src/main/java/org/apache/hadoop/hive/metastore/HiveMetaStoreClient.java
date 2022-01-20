@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.metastore;
 import static org.apache.hadoop.hive.metastore.Warehouse.DEFAULT_DATABASE_NAME;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.getDefaultCatalog;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.prependCatalogToDbName;
+import static org.apache.hive.FipsUtil.getDelegationTokenAuthMethod;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -484,11 +485,11 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
               tokenStrForm = SecurityUtils.getTokenStrForm(tokenSig);
 
               if(tokenStrForm != null) {
-                LOG.info("HMSC::open(): Found delegation token. Creating DIGEST-based thrift connection.");
-                // authenticate using delegation tokens via the "DIGEST" mechanism
-                transport = authBridge.createClientTransport(null, store.getHost(),
-                    "DIGEST", tokenStrForm, transport,
-                        MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
+                String delegationTokenAuthMethod = getDelegationTokenAuthMethod();
+                LOG.info("HMSC::open(): Found delegation token. Creating {} thrift connection.", delegationTokenAuthMethod);
+                // authenticate using delegation tokens
+                transport = authBridge.createClientTransport(null, store.getHost(), delegationTokenAuthMethod,
+                    tokenStrForm, transport, MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
               } else {
                 AuthType authType = AuthType.parse(MetastoreConf.getVar(conf, ConfVars.METASTORE_AUTHENTICATION));
                 switch (authType) {

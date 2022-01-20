@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.hive.FipsUtil.getScramMechanismName;
-import static org.apache.hive.FipsUtil.isFips;
+import static org.apache.hive.FipsUtil.isScram;
 
 /**
  * A Hive specific delegation token secret manager.
@@ -46,7 +46,7 @@ import static org.apache.hive.FipsUtil.isFips;
 public class DelegationTokenSecretManager
     extends AbstractDelegationTokenSecretManager<DelegationTokenIdentifier> {
   private static final Logger LOG = LoggerFactory.getLogger(DelegationTokenSecretManager.class);
-  private static final boolean isFips = isFips();
+  private static final boolean isScram = isScram();
 
   private CredentialCache.Cache<ScramCredential> scramCredentialCache;
 
@@ -66,7 +66,7 @@ public class DelegationTokenSecretManager
                                       long delegationTokenRemoverScanInterval) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime,
           delegationTokenRenewInterval, delegationTokenRemoverScanInterval);
-    if(isFips) {
+    if(isScram) {
       CredentialCache credentialCache = new CredentialCache();
       String mechanismName = getScramMechanismName();
       credentialCache.createCache(mechanismName, ScramCredential.class);
@@ -109,7 +109,7 @@ public class DelegationTokenSecretManager
     t.decodeFromUrlString(tokenStrForm);
     String user = UserGroupInformation.getCurrentUser().getUserName();
     cancelToken(t, user);
-    if (isFips) {
+    if (isScram) {
       removeUserFromScramCache(user);
     }
   }
@@ -124,7 +124,7 @@ public class DelegationTokenSecretManager
     //shortname during token renewal. Use getShortUserName() until its fixed
     //in HADOOP-15068
     String user = UserGroupInformation.getCurrentUser().getShortUserName();
-    if (isFips) {
+    if (isScram) {
       addUserToScramCache(user, new String(encodePassword(t.getPassword())));
     }
     return renewToken(t, user);
@@ -144,7 +144,7 @@ public class DelegationTokenSecretManager
       new DelegationTokenIdentifier(owner, new Text(renewer), realUser);
     Token<DelegationTokenIdentifier> t = new Token<>(
         ident, this);
-    if (isFips) {
+    if (isScram) {
       addUserToScramCache(owner.toString(), new String(encodePassword(t.getPassword())));
     }
     return t.encodeToUrlString();
