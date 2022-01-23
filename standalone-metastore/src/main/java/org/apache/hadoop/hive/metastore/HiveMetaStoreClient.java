@@ -21,7 +21,7 @@ package org.apache.hadoop.hive.metastore;
 import static org.apache.hadoop.hive.metastore.Warehouse.DEFAULT_DATABASE_NAME;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.getDefaultCatalog;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.prependCatalogToDbName;
-import static org.apache.hive.FipsUtil.getDelegationTokenAuthMethod;
+import static org.apache.hive.scram.ScramUtil.getDelegationTokenAuthMethod;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;

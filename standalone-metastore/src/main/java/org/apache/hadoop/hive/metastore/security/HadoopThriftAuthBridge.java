@@ -19,6 +19,8 @@ package org.apache.hadoop.hive.metastore.security;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
@@ -44,6 +46,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.security.scram.CredentialCache;
 import org.apache.hadoop.security.scram.ScramCredential;
 import org.apache.hadoop.security.scram.ScramCredentialCallback;
+import org.apache.hadoop.security.token.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -507,14 +510,38 @@ public abstract class HadoopThriftAuthBridge {
       return userAuthMechanism.get();
     }
 
-    static class SaslScramCallbackHandler implements CallbackHandler {
+    /**
+     * Callback handler for SCRAM SASL mechanism.
+     *
+     * This is copy of Hadoop ScramServerCallbackHandler except one thing:
+     * we did no use Server.Connection which is required in Hadoop but
+     * is not required in Metastore.
+     */
+    static class ScramServerCallbackHandler implements CallbackHandler {
       private final CredentialCache.Cache<ScramCredential> credentialCache;
       private final DelegationTokenSecretManager secretManager;
 
-      public SaslScramCallbackHandler(
+      public ScramServerCallbackHandler(CredentialCache.Cache<ScramCredential> credentialCache,
           DelegationTokenSecretManager secretManager) {
-        this.credentialCache = secretManager.getScramCredentialCache();
+        this.credentialCache = credentialCache;
         this.secretManager = secretManager;
+      }
+
+      public static <T extends TokenIdentifier> T getIdentifier(String id, SecretManager<T> secretManager)
+          throws SecretManager.InvalidToken {
+        byte[] tokenId = decodeIdentifier(id);
+        T tokenIdentifier = secretManager.createIdentifier();
+        try {
+          tokenIdentifier.readFields(new DataInputStream(new ByteArrayInputStream(tokenId)));
+        } catch (IOException e) {
+          throw (SecretManager.InvalidToken) new SecretManager.InvalidToken(
+              "Can't de-serialize tokenIdentifier").initCause(e);
+        }
+        return tokenIdentifier;
+      }
+
+      public static byte[] decodeIdentifier(String identifier) {
+        return Base64.decodeBase64(identifier.getBytes());
       }
 
       @Override
@@ -525,11 +552,10 @@ public abstract class HadoopThriftAuthBridge {
           if (callback instanceof NameCallback) {
             NameCallback nc = (NameCallback) callback;
             defaultName = nc.getDefaultName();
-            tokenIdentifier = SaslRpcServer.getIdentifier(defaultName, secretManager);
+            tokenIdentifier = getIdentifier(defaultName, secretManager);
           } else if (callback instanceof ScramCredentialCallback) {
             ScramCredentialCallback scc = (ScramCredentialCallback) callback;
-            String userName = tokenIdentifier.getUser().getUserName();
-            scc.scramCredential(credentialCache.get(userName));
+            scc.scramCredential(credentialCache.get(tokenIdentifier.getTrackingId()));
           } else {
             throw new UnsupportedCallbackException(callback);
           }

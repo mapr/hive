@@ -29,15 +29,16 @@ import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.scram.ScramServerCallbackHandler;
 import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.hive.scram.CredentialCacheHelper.getScramCache;
 import static org.apache.hadoop.hive.metastore.security.ThriftTransportHelper.*;
-import static org.apache.hive.FipsUtil.getDelegationTokenAuthMethod;
-import static org.apache.hive.FipsUtil.getScramMechanismName;
-import static org.apache.hive.FipsUtil.isFips;
+import static org.apache.hive.scram.ScramUtil.getDelegationTokenAuthMethod;
+import static org.apache.hive.scram.ScramUtil.getScramMechanismName;
 
 /**
  * Functions that bridge Thrift's SASL transports to Hadoop's SASL callback
@@ -112,7 +113,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
       switch (getDelegationTokenAuthMethod()) {
       case "SCRAM":
         transFactory.addServerDefinition(getScramMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
-            new SaslScramCallbackHandler(secretManager));
+            new ScramServerCallbackHandler(getScramCache(), secretManager));
         LOG.info(String.format("Added SASL Server definition with mechanism %s", getScramMechanismName()));
         break;
       case "DIGEST":

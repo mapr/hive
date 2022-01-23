@@ -36,7 +36,8 @@ import javax.security.sasl.SaslException;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.apache.hive.FipsUtil.getScramMechanismName;
+import static org.apache.hive.scram.CredentialCacheHelper.getScramPassword;
+import static org.apache.hive.scram.ScramUtil.getScramMechanismName;
 
 /**
  * Help class for creating Thrift transport.
@@ -80,7 +81,7 @@ final class ThriftTransportHelper {
       Map<String, String> saslProps) throws IOException {
     Token<DelegationTokenIdentifier> token = new Token<>();
     token.decodeFromUrlString(tokenStrForm);
-    String password = new String(ScramClientCallbackHandler.encodePassword(token.getPassword()));
+    String password = new String(getScramPassword());
     String mechanism = getScramMechanismName();
     SaslClientFactory saslClientFactory = new ScramSaslClient.ScramSaslClientFactory();
     SaslClient scramSaslClient = saslClientFactory.createSaslClient(new String[] { mechanism }, null, null, null,
