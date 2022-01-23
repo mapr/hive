@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,31 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hive;
-
-import org.apache.hadoop.security.scram.ScramAuthMethod;
-
-import java.security.Provider;
-import java.security.Security;
+package org.apache.hive.scram;
 
 /**
- * Utility class for FIPS related operations.
+ * This exception is for case when Hive can not create SCRAM formatter.
  */
-public final class FipsUtil {
-  private FipsUtil() {
-  }
-
-  /**
-   * Checks if cluster supports and configured for FIPS
-   *
-   * @return true if cluster supports and configured for FIPS
-   */
-  public static boolean isFips() {
-    Provider[] providers = Security.getProviders();
-    for (Provider provider : providers) {
-      if (provider.getName().toLowerCase().contains("fips"))
-        return true;
-    }
-    return false;
+public class NoScramAlgorithmException extends RuntimeException {
+  public NoScramAlgorithmException(Throwable cause) {
+    super(cause);
   }
 }

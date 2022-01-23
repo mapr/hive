@@ -20,8 +20,7 @@ package org.apache.hadoop.hive.metastore;
 
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.DEFAULT_DATABASE_NAME;
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.isIndexTable;
-import static org.apache.hive.FipsUtil.getDelegationTokenAuthMethod;
-import static org.apache.hive.FipsUtil.isFips;
+import static org.apache.hive.scram.ScramUtil.getDelegationTokenAuthMethod;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;

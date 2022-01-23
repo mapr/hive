@@ -21,22 +21,16 @@ package org.apache.hadoop.hive.thrift;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.scram.CredentialCache;
-import org.apache.hadoop.security.scram.ScramCredential;
-import org.apache.hadoop.security.scram.ScramFormatter;
-import org.apache.hadoop.security.scram.ScramMechanism;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static org.apache.hive.FipsUtil.getScramMechanismName;
-import static org.apache.hive.FipsUtil.isScram;
+import static org.apache.hive.scram.CredentialCacheHelper.addUserToScramCache;
+import static org.apache.hive.scram.CredentialCacheHelper.removeUserFromScramCache;
+import static org.apache.hive.scram.ScramUtil.isScramConfiguredForTokens;
+import static org.apache.hive.scram.ScramUtil.isScramSupported;
 
 /**
  * A Hive specific delegation token secret manager.
@@ -45,10 +39,6 @@ import static org.apache.hive.FipsUtil.isScram;
  */
 public class DelegationTokenSecretManager
     extends AbstractDelegationTokenSecretManager<DelegationTokenIdentifier> {
-  private static final Logger LOG = LoggerFactory.getLogger(DelegationTokenSecretManager.class);
-  private static final boolean isScram = isScram();
-
-  private CredentialCache.Cache<ScramCredential> scramCredentialCache;
 
   /**
    * Create a secret manager
@@ -66,12 +56,6 @@ public class DelegationTokenSecretManager
                                       long delegationTokenRemoverScanInterval) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime,
           delegationTokenRenewInterval, delegationTokenRemoverScanInterval);
-     if(isScram) {
-       CredentialCache credentialCache = new CredentialCache();
-       String mechanismName = getScramMechanismName();
-       credentialCache.createCache(mechanismName, ScramCredential.class);
-       this.scramCredentialCache = credentialCache.cache(mechanismName, ScramCredential.class);
-     }
   }
 
   @Override
@@ -109,8 +93,8 @@ public class DelegationTokenSecretManager
     t.decodeFromUrlString(tokenStrForm);
     String user = UserGroupInformation.getCurrentUser().getUserName();
     cancelToken(t, user);
-    if (isScram) {
-      removeUserFromScramCache(user);
+    if (isScramConfiguredForTokens() && isScramSupported()) {
+      removeUserFromScramCache(getTokenIdentifier(t).getTrackingId());
     }
   }
 
@@ -118,8 +102,8 @@ public class DelegationTokenSecretManager
     Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
     t.decodeFromUrlString(tokenStrForm);
     String user = UserGroupInformation.getCurrentUser().getUserName();
-    if (isScram) {
-      addUserToScramCache(user, new String(encodePassword(t.getPassword())));
+    if (isScramConfiguredForTokens() && isScramSupported()) {
+      addUserToScramCache(getTokenIdentifier(t).getTrackingId());
     }
     return renewToken(t, user);
   }
@@ -135,32 +119,10 @@ public class DelegationTokenSecretManager
       new DelegationTokenIdentifier(owner, new Text(renewer), realUser);
     Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>(
         ident, this);
-    if (isScram) {
-      addUserToScramCache(owner.toString(), new String(encodePassword(t.getPassword())));
+    if (isScramConfiguredForTokens() && isScramSupported()) {
+      addUserToScramCache(getTokenIdentifier(t).getTrackingId());
     }
     return t.encodeToUrlString();
-  }
-
-  public CredentialCache.Cache<ScramCredential> getScramCredentialCache() {
-    return scramCredentialCache;
-  }
-
-  private void addUserToScramCache(String userName, String password){
-    try {
-      ScramFormatter formatter = new ScramFormatter(ScramMechanism.SCRAM_SHA_256);
-      ScramCredential generatedCred = formatter.generateCredential(password, 4096);
-      scramCredentialCache.put(userName, generatedCred);
-    } catch (NoSuchAlgorithmException e) {
-      LOG.error(e.toString());
-    }
-  }
-
-  private void removeUserFromScramCache(String userName) {
-    scramCredentialCache.remove(userName);
-  }
-
-  private static char[] encodePassword(byte[] password) {
-    return new String(Base64.encodeBase64(password)).toCharArray();
   }
 
   public String getUserFromToken(String tokenStr) throws IOException {
