@@ -17,6 +17,7 @@
  */
 package org.apache.hive.scram;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -27,6 +28,7 @@ import org.apache.hadoop.security.scram.ScramMechanism;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import static org.apache.hive.scram.ScramUtil.getScramMechanismName;
 
@@ -37,8 +39,7 @@ public final class CredentialCacheHelper {
   private static final Log LOG = LogFactory.getLog(CredentialCacheHelper.class);
   private static final char[] PASSWORD = readPassword();
   private static final ScramFormatter SCRAM_FORMATTER = createScramFormatter();
-  private static final ScramCredential SCRAM_CREDENTIAL =
-      SCRAM_FORMATTER.generateCredential(new String(getScramPassword()), 4096);
+  private static final ScramCredential SCRAM_CREDENTIAL = createScramCredential();
   private static final CredentialCache.Cache<ScramCredential> SCRAM_CACHE = createScramCache();
 
   private CredentialCacheHelper() {
@@ -71,7 +72,11 @@ public final class CredentialCacheHelper {
     try {
       Configuration conf = new Configuration();
       conf.addResource("scram/scram-site.xml");
-      return conf.getPassword("scram.password");
+      char[] password = conf.getPassword("scram.password");
+      if (password == null) {
+        throw new ScramPasswordException("Scram password is null. Check that scram credentials exist and configured");
+      }
+      return password;
     } catch (IOException e) {
       LOG.error("Error reading scram.password property");
       throw new ScramPasswordException(e);
@@ -84,15 +89,23 @@ public final class CredentialCacheHelper {
    * @return SCRAM-SHA-256 cache.
    */
   private static CredentialCache.Cache<ScramCredential> createScramCache() {
+    LOG.info("Creating SCRAM-SHA-256 cache");
     CredentialCache credentialCache = new CredentialCache();
     credentialCache.createCache(getScramMechanismName(), ScramCredential.class);
-    CredentialCache.Cache<ScramCredential> sha256Cache =
-        credentialCache.cache(getScramMechanismName(), ScramCredential.class);
-    return sha256Cache;
+    return credentialCache.cache(getScramMechanismName(), ScramCredential.class);
   }
 
   /**
-   * Adds user to SCARM credentials cache. Use the same password for all users.
+   * Creates SCRAM credentials.
+   *
+   * @return SCRAM credentials object.
+   */
+  private static ScramCredential createScramCredential() {
+    return SCRAM_FORMATTER.generateCredential(new String(getScramPassword()), 4096);
+  }
+
+  /**
+   * Adds user to SCRAM credentials cache. Use the same password for all users.
    *
    * @param userName name of the user.
    */
@@ -102,7 +115,7 @@ public final class CredentialCacheHelper {
   }
 
   /**
-   * Removes a user from SCARM credentials cache.
+   * Removes a user from SCRAM credentials cache.
    *
    * @param userName name of the user.
    */

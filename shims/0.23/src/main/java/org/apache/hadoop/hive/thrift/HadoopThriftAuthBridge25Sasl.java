@@ -35,7 +35,6 @@ import org.apache.thrift.transport.TTransportException;
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
 import static org.apache.hive.scram.CredentialCacheHelper.getScramCache;
 import static org.apache.hadoop.hive.thrift.ThriftTransportHelper.*;
-import static org.apache.hive.scram.ScramUtil.getDelegationTokenAuthMethod;
 import static org.apache.hive.scram.ScramUtil.getScramMechanismName;
 
 /**
@@ -105,7 +104,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
                   rpcAuthMethod.createCallbackHandler());
         }
       }
-      switch (getDelegationTokenAuthMethod()) {
+      switch (secretManager.getDelegationTokenAuthentication()) {
       case "SCRAM":
         transFactory.addServerDefinition(getScramMechanismName(), null, SaslRpcServer.SASL_DEFAULT_REALM, saslProps,
             new ScramServerCallbackHandler(getScramCache(), secretManager));
@@ -118,7 +117,7 @@ public class HadoopThriftAuthBridge25Sasl extends HadoopThriftAuthBridge23 {
         LOG.info(String.format("Added SASL Server definition with mechanism %s", AuthMethod.TOKEN.getMechanismName()));
         break;
       default:
-        LOG.warn(String.format("Unknown delegation token auth method: %s", getDelegationTokenAuthMethod()));
+        LOG.error(String.format("Unknown delegation token auth method: %s", secretManager.getDelegationTokenAuthentication()));
       }
       return transFactory;
     }

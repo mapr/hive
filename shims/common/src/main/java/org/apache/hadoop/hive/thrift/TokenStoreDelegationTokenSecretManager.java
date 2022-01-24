@@ -67,9 +67,10 @@ public class TokenStoreDelegationTokenSecretManager extends DelegationTokenSecre
   public TokenStoreDelegationTokenSecretManager(long delegationKeyUpdateInterval,
       long delegationTokenMaxLifetime, long delegationTokenRenewInterval,
       long delegationTokenRemoverScanInterval,
-      DelegationTokenStore sharedStore) {
+      DelegationTokenStore sharedStore,
+      String delegationTokenAuthentication) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime, delegationTokenRenewInterval,
-        delegationTokenRemoverScanInterval);
+        delegationTokenRemoverScanInterval, delegationTokenAuthentication);
     this.keyUpdateInterval = delegationKeyUpdateInterval;
     this.tokenRemoverScanInterval = delegationTokenRemoverScanInterval;
 

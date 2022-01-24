@@ -19,6 +19,7 @@ package org.apache.hive.scram;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.scram.ScramAuthMethod;
 
 /**
@@ -28,15 +29,6 @@ public final class ScramUtil {
   private static final Log LOG = LogFactory.getLog(ScramUtil.class);
 
   private ScramUtil() {
-  }
-
-  /**
-   * True if authentication method for Hive delegation tokens is SCRAM.
-   *
-   * @return True if authentication method for Hive delegation tokens is SCRAM
-   */
-  public static boolean isScramConfiguredForTokens() {
-    return "SCRAM".equalsIgnoreCase(getDelegationTokenAuthMethod());
   }
 
   /**
@@ -53,6 +45,7 @@ public final class ScramUtil {
     if (isScramSupported()) {
       return ScramAuthMethod.INSTANCE.getMechanismName();
     }
+    LOG.info("SCRAM is not supported.");
     return "SCRAM-SHA-256"; // We use string value for old mapr-cores
   }
 
@@ -73,19 +66,17 @@ public final class ScramUtil {
   }
 
   /**
-   * Returns authentication method for Hive delegation tokens. Default value is SCRAM.
-   * Possible values are :
+   * Checks if Hadoop configured for SCRAM-SHA-256 in token authentication.
    *
-   * - SCRAM,
-   * - DIGEST,
-   * - TOKEN.
-   *
-   * TOKEN means the same as DIGEST and created for purposes of readability.
-   * Value delegation.token.auth is Java system property and is set in HIVE_HOME/bin/hive bash script.
-   *
-   * @return authentication method for Hive delegation tokens.
+   * @return true if Hadoop uses SCRAM-SHA-256
    */
-  public static String getDelegationTokenAuthMethod() {
-    return System.getProperty("delegation.token.auth", "SCRAM");
+  public static boolean isHadoopConfiguredForScram() {
+    Configuration configuration = new Configuration();
+    configuration.addResource("yarn-site.xml");
+    String hadoopTokenAuth = configuration.get("hadoop.security.token.authentication.method");
+    if (hadoopTokenAuth != null && !hadoopTokenAuth.isBlank()) {
+      return hadoopTokenAuth.toUpperCase().contains("SCRAM");
+    }
+    return false;
   }
 }

@@ -29,7 +29,6 @@ import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecret
 
 import static org.apache.hive.scram.CredentialCacheHelper.addUserToScramCache;
 import static org.apache.hive.scram.CredentialCacheHelper.removeUserFromScramCache;
-import static org.apache.hive.scram.ScramUtil.isScramConfiguredForTokens;
 import static org.apache.hive.scram.ScramUtil.isScramSupported;
 
 /**
@@ -39,6 +38,7 @@ import static org.apache.hive.scram.ScramUtil.isScramSupported;
  */
 public class DelegationTokenSecretManager
     extends AbstractDelegationTokenSecretManager<DelegationTokenIdentifier> {
+  private final String delegationTokenAuthentication;
 
   /**
    * Create a secret manager
@@ -48,14 +48,16 @@ public class DelegationTokenSecretManager
    *        tokens
    * @param delegationTokenRenewInterval how often the tokens must be renewed
    * @param delegationTokenRemoverScanInterval how often the tokens are scanned
-   *        for expired tokens
+   * @param delegationTokenAuthentication possible values are SCRAM, DIGEST
    */
   public DelegationTokenSecretManager(long delegationKeyUpdateInterval,
                                       long delegationTokenMaxLifetime,
                                       long delegationTokenRenewInterval,
-                                      long delegationTokenRemoverScanInterval) {
+                                      long delegationTokenRemoverScanInterval,
+                                      String delegationTokenAuthentication) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime,
           delegationTokenRenewInterval, delegationTokenRemoverScanInterval);
+    this.delegationTokenAuthentication = delegationTokenAuthentication;
   }
 
   @Override
@@ -134,6 +136,15 @@ public class DelegationTokenSecretManager
     DelegationTokenIdentifier id = createIdentifier();
     id.readFields(in);
     return id.getUser().getShortUserName();
+  }
+
+  public String getDelegationTokenAuthentication() {
+    return delegationTokenAuthentication;
+  }
+
+  private boolean isScramConfiguredForTokens() {
+    return delegationTokenAuthentication != null && !delegationTokenAuthentication.isEmpty()
+        && "SCRAM".equalsIgnoreCase(delegationTokenAuthentication);
   }
 }
 

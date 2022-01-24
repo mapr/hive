@@ -2566,6 +2566,8 @@ public class HiveConf extends Configuration {
         "          (Use with property hive.server2.custom.authentication.class)\n" +
         "  PAM: Pluggable authentication module\n" +
         "  NOSASL:  Raw transport"),
+    HIVE_DELEGATION_TOKEN_AUTHENTICATION("hive.delegation.token.authentication",
+        "DIGEST", new StringSet("DIGEST", "SCRAM"), "Delegation token authentication method"),
     HIVE_JDBC_CLIENT_AUTHENTICATION("hive.jdbc.client.authentication", "NONE",
         "Authentication type that comes from jdbc client. Since HiveServer2 supports both"
             + "MAPRSASL and PAM at the same time, we get certain value from jdbc connection string and use this"

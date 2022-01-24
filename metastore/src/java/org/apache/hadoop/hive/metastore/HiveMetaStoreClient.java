@@ -20,7 +20,6 @@ package org.apache.hadoop.hive.metastore;
 
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.DEFAULT_DATABASE_NAME;
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.isIndexTable;
-import static org.apache.hive.scram.ScramUtil.getDelegationTokenAuthMethod;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -419,12 +418,13 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
               // submission.
               String tokenSig = conf.getVar(ConfVars.METASTORE_TOKEN_SIGNATURE);
               // tokenSig could be null
+              String tokenAuth = conf.getVar(ConfVars.HIVE_DELEGATION_TOKEN_AUTHENTICATION);
               tokenStrForm = Utils.getTokenStrForm(tokenSig);
               transport = new TSocket(store.getHost(), store.getPort(), clientSocketTimeout);
 
               if(tokenStrForm != null) {
                 // authenticate using delegation tokens
-                transport = authBridge.createClientTransport(null, store.getHost(), getDelegationTokenAuthMethod(),
+                transport = authBridge.createClientTransport(null, store.getHost(), tokenAuth,
                     tokenStrForm, transport, MetaStoreUtils.getMetaStoreSaslProperties(conf));
               } else {
                 AuthType authType = AuthType.parse(conf.getVar(HiveConf.ConfVars.METASTORE_AUTHENTICATION));
