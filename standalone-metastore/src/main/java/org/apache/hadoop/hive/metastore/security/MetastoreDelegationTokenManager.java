@@ -48,6 +48,8 @@ public class MetastoreDelegationTokenManager {
   public static final String DELEGATION_TOKEN_STORE_ZK_ACL =
       "hive.cluster.delegation.token.store.zookeeper.acl";
   public static final String DELEGATION_TOKEN_STORE_ZK_ZNODE_DEFAULT = "/hivedelegation";
+  public static final String DELEGATION_TOKEN_AUTHENTICATION = "hive.delegation.token.authentication";
+  public static final String DELEGATION_TOKEN_AUTHENTICATION_DEFAULT = "DIGEST";
 
   public MetastoreDelegationTokenManager() {
   }
@@ -70,13 +72,15 @@ public class MetastoreDelegationTokenManager {
         MetastoreConf.ConfVars.DELEGATION_TOKEN_RENEW_INTERVAL, TimeUnit.MILLISECONDS);
     long tokenGcInterval = MetastoreConf.getTimeVar(conf,
         MetastoreConf.ConfVars.DELEGATION_TOKEN_GC_INTERVAL, TimeUnit.MILLISECONDS);
+    String tokenAuth =
+        conf.get(DELEGATION_TOKEN_AUTHENTICATION, DELEGATION_TOKEN_AUTHENTICATION_DEFAULT);
 
     DelegationTokenStore dts = getTokenStore(conf);
     dts.setConf(conf);
     dts.init(hms, smode);
     secretManager =
         new TokenStoreDelegationTokenSecretManager(secretKeyInterval, tokenMaxLifetime,
-            tokenRenewInterval, tokenGcInterval, dts);
+            tokenRenewInterval, tokenGcInterval, dts, tokenAuth);
     secretManager.startThreads();
   }
 

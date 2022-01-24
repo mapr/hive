@@ -24,4 +24,8 @@ public class ScramPasswordException extends RuntimeException {
   public ScramPasswordException(Throwable cause) {
     super(cause);
   }
+
+  public ScramPasswordException(String message) {
+    super(message);
+  }
 }

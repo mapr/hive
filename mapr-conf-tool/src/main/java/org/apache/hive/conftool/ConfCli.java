@@ -77,6 +77,7 @@ public final class ConfCli {
   private static final String JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION = "hs2_report_file";
   private static final String WEBHCAT_HEADERS = "webhcat_headers";
   private static final String WEBUI_HEADERS = "webui_headers";
+  private static final String TOKEN_AUTH = "tokenAuth";
 
   static {
     OptionBuilder.hasArg(false);
@@ -216,6 +217,10 @@ public final class ConfCli {
     OptionBuilder.withArgName("path to headers xml file");
     OptionBuilder.withDescription("Path to headers xml file to configure security headers for HS2 web UI server");
     CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBUI_HEADERS));
+
+    OptionBuilder.hasArg(false);
+    OptionBuilder.withDescription("Configures token authentication depending on cluster type: FIPS enabled or FIPS disabled");
+    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(TOKEN_AUTH));
   }
 
   public static void main(String[] args)
@@ -367,6 +372,10 @@ public final class ConfCli {
     if (isWebUiHeadersConfig(line)) {
       String headers = line.getOptionValue(WEBUI_HEADERS);
       ConfTool.setWebUiHeaders(pathToXmlFile, getAuthMethod(line), headers);
+    }
+
+    if (isTokenAuthMethodConfig(line)){
+      ConfTool.configureTokenAuth(pathToXmlFile, getAuthMethod(line));
     }
   }
 
@@ -560,6 +569,10 @@ public final class ConfCli {
 
   private static boolean isHiveServer2MetricsReporterFileLocation(CommandLine line) {
     return line.hasOption(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
+  }
+
+  private static boolean isTokenAuthMethodConfig(CommandLine line) {
+    return line.hasOption(TOKEN_AUTH);
   }
 
   private static void printHelp() {

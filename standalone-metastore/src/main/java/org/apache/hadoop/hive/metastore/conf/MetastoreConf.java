@@ -864,6 +864,8 @@ public class MetastoreConf {
         "Set this to true for using SSL encryption in HMS server."),
     USE_THRIFT_SASL("metastore.sasl.enabled", "hive.metastore.sasl.enabled", System.getProperty("mapr_sec_enabled") != null && Boolean.parseBoolean(System.getProperty("mapr_sec_enabled")),
         "If true, the metastore Thrift interface will be secured with SASL. Clients must authenticate with Kerberos or MapRSASL."),
+    HIVE_DELEGATION_TOKEN_AUTHENTICATION("hive.delegation.token.authentication", "hive.delegation.token.authentication",
+        "DIGEST", "Delegation token authentication method"),
     METASTORE_AUTHENTICATION("metastore.authentication", "hive.metastore.authentication", "MAPRSASL",
         "Hive Metastore authentication type: KERBEROS, MAPRSASL.  In case of hive.metastore.sasl.enabled = false we simply do not wrap Thrift transport with SASL wrapper and hence there is no need in value NONE."),
     USE_THRIFT_FRAMED_TRANSPORT("metastore.thrift.framed.transport.enabled",

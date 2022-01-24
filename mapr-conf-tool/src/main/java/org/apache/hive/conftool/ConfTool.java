@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.HIVE_DELEGATION_TOKEN_AUTHENTICATION;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_SUPPORT_DYNAMIC_SERVICE_DISCOVERY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_METRICS_JSON_FILE_LOCATION;
@@ -77,6 +78,8 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHO
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_METRICS_JSON_FILE_LOCATION;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METRICS_REPORTER;
+import static org.apache.hive.FipsUtil.isFips;
+import static org.apache.hive.scram.ScramUtil.isHadoopConfiguredForScram;
 
 /**
  *  Helper for configuring Hive.
@@ -1164,6 +1167,30 @@ public final class ConfTool {
     Document doc = readDocument(pathToHiveSite);
     LOG.info("Reading hive-site.xml from path : {}", pathToHiveSite);
     setConnectionUrl(doc, connectionUrl);
+    saveToFile(doc, pathToHiveSite);
+  }
+
+  static void configureTokenAuth(String pathToHiveSite, AuthMethod authMethod)
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
+    Document doc = readDocument(pathToHiveSite);
+    switch (authMethod) {
+    case CUSTOM:
+      return;
+    case MAPRSASL:
+    case KERBEROS:
+      if (isFips() || isHadoopConfiguredForScram()) {
+        set(doc, HIVE_DELEGATION_TOKEN_AUTHENTICATION.getVarname(), "SCRAM");
+        LOG.info("Configured delegation token authentication as SCRAM");
+      } else {
+        set(doc, HIVE_DELEGATION_TOKEN_AUTHENTICATION.getVarname(), "DIGEST");
+        LOG.info("Configured delegation token authentication as DIGEST");
+      }
+      break;
+    case NONE:
+      remove(doc, HIVE_DELEGATION_TOKEN_AUTHENTICATION.getVarname());
+      LOG.info("Removed delegation token authentication");
+      break;
+    }
     saveToFile(doc, pathToHiveSite);
   }
 

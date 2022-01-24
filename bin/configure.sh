@@ -296,6 +296,18 @@ fi
 }
 
 #
+# Configures token authentication depending on cluster type: FIPS enabled or FIPS disabled.
+#
+configure_token_auth(){
+HIVE_SITE="$1"
+authMethod="$2"
+if security_has_to_be_configured ;  then
+  . "${HIVE_BIN}"/conftool -path "$HIVE_SITE" -tokenAuth -authMethod "$authMethod"
+fi
+logInfo "Configured token authentication"
+}
+
+#
 # Set SSL encryption by default for Hive Metastore on MapR SASL cluster
 #
 configure_hmeta_ssl(){
@@ -1007,6 +1019,8 @@ configure_webhcat_headres "$WEBHCAT_SITE" "$authMethod" "$HEADERS"
 configure_hs2_ssl "$HIVE_SITE" "$authMethod"
 
 configure_hs2_webui_headres "$HIVE_SITE" "$authMethod" "$HEADERS"
+
+configure_token_auth "$HIVE_SITE" "$authMethod"
 
 # Comment out according MAPR-HIVE-507 : hive.metastore.use.SSL should be set to false by default
 # TODO: uncomment after hive.metastore.use.SSL back-porting to Hive-1.2 Spark branch
