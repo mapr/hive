@@ -102,20 +102,6 @@ public class ClientXmlSslConfig implements Closeable {
         .copyOf(this.clientKeystorePassword, this.clientKeystorePassword.length);
   }
 
-  public static String getClientKeystoreType(){
-    try (SslConfig sslConfig = getSslConfig()) {
-      return sslConfig.getClientKeystoreType();
-    }
-  }
-
-  public static SslConfig getSslConfig() throws SecurityException {
-    return getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL);
-  }
-
-  public static SslConfig getSslConfig(SslConfig.SslConfigScope scope) throws SecurityException {
-    return new XmlSslConfig(scope);
-  }
-
   @Override
   public void close() {
     char[][] passwords =
