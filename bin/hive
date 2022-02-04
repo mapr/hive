@@ -572,7 +572,8 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
 
   if [ "$isSecure" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
     if [ -n "$JMX_JAR" ] && [ -f ${JMX_JAR} ]; then
-      MAPR_JMX_OPTS="-javaagent:$JMX_JAR -Dmapr.jmx.agent.login.config=$MAPR_JMX_LOGIN_CONFIG"
+      MAPR_JMX_OPTS="-javaagent:$JMX_JAR -Dmapr.jmx.agent.login.config=$MAPR_JMX_LOGIN_CONFIG \
+      -Djava.security.auth.login.config=$MAPR_AUTH_LOGIN_CONFIG_FILE"
       MAPR_JMXAUTH="true"
     else
       echo "jmxagent jar file missed"
@@ -585,8 +586,12 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
       if [ -f "$MAPR_AUTH_LOGIN_CONFIG_FILE" ] && \
          [ -f "${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access" ]; then
         MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
-          -Djava.security.auth.login.config=$MAPR_AUTH_LOGIN_CONFIG_FILE \
           -Dcom.sun.management.jmxremote.access.file=${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access"
+
+        if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+          MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Djava.security.auth.login.config=$MAPR_AUTH_LOGIN_CONFIG_FILE \
+            -Dcom.sun.management.jmxremote.login.config=$MAPR_LOGIN_CONFIG"
+        fi
       else
         echo "JMX login config or access file missing - not starting since we are in secure mode"
         exit 1
@@ -604,12 +609,9 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
   fi
 
 
-
-
   if [ "$MAPR_JMXLOCALHOST" = "true" ] || [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
-    if [ "$MAPR_JMXSSL" = "true" ] && [ "$MAPR_JMXLOCALHOST" = "true" ]; then
-      echo "WARNING: ssl is not supported in localhost. Setting default to false"
-      MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=false"
+      if [ "$MAPR_JMXSSL" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ] ; then
+        MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=true"
     else
       MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=false"
     fi
