@@ -167,7 +167,7 @@
     <httpcomponents.core.version>4.4.13</httpcomponents.core.version>
     <hk2.version>2.6.1</hk2.version>
     <ivy.version>2.4.0</ivy.version>
-    <jackson.version>2.12.0</jackson.version>
+    <jackson.version>2.13.2</jackson.version>
     <jamon.plugin.version>2.3.4</jamon.plugin.version>
     <jamon-runtime.version>2.3.1</jamon-runtime.version>
     <javaewah.version>0.3.2</javaewah.version>
@@ -308,6 +308,11 @@
         <groupId>com.esotericsoftware</groupId>
         <artifactId>kryo-shaded</artifactId>
         <version>${kryo.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-smile-provider</artifactId>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
