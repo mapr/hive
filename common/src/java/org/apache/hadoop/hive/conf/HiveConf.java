@@ -157,7 +157,7 @@ public class HiveConf extends Configuration {
     hiveDefaultURL = classLoader.getResource("hive-default.xml");
 
     // Look for hive-site.xml on the CLASSPATH and log its location if found.
-    hiveSiteURL = findConfigFile(classLoader, "hive-site.xml", true);
+    hiveSiteURL = findConfigFile(classLoader, "hive-site.xml", false);
     hivemetastoreSiteUrl = findConfigFile(classLoader, "hivemetastore-site.xml", false);
     hiveServer2SiteUrl = findConfigFile(classLoader, "hiveserver2-site.xml", false);
 
@@ -5149,7 +5149,7 @@ public class HiveConf extends Configuration {
 
   public HiveConf(Configuration other, Class<?> cls) {
     super(other);
-    initialize(cls);
+    initialize(other, cls);
     initializeMapRSsl();
     initializeAuth();
   }
@@ -5163,7 +5163,9 @@ public class HiveConf extends Configuration {
    * Initializes authentication for HS2 HMS and sasl.enabled if it not has been initialized yet.
    */
   private void initializeAuth() {
-    LOG.info(String.format("Authentication method is %s", getAuthMethod()));
+    if(LOG.isInfoEnabled() && !isSilent()) {
+      LOG.info(String.format("Authentication method is %s", getAuthMethod()));
+    }
     // Do not change value if it already has been configured directly in hive-site.xml
     // Init for HiveServer2 auth
     if (!isInHiveSite(HS2_AUTH)) {
@@ -5204,10 +5206,10 @@ public class HiveConf extends Configuration {
   }
 
   private void logNonEmpty(HiveConf.ConfVars var) {
-    if (var.valType == ConfVars.VarType.BOOLEAN) {
+    if (var.valType == ConfVars.VarType.BOOLEAN && LOG.isInfoEnabled() && !isSilent()) {
       LOG.info(String.format(NON_EMPTY, var.varname, getBoolVar(var)));
     }
-    if (var.valType == ConfVars.VarType.STRING) {
+    if (var.valType == ConfVars.VarType.STRING && LOG.isInfoEnabled() && !isSilent()) {
       LOG.info(String.format(NON_EMPTY, var.varname, getVar(var)));
     }
   }
@@ -5216,8 +5218,14 @@ public class HiveConf extends Configuration {
     LOG.info(String.format(IS_EMPTY_MSG, var.varname));
   }
 
-  private void logVar(HiveConf.ConfVars var){
-    LOG.info(String.format(DEFAULT_MSG, var.varname, getVar(var)));
+  private void logVar(HiveConf.ConfVars var) {
+    if (LOG.isInfoEnabled() && !isSilent()) {
+      LOG.info(String.format(DEFAULT_MSG, var.varname, getVar(var)));
+    }
+  }
+
+  private boolean isSilent() {
+    return getBoolVar(ConfVars.HIVESESSIONSILENT);
   }
 
   /**
@@ -5308,6 +5316,10 @@ public class HiveConf extends Configuration {
   }
 
   private void initialize(Class<?> cls) {
+    initialize(null, cls);
+  }
+
+  private void initialize(Configuration conf, Class<?> cls) {
     hiveJar = (new JobConf(cls)).getJar();
 
     // preserve the original configuration
@@ -5315,6 +5327,9 @@ public class HiveConf extends Configuration {
 
     // Overlay the ConfVars. Note that this ignores ConfVars with null values
     addResource(getConfVarInputStream());
+    if (conf != null) {
+      addResource(conf);
+    }
 
     // Overlay hive-site.xml if it exists
     if (hiveSiteURL != null) {
@@ -5386,10 +5401,12 @@ public class HiveConf extends Configuration {
             trimmed.add(key);
           }
         }
-        if (var == null) {
-          LOG.warn("HiveConf of name {} does not exist", key);
-        } else if (!var.isType(entry.getValue())) {
-          LOG.warn("HiveConf {} expects {} type value", var.varname, var.typeString());
+        if (!isSilent()) {
+          if (var == null) {
+            LOG.warn("HiveConf of name {} does not exist", key);
+          } else if (!var.isType(entry.getValue())) {
+            LOG.warn("HiveConf {} expects {} type value", var.varname, var.typeString());
+          }
         }
       }
       for (String key : trimmed) {

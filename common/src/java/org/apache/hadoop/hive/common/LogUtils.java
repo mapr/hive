@@ -87,15 +87,21 @@ public class LogUtils {
    * @return an message suitable for display to the user
    * @throws LogInitializationException if log4j-exec fails to initialize correctly
    */
-  public static String initHiveExecLog4j()
+  public static String initHiveExecLog4j(Configuration conf)
     throws LogInitializationException {
-    return initHiveLog4jCommon(HiveConf.ConfVars.HIVE_EXEC_LOG4J_FILE);
+    return initHiveLog4jCommon(conf, HiveConf.ConfVars.HIVE_EXEC_LOG4J_FILE);
   }
 
   private static String initHiveLog4jCommon(ConfVars confVarName)
       throws LogInitializationException {
-    HiveConf conf = new HiveConf();
-    return initHiveLog4jCommon(conf, confVarName);
+    HiveConf hiveConf = new HiveConf();
+    return initHiveLog4jCommon(hiveConf, confVarName);
+  }
+
+  private static String initHiveLog4jCommon(Configuration conf, ConfVars confVarName)
+      throws LogInitializationException {
+    HiveConf hiveConf = new HiveConf(conf, HiveConf.class);
+    return initHiveLog4jCommon(hiveConf, confVarName);
   }
 
   @VisibleForTesting

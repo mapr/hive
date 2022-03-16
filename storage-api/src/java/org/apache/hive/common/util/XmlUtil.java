@@ -72,7 +72,6 @@ public final class XmlUtil {
   }
 
   private static boolean propertyExists(Document doc, String property) {
-    LOG.info("Checking that property exists in hive-site.xml : {}", property);
     Node configuration = getConfigurationNode(doc);
     NodeList properties = configuration.getChildNodes();
     int length = properties.getLength();

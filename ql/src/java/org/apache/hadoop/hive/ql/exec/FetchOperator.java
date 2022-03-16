@@ -370,7 +370,7 @@ public class FetchOperator implements Serializable {
     while (getNextPath()) {
       // not using FileInputFormat.setInputPaths() here because it forces a connection to the
       // default file system - which may or may not be online during pure metadata operations
-      job.set("mapred.input.dir", StringUtils.escapeString(currPath.toString()));
+      job.set("mapreduce.input.fileinputformat.inputdir", StringUtils.escapeString(currPath.toString()));
 
       // Fetch operator is not vectorized and as such turn vectorization flag off so that
       // non-vectorized record reader is created below.

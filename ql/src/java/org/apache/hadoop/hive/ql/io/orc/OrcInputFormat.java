@@ -586,9 +586,9 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
    * @return the list of input {@link Path}s for the map-reduce job.
    */
   static Path[] getInputPaths(Configuration conf) throws IOException {
-    String dirs = conf.get("mapred.input.dir");
+    String dirs = conf.get("mapreduce.input.fileinputformat.inputdir");
     if (dirs == null) {
-      throw new IOException("Configuration mapred.input.dir is not defined.");
+      throw new IOException("Configuration mapreduce.input.fileinputformat.inputdir is not defined.");
     }
     String [] list = StringUtils.split(dirs);
     Path[] result = new Path[list.length];

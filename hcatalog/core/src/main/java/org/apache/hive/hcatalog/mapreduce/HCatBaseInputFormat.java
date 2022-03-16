@@ -356,7 +356,7 @@ public abstract class HCatBaseInputFormat
     }
 
     if (!ignoreInvalidPath || !pathStrings.isEmpty()) {
-      jobConf.set("mapred.input.dir", str.toString());
+      jobConf.set("mapreduce.input.fileinputformat.inputdir", str.toString());
     }
     return pathStrings;
   }

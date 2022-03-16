@@ -640,7 +640,7 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
 
   private static void setupChildLog4j(Configuration conf) {
     try {
-      LogUtils.initHiveExecLog4j();
+      LogUtils.initHiveExecLog4j(conf);
       LogDivertAppender.registerRoutingAppender(conf);
       LogDivertAppenderForTest.registerRoutingAppenderIfInTest(conf);
     } catch (LogInitializationException e) {
