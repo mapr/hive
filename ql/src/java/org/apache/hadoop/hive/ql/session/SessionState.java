@@ -241,9 +241,6 @@ public class SessionState {
 
   private String currentDatabase;
 
-  private final String CONFIG_AUTHZ_SETTINGS_APPLIED_MARKER =
-      "hive.internal.ss.authz.settings.applied.marker";
-
   private String userIpAddress;
 
   private SparkSession sparkSession;
@@ -974,6 +971,7 @@ public class SessionState {
 
   private void setAuthorizerV2Config() throws HiveException {
     // avoid processing the same config multiple times, check marker
+    final String CONFIG_AUTHZ_SETTINGS_APPLIED_MARKER = "local.hive.internal.ss.authz.settings.applied.marker";
     if (sessionConf.get(CONFIG_AUTHZ_SETTINGS_APPLIED_MARKER, "").equals(Boolean.TRUE.toString())) {
       return;
     }

@@ -1235,21 +1235,14 @@ public class MetastoreConf {
    * Initializes authentication for HS2 HMS and sasl.enabled if it not has been initialized yet.
    */
   private  static void initializeAuth(Configuration conf) {
-    LOG.info(String.format("Authentication method is %s", getAuthMethod()));
     // Do not change value if it already has been configured directly in hive-site.xml
     // Init for HiveMeta auth
     if (!isInHiveSite(METASTORE_AUTHENTICATION)) {
-      logEmpty(METASTORE_AUTHENTICATION);
       initMetaAuth(conf);
-    } else {
-      logNonEmpty(conf, METASTORE_AUTHENTICATION);
     }
     // Init for HiveMeta use thrift sasl
     if (!isInHiveSite(USE_THRIFT_SASL)) {
-      logEmpty(USE_THRIFT_SASL);
       initUseThriftSasl(conf);
-    } else {
-      logNonEmpty(conf, USE_THRIFT_SASL);
     }
   }
 
@@ -1257,15 +1250,11 @@ public class MetastoreConf {
   private static void initUseThriftSasl(Configuration conf) {
     if (isMapRSecurityEnabled() || isKerberosEnabled()) {
       propagateBoolVar(conf, USE_THRIFT_SASL, true);
-      logBoolVar(conf, USE_THRIFT_SASL);
       return;
     }
     if (isNoSecurity() || isCustomSecurityEnabled()) {
       propagateBoolVar(conf, USE_THRIFT_SASL, false);
-      logBoolVar(conf, USE_THRIFT_SASL);
-      return;
     }
-    logBoolVar(conf, USE_THRIFT_SASL);
   }
 
   private static void propagateBoolVar(Configuration conf, ConfVars var, boolean val){
@@ -1276,28 +1265,6 @@ public class MetastoreConf {
   private static void propagateVar(Configuration conf, ConfVars var, String val){
     conf.set(var.varname, val);
     conf.set(var.hiveName, val);
-  }
-
-
-  private static void logBoolVar(Configuration conf, ConfVars var){
-    LOG.info(String.format("Default value for %s is set to %s", var.varname, getBoolVar(conf, var)));
-  }
-
-  private static void logVar(Configuration conf, ConfVars var){
-    LOG.info(String.format("Default value for %s is set to %s", var.varname, getVar(conf, var)));
-  }
-
-  private static void logEmpty(ConfVars var){
-    LOG.info(String.format("%s is empty", var.varname));
-  }
-
-  private static void logNonEmpty(Configuration conf, ConfVars var) {
-    if (var.defaultVal.getClass() == Boolean.class) {
-      LOG.info(String.format("%s has non empty value %s. Skip changing", var.varname, getBoolVar(conf, var)));
-    }
-    if (var.defaultVal.getClass() == String.class) {
-      LOG.info(String.format("%s has non empty value %s. Skip changing", var.varname, getVar(conf, var)));
-    }
   }
 
 
@@ -1314,7 +1281,6 @@ public class MetastoreConf {
       configureHmsInSecure(conf, hs2Auth);
       return;
     }
-    logVar(conf, METASTORE_AUTHENTICATION);
   }
 
   /**
@@ -1349,12 +1315,10 @@ public class MetastoreConf {
 
   private static void setHmsAuthMapRSasl(Configuration conf){
     propagateVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
-    logVar(conf, METASTORE_AUTHENTICATION);
   }
 
   private static void setHmsAuthKrb(Configuration conf){
     propagateVar(conf, METASTORE_AUTHENTICATION, "KERBEROS");
-    logVar(conf, METASTORE_AUTHENTICATION);
   }
 
   private static boolean isInHiveSite(ConfVars confVars) {
@@ -1377,28 +1341,22 @@ public class MetastoreConf {
     // Hive configured to be MapR secure
     if (isMapRSecurityEnabled()) {
       propagateVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
-      logVar(conf, METASTORE_AUTHENTICATION);
       return;
     }
     // If user enables Sasl for Metastore we expect it to be MapR Sasl.
     if (isMetaStoreSaslEnabled(conf)) {
       propagateVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
-      logVar(conf, METASTORE_AUTHENTICATION);
       return;
     }
     // Hive configured to be custom (usually Kerberos) secure
     if (isCustomSecurityEnabled()) {
       propagateVar(conf, METASTORE_AUTHENTICATION, "KERBEROS");
-      logVar(conf, METASTORE_AUTHENTICATION);
       return;
     }
     // Non secure configuration
     if (isNoSecurity()) {
       propagateVar(conf, METASTORE_AUTHENTICATION, "NONE");
-      logVar(conf, METASTORE_AUTHENTICATION);
-      return;
     }
-    logVar(conf, METASTORE_AUTHENTICATION);
   }
 
   /**

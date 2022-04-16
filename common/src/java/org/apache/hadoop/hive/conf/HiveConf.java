@@ -5163,16 +5163,10 @@ public class HiveConf extends Configuration {
    * Initializes authentication for HS2 HMS and sasl.enabled if it not has been initialized yet.
    */
   private void initializeAuth() {
-    if(LOG.isInfoEnabled() && !isSilent()) {
-      LOG.info(String.format("Authentication method is %s", getAuthMethod()));
-    }
     // Do not change value if it already has been configured directly in hive-site.xml
     // Init for HiveServer2 auth
     if (!isInHiveSite(HS2_AUTH)) {
-      logEmpty(HS2_AUTH);
       initHs2Auth();
-    } else {
-      logNonEmpty(HS2_AUTH);
     }
   }
 
@@ -5186,42 +5180,19 @@ public class HiveConf extends Configuration {
     }
     if (isNoSecurity() || isCustomSecurityEnabled()) {
       setHs2AuthNone();
-      return;
     }
-    logVar(HS2_AUTH);
   }
 
   private void setHs2AuthPam(){
     setVar(HS2_AUTH, "PAM");
-    logVar(HS2_AUTH);
   }
 
   private void setHs2AuthNone(){
     setVar(HS2_AUTH, "NONE");
-    logVar(HS2_AUTH);
   }
 
   private static boolean isInHiveSite(HiveConf.ConfVars confVars) {
     return existsIn(hiveSiteURL, confVars.varname);
-  }
-
-  private void logNonEmpty(HiveConf.ConfVars var) {
-    if (var.valType == ConfVars.VarType.BOOLEAN && LOG.isInfoEnabled() && !isSilent()) {
-      LOG.info(String.format(NON_EMPTY, var.varname, getBoolVar(var)));
-    }
-    if (var.valType == ConfVars.VarType.STRING && LOG.isInfoEnabled() && !isSilent()) {
-      LOG.info(String.format(NON_EMPTY, var.varname, getVar(var)));
-    }
-  }
-
-  private void logEmpty(HiveConf.ConfVars var){
-    LOG.info(String.format(IS_EMPTY_MSG, var.varname));
-  }
-
-  private void logVar(HiveConf.ConfVars var) {
-    if (LOG.isInfoEnabled() && !isSilent()) {
-      LOG.info(String.format(DEFAULT_MSG, var.varname, getVar(var)));
-    }
   }
 
   private boolean isSilent() {
@@ -5259,7 +5230,6 @@ public class HiveConf extends Configuration {
     // Configure keystore path / password for web UI
     if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
-      logVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
@@ -5271,7 +5241,6 @@ public class HiveConf extends Configuration {
     // Configure keystore path / password for Hive Server2
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
-      logVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
@@ -5283,7 +5252,6 @@ public class HiveConf extends Configuration {
     // Configure keystore path / password for Hive Metastore
     if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
-      logVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
@@ -5293,7 +5261,6 @@ public class HiveConf extends Configuration {
     // Configure truststore path / password for Hive Metastore
     if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH).isEmpty()) {
       setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH, getClientTruststoreLocation());
-      logVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH);
     }
 
     if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD).isEmpty()) {
