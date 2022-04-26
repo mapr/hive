@@ -34,6 +34,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <skipAssembly>true</skipAssembly>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
       </plugin>
       <plugin>
