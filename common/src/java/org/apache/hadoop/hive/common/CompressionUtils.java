@@ -42,6 +42,8 @@ import org.apache.tools.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.commons.compress.archivers.tar.TarArchiveOutputStream.BIGNUMBER_POSIX;
+
 /**
  * This class contains methods used for the purposes of compression, this class
  * should not be accessed from code run in Hadoop.
@@ -65,6 +67,7 @@ public class CompressionUtils {
       out = new FileOutputStream(new File(parentDir, outputFile));
       TarArchiveOutputStream tOut = new TarArchiveOutputStream(
           new GzipCompressorOutputStream(new BufferedOutputStream(out)));
+      tOut.setBigNumberMode(BIGNUMBER_POSIX);
 
       for (int i = 0; i < inputFiles.length; i++) {
         File f = new File(parentDir, inputFiles[i]);
