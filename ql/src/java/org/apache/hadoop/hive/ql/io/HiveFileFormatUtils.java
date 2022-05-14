@@ -23,13 +23,11 @@ import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -68,7 +66,6 @@ import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TaskAttemptContext;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapreduce.MRJobConfig;
-import org.apache.hadoop.util.Shell;
 import org.apache.hive.common.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +73,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
+
+import static org.apache.hadoop.hive.common.SymLinkUtils.isSymLinkSupportEnabled;
 
 /**
  * An util class for various Hive file format tasks.
@@ -86,7 +85,6 @@ import com.google.common.collect.ImmutableMap;
  */
 public final class HiveFileFormatUtils {
   private static final Logger LOG = LoggerFactory.getLogger(HiveFileFormatUtils.class);
-  private static final Configuration CONF = new Configuration();
 
   public static class FileChecker {
     // we don't have many file formats that implement InputFormatChecker. We won't be holding
@@ -377,17 +375,17 @@ public final class HiveFileFormatUtils {
   }
 
   public static <T> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
-      Map<Map<Path, T>, Map<Path, T>> cacheMap) throws IOException {
-    return getFromPathRecursively(pathToPartitionInfo, dir, cacheMap, false);
+      Map<Map<Path, T>, Map<Path, T>> cacheMap, Configuration conf) throws IOException {
+    return getFromPathRecursively(pathToPartitionInfo, dir, cacheMap, false, conf);
   }
 
   public static <T> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
-      Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema) throws IOException {
-    return getFromPathRecursively(pathToPartitionInfo, dir, cacheMap, ignoreSchema, false);
+      Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema, Configuration conf) throws IOException {
+    return getFromPathRecursively(pathToPartitionInfo, dir, cacheMap, ignoreSchema, false, conf);
   }
 
   public static <T> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
-      Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema, boolean ifPresent)
+      Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema, boolean ifPresent, Configuration conf)
           throws IOException {
     T part = getFromPath(pathToPartitionInfo, dir);
 
@@ -412,8 +410,8 @@ public final class HiveFileFormatUtils {
     }
 
     // if still null, consider symlink cases
-    if (part == null) {
-      FileSystem maprFs = MapRFileSystem.get(CONF);
+    if (part == null && FileSystem.get(conf) instanceof MapRFileSystem && isSymLinkSupportEnabled(conf)) {
+      FileSystem maprFs = MapRFileSystem.get(conf);
       Map<Path, T> symlinkPathToPartitionInfo = new HashMap<>();
       for (Map.Entry<Path, T> entry : pathToPartitionInfo.entrySet()) {
         boolean isFound = false;

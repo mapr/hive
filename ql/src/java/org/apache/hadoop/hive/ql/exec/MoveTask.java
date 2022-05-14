@@ -74,6 +74,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.hive.common.SymLinkUtils.isSymLinkSupportEnabled;
+
 /**
  * MoveTask implementation.
  **/
@@ -638,7 +640,7 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
         // fix the load-file path in case it is symlink (better do it here in the file check phase)
         srcFs = tbd.getSourcePath().getFileSystem(conf);
         FileStatus sourceFileStatus = srcFs.getFileStatus(tbd.getSourcePath());
-        if (sourceFileStatus.isSymlink()) {
+        if (sourceFileStatus.isSymlink() && isSymLinkSupportEnabled(conf)) {
           Path p = FileUtil.fixSymlinkFileStatus(sourceFileStatus);
           // set fixed path as source path
           tbd.setSourcePath(p);

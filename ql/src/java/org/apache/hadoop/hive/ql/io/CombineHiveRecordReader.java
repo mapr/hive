@@ -115,7 +115,7 @@ public class CombineHiveRecordReader<K extends WritableComparable, V extends Wri
     Map<Map<Path,PartitionDesc>, Map<Path,PartitionDesc>> cache = new HashMap<>();
     for (Path path : hsplit.getPaths()) {
       PartitionDesc otherPart = HiveFileFormatUtils.getFromPathRecursively(
-          pathToPartInfo, path, cache);
+          pathToPartInfo, path, cache, jobConf);
       LOG.debug("Found spec for " + path + " " + otherPart + " from " + pathToPartInfo);
       if (part == null) {
         part = otherPart;

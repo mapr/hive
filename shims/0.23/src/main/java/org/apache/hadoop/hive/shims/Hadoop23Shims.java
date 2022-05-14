@@ -139,7 +139,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
         while (it.hasNext()) {
           FileStatus stat = it.next();
           // After symlink support, we need to consider the symlink case as well for MR jobs
-          if (stat.isSymlink()) {
+          if (stat.isSymlink() && isSymLinkSupportEnabled(job)) {
             links.add(new PathData(FileUtil.fixSymlinkFileStatus(stat).toString(), job.getConfiguration()).stat);
           }
           if (!stat.isFile() || (stat.getLen() == 0 && !stat.getPath().toUri().getScheme().equals("nullscan"))) {
@@ -154,6 +154,16 @@ public class Hadoop23Shims extends HadoopShimsSecure {
         return result;
       }
     };
+  }
+
+  private static boolean isSymLinkSupportEnabled(JobContext job) {
+    if (job != null) {
+      Configuration conf = job.getConfiguration();
+      if (conf != null) {
+        return conf.getBoolean("hive.sym.link.support.enabled", false);
+      }
+    }
+    return false;
   }
 
   @Override

@@ -180,7 +180,7 @@ public class SplitGrouper {
     for (InputSplit s : splits) {
       // this is the bit where we make sure we don't group across partition
       // schema boundaries
-      if (schemaEvolved(s, prevSplit, groupAcrossFiles, work)) {
+      if (schemaEvolved(s, prevSplit, groupAcrossFiles, work, jobConf)) {
         ++i;
         prevSplit = s;
       }
@@ -272,11 +272,11 @@ public class SplitGrouper {
   }
 
   private boolean schemaEvolved(InputSplit s, InputSplit prevSplit, boolean groupAcrossFiles,
-                                       MapWork work) throws IOException {
+                                       MapWork work, Configuration conf) throws IOException {
     boolean retval = false;
     Path path = ((FileSplit) s).getPath();
     PartitionDesc pd = HiveFileFormatUtils.getFromPathRecursively(
-        work.getPathToPartitionInfo(), path, cache);
+        work.getPathToPartitionInfo(), path, cache, conf);
     String currentDeserializerClass = pd.getDeserializerClassName();
     Class<?> currentInputFormatClass = pd.getInputFileFormatClass();
 
@@ -289,7 +289,7 @@ public class SplitGrouper {
       }
       PartitionDesc prevPD =
           HiveFileFormatUtils.getFromPathRecursively(work.getPathToPartitionInfo(),
-              prevPath, cache);
+              prevPath, cache, conf);
       previousDeserializerClass = prevPD.getDeserializerClassName();
       previousInputFormatClass = prevPD.getInputFileFormatClass();
     }

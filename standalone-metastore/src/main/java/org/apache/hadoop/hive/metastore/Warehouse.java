@@ -56,6 +56,8 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import static org.apache.hadoop.hive.common.SymLinkUtils.isSymLinkSupportEnabled;
+
 /**
  * This class represents a warehouse where data of Hive tables is stored
  */
@@ -660,7 +662,7 @@ public class Warehouse {
     try {
       fs = getFs(f);
       FileStatus fstatus = fs.getFileStatus(f);
-      if (fstatus.isSymlink()) {
+      if (fstatus.isSymlink() && isSymLinkSupportEnabled(conf)) {
         fstatus = fs.getFileStatus(FileUtil.fixSymlinkFileStatus(fstatus));
       }
       if (!fstatus.isDir()) {

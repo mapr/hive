@@ -174,7 +174,7 @@ class LlapRecordReader
     int partitionColumnCount = rbCtx.getPartitionColumnCount();
     if (partitionColumnCount > 0) {
       partitionValues = new Object[partitionColumnCount];
-      VectorizedRowBatchCtx.getPartitionValues(rbCtx, mapWork, split, partitionValues);
+      VectorizedRowBatchCtx.getPartitionValues(rbCtx, mapWork, split, partitionValues, jobConf);
     } else {
       partitionValues = null;
     }

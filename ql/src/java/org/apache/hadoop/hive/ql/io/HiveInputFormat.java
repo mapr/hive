@@ -390,7 +390,7 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
     boolean nonNative = false;
     hsplit.getPath().getFileSystem(job);
     PartitionDesc part = HiveFileFormatUtils.getFromPathRecursively(
-        pathToPartitionInfo, hsplit.getPath(), null);
+        pathToPartitionInfo, hsplit.getPath(), null, job);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Found spec for " + hsplit.getPath() + " " + part + " from " + pathToPartitionInfo);
     }

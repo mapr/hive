@@ -65,6 +65,8 @@ import org.apache.hive.common.util.ShutdownHookManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.hive.common.SymLinkUtils.isSymLinkSupportEnabled;
+
 /**
  * Collection of file manipulation utilities common across Hive.
  */
@@ -580,7 +582,7 @@ public final class FileUtils {
   public static boolean mkdir(FileSystem fs, Path f, Configuration conf) throws IOException {
     LOG.info("Creating directory if it doesn't exist: " + f);
     Path fixedPath = f;
-    if (fs.exists(f) && fs.getFileStatus(f).isSymlink()) {
+    if (fs.exists(f) && fs.getFileStatus(f).isSymlink() && isSymLinkSupportEnabled(conf)) {
       fixedPath = FileUtil.fixSymlinkPath(new PathData(f.toString(), fs.getConf()));
     }
     return fs.mkdirs(fixedPath);

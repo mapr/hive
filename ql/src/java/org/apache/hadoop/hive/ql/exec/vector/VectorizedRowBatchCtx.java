@@ -260,17 +260,17 @@ public class VectorizedRowBatchCtx {
       FileSplit split, Object[] partitionValues) throws IOException {
     // TODO: this is invalid for SMB. Keep this for now for legacy reasons. See the other overload.
     MapWork mapWork = Utilities.getMapWork(hiveConf);
-    getPartitionValues(vrbCtx, mapWork, split, partitionValues);
+    getPartitionValues(vrbCtx, mapWork, split, partitionValues, hiveConf);
   }
 
   public static void getPartitionValues(VectorizedRowBatchCtx vrbCtx,
-      MapWork mapWork, FileSplit split, Object[] partitionValues)
+      MapWork mapWork, FileSplit split, Object[] partitionValues, Configuration conf)
       throws IOException {
     Map<Path, PartitionDesc> pathToPartitionInfo = mapWork.getPathToPartitionInfo();
 
     PartitionDesc partDesc = HiveFileFormatUtils
         .getFromPathRecursively(pathToPartitionInfo,
-            split.getPath(), IOPrepareCache.get().getPartitionDescMap());
+            split.getPath(), IOPrepareCache.get().getPartitionDescMap(), conf);
 
     getPartitionValues(vrbCtx, partDesc, partitionValues);
   }

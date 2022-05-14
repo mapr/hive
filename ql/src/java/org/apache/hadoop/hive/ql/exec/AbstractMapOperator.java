@@ -18,13 +18,11 @@
 
 package org.apache.hadoop.hive.ql.exec;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 import com.mapr.fs.MapRFileSystem;
@@ -40,6 +38,8 @@ import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
+
+import static org.apache.hadoop.hive.common.SymLinkUtils.isSymLinkSupportEnabled;
 
 /**
  * Abstract Map operator. Common code of MapOperator and VectorMapOperator.
@@ -110,18 +110,20 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
       Path onepath = normalizePath(onefile, schemaless);
       // onepath can be a symlink, we need to check and fix it
       try {
-        FileSystem maprFS = MapRFileSystem.get(internalConf);
-        FileStatus fileStatus = maprFS.getFileStatus(onepath);
-        if (fileStatus.isSymlink()) { // symlink to a dir; MAPR-HIVE-880
-          onepath = FileUtil.fixSymlinkFileStatus(fileStatus);
-        } else { // symlink to a file; MAPR-HIVE-884
-          FileStatus[] fileStatuses = maprFS.listStatus(onepath);
-          for (FileStatus each : fileStatuses) {
-            if (each.isSymlink()) {
-              Path p = FileUtil.fixSymlinkFileStatus(each);
-              if (maprFS.getFileStatus(p).compareTo(maprFS.getFileStatus(fpath)) == 0) {
-                onepath = p.getParent();
-                break;
+        if (FileSystem.get(internalConf) instanceof MapRFileSystem && isSymLinkSupportEnabled(internalConf)) {
+          FileSystem maprFS = MapRFileSystem.get(internalConf);
+          FileStatus fileStatus = maprFS.getFileStatus(onepath);
+          if (fileStatus.isSymlink()) { // symlink to a dir; MAPR-HIVE-880
+            onepath = FileUtil.fixSymlinkFileStatus(fileStatus);
+          } else { // symlink to a file; MAPR-HIVE-884
+            FileStatus[] fileStatuses = maprFS.listStatus(onepath);
+            for (FileStatus each : fileStatuses) {
+              if (each.isSymlink()) {
+                Path p = FileUtil.fixSymlinkFileStatus(each);
+                if (maprFS.getFileStatus(p).compareTo(maprFS.getFileStatus(fpath)) == 0) {
+                  onepath = p.getParent();
+                  break;
+                }
               }
             }
           }

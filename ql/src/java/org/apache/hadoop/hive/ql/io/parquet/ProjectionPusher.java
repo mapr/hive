@@ -86,7 +86,7 @@ public class ProjectionPusher {
     final Set<String> aliases = new HashSet<String>();
     try {
       ArrayList<String> a = HiveFileFormatUtils.getFromPathRecursively(
-          mapWork.getPathToAliases(), new Path(splitPath), null, false, true);
+          mapWork.getPathToAliases(), new Path(splitPath), null, false, true, jobConf);
       if (a != null) {
         aliases.addAll(a);
       }
@@ -187,7 +187,7 @@ public class ProjectionPusher {
     updateMrWork(jobConf);  // TODO: refactor this in HIVE-6366
     final JobConf cloneJobConf = new JobConf(jobConf);
     final PartitionDesc part = HiveFileFormatUtils.getFromPathRecursively(
-        pathToPartitionInfo, path, null, false, true);
+        pathToPartitionInfo, path, null, false, true, jobConf);
 
     try {
       if ((part != null) && (part.getTableDesc() != null)) {

@@ -3190,6 +3190,10 @@ public class HiveConf extends Configuration {
       "Maximum hive server2 connections per user:ipaddress combination. Any user-ipaddress exceeding this limit will " +
         "not be allowed to connect. Default=0 does not enforce limits."),
 
+    HIVE_SYM_LINK_SUPPORT_ENABLED("hive.sym.link.support.enabled", false, "Indicates whether the"
+        + " support of symlink in Hive is enabled. Enabling this functionality leads to verification of each file and folder to be"
+        + " a symlink, so this may cause performance degradation when there are many small files needed to process."),
+
     // Enable metric collection for HiveServer2
     HIVE_SERVER2_METRICS_ENABLED("hive.server2.metrics.enabled", false, "Enable metrics on the HiveServer2."),
 
