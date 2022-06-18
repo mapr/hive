@@ -63,6 +63,7 @@ import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.transport.TMemoryBuffer;
 
 import com.google.common.annotations.VisibleForTesting;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * QueryPlan can be serialized to disk so that we can restart/resume the
@@ -648,7 +649,7 @@ public class QueryPlan implements Serializable {
       e.printStackTrace();
       return q.toString();
     }
-    return tmb.toString("UTF-8");
+    return tmb.toString(UTF_8);
   }
 
   public String toBinaryString() throws IOException {
