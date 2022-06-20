@@ -135,16 +135,4 @@ public class MockUriInfo implements UriInfo {
     // TODO Auto-generated method stub
     return null;
   }
-
-  @Override
-  public URI relativize(URI uri) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public URI resolve(URI uri) {
-    // TODO Auto-generated method stub
-    return null;
-  }
 }

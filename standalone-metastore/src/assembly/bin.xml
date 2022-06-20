@@ -41,7 +41,6 @@
       <excludes>
         <exclude>org.apache.hadoop:*</exclude>
         <exclude>org.slf4j:*</exclude>
-        <exclude>log4j:*</exclude>
       </excludes>
     </dependencySet>
   </dependencySets>
