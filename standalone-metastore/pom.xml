@@ -25,7 +25,7 @@
 
   <groupId>org.apache.hive</groupId>
   <artifactId>hive-standalone-metastore</artifactId>
-  <version>3.1.3.0-mapr-SNAPSHOT</version>
+  <version>3.1.3.0-eep-900-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Hive Standalone Metastore</name>
 
@@ -87,7 +87,7 @@
     <orc.version>1.5.1</orc.version>
     <protobuf.version>3.11.1</protobuf.version>
     <sqlline.version>1.3.0</sqlline.version>
-    <storage-api.version>2.6.1.0-mapr-SNAPSHOT</storage-api.version>
+    <storage-api.version>2.6.1.0-eep-900-SNAPSHOT</storage-api.version>
 
     <!-- Thrift properties -->
     <thrift.home>you-must-set-this-to-run-thrift</thrift.home>

@@ -29,12 +29,12 @@ function die() {
 #====================================
 
 # The directory,file containing the running pid
-PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-3.1.1/pids/webhcat}
+PID_DIR=${WEBHCAT_PID_DIR:-/opt/mapr/hive/hive-3.1.3/pids/webhcat}
 PID_FILE=${PID_DIR}/hive-mapr-webhcat.pid
 mkdir -p $PID_DIR 2>/dev/null
 
 #default log directory
-WEBHCAT_LOG_DIR=${WEBHCAT_LOG_DIR:-/opt/mapr/hive/hive-3.1.1/logs/`id -u -n`/webhcat}
+WEBHCAT_LOG_DIR=${WEBHCAT_LOG_DIR:-/opt/mapr/hive/hive-3.1.3/logs/`id -u -n`/webhcat}
 
 # The console error log
 ERROR_LOG=${WEBHCAT_LOG_DIR}/webhcat-console-error.log
