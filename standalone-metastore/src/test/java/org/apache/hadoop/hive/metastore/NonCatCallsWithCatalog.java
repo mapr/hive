@@ -96,6 +96,7 @@ public abstract class NonCatCallsWithCatalog {
   @Before
   public void setUp() throws Exception {
     conf = MetastoreConf.newMetastoreConf();
+    conf.set("fs.defaultFS", "file:///");
     MetaStoreTestUtils.setConfForStandloneMode(conf);
 
     // Get new client

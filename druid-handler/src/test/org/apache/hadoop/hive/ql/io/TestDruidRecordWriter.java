@@ -125,6 +125,7 @@ public class TestDruidRecordWriter {
     final File segmentOutputDir = temporaryFolder.newFolder();
     final File workingDir = temporaryFolder.newFolder();
     Configuration config = new Configuration();
+    config.set("fs.defaultFS", "file:///");
 
     final InputRowParser inputRowParser = new MapInputRowParser(new TimeAndDimsParseSpec(
             new TimestampSpec(DruidStorageHandlerUtils.DEFAULT_TIMESTAMP_COLUMN, "auto", null),

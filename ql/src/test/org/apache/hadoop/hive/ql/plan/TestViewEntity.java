@@ -57,6 +57,7 @@ public class TestViewEntity {
   @BeforeClass
   public static void onetimeSetup() throws Exception {
     HiveConf conf = new HiveConf(Driver.class);
+    conf.set("fs.defaultFS", "file:///");
     conf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

@@ -316,6 +316,7 @@ public class TestVectorStringConcat {
         new ExprNodeGenericFuncDesc(TypeInfoFactory.stringTypeInfo, genericUdf, children);
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     ExprNodeEvaluator evaluator =
         ExprNodeEvaluatorFactory.get(exprDesc, hiveConf);
     evaluator.initialize(rowInspector);

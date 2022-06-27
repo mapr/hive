@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
   @BeforeClass public static void setUp() throws Exception {
     conf = MetastoreConf.newMetastoreConf();
+    conf.set("fs.defaultFS", "file:///");
     MetastoreConf.setBoolVar(conf, MetastoreConf.ConfVars.METASTORE_ALLOW_NEW_DB_IN_EXISTING_DIRECTORY, false);
     MetastoreConf.setVar(conf, MetastoreConf.ConfVars.CONNECT_URL_KEY,
         "jdbc:derby:memory:${test.tmp.dir}/junit_metastore_db_test_meta_create_objects;create=true");

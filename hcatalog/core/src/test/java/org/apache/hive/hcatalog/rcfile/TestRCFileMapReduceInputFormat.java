@@ -59,6 +59,7 @@ public class TestRCFileMapReduceInputFormat extends TestCase {
   private static final Logger LOG = LoggerFactory.getLogger(TestRCFileMapReduceInputFormat.class);
 
   private static Configuration conf = new Configuration();
+  static {conf.set("fs.defaultFS", "file:///");}
 
   private static ColumnarSerDe serDe;
 
@@ -210,6 +211,7 @@ public class TestRCFileMapReduceInputFormat extends TestCase {
     Path testFile = new Path(testDir, "test_rcfile");
     fs.delete(testFile, true);
     Configuration cloneConf = new Configuration(conf);
+    cloneConf.set("fs.defaultFS", "file:///");
     RCFileOutputFormat.setColumnNumber(cloneConf, bytesArray.length);
     cloneConf.setInt(HiveConf.ConfVars.HIVE_RCFILE_RECORD_INTERVAL.varname, intervalRecordCount);
 
@@ -228,6 +230,7 @@ public class TestRCFileMapReduceInputFormat extends TestCase {
 
     RCFileMapReduceInputFormat<LongWritable, BytesRefArrayWritable> inputFormat = new RCFileMapReduceInputFormat<LongWritable, BytesRefArrayWritable>();
     Configuration jonconf = new Configuration(cloneConf);
+    jonconf.set("fs.defaultFS", "file:///");
     jonconf.set("mapred.input.dir", testDir.toString());
     JobContext context = new Job(jonconf);
     HiveConf.setLongVar(context.getConfiguration(),

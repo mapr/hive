@@ -257,6 +257,7 @@ public class TestVectorizedListColumnReader extends VectorizedColumnReaderTestBa
 
   private void testListRead(boolean isDictionaryEncoding, String type, int elementNum) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     setTypeConfiguration(type, conf);
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
@@ -298,6 +299,7 @@ public class TestVectorizedListColumnReader extends VectorizedColumnReaderTestBa
 
   private void testRepeateListRead(int elementNum, boolean isNull) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(IOConstants.COLUMNS, "list_int32_field_for_repeat_test");
     conf.set(IOConstants.COLUMNS_TYPES, "array<int>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -329,6 +331,7 @@ public class TestVectorizedListColumnReader extends VectorizedColumnReaderTestBa
 
   private void testUnRepeateStringWithoutNullListRead() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(IOConstants.COLUMNS, "list_binary_field_for_repeat_test");
     conf.set(IOConstants.COLUMNS_TYPES, "array<string>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -348,6 +351,7 @@ public class TestVectorizedListColumnReader extends VectorizedColumnReaderTestBa
 
   private void testVectorizedRowBatchSizeChangeListRead() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(IOConstants.COLUMNS, "list_binary_field_for_repeat_test");
     conf.set(IOConstants.COLUMNS_TYPES, "array<string>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);

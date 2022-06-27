@@ -42,6 +42,7 @@ public class TestPrivilegesV1 extends PrivilegesTestBase{
     queryState = new QueryState.Builder().build();
     db = Mockito.mock(Hive.class);
     HiveConf hiveConf = queryState.getConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     table = new Table(DB, TABLE);
     partition = new Partition(table);
     hiveConf

@@ -51,6 +51,7 @@ public class TestHdfsUtils {
   @Test
   public void testSetFullFileStatusFailInheritGroup() throws IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.namenode.acls.enabled", "false");
 
     HdfsUtils.HadoopFileStatus mockHadoopFileStatus = mock(HdfsUtils.HadoopFileStatus.class);
@@ -72,6 +73,7 @@ public class TestHdfsUtils {
   @Test
   public void testSetFullFileStatusFailInheritAcls() throws IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.namenode.acls.enabled", "true");
 
     HdfsUtils.HadoopFileStatus mockHadoopFileStatus = mock(HdfsUtils.HadoopFileStatus.class);
@@ -97,6 +99,7 @@ public class TestHdfsUtils {
   @Test
   public void testSetFullFileStatusFailInheritPerms() throws IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.namenode.acls.enabled", "false");
 
     HdfsUtils.HadoopFileStatus mockHadoopFileStatus = mock(HdfsUtils.HadoopFileStatus.class);
@@ -118,6 +121,7 @@ public class TestHdfsUtils {
   @Test
   public void testSetFullFileStatusFailInheritGroupRecursive() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.namenode.acls.enabled", "false");
     String currentUserName = UserGroupInformation.getCurrentUser().getUserName();
 
@@ -149,6 +153,7 @@ public class TestHdfsUtils {
   @Test
   public void testSetFullFileStatusFailInheritAclsRecursive() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.namenode.acls.enabled", "true");
 
     Path fakeTarget = new Path("fakePath");
@@ -177,6 +182,7 @@ public class TestHdfsUtils {
   @Test
   public void testSetFullFileStatusFailInheritPermsRecursive() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.namenode.acls.enabled", "false");
 
     Path fakeTarget = new Path("fakePath");

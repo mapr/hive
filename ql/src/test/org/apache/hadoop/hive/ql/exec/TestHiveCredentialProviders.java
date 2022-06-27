@@ -68,6 +68,7 @@ public class TestHiveCredentialProviders {
   @Before
   public void resetConfig() {
     jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
   }
   /*
    * Tests whether credential provider is updated when HIVE_JOB_CREDSTORE_PASSWORD is set and when

@@ -125,6 +125,7 @@ public class TestHiveBinarySearchRecordReader extends TestCase {
 
   private void init() throws IOException {
     conf = new JobConf();
+    conf.set("fs.defaultFS", "file:///");
     resetIOContext();
     rcfReader = mock(RCFileRecordReader.class);
     when(rcfReader.next((LongWritable)anyObject(),

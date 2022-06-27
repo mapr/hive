@@ -63,6 +63,7 @@ public class TestHiveProtoLoggingHook {
   @Before
   public void setup() throws Exception {
     conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
     tmpFolder = folder.newFolder().getAbsolutePath();
     conf.set(HiveProtoLoggingHook.HIVE_EVENTS_BASE_PATH, tmpFolder);
     QueryState state = new QueryState.Builder().withHiveConf(conf).build();

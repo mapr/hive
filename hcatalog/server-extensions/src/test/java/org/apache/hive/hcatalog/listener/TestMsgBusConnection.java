@@ -67,6 +67,7 @@ public class TestMsgBusConnection {
     System.setProperty("java.naming.provider.url", "tcp://localhost:61616");
     connectClient();
     HiveConf hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.set(ConfVars.METASTORE_EVENT_LISTENERS.varname, NotificationListener.class.getName());
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");

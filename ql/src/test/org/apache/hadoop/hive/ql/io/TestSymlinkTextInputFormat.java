@@ -72,7 +72,9 @@ public class TestSymlinkTextInputFormat extends TestCase {
   @Override
   protected void setUp() throws IOException {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     job = new JobConf(conf);
+    job.set("fs.defaultFS", "file:///");
 
     TableDesc tblDesc = Utilities.defaultTd;
     PartitionDesc partDesc = new PartitionDesc(tblDesc, null);
@@ -132,6 +134,7 @@ public class TestSymlinkTextInputFormat extends TestCase {
 
 
     HiveConf hiveConf = new HiveConf(TestSymlinkTextInputFormat.class);
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

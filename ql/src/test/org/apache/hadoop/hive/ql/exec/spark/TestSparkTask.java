@@ -93,6 +93,7 @@ public class TestSparkTask {
     when(jobSts.getRemoteJobState()).thenReturn(State.CANCELLED);
     when(jobSts.isRemoteActive()).thenReturn(true);
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     RemoteSparkJobMonitor remoteSparkJobMonitor = new RemoteSparkJobMonitor(hiveConf, jobSts);
     Assert.assertEquals(remoteSparkJobMonitor.startMonitor(), 3);
   }

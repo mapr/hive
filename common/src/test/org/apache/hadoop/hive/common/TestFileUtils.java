@@ -121,6 +121,7 @@ public class TestFileUtils {
   @Test
   public void testGetJarFilesByPath() {
     HiveConf conf = new HiveConf(this.getClass());
+    conf.set("fs.defaultFS", "file:///");
     File tmpDir = Files.createTempDir();
     String jarFileName1 = tmpDir.getAbsolutePath() + File.separator + "a.jar";
     String jarFileName2 = tmpDir.getAbsolutePath() + File.separator + "b.jar";
@@ -214,6 +215,7 @@ public class TestFileUtils {
     Path copySrc = new Path("copySrc");
     Path copyDst = new Path("copyDst");
     HiveConf conf = new HiveConf(TestFileUtils.class);
+    conf.set("fs.defaultFS", "file:///");
 
     FileSystem mockFs = mock(FileSystem.class);
     when(mockFs.getUri()).thenReturn(URI.create("maprfs:///"));
@@ -235,6 +237,7 @@ public class TestFileUtils {
     Path copySrc = new Path("copySrc");
     Path copyDst = new Path("copyDst");
     HiveConf conf = new HiveConf(TestFileUtils.class);
+    conf.set("fs.defaultFS", "file:///");
 
     FileSystem fs = copySrc.getFileSystem(conf);
 

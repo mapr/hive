@@ -156,6 +156,7 @@ public class TestArrowColumnarBatchSerDe {
   @Before
   public void setUp() {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
   }
 
   private static ByteWritable byteW(int value) {

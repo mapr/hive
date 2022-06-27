@@ -44,6 +44,7 @@ public class TestCatalogNonDefaultClient extends NonCatCallsWithCatalog {
   protected IMetaStoreClient getClient() throws Exception {
 
     Configuration svrConf = new Configuration(conf);
+    svrConf.set("fs.defaultFS", "file:///");
     int port = MetaStoreTestUtils.startMetaStoreWithRetry(HadoopThriftAuthBridge.getBridge(),
         svrConf);
     // Only set the default catalog on the client.

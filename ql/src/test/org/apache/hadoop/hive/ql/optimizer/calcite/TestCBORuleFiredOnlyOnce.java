@@ -52,6 +52,7 @@ public class TestCBORuleFiredOnlyOnce {
   public void testRuleFiredOnlyOnce() {
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
 
     // Create HepPlanner
     HepProgramBuilder programBuilder = new HepProgramBuilder();

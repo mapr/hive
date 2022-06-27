@@ -68,6 +68,7 @@ public class TestSparkClient {
   // Timeouts are bad... mmmkay.
   private static final long TIMEOUT = 20;
   private static final HiveConf HIVECONF = new HiveConf();
+  static {HIVECONF.set("fs.defaultFS", "file:///");}
 
   static {
     HIVECONF.set("hive.spark.client.connect.timeout", "30000ms");

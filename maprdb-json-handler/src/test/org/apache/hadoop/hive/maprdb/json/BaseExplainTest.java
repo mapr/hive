@@ -37,6 +37,7 @@ abstract class BaseExplainTest {
 
   void setup() throws HiveException {
     conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
     queryState = new QueryState.Builder().withHiveConf(conf).nonIsolated().build();
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER, SQLStdHiveAuthorizerFactory.class.getName());
 

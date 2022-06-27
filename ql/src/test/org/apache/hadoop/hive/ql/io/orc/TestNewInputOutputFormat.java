@@ -73,6 +73,7 @@ public class TestNewInputOutputFormat {
   @Before
   public void setup() throws Exception {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("mapred.job.tracker", "local");
     conf.set("fs.default.name", "local");
     conf.set("mapred.local.dir", workDir + File.separator + this.getClass().getSimpleName()

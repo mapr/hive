@@ -32,6 +32,7 @@ public class TestCLIServiceConnectionLimits {
 
   private int limit = 10;
   private HiveConf conf = new HiveConf();
+  {conf.set("fs.defaultFS", "file:///");}
 
   @Test
   public void testNoLimit() throws HiveSQLException {

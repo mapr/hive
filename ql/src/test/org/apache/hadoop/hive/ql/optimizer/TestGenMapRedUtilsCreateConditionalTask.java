@@ -64,6 +64,7 @@ public class TestGenMapRedUtilsCreateConditionalTask {
   @BeforeClass
   public static void initializeSessionState() {
     hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
   }
 
   @Before

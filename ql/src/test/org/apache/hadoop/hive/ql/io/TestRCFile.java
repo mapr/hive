@@ -106,6 +106,7 @@ public class TestRCFile {
   @Before
   public void setup() throws Exception {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     ColumnProjectionUtils.setReadAllColumns(conf);
     fs = FileSystem.getLocal(conf);
     dir = new Path(System.getProperty("test.tmp.dir", ".") + "/mapred");
@@ -372,6 +373,7 @@ public class TestRCFile {
 
     // Set the option for tolerating corruptions. The read should succeed.
     Configuration tmpConf = new Configuration(conf);
+    tmpConf.set("fs.defaultFS", "file:///");
     tmpConf.setBoolean("hive.io.rcfile.tolerate.corruptions", true);
     RCFile.Reader reader = new RCFile.Reader(fs, file, tmpConf);
 
@@ -425,6 +427,7 @@ public class TestRCFile {
     int count = 10000;
     boolean create = true;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     FileSystem fs = FileSystem.getLocal(conf);
     Path file = null;
     // the SerDe part is from TestLazySimpleSerDe
@@ -626,6 +629,7 @@ public class TestRCFile {
     CompressionCodec codec = null;
     int writeCount = 2500;
     Configuration cloneConf = new Configuration(conf);
+    cloneConf.set("fs.defaultFS", "file:///");
     RCFileOutputFormat.setColumnNumber(cloneConf, bytesArray.length);
     cloneConf.setInt(HiveConf.ConfVars.HIVE_RCFILE_RECORD_INTERVAL.varname, intervalRecordCount);
     RCFile.Writer writer = new RCFile.Writer(fs, cloneConf, testFile, null, codec);
@@ -690,6 +694,7 @@ public class TestRCFile {
     Path testFile = new Path(testDir, "test_rcfile");
     fs.delete(testFile, true);
     Configuration cloneConf = new Configuration(conf);
+    cloneConf.set("fs.defaultFS", "file:///");
     RCFileOutputFormat.setColumnNumber(cloneConf, bytesArray.length);
     cloneConf.setInt(HiveConf.ConfVars.HIVE_RCFILE_RECORD_INTERVAL.varname, intervalRecordCount);
 
@@ -756,6 +761,7 @@ public class TestRCFile {
   @Test
   public void testCloseForErroneousRCFile() throws IOException {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     LocalFileSystem fs = FileSystem.getLocal(conf);
     // create an empty file (which is not a valid rcfile)
     Path path = new Path(System.getProperty("test.tmp.dir", ".")
@@ -798,6 +804,7 @@ public class TestRCFile {
   @Test
   public void testNonExplicitRCFileHeader() throws IOException, SerDeException {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.setBoolean(HiveConf.ConfVars.HIVEUSEEXPLICITRCFILEHEADER.varname, false);
     char[] expected = new char[] {'S', 'E', 'Q'};
     testRCFileHeader(expected, conf);
@@ -806,6 +813,7 @@ public class TestRCFile {
   @Test
   public void testExplicitRCFileHeader() throws IOException, SerDeException {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.setBoolean(HiveConf.ConfVars.HIVEUSEEXPLICITRCFILEHEADER.varname, true);
     char[] expected = new char[] {'R', 'C', 'F'};
     testRCFileHeader(expected, conf);

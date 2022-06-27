@@ -184,6 +184,7 @@ public class TestVectorizedMapColumnReader extends VectorizedColumnReaderTestBas
   private void testMapRead(boolean isDictionaryEncoding, String type,
       int elementNum) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     setTypeConfiguration(type, conf);
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
     conf.set(ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR, "0");
@@ -226,6 +227,7 @@ public class TestVectorizedMapColumnReader extends VectorizedColumnReaderTestBas
 
   private void testRepeateMapRead(int elementNum, boolean isNull) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(IOConstants.COLUMNS, "map_int32_for_repeat_test");
     conf.set(IOConstants.COLUMNS_TYPES, "map<int,int>");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);

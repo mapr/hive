@@ -132,6 +132,7 @@ public class TestVectorizedColumnReader extends VectorizedColumnReaderTestBase {
   @Test
   public void testNullSplitForParquetReader() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(IOConstants.COLUMNS,"int32_field");
     conf.set(IOConstants.COLUMNS_TYPES,"int");
     conf.setBoolean(ColumnProjectionUtils.READ_ALL_COLUMNS, false);
@@ -144,6 +145,7 @@ public class TestVectorizedColumnReader extends VectorizedColumnReaderTestBase {
     initialVectorizedRowBatchCtx(conf);
     FileSplit fsplit = getFileSplit(vectorJob);
     JobConf jobConf = new JobConf(conf);
+    jobConf.set("fs.defaultFS", "file:///");
     TestVectorizedParquetRecordReader testReader = new TestVectorizedParquetRecordReader(fsplit, jobConf);
     Assert.assertNull("Test should return null split from getSplit() method", testReader.getSplit(fsplit, jobConf));
   }

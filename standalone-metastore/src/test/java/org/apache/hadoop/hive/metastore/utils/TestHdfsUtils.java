@@ -68,6 +68,7 @@ public class TestHdfsUtils {
   private Configuration makeConf() {
     // Make sure that the user doesn't happen to be in the super group
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("dfs.permissions.supergroup", "ubermensch");
     return conf;
   }
@@ -191,7 +192,9 @@ public class TestHdfsUtils {
   @Test
   public void rootReadWriteExecute() throws IOException, LoginException {
     UserGroupInformation ugi = SecurityUtils.getUGI();
-    FileSystem fs = FileSystem.get(new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    FileSystem fs = FileSystem.get(conf);
     String old = fs.getConf().get("dfs.permissions.supergroup");
     try {
       fs.getConf().set("dfs.permissions.supergroup", ugi.getPrimaryGroupName());

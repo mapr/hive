@@ -105,6 +105,7 @@ public class TestUtilities {
   @Test
   public void testGetFileExtension() {
     JobConf jc = new JobConf();
+    jc.set("fs.defaultFS", "file:///");
     assertEquals("No extension for uncompressed unknown format", "",
         getFileExtension(jc, false, null));
     assertEquals("No extension for compressed unknown format", "",
@@ -146,7 +147,9 @@ public class TestUtilities {
   public void testgetDbTableName() throws HiveException{
     String tablename;
     String [] dbtab;
-    SessionState.start(new HiveConf(this.getClass()));
+    HiveConf hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
     String curDefaultdb = SessionState.get().getCurrentDatabase();
 
     //test table without db portion
@@ -209,6 +212,7 @@ public class TestUtilities {
   private List<Path> runRemoveTempOrDuplicateFilesTestCase(String executionEngine, boolean dPEnabled)
       throws Exception {
     Configuration hconf = new HiveConf(this.getClass());
+    hconf.set("fs.defaultFS", "file:///");
     // do this to verify that Utilities.removeTempOrDuplicateFiles does not revert to default scheme information
     hconf.set("fs.defaultFS", "hdfs://should-not-be-used/");
     hconf.set(HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.varname, executionEngine);
@@ -270,7 +274,9 @@ public class TestUtilities {
     MapWork mapWork1 = new MapWork();
     MapWork mapWork2 = new MapWork();
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
 
     Path nonExistentPath1 = new Path(UUID.randomUUID().toString());
     Path nonExistentPath2 = new Path(UUID.randomUUID().toString());
@@ -340,6 +346,7 @@ public class TestUtilities {
   public void testGetInputPathsWithMultipleThreadsAndEmptyPartitions() throws Exception {
     int numPartitions = 15;
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     jobConf.setInt(HiveConf.ConfVars.HIVE_EXEC_INPUT_LISTING_MAX_THREADS.varname,
             Runtime.getRuntime().availableProcessors() * 2);
     MapWork mapWork = new MapWork();
@@ -386,7 +393,9 @@ public class TestUtilities {
         assertNotNull(entry.getKey());
         assertNotNull(entry.getValue());
         assertEquals(entry.getValue().size(), 1);
-        assertTrue(entry.getKey().getFileSystem(new Configuration()).exists(entry.getKey()));
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", "file:///");
+        assertTrue(entry.getKey().getFileSystem(conf).exists(entry.getKey()));
       }
     } finally {
       if (fs.exists(testTablePath)) {
@@ -402,6 +411,7 @@ public class TestUtilities {
   @Test
   public void testGetMaxExecutorsForInputListing() {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
 
     final int ZERO_EXECUTORS = 0;
     final int ONE_EXECUTOR = 1;
@@ -478,6 +488,7 @@ public class TestUtilities {
     final int NUM_PARTITIONS = 5;
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
 
     jobConf.setInt(HiveConf.ConfVars.HIVE_EXEC_INPUT_LISTING_MAX_THREADS.varname, 1);
     runTestGetInputPaths(jobConf, NUM_PARTITIONS);
@@ -492,6 +503,7 @@ public class TestUtilities {
     final int NUM_PARTITIONS = 5;
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
 
     jobConf.setInt(HiveConf.ConfVars.HIVE_EXEC_INPUT_LISTING_MAX_THREADS.varname, 2);
     runTestGetInputPaths(jobConf, NUM_PARTITIONS);
@@ -549,8 +561,11 @@ public class TestUtilities {
     pathNeedProcess.add(new Path("dummy-path2"));
     pathNeedProcess.add(new Path("dummy-path3"));
 
-    SessionState.start(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Context context = new Context(jobConf);
 
     Utilities.getInputSummaryWithPool(context, pathNeedProcess, mock(MapWork.class), new long[3], pool);
@@ -569,8 +584,11 @@ public class TestUtilities {
     pathNeedProcess.add(new Path("dummy-path2"));
     pathNeedProcess.add(new Path("dummy-path3"));
 
-    SessionState.start(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Context context = new Context(jobConf);
 
     Utilities.getInputSummaryWithPool(context, pathNeedProcess, mock(MapWork.class), new long[3], pool);
@@ -636,6 +654,7 @@ public class TestUtilities {
     final int BYTES_PER_FILE = 5;
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Properties properties = new Properties();
 
     jobConf.setInt(HiveConf.ConfVars.HIVE_EXEC_INPUT_LISTING_MAX_THREADS.varname, 0);
@@ -651,6 +670,7 @@ public class TestUtilities {
     final int BYTES_PER_FILE = 5;
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Properties properties = new Properties();
 
     jobConf.setInt(HiveConf.ConfVars.HIVE_EXEC_INPUT_LISTING_MAX_THREADS.varname, 2);
@@ -675,6 +695,7 @@ public class TestUtilities {
     final int NUM_OF_ROWS = 5;
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Properties properties = new Properties();
 
     jobConf.setInt(Utilities.DEPRECATED_MAPRED_DFSCLIENT_PARALLELISM_MAX, 2);
@@ -726,6 +747,7 @@ public class TestUtilities {
     final int BYTES_PER_FILE = 10;
 
     JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     Properties properties = new Properties();
 
     jobConf.setInt(Utilities.DEPRECATED_MAPRED_DFSCLIENT_PARALLELISM_MAX, 2);
@@ -742,7 +764,9 @@ public class TestUtilities {
 
   private ContentSummary runTestGetInputSummary(JobConf jobConf, Properties properties, int numOfPartitions, int bytesPerFile, Class<? extends InputFormat> inputFormatClass) throws IOException {
     // creates scratch directories needed by the Context object
-    SessionState.start(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
 
     MapWork mapWork = new MapWork();
     Context context = new Context(jobConf);

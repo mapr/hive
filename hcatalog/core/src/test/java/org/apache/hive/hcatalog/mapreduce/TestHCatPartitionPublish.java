@@ -79,6 +79,7 @@ public class TestHCatPartitionPublish {
   private static HiveMetaStoreClient msc;
   private static SecurityManager securityManager;
   private static Configuration conf = new Configuration(true);
+  static {conf.set("fs.defaultFS", "file:///");}
   private static String testName;
 
   public static File handleWorkDir() throws IOException {
@@ -121,6 +122,7 @@ public class TestHCatPartitionPublish {
     Policy.setPolicy(new DerbyPolicy());
 
     hcatConf = new HiveConf(TestHCatPartitionPublish.class);
+    hcatConf.set("fs.defaultFS", "file:///");
     hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:"
         + msPort);
     hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);

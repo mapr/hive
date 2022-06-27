@@ -110,6 +110,7 @@ public class TestHCatInputFormat extends HCatBaseTest {
 
   private boolean runJob(float badRecordThreshold) throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
 
     conf.setFloat(HCatConstants.HCAT_INPUT_BAD_RECORD_THRESHOLD_KEY, badRecordThreshold);
 

@@ -67,6 +67,7 @@ public class TestHS2HttpServerPam {
     webUIPort =
         MetaStoreTestUtils.findFreePortExcepting(Integer.valueOf(ConfVars.HIVE_SERVER2_WEBUI_PORT.getDefaultValue()));
     hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.setBoolVar(ConfVars.HIVE_IN_TEST, true);
     hiveConf.set(ConfVars.METASTOREPWD.varname, metastorePasswd);
     hiveConf.set(ConfVars.HIVE_SERVER2_WEBUI_PORT.varname, webUIPort.toString());

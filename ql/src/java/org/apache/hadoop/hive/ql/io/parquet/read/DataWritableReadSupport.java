@@ -365,6 +365,7 @@ public class DataWritableReadSupport extends ReadSupport<ArrayWritable> {
   @Override
   public org.apache.parquet.hadoop.api.ReadSupport.ReadContext init(InitContext context) {
     Configuration configuration = context.getConfiguration();
+    configuration.set("fs.defaultFS", "file:///");
     MessageType fileSchema = context.getFileSchema();
     String columnNames = configuration.get(IOConstants.COLUMNS);
     Map<String, String> contextMetadata = new HashMap<String, String>();

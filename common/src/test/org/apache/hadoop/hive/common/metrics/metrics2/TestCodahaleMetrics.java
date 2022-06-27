@@ -66,6 +66,7 @@ public class TestCodahaleMetrics {
     }
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
 
     jsonReportFile = File.createTempFile("TestCodahaleMetrics", ".json");
     System.out.println("Json metrics saved in " + jsonReportFile.getAbsolutePath());

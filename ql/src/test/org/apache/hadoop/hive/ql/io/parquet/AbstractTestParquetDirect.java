@@ -53,7 +53,9 @@ public abstract class AbstractTestParquetDirect {
 
   @BeforeClass
   public static void initializeFS() throws IOException {
-    localFS = FileSystem.getLocal(new Configuration());
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    localFS = FileSystem.getLocal(conf);
   }
 
   @Rule

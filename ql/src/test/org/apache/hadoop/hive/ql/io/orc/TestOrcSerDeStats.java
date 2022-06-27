@@ -190,6 +190,7 @@ public class TestOrcSerDeStats {
   @Before
   public void openFileSystem() throws Exception {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcSerDeStats." +
         testCaseName.getMethodName() + ".orc");

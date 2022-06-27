@@ -39,6 +39,7 @@ public class TestUnpermittedCharsInColumnNameCreateTableNegative {
   @BeforeClass
   public static void initialize() {
     conf = new HiveConf(SemanticAnalyzer.class);
+    conf.set("fs.defaultFS", "file:///");
     SessionState.start(conf);
   }
 

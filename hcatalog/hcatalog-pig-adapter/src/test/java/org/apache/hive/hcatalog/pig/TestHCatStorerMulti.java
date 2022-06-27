@@ -96,6 +96,7 @@ public class TestHCatStorerMulti {
 
     if (driver == null) {
       HiveConf hiveConf = new HiveConf(this.getClass());
+      hiveConf.set("fs.defaultFS", "file:///");
       hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
       hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
       hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");

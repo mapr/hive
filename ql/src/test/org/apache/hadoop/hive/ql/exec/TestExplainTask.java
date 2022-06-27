@@ -64,6 +64,7 @@ public class TestExplainTask {
     out = mock(PrintStream.class);
     QueryState qs = mock(QueryState.class);
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     when(qs.getConf()).thenReturn(hiveConf);
     uut.queryState = qs;
   }
@@ -336,7 +337,9 @@ public class TestExplainTask {
     when(qs.getHiveOperation()).thenReturn(HiveOperation.EXPLAIN);
     uut.queryState = qs;
 
-    SessionState.start(new HiveConf(ExplainTask.class));
+    HiveConf hiveConf = new HiveConf(ExplainTask.class);
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
     // SessionState.get().setCommandType(HiveOperation.EXPLAIN);
     HiveAuthenticationProvider authenticationProviderMock = mock(HiveAuthenticationProvider.class);
     when(authenticationProviderMock.getUserName()).thenReturn("test-user");
@@ -355,6 +358,7 @@ public class TestExplainTask {
     QueryState qs = mock(QueryState.class);
     when(qs.getHiveOperation()).thenReturn(HiveOperation.EXPLAIN);
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.setBoolVar(HiveConf.ConfVars.HIVE_VECTORIZATION_ENABLED, true);
     when(qs.getConf()).thenReturn(hiveConf);
     uut.queryState = qs;

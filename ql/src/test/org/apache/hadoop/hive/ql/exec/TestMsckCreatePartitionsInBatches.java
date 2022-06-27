@@ -57,6 +57,7 @@ public class TestMsckCreatePartitionsInBatches {
   @BeforeClass
   public static void setupClass() throws HiveException {
     hiveConf = new HiveConf(TestMsckCreatePartitionsInBatches.class);
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.setIntVar(ConfVars.HIVE_MSCK_REPAIR_BATCH_SIZE, 5);
     hiveConf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

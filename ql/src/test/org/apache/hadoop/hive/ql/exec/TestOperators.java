@@ -108,6 +108,7 @@ public class TestOperators extends TestCase {
 
   private void testTaskIds(String [] taskIds, String expectedAttemptId, String expectedTaskId) {
     Configuration conf = new JobConf(TestOperators.class);
+    conf.set("fs.defaultFS", "file:///");
     for (String one: taskIds) {
       conf.set("mapred.task.id", one);
       String attemptId = Utilities.getTaskId(conf);
@@ -180,6 +181,7 @@ public class TestOperators extends TestCase {
 
       //Full test
       Configuration hconf = new JobConf(ScriptOperator.class);
+      hconf.set("fs.defaultFS", "file:///");
       hconf.set("name", hugeEnvVar);
       Map<String, String> env = new HashMap<String, String>();
 
@@ -202,6 +204,7 @@ public class TestOperators extends TestCase {
     ScriptOperator scriptOperator = new ScriptOperator(new CompilationOpContext());
 
     Configuration hconf = new JobConf(ScriptOperator.class);
+    hconf.set("fs.defaultFS", "file:///");
 
     Map<String, String> env = new HashMap<String, String>();
 
@@ -292,6 +295,7 @@ public class TestOperators extends TestCase {
       System.out.println("Testing Map Operator");
       // initialize configuration
       JobConf hconf = new JobConf(TestOperators.class);
+      hconf.set("fs.defaultFS", "file:///");
       hconf.set(MRJobConfig.MAP_INPUT_FILE, "hdfs:///testDir/testFile");
       IOContextMap.get(hconf).setInputPath(
           new Path("hdfs:///testDir/testFile"));
@@ -363,6 +367,7 @@ public class TestOperators extends TestCase {
   @Test
   public void testFetchOperatorContextQuoting() throws Exception {
     JobConf conf = new JobConf();
+    conf.set("fs.defaultFS", "file:///");
     ArrayList<Path> list = new ArrayList<Path>();
     list.add(new Path("hdfs://nn.example.com/fi\tl\\e\t1"));
     list.add(new Path("hdfs://nn.example.com/file\t2"));
@@ -401,6 +406,7 @@ public class TestOperators extends TestCase {
   @Test
   public void testFetchOperatorContext() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("hive.support.concurrency", "false");
     conf.setVar(HiveConf.ConfVars.HIVEMAPREDMODE, "nonstrict");
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
@@ -442,6 +448,7 @@ public class TestOperators extends TestCase {
     ConvertJoinMapJoin convertJoinMapJoin = new ConvertJoinMapJoin();
     long defaultNoConditionalTaskSize = 1024L * 1024L * 1024L;
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
 
     LlapClusterStateForCompile llapInfo = null;
     if ("llap".equalsIgnoreCase(hiveConf.getVar(HiveConf.ConfVars.HIVE_EXECUTION_MODE))) {

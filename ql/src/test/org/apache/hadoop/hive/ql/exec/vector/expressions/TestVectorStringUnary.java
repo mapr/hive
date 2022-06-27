@@ -272,6 +272,7 @@ public class TestVectorStringUnary {
     ExprNodeGenericFuncDesc exprDesc =
         new ExprNodeGenericFuncDesc(typeInfo, genericUdf, children);
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     ExprNodeEvaluator evaluator =
         ExprNodeEvaluatorFactory.get(exprDesc, hiveConf);
     evaluator.initialize(rowInspector);
@@ -328,6 +329,7 @@ public class TestVectorStringUnary {
         new ExprNodeGenericFuncDesc(targetTypeInfo, genericUdf, children);
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     if (stringUnaryTestMode == StringUnaryTestMode.ADAPTOR) {
       hiveConf.setBoolVar(HiveConf.ConfVars.HIVE_TEST_VECTOR_ADAPTOR_OVERRIDE, true);
     }

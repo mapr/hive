@@ -54,6 +54,7 @@ public final class MetaStoreFactoryForTests {
     List<Object[]> metaStores = new ArrayList<Object[]>();
 
     Configuration conf = MetastoreConf.newMetastoreConf();
+    conf.set("fs.defaultFS", "file:///");
     // set some values to use for getting conf. vars
     MetastoreConf.setBoolVar(conf, MetastoreConf.ConfVars.METRICS_ENABLED, true);
     MetastoreConf.setLongVar(conf, MetastoreConf.ConfVars.BATCH_RETRIEVE_MAX, 2);

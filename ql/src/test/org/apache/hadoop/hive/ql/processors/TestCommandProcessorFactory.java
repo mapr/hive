@@ -35,6 +35,7 @@ public class TestCommandProcessorFactory {
   @Before
   public void setUp() throws Exception {
     conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
   }
 
   @Test

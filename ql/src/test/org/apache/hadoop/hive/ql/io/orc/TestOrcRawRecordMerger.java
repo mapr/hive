@@ -294,6 +294,7 @@ public class TestOrcRawRecordMerger {
     int BUCKET = 10;
     ReaderKey key = new ReaderKey();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     int bucketProperty = OrcRawRecordMerger.encodeBucketId(conf, BUCKET, 0);
     Reader reader = createMockOriginalReader();
     RecordIdentifier minKey = new RecordIdentifier(0, bucketProperty, 1);
@@ -335,6 +336,7 @@ public class TestOrcRawRecordMerger {
     ReaderKey key = new ReaderKey();
     Reader reader = createMockOriginalReader();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     int bucketProperty = OrcRawRecordMerger.encodeBucketId(conf, BUCKET, 0);
     FileSystem fs = FileSystem.getLocal(conf);
     Path root = new Path(tmpDir, "testOriginalReaderPairNoMin");
@@ -384,6 +386,7 @@ public class TestOrcRawRecordMerger {
   @Test
   public void testNewBase() throws Exception {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS, "col1");
     conf.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES, "string");
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN, true);
@@ -530,6 +533,7 @@ public class TestOrcRawRecordMerger {
   public void testGetLogicalLength() throws Exception {
     final int BUCKET = 0;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     FileSystem fs = FileSystem.getLocal(conf);
     OrcOutputFormat of = new OrcOutputFormat();
     Path root = new Path(tmpDir, "testEmpty").makeQualified(fs);
@@ -571,6 +575,7 @@ public class TestOrcRawRecordMerger {
   public void testEmpty() throws Exception {
     final int BUCKET = 0;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     OrcOutputFormat of = new OrcOutputFormat();
     FileSystem fs = FileSystem.getLocal(conf);
     Path root = new Path(tmpDir, "testEmpty").makeQualified(fs);
@@ -631,6 +636,7 @@ public class TestOrcRawRecordMerger {
                                    "fifth", "sixth", "seventh", "eighth",
                                    "ninth", "tenth"};
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     OrcOutputFormat of = new OrcOutputFormat();
     FileSystem fs = FileSystem.getLocal(conf);
     Path root = new Path(tmpDir, "testNewBaseAndDelta").makeQualified(fs);
@@ -1067,6 +1073,7 @@ public class TestOrcRawRecordMerger {
   public void testRecordReaderOldBaseAndDelta() throws Exception {
     final int BUCKET = 10;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     OrcConf.ROWS_BETWEEN_CHECKS.setLong(conf, 2);
     OrcOutputFormat of = new OrcOutputFormat();
     FileSystem fs = FileSystem.getLocal(conf);
@@ -1185,6 +1192,7 @@ public class TestOrcRawRecordMerger {
   public void testRecordReaderNewBaseAndDelta() throws Exception {
     final int BUCKET = 11;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     OrcConf.ROWS_BETWEEN_CHECKS.setLong(conf, 2);
     OrcOutputFormat of = new OrcOutputFormat();
     FileSystem fs = FileSystem.getLocal(conf);
@@ -1322,6 +1330,7 @@ public class TestOrcRawRecordMerger {
   public void testRecordReaderDelta() throws Exception {
     final int BUCKET = 0;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     OrcOutputFormat of = new OrcOutputFormat();
     FileSystem fs = FileSystem.getLocal(conf);
     Path root = new Path(tmpDir, "testRecordReaderDelta").makeQualified(fs);
@@ -1397,6 +1406,7 @@ public class TestOrcRawRecordMerger {
   private void testRecordReaderIncompleteDelta(boolean use130Format) throws Exception {
     final int BUCKET = 1;
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     OrcOutputFormat of = new OrcOutputFormat();
     FileSystem fs = FileSystem.getLocal(conf).getRaw();
     Path root = new Path(tmpDir, "testRecordReaderIncompleteDelta").makeQualified(fs);

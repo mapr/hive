@@ -63,6 +63,7 @@ import static junit.framework.Assert.fail;
 public class TestCompactionTxnHandler {
 
   private HiveConf conf = new HiveConf();
+  {conf.set("fs.defaultFS", "file:///");}
   private TxnStore txnHandler;
 
   public TestCompactionTxnHandler() throws Exception {

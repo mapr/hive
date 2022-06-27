@@ -48,6 +48,7 @@ public class TestOrcFileStripeMergeRecordReader {
   @Before
   public void setup() throws IOException {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     fs = FileSystem.getLocal(conf);
     key = new OrcFileKeyWrapper();
     value = new OrcFileValueWrapper();

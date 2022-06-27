@@ -36,6 +36,7 @@ public class TestStorageBasedAuthorizationProviderWarehouse {
 
     StorageBasedAuthorizationProvider sbap = new StorageBasedAuthorizationProvider();
     Configuration metastoreConf = MetastoreConf.newMetastoreConf();
+    metastoreConf.set("fs.defaultFS", "file:///");
 
     sbap.setConf(metastoreConf);
     sbap.setAuthenticator(new HadoopDefaultMetastoreAuthenticator());

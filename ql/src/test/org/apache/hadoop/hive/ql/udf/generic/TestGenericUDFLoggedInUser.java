@@ -38,7 +38,10 @@ public class TestGenericUDFLoggedInUser {
   @Test
   public void testSystemUser() throws HiveException, IOException {
     String userName = "test_user";
-    HiveConf conf = spy(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    HiveConf conf = spy(hiveConf);
+    conf.set("fs.defaultFS", "file:///");
     when(conf.getUser()).thenReturn(userName);
 
     udf = new GenericUDFLoggedInUser();

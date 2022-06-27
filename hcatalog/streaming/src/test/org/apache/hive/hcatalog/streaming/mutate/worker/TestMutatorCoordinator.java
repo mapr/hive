@@ -80,6 +80,7 @@ public class TestMutatorCoordinator {
   private MutatorCoordinator coordinator;
 
   private HiveConf configuration = new HiveConf();
+  {configuration.set("fs.defaultFS", "file:///");}
 
   @Before
   public void createCoordinator() throws Exception {

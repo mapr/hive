@@ -75,6 +75,7 @@ public abstract class TxnCommandsBaseForTests {
   }
   void initHiveConf() {
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.defaultFS", "file:///");
   }
   void setUpInternal() throws Exception {
     initHiveConf();

@@ -43,6 +43,7 @@ public class TestCLIServiceRestore {
 
   public CLIService getService() {
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
       "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
     CLIService service = new CLIService(null);

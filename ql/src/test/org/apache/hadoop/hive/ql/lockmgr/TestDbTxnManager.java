@@ -62,6 +62,7 @@ import static junit.framework.Assert.assertEquals;
 public class TestDbTxnManager {
   private static final int TEST_TIMED_OUT_TXN_ABORT_BATCH_SIZE = 1000;
   private final HiveConf conf = new HiveConf();
+  {conf.set("fs.defaultFS", "file:///");}
   private HiveTxnManager txnMgr;
   private AcidHouseKeeperService houseKeeperService = null;
   private final Context ctx;
@@ -388,6 +389,7 @@ public class TestDbTxnManager {
   @Test
   public void concurrencyFalse() throws Exception {
     HiveConf badConf = new HiveConf();
+    badConf.set("fs.defaultFS", "file:///");
     if(badConf.getBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY)) {
       //TxnManagerFactory is a singleton, so if the default is true, it has already been
       //created and won't throw

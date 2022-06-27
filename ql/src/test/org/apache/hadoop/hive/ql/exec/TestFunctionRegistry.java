@@ -84,7 +84,9 @@ public class TestFunctionRegistry extends TestCase {
     varchar5 = TypeInfoFactory.getPrimitiveTypeInfo("varchar(5)");
     char10 = TypeInfoFactory.getPrimitiveTypeInfo("char(10)");
     char5 = TypeInfoFactory.getPrimitiveTypeInfo("char(5)");
-    SessionState.start(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
   }
 
   private void implicit(TypeInfo a, TypeInfo b, boolean convertible) {

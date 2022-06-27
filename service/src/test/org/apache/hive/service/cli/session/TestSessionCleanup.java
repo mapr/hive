@@ -42,6 +42,7 @@ public class TestSessionCleanup extends TestCase {
   public void testTempSessionFileCleanup() throws Exception {
     EmbeddedThriftBinaryCLIService service = new EmbeddedThriftBinaryCLIService();
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf
         .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
             "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

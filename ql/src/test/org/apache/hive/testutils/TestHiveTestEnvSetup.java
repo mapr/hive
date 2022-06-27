@@ -90,6 +90,7 @@ public class TestHiveTestEnvSetup {
 
   private static IDriver createDriver() {
     HiveConf conf = env_setup.getTestCtx().hiveConf;
+    conf.set("fs.defaultFS", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
     HiveConf.setBoolVar(conf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);

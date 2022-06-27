@@ -76,6 +76,7 @@ public class TestHive extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
@@ -749,6 +750,7 @@ public class TestHive extends TestCase {
 
     //if HiveConf has not changed, same object should be returned
     HiveConf newHconf = new HiveConf(hiveConf);
+    newHconf.set("fs.defaultFS", "file:///");
     newHiveObj = Hive.get(newHconf);
     assertTrue(prevHiveObj == newHiveObj);
 
@@ -761,6 +763,7 @@ public class TestHive extends TestCase {
     prevHiveObj.getDatabaseCurrent();
     //change value of a metavar config param in new hive conf
     newHconf = new HiveConf(hiveConf);
+    newHconf.set("fs.defaultFS", "file:///");
     newHconf.setIntVar(ConfVars.METASTORETHRIFTCONNECTIONRETRIES,
         newHconf.getIntVar(ConfVars.METASTORETHRIFTCONNECTIONRETRIES) + 1);
     newHiveObj = Hive.get(newHconf);

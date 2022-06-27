@@ -1812,14 +1812,16 @@ public class TestInputOutputFormat {
 
     // the the validate input method
     ArrayList<FileStatus> fileList = new ArrayList<FileStatus>();
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     assertEquals(false,
-        ((InputFormatChecker) in).validateInput(fs, new HiveConf(), fileList));
+        ((InputFormatChecker) in).validateInput(fs, hiveConf, fileList));
     fileList.add(fs.getFileStatus(testFilePath));
     assertEquals(true,
-        ((InputFormatChecker) in).validateInput(fs, new HiveConf(), fileList));
+        ((InputFormatChecker) in).validateInput(fs, hiveConf, fileList));
     fileList.add(fs.getFileStatus(workDir));
     assertEquals(false,
-        ((InputFormatChecker) in).validateInput(fs, new HiveConf(), fileList));
+        ((InputFormatChecker) in).validateInput(fs, hiveConf, fileList));
 
 
     // read the whole file

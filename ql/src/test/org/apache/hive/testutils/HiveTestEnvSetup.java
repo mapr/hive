@@ -150,6 +150,7 @@ public class HiveTestEnvSetup extends ExternalResource {
       // FIXME: hiveServer2SiteUrl is not settable?
 
       ctx.hiveConf = new HiveConf(IDriver.class);
+      ctx.hiveConf.set("fs.defaultFS", "file:///");
       ctx.hiveConf.setBoolVar(ConfVars.HIVE_IN_TEST_IDE, true);
     }
 
@@ -157,9 +158,11 @@ public class HiveTestEnvSetup extends ExternalResource {
     public void beforeMethod(HiveTestEnvContext ctx) throws Exception {
       if (savedConf == null) {
         savedConf = new HiveConf(ctx.hiveConf);
+        savedConf.set("fs.defaultFS", "file:///");
       }
       // service a fresh conf for every testMethod
       ctx.hiveConf = new HiveConf(savedConf);
+      ctx.hiveConf.set("fs.defaultFS", "file:///");
     }
 
     @Override

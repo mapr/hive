@@ -61,6 +61,7 @@ public class TestPassProperties {
 
   public void Initialize() throws Exception {
     hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
@@ -95,6 +96,7 @@ public class TestPassProperties {
     boolean caughtException = false;
     try {
       Configuration conf = new Configuration();
+      conf.set("fs.defaultFS", "file:///");
       conf.set("hive.metastore.uris", "thrift://no.such.machine:10888");
       Job job = new Job(conf, "Write-hcat-seq-table");
       job.setJarByClass(TestPassProperties.class);

@@ -106,6 +106,7 @@ public class TestHCatClient {
   public static void startMetaStoreServer() throws Exception {
 
     hcatConf = new HiveConf(TestHCatClient.class);
+    hcatConf.set("fs.defaultFS", "file:///");
     String metastoreUri = System.getProperty("test."+HiveConf.ConfVars.METASTOREURIS.varname);
     if (metastoreUri != null) {
       hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreUri);
@@ -115,6 +116,7 @@ public class TestHCatClient {
 
     // Set proxy user privilege and initialize the global state of ProxyUsers
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set("hadoop.proxyuser." + Utils.getUGI().getShortUserName() + ".hosts", "*");
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
 
@@ -810,10 +812,12 @@ public class TestHCatClient {
   private void startReplicationTargetMetaStoreIfRequired() throws Exception {
     if (!isReplicationTargetHCatRunning) {
       HiveConf conf = new HiveConf();
+      conf.set("fs.defaultFS", "file:///");
       conf.set("javax.jdo.option.ConnectionURL", hcatConf.get("javax.jdo.option.ConnectionURL")
         .replace("metastore", "target_metastore"));
       replicationTargetHCatPort = MetaStoreTestUtils.startMetaStoreWithRetry(conf);
       replicationTargetHCatConf = new HiveConf(hcatConf);
+      replicationTargetHCatConf.set("fs.defaultFS", "file:///");
       replicationTargetHCatConf.setVar(HiveConf.ConfVars.METASTOREURIS,
                                        "thrift://localhost:" + replicationTargetHCatPort);
       isReplicationTargetHCatRunning = true;

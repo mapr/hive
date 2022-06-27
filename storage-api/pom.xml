@@ -38,6 +38,7 @@
     <slf4j.version>1.7.10</slf4j.version>
     <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
     <checkstyle.conf.dir>${basedir}/checkstyle/</checkstyle.conf.dir>
+    <mapr.core.version>7.1.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
   </properties>
 
   <repositories>
@@ -137,6 +138,11 @@
 
   <dependencies>
     <!-- compile inter-project -->
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.core.version}</version>
+    </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>

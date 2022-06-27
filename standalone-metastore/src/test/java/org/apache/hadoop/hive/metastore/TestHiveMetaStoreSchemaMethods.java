@@ -83,6 +83,7 @@ public class TestHiveMetaStoreSchemaMethods {
   @BeforeClass
   public static void startMetastore() throws Exception {
     conf = MetastoreConf.newMetastoreConf();
+    conf.set("fs.defaultFS", "file:///");
     MetaStoreTestUtils.setConfForStandloneMode(conf);
     MetastoreConf.setClass(conf, ConfVars.EVENT_LISTENERS, SchemaEventListener.class,
         MetaStoreEventListener.class);

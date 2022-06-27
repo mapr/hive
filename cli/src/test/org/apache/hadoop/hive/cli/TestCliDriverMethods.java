@@ -114,7 +114,9 @@ public class TestCliDriverMethods extends TestCase {
     PrintStream err = new PrintStream(dataErr);
     System.setErr(err);
 
-    CliSessionState ss = new CliSessionState(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    CliSessionState ss = new CliSessionState(hiveConf);
     ss.out = out;
     ss.err = err;
 
@@ -208,6 +210,7 @@ public class TestCliDriverMethods extends TestCase {
       historyFile.delete();
     }
     HiveConf configuration = new HiveConf();
+    configuration.set("fs.defaultFS", "file:///");
     configuration.setBoolVar(ConfVars.HIVE_SESSION_HISTORY_ENABLED, true);
     PrintStream oldOut = System.out;
     ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
@@ -240,7 +243,9 @@ public class TestCliDriverMethods extends TestCase {
    */
   public void testQuit() throws Exception {
 
-    CliSessionState ss = new CliSessionState(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    CliSessionState ss = new CliSessionState(hiveConf);
     ss.err = System.err;
     ss.out = System.out;
 
@@ -269,7 +274,9 @@ public class TestCliDriverMethods extends TestCase {
   }
 
   public void testProcessSelectDatabase() throws Exception {
-    CliSessionState sessinState = new CliSessionState(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    CliSessionState sessinState = new CliSessionState(hiveConf);
     CliSessionState.start(sessinState);
     ByteArrayOutputStream data = new ByteArrayOutputStream();
     sessinState.err = new PrintStream(data);
@@ -303,7 +310,9 @@ public class TestCliDriverMethods extends TestCase {
     FileUtils.write(homeFile, "-- init hive file for test ");
     setEnv("HIVE_HOME", homeFile.getParentFile().getParentFile().getAbsolutePath());
     setEnv("HIVE_CONF_DIR", homeFile.getParentFile().getAbsolutePath());
-    CliSessionState sessionState = new CliSessionState(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    CliSessionState sessionState = new CliSessionState(hiveConf);
 
     ByteArrayOutputStream data = new ByteArrayOutputStream();
 

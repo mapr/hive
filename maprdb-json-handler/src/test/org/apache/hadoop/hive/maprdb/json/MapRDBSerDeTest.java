@@ -403,8 +403,9 @@ public class MapRDBSerDeTest {
     tblProperties.setProperty(MAPRDB_COLUMN_ID, ID_KEY);
     tblProperties.setProperty(serdeConstants.LIST_COLUMNS, columnNames);
     tblProperties.setProperty(serdeConstants.LIST_COLUMN_TYPES, columnTypes);
-
-    serDe.initialize(new Configuration(), tblProperties);
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    serDe.initialize(conf, tblProperties);
     return MapRDBSerDeUtils.deserializeField(value, TypeInfoUtils.getTypeInfosFromTypeString(columnTypes).get(0));
   }
 

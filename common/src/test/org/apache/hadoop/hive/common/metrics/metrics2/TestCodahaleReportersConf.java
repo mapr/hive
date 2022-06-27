@@ -50,6 +50,7 @@ public class TestCodahaleReportersConf {
   public void testFallbackToDeprecatedConfig() throws Exception {
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
 
     jsonReportFile = new File(workDir, "json_reporting");
     jsonReportFile.delete();
@@ -89,6 +90,7 @@ public class TestCodahaleReportersConf {
   public void testNoFallback() throws Exception {
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
 
     jsonReportFile = new File(workDir, "json_reporting");
     jsonReportFile.delete();
@@ -122,6 +124,7 @@ public class TestCodahaleReportersConf {
   public void testNoFallbackOnIncorrectConf() throws Exception {
 
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
 
     jsonReportFile = new File(workDir, "json_reporting");
     jsonReportFile.delete();

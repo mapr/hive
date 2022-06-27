@@ -52,6 +52,7 @@ import java.util.List;
 @RunWith(MockitoJUnitRunner.class)
 public class TestDummyTxnManager {
   private final HiveConf conf = new HiveConf();
+  {conf.set("fs.defaultFS", "file:///");}
   private HiveTxnManager txnMgr;
   private Context ctx;
   private int nextInput = 1;

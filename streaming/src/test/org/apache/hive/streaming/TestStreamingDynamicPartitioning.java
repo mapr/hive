@@ -126,6 +126,7 @@ public class TestStreamingDynamicPartitioning {
 
   public TestStreamingDynamicPartitioning() throws Exception {
     conf = new HiveConf(this.getClass());
+    conf.set("fs.defaultFS", "file:///");
     conf.set("fs.raw.impl", RawFileSystem.class.getName());
     conf
       .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,

@@ -85,6 +85,7 @@ import java.util.Map;
 public class TestDbTxnManager2 {
   private static final Logger LOG = LoggerFactory.getLogger(TestDbTxnManager2.class);
   private static HiveConf conf = new HiveConf(Driver.class);
+  static {conf.set("fs.defaultFS", "file:///");}
   private HiveTxnManager txnMgr;
   private Context ctx;
   private Driver driver;

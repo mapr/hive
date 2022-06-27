@@ -94,6 +94,7 @@ public class TestLock {
   private Lock readLock;
   private Lock writeLock;
   private HiveConf configuration = new HiveConf();
+  {configuration.set("fs.defaultFS", "file:///");}
 
   @Before
   public void injectMocks() throws Exception {

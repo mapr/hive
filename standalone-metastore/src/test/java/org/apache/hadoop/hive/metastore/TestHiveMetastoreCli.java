@@ -32,6 +32,7 @@ public class TestHiveMetastoreCli {
   @Test
   public void testDefaultCliPortValue() {
     Configuration configuration = MetastoreConf.newMetastoreConf();
+    configuration.set("fs.defaultFS", "file:///");
     HiveMetaStore.HiveMetastoreCli cli = new HiveMetaStore.HiveMetastoreCli(configuration);
     assert (cli.getPort() == MetastoreConf.getIntVar(configuration, ConfVars.SERVER_PORT));
   }
@@ -39,6 +40,7 @@ public class TestHiveMetastoreCli {
   @Test
   public void testOverriddenCliPortValue() {
     Configuration configuration = MetastoreConf.newMetastoreConf();
+    configuration.set("fs.defaultFS", "file:///");
     HiveMetaStore.HiveMetastoreCli cli = new HiveMetaStore.HiveMetastoreCli(configuration);
     cli.parse(TestHiveMetastoreCli.CLI_ARGUMENTS);
 
@@ -48,6 +50,7 @@ public class TestHiveMetastoreCli {
   @Test
   public void testOverriddenMetastoreServerPortValue() {
     Configuration configuration = MetastoreConf.newMetastoreConf();
+    configuration.set("fs.defaultFS", "file:///");
     MetastoreConf.setLongVar(configuration, ConfVars.SERVER_PORT, 12345);
 
     HiveMetaStore.HiveMetastoreCli cli = new HiveMetaStore.HiveMetastoreCli(configuration);
@@ -58,6 +61,7 @@ public class TestHiveMetastoreCli {
   @Test
   public void testCliOverridesConfiguration() {
     Configuration configuration = MetastoreConf.newMetastoreConf();
+    configuration.set("fs.defaultFS", "file:///");
     MetastoreConf.setLongVar(configuration, ConfVars.SERVER_PORT, 12345);
 
     HiveMetaStore.HiveMetastoreCli cli = new HiveMetaStore.HiveMetastoreCli(configuration);

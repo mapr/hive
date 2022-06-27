@@ -289,6 +289,7 @@ public class TestVectorTimestampExtract {
         " exprDesc " + exprDesc.toString());
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     ExprNodeEvaluator evaluator =
         ExprNodeEvaluatorFactory.get(exprDesc, hiveConf);
     try {
@@ -378,6 +379,7 @@ public class TestVectorTimestampExtract {
           throws Exception {
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     if (timestampExtractTestMode == TimestampExtractTestMode.ADAPTOR) {
       hiveConf.setBoolVar(HiveConf.ConfVars.HIVE_TEST_VECTOR_ADAPTOR_OVERRIDE, true);
     }

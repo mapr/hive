@@ -88,13 +88,16 @@ public class TestSessionGlobalInitFile extends TestCase {
 
     // set up service and client
     hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_GLOBAL_INIT_FILE_LOCATION,
         initFile.getParentFile().getAbsolutePath());
     hiveConf
     .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
         "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");
     service = new FakeEmbeddedThriftBinaryCLIService(hiveConf);
-    service.init(new HiveConf());
+    HiveConf serviceConf = new HiveConf();
+    serviceConf.set("fs.defaultFS", "file:///");
+    service.init(serviceConf);
     client = new ThriftCLIServiceClient(service);
   }
 

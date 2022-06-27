@@ -215,6 +215,7 @@ public class TestWorkloadManager {
     @Override
     protected WmTezSession createSessionObject(String sessionId, HiveConf conf) {
       conf = conf == null ? new HiveConf(getConf()) : conf;
+      conf.set("fs.defaultFS", "file:///");
       SampleTezSessionState sess = new SampleTezSessionState(sessionId, this, conf);
       if (failedWait != null) {
         sess.setWaitForAmRegistryFuture(failedWait);
@@ -264,6 +265,7 @@ public class TestWorkloadManager {
   @Test(timeout = 10000)
   public void testReuse() throws Exception {
     HiveConf conf = createConf();
+    conf.set("fs.defaultFS", "file:///");
     MockQam qam = new MockQam();
     WorkloadManager wm = new WorkloadManagerForTest("test", conf, 1, qam);
     wm.start();
@@ -287,6 +289,7 @@ public class TestWorkloadManager {
   @Test(timeout = 10000)
   public void testQueueName() throws Exception {
     HiveConf conf = createConf();
+    conf.set("fs.defaultFS", "file:///");
     MockQam qam = new MockQam();
     WorkloadManager wm = new WorkloadManagerForTest("test", conf, 1, qam);
     wm.start();
@@ -306,6 +309,7 @@ public class TestWorkloadManager {
   public void testReopen() throws Exception {
     // We should always get a different object, and cluster fraction should be propagated.
     HiveConf conf = createConf();
+    conf.set("fs.defaultFS", "file:///");
     MockQam qam = new MockQam();
     WorkloadManager wm = new WorkloadManagerForTest("test", conf, 1, qam);
     wm.start();
@@ -325,6 +329,7 @@ public class TestWorkloadManager {
   public void testDestroyAndReturn() throws Exception {
     // Session should not be lost; however the fraction should be discarded.
     HiveConf conf = createConf();
+    conf.set("fs.defaultFS", "file:///");
     MockQam qam = new MockQam();
     WorkloadManager wm = new WorkloadManagerForTest("test", conf, 2, qam);
     wm.start();
@@ -352,6 +357,7 @@ public class TestWorkloadManager {
   @Test(timeout = 10000)
   public void testClusterFractions() throws Exception {
     HiveConf conf = createConf();
+    conf.set("fs.defaultFS", "file:///");
     MockQam qam = new MockQam();
     WMFullResourcePlan plan = new WMFullResourcePlan(plan(),
         Lists.newArrayList(pool("r1", 1, 0.6f), pool("r2", 1, 0.4f),
@@ -388,6 +394,7 @@ public class TestWorkloadManager {
   @Test(timeout = 10000)
   public void testMappings() throws Exception {
     HiveConf conf = createConf();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(ConfVars.HIVE_SERVER2_WM_ALLOW_ANY_POOL_VIA_JDBC.varname, "false");
     MockQam qam = new MockQam();
     WMFullResourcePlan plan = new WMFullResourcePlan(plan(),

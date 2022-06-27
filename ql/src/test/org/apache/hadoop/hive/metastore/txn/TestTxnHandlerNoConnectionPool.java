@@ -47,6 +47,7 @@ public class TestTxnHandlerNoConnectionPool {
 
   @Before
   public void setUp() throws Exception {
+    conf.set("fs.defaultFS", "file:///");
     conf.setVar(HiveConf.ConfVars.METASTORE_CONNECTION_POOLING_TYPE, "None");
     TxnDbUtil.setConfValues(conf);
     try {

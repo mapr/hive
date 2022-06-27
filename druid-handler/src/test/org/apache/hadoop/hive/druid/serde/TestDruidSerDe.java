@@ -626,6 +626,7 @@ public class TestDruidSerDe {
     // Create, initialize, and test the SerDe
     QTestDruidSerDe serDe = new QTestDruidSerDe();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     Properties tbl;
     // Timeseries query
     tbl = createPropertiesQuery("sample_datasource", Query.TIMESERIES, TIMESERIES_QUERY,
@@ -813,6 +814,7 @@ public class TestDruidSerDe {
     // Create, initialize, and test the SerDe
     DruidSerDe serDe = new DruidSerDe();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     Properties tbl;
     // Mixed source (all types)
     tbl = createPropertiesSource(COLUMN_NAMES, COLUMN_TYPES);
@@ -901,6 +903,7 @@ public class TestDruidSerDe {
     // Create, initialize, and test the SerDe
     DruidSerDe serDe = new DruidSerDe();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     Properties tbl;
     // Mixed source (all types)
     tbl = createPropertiesSource(COLUMN_NAMES, COLUMN_TYPES);

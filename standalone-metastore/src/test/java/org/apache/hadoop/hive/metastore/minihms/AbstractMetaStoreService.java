@@ -45,6 +45,7 @@ public abstract class AbstractMetaStoreService {
 
   public AbstractMetaStoreService(Configuration configuration) {
     this.configuration = new Configuration(configuration);
+    this.configuration.set("fs.defaultFS", "file:///");
   }
 
   /**

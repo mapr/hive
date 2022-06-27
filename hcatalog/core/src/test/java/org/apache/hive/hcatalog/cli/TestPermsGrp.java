@@ -89,6 +89,7 @@ public class TestPermsGrp extends TestCase {
     Policy.setPolicy(new DerbyPolicy());
 
     hcatConf = new HiveConf(this.getClass());
+    hcatConf.set("fs.defaultFS", "file:///");
     hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://127.0.0.1:" + msPort);
     hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 3);

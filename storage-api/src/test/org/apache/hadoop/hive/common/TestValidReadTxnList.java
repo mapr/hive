@@ -80,6 +80,7 @@ public class TestValidReadTxnList {
     ValidTxnList txnList = new ValidReadTxnList(exceptions, new BitSet(), 2000, 900);
     String str = txnList.writeToString();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     conf.set(ValidTxnList.VALID_TXNS_KEY, str);
     File tmpFile = File.createTempFile("TestValidTxnImpl", "readWriteConfig");
     DataOutputStream out = new DataOutputStream(new FileOutputStream(tmpFile));
@@ -87,6 +88,7 @@ public class TestValidReadTxnList {
     out.close();
     DataInputStream in = new DataInputStream(new FileInputStream(tmpFile));
     Configuration newConf = new Configuration();
+    newConf.set("fs.defaultFS", "file:///");
     newConf.readFields(in);
     Assert.assertEquals(str, newConf.get(ValidTxnList.VALID_TXNS_KEY));
   }

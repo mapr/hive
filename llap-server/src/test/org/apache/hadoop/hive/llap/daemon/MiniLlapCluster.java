@@ -52,6 +52,7 @@ public class MiniLlapCluster extends AbstractService {
   private final File zkWorkDir;
   private final String[] localDirs;
   private final Configuration clusterSpecificConfiguration = new Configuration(false);
+  {clusterSpecificConfiguration.set("fs.defaultFS", "file:///");}
 
   private final LlapDaemon [] llapDaemons;
   private MiniZooKeeperCluster miniZooKeeperCluster;

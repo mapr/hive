@@ -47,6 +47,7 @@ public class TestLegacyMetrics {
   public void before() throws Exception {
     MetricsFactory.close();
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_METRICS_CLASS, LegacyMetrics.class.getCanonicalName());
     MetricsFactory.init(conf);
     metrics = (LegacyMetrics) MetricsFactory.getInstance();

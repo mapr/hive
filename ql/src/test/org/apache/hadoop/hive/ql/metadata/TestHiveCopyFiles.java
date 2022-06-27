@@ -63,6 +63,7 @@ public class TestHiveCopyFiles {
   @BeforeClass
   public static void setUp() {
     hiveConf = new HiveConf(TestHiveCopyFiles.class);
+    hiveConf.set("fs.defaultFS", "file:///");
     SessionState.start(hiveConf);
   }
 

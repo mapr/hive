@@ -36,6 +36,7 @@ public class TestMetricVariableRatioGauge {
   @Before
   public void before() throws Exception {
     HiveConf conf = new HiveConf();
+    conf.set("fs.defaultFS", "file:///");
     conf.setVar(HiveConf.ConfVars.HIVE_METRICS_CLASS, CodahaleMetrics.class.getCanonicalName());
     // disable json file writing
     conf.setVar(HiveConf.ConfVars.HIVE_METRICS_JSON_FILE_INTERVAL, "60000m");

@@ -73,6 +73,8 @@ public class TestMultiOutputFormat {
   public static void setup() throws IOException {
     createWorkDir();
     Configuration conf = new Configuration(true);
+    conf.set("fs.defaultFS", "file:///");
+
     conf.set("yarn.scheduler.capacity.root.queues", "default");
     conf.set("yarn.scheduler.capacity.root.default.capacity", "100");
 

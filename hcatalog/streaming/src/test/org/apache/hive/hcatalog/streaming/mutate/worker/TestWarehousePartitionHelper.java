@@ -32,6 +32,7 @@ import org.junit.Test;
 public class TestWarehousePartitionHelper {
 
   private static final HiveConf CONFIGURATION = new HiveConf();
+  static {CONFIGURATION.set("fs.defaultFS", "file:///");}
   private static final Path TABLE_PATH = new Path("table");
   
   private static final List<String> UNPARTITIONED_COLUMNS = Collections.emptyList();

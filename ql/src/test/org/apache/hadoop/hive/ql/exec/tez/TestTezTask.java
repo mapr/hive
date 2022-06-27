@@ -169,9 +169,11 @@ public class TestTezTask {
     task.setQueryPlan(mockQueryPlan);
 
     conf = new JobConf();
+    conf.set("fs.defaultFS", "file:///");
     appLr = createResource("foo.jar");
 
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf
         .setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
             "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

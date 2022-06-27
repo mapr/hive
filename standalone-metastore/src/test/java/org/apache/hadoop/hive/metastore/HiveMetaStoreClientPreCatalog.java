@@ -144,9 +144,11 @@ public class HiveMetaStoreClientPreCatalog implements IMetaStoreClient, AutoClos
     this.hookLoader = hookLoader;
     if (conf == null) {
       conf = MetastoreConf.newMetastoreConf();
+      conf.set("fs.defaultFS", "file:///");
       this.conf = conf;
     } else {
       this.conf = new Configuration(conf);
+      conf.set("fs.defaultFS", "file:///");
     }
     version = MetastoreConf.getBoolVar(conf, ConfVars.HIVE_IN_TEST) ? TEST_VERSION : VERSION;
     filterHook = loadFilterHooks();

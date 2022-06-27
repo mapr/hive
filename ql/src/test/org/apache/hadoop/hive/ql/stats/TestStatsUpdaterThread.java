@@ -67,6 +67,7 @@ public class TestStatsUpdaterThread {
   @Before
   public void setUp() throws Exception {
     this.hiveConf = new HiveConf(TestStatsUpdaterThread.class);
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, getTestDataDir());

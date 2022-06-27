@@ -47,6 +47,7 @@ public class TestQueryLifeTimeHooksWithSQLOperation {
   @Test
   public void testQueryInfoInHookContext() throws IllegalAccessException, ClassNotFoundException, InstantiationException, HiveSQLException {
     HiveConf conf = new HiveConf(TestQueryHooks.class);
+    conf.set("fs.defaultFS", "file:///");
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
     conf.setVar(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER,
             "org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory");

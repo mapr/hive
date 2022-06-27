@@ -162,6 +162,7 @@ public class TestHCatLoaderEncryption {
     }
 
     HiveConf hiveConf = new HiveConf(this.getClass());
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
@@ -325,6 +326,7 @@ public class TestHCatLoaderEncryption {
 
     readRecords.clear();
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     Job job = new Job(conf, "hcat mapreduce read encryption test");
     job.setJarByClass(this.getClass());
     job.setMapperClass(TestHCatLoaderEncryption.MapRead.class);

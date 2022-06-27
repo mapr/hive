@@ -64,6 +64,7 @@ public class TestFixAcidKeyIndex {
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestFixAcidKeyIndex." +
         testCaseName.getMethodName() + ".orc");

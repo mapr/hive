@@ -50,6 +50,7 @@ public class TestRCFileCat {
   public void testRCFileCat() throws Exception {
     File template = File.createTempFile("hive", "tmpTest");
     Configuration configuration = new Configuration();
+    configuration.set("fs.defaultFS", "file:///");
 
     byte[][] record_1 = { Bytes.toBytes("123"), Bytes.toBytes("456"),
         Bytes.toBytes("789"), Bytes.toBytes("1000"), Bytes.toBytes("5.3"),

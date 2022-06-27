@@ -51,6 +51,7 @@ public class TestQBSubQuery {
     queryState =
         new QueryState.Builder().withHiveConf(new HiveConf(SemanticAnalyzer.class)).build();
     conf = queryState.getConf();
+    conf.set("fs.defaultFS", "file:///");
     SessionState.start(conf);
   }
 

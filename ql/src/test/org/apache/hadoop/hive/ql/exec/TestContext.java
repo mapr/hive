@@ -38,6 +38,7 @@ public class TestContext {
     @Before
     public void setUp() throws IOException {
         /* Only called to create session directories used by the Context class */
+        conf.set("fs.defaultFS", "file:///");
         SessionState.start(conf);
         SessionState.detachSession();
 

@@ -48,6 +48,7 @@ public class TestHiveMetaStoreTimeout {
   public static void setUp() throws Exception {
     HiveMetaStore.TEST_TIMEOUT_ENABLED = true;
     conf = MetastoreConf.newMetastoreConf();
+    conf.set("fs.defaultFS", "file:///");
     MetastoreConf.setClass(conf, ConfVars.EXPRESSION_PROXY_CLASS,
         MockPartitionExpressionForMetastore.class, PartitionExpressionProxy.class);
     MetastoreConf.setTimeVar(conf, ConfVars.CLIENT_SOCKET_TIMEOUT, 1000,
