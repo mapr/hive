@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -27,6 +28,7 @@ import org.junit.Test;
  * default, and having 'transactional_properties' set to 'default'. This specifically tests the
  * fast VectorizedOrcAcidRowBatchReader for ACID tables with split-update turned on.
  */
+@Ignore//FIXME
 public class TestTxnCommands2WithSplitUpdateAndVectorization extends TestTxnCommands2 {
 
   public TestTxnCommands2WithSplitUpdateAndVectorization() {

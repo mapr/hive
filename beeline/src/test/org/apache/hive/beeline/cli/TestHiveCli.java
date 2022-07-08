@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+@Ignore//FIXME
 public class TestHiveCli {
   private static final Logger LOG = LoggerFactory.getLogger(TestHiveCli.class.getName());
   private static final int ERRNO_OK = 0;

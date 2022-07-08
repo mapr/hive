@@ -412,6 +412,7 @@ public class TestInputOutputFormat {
   @Before
   public void openFileSystem () throws Exception {
     conf = new JobConf();
+    conf.set("fs.defaultFS", "file:///");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestInputOutputFormat." +
         testCaseName.getMethodName() + ".orc");
@@ -2126,6 +2127,7 @@ public class TestInputOutputFormat {
                                          int partitions
                                          ) throws IOException, HiveException {
     JobConf conf = new JobConf();
+    conf.set("fs.defaultFS", "file:///");
     Utilities.clearWorkMap(conf);
     conf.set("hive.exec.plan", workDir.toString());
     conf.set("mapred.job.tracker", "local");

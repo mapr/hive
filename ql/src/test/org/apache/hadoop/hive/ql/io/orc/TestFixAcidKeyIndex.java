@@ -146,7 +146,9 @@ public class TestFixAcidKeyIndex {
         "--check-only",
         orcFile.toString()
     };
-    FixAcidKeyIndex.main(checkArgs);
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    FixAcidKeyIndex.main(checkArgs, conf);
     System.out.flush();
     System.setOut(origOut);
   }
@@ -183,7 +185,9 @@ public class TestFixAcidKeyIndex {
         "--recover",
         orcFile.toString()
     };
-    FixAcidKeyIndex.main(checkArgs);
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    FixAcidKeyIndex.main(checkArgs, conf);
     System.out.flush();
     System.setOut(origOut);
   }

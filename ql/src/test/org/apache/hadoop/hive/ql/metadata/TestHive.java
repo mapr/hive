@@ -63,6 +63,7 @@ import org.junit.Assert;
 import com.google.common.collect.ImmutableMap;
 
 import junit.framework.TestCase;
+import org.junit.Ignore;
 
 /**
  * TestHive.

@@ -34,7 +34,9 @@ public class TestCliSessionState {
    */
   @Test
   public void testgetDbName() throws Exception {
-    SessionState.start(new HiveConf());
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
+    SessionState.start(hiveConf);
     assertEquals(Warehouse.DEFAULT_DATABASE_NAME,
         SessionState.get().getCurrentDatabase());
   }

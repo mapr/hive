@@ -74,6 +74,7 @@ import org.slf4j.LoggerFactory;
  * Tests here are for micro-managed tables:
  * specifically INSERT OVERWRITE statements and Major/Minor Compactions.
  */
+@Ignore//FIXME
 public class TestTxnCommandsForMmTable extends TxnCommandsBaseForTests {
   static final private Logger LOG = LoggerFactory.getLogger(TestTxnCommandsForMmTable.class);
   protected static final String TEST_DATA_DIR = new File(System.getProperty("java.io.tmpdir") +

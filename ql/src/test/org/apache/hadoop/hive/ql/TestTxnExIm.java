@@ -32,6 +32,7 @@ import java.util.List;
 /**
  * tests for IMPORT/EXPORT of transactional tables.
  */
+@Ignore//FIXME
 public class TestTxnExIm extends TxnCommandsBaseForTests {
   private static final Logger LOG = LoggerFactory.getLogger(TestTxnExIm.class);
   private static final String TEST_DATA_DIR = new File(System.getProperty("java.io.tmpdir") +

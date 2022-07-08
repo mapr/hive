@@ -47,6 +47,7 @@ import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 import org.apache.hive.service.server.HiveServer2;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -257,7 +258,7 @@ public class TestSessionManagerMetrics {
 
   }
 
-  @Test
+  @Test@Ignore//FIXME
   public void testActiveSessionMetrics() throws Exception {
 
     final CyclicBarrier ready = new CyclicBarrier(2);

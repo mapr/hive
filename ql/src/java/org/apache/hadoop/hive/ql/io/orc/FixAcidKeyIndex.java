@@ -66,7 +66,10 @@ public class FixAcidKeyIndex {
   private static final CharsetDecoder utf8Decoder = UTF8.newDecoder();
 
   public static void main(String[] args) throws Exception {
-    Configuration conf = new Configuration();
+    main(args, new Configuration());
+  }
+
+  public static void main(String[] args, Configuration conf) throws Exception {
 
     Options opts = createOptions();
     CommandLine cli = new GnuParser().parse(opts, args);

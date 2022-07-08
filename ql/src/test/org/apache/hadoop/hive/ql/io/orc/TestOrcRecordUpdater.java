@@ -44,6 +44,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.orc.impl.OrcAcidUtils;
 import org.apache.orc.tools.FileDump;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestOrcRecordUpdater {
@@ -230,7 +231,7 @@ public class TestOrcRecordUpdater {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut));
-    FileDump.main(new String[]{root.toUri().toString()});
+    FileDump.main(conf, new String[]{root.toUri().toString()});
     System.out.flush();
     String outDump = new String(myOut.toByteArray());
     assertEquals(true, outDump.contains("Compression: SNAPPY"));

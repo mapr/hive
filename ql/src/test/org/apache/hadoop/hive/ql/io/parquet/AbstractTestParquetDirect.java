@@ -47,6 +47,9 @@ import org.apache.parquet.hadoop.api.WriteSupport;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.MessageType;
 
+import static org.apache.parquet.hadoop.ParquetWriter.DEFAULT_COMPRESSION_CODEC_NAME;
+import static org.apache.parquet.hadoop.ParquetWriter.DEFAULT_WRITER_VERSION;
+
 public abstract class AbstractTestParquetDirect {
 
   public static FileSystem localFS = null;
@@ -102,9 +105,11 @@ public abstract class AbstractTestParquetDirect {
     temp.delete();
 
     Path path = new Path(temp.getPath());
-
-    ParquetWriter<Void> parquetWriter = new ParquetWriter<Void>(path,
-        new DirectWriteSupport(type, writer, new HashMap<String, String>()));
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    ParquetWriter<Void> parquetWriter =
+        new ParquetWriter<Void>(path, new DirectWriteSupport(type, writer, new HashMap<String, String>()),
+            DEFAULT_COMPRESSION_CODEC_NAME, 134217728, 1048576, 1048576, true, false, DEFAULT_WRITER_VERSION, conf);
     parquetWriter.write(null);
     parquetWriter.close();
 
@@ -143,10 +148,12 @@ public abstract class AbstractTestParquetDirect {
   public static List<ArrayWritable> read(Path parquetFile) throws IOException {
     List<ArrayWritable> records = new ArrayList<ArrayWritable>();
 
+    JobConf jobConf = new JobConf();
+    jobConf.set("fs.defaultFS", "file:///");
     RecordReader<NullWritable, ArrayWritable> reader = new MapredParquetInputFormat().
         getRecordReader(new FileSplit(
                 parquetFile, 0, fileLength(parquetFile), (String[]) null),
-            new JobConf(), null);
+        jobConf, null);
 
     NullWritable alwaysNull = reader.createKey();
     ArrayWritable record = reader.createValue();

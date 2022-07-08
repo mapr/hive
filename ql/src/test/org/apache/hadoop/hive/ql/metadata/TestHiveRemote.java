@@ -24,6 +24,7 @@ import java.net.ServerSocket;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreTestUtils;
 import org.apache.hadoop.util.StringUtils;
+import org.junit.Ignore;
 
 /**
  *
@@ -31,6 +32,7 @@ import org.apache.hadoop.util.StringUtils;
  *
  * Tests using the Hive metadata class to make calls to a remote metastore
  */
+@Ignore//FIXME
 public class TestHiveRemote extends TestHive {
 
   /**

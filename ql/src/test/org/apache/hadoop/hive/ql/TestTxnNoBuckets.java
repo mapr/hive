@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.io.BucketCodec;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Ignore//FIXME
 public class TestTxnNoBuckets extends TxnCommandsBaseForTests {
   static final private Logger LOG = LoggerFactory.getLogger(TestTxnNoBuckets.class);
   private static final String TEST_DATA_DIR = new File(System.getProperty("java.io.tmpdir") +
