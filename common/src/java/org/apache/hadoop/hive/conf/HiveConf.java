@@ -2436,7 +2436,7 @@ public class HiveConf extends Configuration {
         "4. LLAP daemon registry service\n" +
         "5. Leader selection for privilege synchronizer"),
 
-    HIVE_ZOOKEEPER_CLIENT_PORT("hive.zookeeper.client.port", "2181",
+    HIVE_ZOOKEEPER_CLIENT_PORT("hive.zookeeper.client.port", "5181",
         "The port of ZooKeeper servers to talk to.\n" +
         "If the list of Zookeeper servers specified in hive.zookeeper.quorum\n" +
         "does not contain port numbers, this value is used."),

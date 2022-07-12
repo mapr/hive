@@ -84,7 +84,7 @@ public class TestHiveAccumuloTableOutputFormat {
   protected String user = "root";
   protected String password = "password";
   protected String instanceName = "instance";
-  protected String zookeepers = "host1:2181,host2:2181,host3:2181";
+  protected String zookeepers = "host1:5181,host2:5181,host3:5181";
   protected String outputTable = "output";
 
   @Rule

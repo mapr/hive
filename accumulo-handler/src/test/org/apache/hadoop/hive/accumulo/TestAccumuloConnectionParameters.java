@@ -47,7 +47,7 @@ public class TestAccumuloConnectionParameters {
   @Test(expected = IllegalArgumentException.class)
   public void testMissingInstanceName() {
     Configuration conf = new Configuration(false);
-    conf.set(AccumuloConnectionParameters.ZOOKEEPERS, "localhost:2181");
+    conf.set(AccumuloConnectionParameters.ZOOKEEPERS, "localhost:5181");
     conf.set(AccumuloConnectionParameters.USER_NAME, "user");
     conf.set(AccumuloConnectionParameters.USER_PASS, "password");
 
@@ -70,7 +70,7 @@ public class TestAccumuloConnectionParameters {
   public void testMissingUserName() throws AccumuloException, AccumuloSecurityException {
     Configuration conf = new Configuration(false);
     conf.set(AccumuloConnectionParameters.INSTANCE_NAME, "accumulo");
-    conf.set(AccumuloConnectionParameters.ZOOKEEPERS, "localhost:2181");
+    conf.set(AccumuloConnectionParameters.ZOOKEEPERS, "localhost:5181");
     conf.set(AccumuloConnectionParameters.USER_PASS, "password");
 
     Instance instance = Mockito.mock(Instance.class);
@@ -87,7 +87,7 @@ public class TestAccumuloConnectionParameters {
   public void testMissingPassword() throws AccumuloException, AccumuloSecurityException {
     Configuration conf = new Configuration(false);
     conf.set(AccumuloConnectionParameters.INSTANCE_NAME, "accumulo");
-    conf.set(AccumuloConnectionParameters.ZOOKEEPERS, "localhost:2181");
+    conf.set(AccumuloConnectionParameters.ZOOKEEPERS, "localhost:5181");
     conf.set(AccumuloConnectionParameters.USER_NAME, "user");
 
     Instance instance = Mockito.mock(Instance.class);

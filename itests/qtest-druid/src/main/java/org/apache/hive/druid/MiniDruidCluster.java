@@ -83,7 +83,7 @@ public class MiniDruidCluster extends AbstractService {
   private final File logDirectory;
 
   public MiniDruidCluster(String name) {
-    this(name, "/tmp/miniDruid/log", "/tmp/miniDruid/data", 2181, null);
+    this(name, "/tmp/miniDruid/log", "/tmp/miniDruid/data", 5181, null);
   }
 
 

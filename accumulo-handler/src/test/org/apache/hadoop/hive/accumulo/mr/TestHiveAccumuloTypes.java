@@ -128,7 +128,7 @@ public class TestHiveAccumuloTypes {
     conf.set(AccumuloSerDeParameters.INSTANCE_NAME, test.getMethodName());
     conf.set(AccumuloSerDeParameters.USER_NAME, user);
     conf.set(AccumuloSerDeParameters.USER_PASS, pass);
-    conf.set(AccumuloSerDeParameters.ZOOKEEPERS, "localhost:2181"); // not used for mock, but
+    conf.set(AccumuloSerDeParameters.ZOOKEEPERS, "localhost:5181"); // not used for mock, but
                                                                     // required by input format.
 
     conf.set(AccumuloSerDeParameters.COLUMN_MAPPINGS, AccumuloHiveConstants.ROWID
@@ -479,7 +479,7 @@ public class TestHiveAccumuloTypes {
     conf.set(AccumuloSerDeParameters.INSTANCE_NAME, test.getMethodName());
     conf.set(AccumuloSerDeParameters.USER_NAME, user);
     conf.set(AccumuloSerDeParameters.USER_PASS, pass);
-    conf.set(AccumuloSerDeParameters.ZOOKEEPERS, "localhost:2181"); // not used for mock, but
+    conf.set(AccumuloSerDeParameters.ZOOKEEPERS, "localhost:5181"); // not used for mock, but
                                                                     // required by input format.
 
     conf.set(AccumuloSerDeParameters.COLUMN_MAPPINGS, AccumuloHiveConstants.ROWID

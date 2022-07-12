@@ -203,7 +203,7 @@ Using localhost in metastore uri does not work with kerberos security.
 
   <tr>
     <td><strong>templeton.zookeeper.hosts</strong></td>
-    <td><code>127.0.0.1:2181</code></td>
+    <td><code>127.0.0.1:5181</code></td>
     <td>ZooKeeper servers, as comma separated host:port pairs</td>
   </tr>
 

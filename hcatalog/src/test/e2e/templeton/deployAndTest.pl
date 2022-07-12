@@ -55,7 +55,7 @@ my $host = `hostname` ;
 chomp $host;
 
 if(! defined $ENV{'ZOOKEEPER_HOST'}){
-    $ENV{'ZOOKEEPER_HOST'} =  $host . ':2181';
+    $ENV{'ZOOKEEPER_HOST'} =  $host . ':5181';
 }
 
 if(! defined $ENV{'METASTORE_HOST'}){

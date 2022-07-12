@@ -36,7 +36,7 @@ import org.apache.hadoop.mapred.InputSplit;
 
 /**
  * Utility to test query and data retrieval via the LLAP input format.
- * llapdump --hiveconf hive.zookeeper.quorum=localhost --hiveconf hive.zookeeper.client.port=2181 --hiveconf hive.llap.daemon.service.hosts=@llap_MiniLlapCluster 'select * from employee where employee_id < 10'
+ * llapdump --hiveconf hive.zookeeper.quorum=localhost --hiveconf hive.zookeeper.client.port=5181 --hiveconf hive.llap.daemon.service.hosts=@llap_MiniLlapCluster 'select * from employee where employee_id < 10'
  *
  */
 public class LlapDump {

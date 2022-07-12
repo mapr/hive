@@ -122,7 +122,7 @@ public class TestHiveAccumuloTableInputFormat {
     conf.set(AccumuloSerDeParameters.INSTANCE_NAME, test.getMethodName());
     conf.set(AccumuloSerDeParameters.USER_NAME, USER);
     conf.set(AccumuloSerDeParameters.USER_PASS, PASS);
-    conf.set(AccumuloSerDeParameters.ZOOKEEPERS, "localhost:2181"); // not used for mock, but
+    conf.set(AccumuloSerDeParameters.ZOOKEEPERS, "localhost:5181"); // not used for mock, but
                                                                     // required by input format.
 
     columnNames = Arrays.asList("name", "sid", "dgrs", "mills");
@@ -510,7 +510,7 @@ public class TestHiveAccumuloTableInputFormat {
     List<IteratorSetting> iterators = Collections.emptyList();
     Set<Range> ranges = Collections.singleton(new Range());
     String instanceName = "realInstance";
-    String zookeepers = "host1:2181,host2:2181,host3:2181";
+    String zookeepers = "host1:5181,host2:5181,host3:5181";
 
     ZooKeeperInstance zkInstance = Mockito.mock(ZooKeeperInstance.class);
     HiveAccumuloTableInputFormat mockInputFormat = Mockito.mock(HiveAccumuloTableInputFormat.class);
@@ -555,7 +555,7 @@ public class TestHiveAccumuloTableInputFormat {
     List<IteratorSetting> iterators = Collections.emptyList();
     Set<Range> ranges = Collections.singleton(new Range());
     String instanceName = "realInstance";
-    String zookeepers = "host1:2181,host2:2181,host3:2181";
+    String zookeepers = "host1:5181,host2:5181,host3:5181";
 
     ZooKeeperInstance zkInstance = Mockito.mock(ZooKeeperInstance.class);
     HiveAccumuloTableInputFormat mockInputFormat = Mockito.mock(HiveAccumuloTableInputFormat.class);
@@ -598,7 +598,7 @@ public class TestHiveAccumuloTableInputFormat {
     List<IteratorSetting> iterators = new ArrayList<IteratorSetting>();
     Set<Range> ranges = Collections.singleton(new Range());
     String instanceName = "realInstance";
-    String zookeepers = "host1:2181,host2:2181,host3:2181";
+    String zookeepers = "host1:5181,host2:5181,host3:5181";
 
     IteratorSetting cfg = new IteratorSetting(50, PrimitiveComparisonFilter.class);
     cfg.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, StringCompare.class.getName());
@@ -655,7 +655,7 @@ public class TestHiveAccumuloTableInputFormat {
     List<IteratorSetting> iterators = new ArrayList<IteratorSetting>();
     Set<Range> ranges = Collections.singleton(new Range());
     String instanceName = "realInstance";
-    String zookeepers = "host1:2181,host2:2181,host3:2181";
+    String zookeepers = "host1:5181,host2:5181,host3:5181";
 
     IteratorSetting cfg = new IteratorSetting(50, PrimitiveComparisonFilter.class);
     cfg.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, StringCompare.class.getName());

@@ -105,7 +105,7 @@ public class TestHiveAccumuloHelper {
 
     final String user = "bob";
     final String instanceName = "accumulo";
-    final String zookeepers = "host1:2181,host2:2181,host3:2181";
+    final String zookeepers = "host1:5181,host2:5181,host3:5181";
     UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[0]);
 
     // Call the real methods for these
@@ -150,7 +150,7 @@ public class TestHiveAccumuloHelper {
 
     final String user = "bob";
     final String instanceName = "accumulo";
-    final String zookeepers = "host1:2181,host2:2181,host3:2181";
+    final String zookeepers = "host1:5181,host2:5181,host3:5181";
     UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[0]);
 
     // Call the real methods for these
@@ -186,7 +186,7 @@ public class TestHiveAccumuloHelper {
 
     final String user = "bob";
     final String instanceName = "accumulo";
-    final String zookeepers = "host1:2181,host2:2181,host3:2181";
+    final String zookeepers = "host1:5181,host2:5181,host3:5181";
     UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[0]);
 
     // Call the real methods for these
@@ -221,7 +221,7 @@ public class TestHiveAccumuloHelper {
 
     final String user = "bob";
     final String instanceName = "accumulo";
-    final String zookeepers = "host1:2181,host2:2181,host3:2181";
+    final String zookeepers = "host1:5181,host2:5181,host3:5181";
     UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[0]);
 
     // Call the real methods for these
