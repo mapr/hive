@@ -242,7 +242,7 @@ public class SecurityUtils {
     }
   }
 
-  public static TServerSocket getServerSocket(String hiveHost, int portNum) throws TTransportException {
+  public static TServerSocket getServerSocket(String hiveHost, int portNum, int socketTimeout) throws TTransportException {
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {
       // Wildcard bind
@@ -250,12 +250,12 @@ public class SecurityUtils {
     } else {
       serverAddress = new InetSocketAddress(hiveHost, portNum);
     }
-    return new TServerSocket(serverAddress);
+    return new TServerSocket(serverAddress, socketTimeout);
   }
 
   public static TServerSocket getServerSSLSocket(String hiveHost, int portNum, String keyStorePath,
-      String keyStorePassWord, List<String> sslVersionBlacklist, String sslProtocolVersion) throws TTransportException,
-      UnknownHostException {
+      String keyStorePassWord, List<String> sslVersionBlacklist, String sslProtocolVersion, int socketTimeout)
+      throws TTransportException, UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     params.setKeyStore(keyStorePath, keyStorePassWord);
@@ -267,7 +267,7 @@ public class SecurityUtils {
       serverAddress = new InetSocketAddress(hiveHost, portNum);
     }
     TServerSocket thriftServerSocket =
-        TSSLTransportFactory.getServerSocket(portNum, 0, serverAddress.getAddress(), params);
+        TSSLTransportFactory.getServerSocket(portNum, socketTimeout, serverAddress.getAddress(), params);
     if (thriftServerSocket.getServerSocket() instanceof SSLServerSocket) {
       List<String> sslVersionBlacklistLocal = new ArrayList<>();
       for (String sslVersion : sslVersionBlacklist) {

@@ -789,6 +789,9 @@ public class MetastoreConf {
         "Command separated list of tasks that will be started in separate threads.  These will be" +
             " started only when the metastore is running as a separate service.  They must " +
             "implement " + MetastoreTaskThread.class.getName()),
+    TCP_SOCKET_BLOCKING_TIMEOUT("metastore.server.tcp.socket.blocking.timeout",
+        "hive.metastore.server.tcp.socket.blocking.timeout", 0, TimeUnit.MINUTES,
+        "Timeout (by default value is interpreted as minutes) on blocking socket operations (accept, read). 0 means infinite timeout."),
     TCP_KEEP_ALIVE("metastore.server.tcp.keepalive",
         "hive.metastore.server.tcp.keepalive", true,
         "Whether to enable TCP keepalive for the metastore server. Keepalive will prevent accumulation of half-open connections."),

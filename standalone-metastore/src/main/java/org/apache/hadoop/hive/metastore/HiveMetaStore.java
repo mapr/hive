@@ -73,6 +73,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 
+import com.google.common.primitives.Ints;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -8916,6 +8917,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       long maxMessageSize = MetastoreConf.getLongVar(conf, ConfVars.SERVER_MAX_MESSAGE_SIZE);
       int minWorkerThreads = MetastoreConf.getIntVar(conf, ConfVars.SERVER_MIN_THREADS);
       int maxWorkerThreads = MetastoreConf.getIntVar(conf, ConfVars.SERVER_MAX_THREADS);
+      int socketTimeout = Ints.saturatedCast(MetastoreConf
+          .getTimeVar(conf, ConfVars.TCP_SOCKET_BLOCKING_TIMEOUT, TimeUnit.MILLISECONDS));
       boolean tcpKeepAlive = MetastoreConf.getBoolVar(conf, ConfVars.TCP_KEEP_ALIVE);
       boolean useFramedTransport = MetastoreConf.getBoolVar(conf, ConfVars.USE_THRIFT_FRAMED_TRANSPORT);
       boolean useCompactProtocol = MetastoreConf.getBoolVar(conf, ConfVars.USE_THRIFT_COMPACT_PROTOCOL);
@@ -8985,7 +8988,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       }
 
       if (!useSSL) {
-        serverSocket = SecurityUtils.getServerSocket(null, port);
+        serverSocket = SecurityUtils.getServerSocket(null, port, socketTimeout);
       } else {
         String keyStorePath = MetastoreConf.getVar(conf, ConfVars.SSL_KEYSTORE_PATH).trim();
         if (keyStorePath.isEmpty()) {
@@ -9002,7 +9005,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         }
         String sslProtocolVersion = MetastoreConf.getVar(conf, ConfVars.SSL_PROTOCOL_VERSION);
         serverSocket = SecurityUtils.getServerSSLSocket(null, port, keyStorePath,
-            keyStorePassword, sslVersionBlacklist, sslProtocolVersion);
+            keyStorePassword, sslVersionBlacklist, sslProtocolVersion, socketTimeout);
       }
 
       if (tcpKeepAlive) {
