@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -63,6 +64,9 @@ import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.transport.TMemoryBuffer;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -73,6 +77,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class QueryPlan implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private static final Logger LOG = LoggerFactory.getLogger(QueryPlan.class);
 
   private String queryString;
 
@@ -640,34 +645,31 @@ public class QueryPlan implements Serializable {
 
   public String toThriftJSONString() throws IOException {
     org.apache.hadoop.hive.ql.plan.api.Query q = getQueryPlan();
-    TMemoryBuffer tmb = new TMemoryBuffer(q.toString().length() * 5);
-    TJSONProtocol oprot = new TJSONProtocol(tmb);
     try {
+      TMemoryBuffer tmb = new TMemoryBuffer(q.toString().length() * 5);
+      TJSONProtocol oprot = new TJSONProtocol(tmb);
       q.write(oprot);
+      return tmb.toString(StandardCharsets.UTF_8);
     } catch (TException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
       return q.toString();
     }
-    return tmb.toString(UTF_8);
   }
 
   public String toBinaryString() throws IOException {
     org.apache.hadoop.hive.ql.plan.api.Query q = getQueryPlan();
-    TMemoryBuffer tmb = new TMemoryBuffer(q.toString().length() * 5);
-    TBinaryProtocol oprot = new TBinaryProtocol(tmb);
     try {
+      TMemoryBuffer tmb = new TMemoryBuffer(q.toString().length() * 5);
+      TBinaryProtocol oprot = new TBinaryProtocol(tmb);
       q.write(oprot);
+      byte[] buf = new byte[tmb.length()];
+      tmb.read(buf, 0, tmb.length());
+      return new String(buf);
     } catch (TException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      LOG.warn("Unable to produce query plan binary string", e);
       return q.toString();
     }
-    byte[] buf = new byte[tmb.length()];
-    tmb.read(buf, 0, tmb.length());
-    return new String(buf);
-    // return getQueryPlan().toString();
-
   }
 
   public void setStarted() {

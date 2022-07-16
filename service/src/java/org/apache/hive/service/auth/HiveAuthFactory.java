@@ -48,6 +48,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.thrift.ThriftCLIService;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TSocket;
@@ -274,8 +275,8 @@ public class HiveAuthFactory {
     }
   }
 
-  public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
-    return new TSocket(host, port, loginTimeout);
+  public static TTransport getSocketTransport(String host, int port, int loginTimeout) throws TTransportException {
+    return new TSocket(new TConfiguration(), host, port, loginTimeout);
   }
 
   // retrieve delegation token for the given user

@@ -45,6 +45,7 @@ import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TSocket;
@@ -74,8 +75,8 @@ public class HiveAuthUtils {
     }
   }
 
-  public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
-    return new TSocket(host, port, loginTimeout);
+  public static TTransport getSocketTransport(String host, int port, int loginTimeout) throws TTransportException {
+    return new TSocket(new TConfiguration(), host, port, loginTimeout);
   }
 
 

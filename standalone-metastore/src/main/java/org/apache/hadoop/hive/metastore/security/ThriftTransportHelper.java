@@ -29,6 +29,7 @@ import org.apache.hadoop.security.scram.ScramSaslClient;
 import org.apache.hadoop.security.token.Token;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslClientFactory;
@@ -59,13 +60,19 @@ final class ThriftTransportHelper {
    */
   static TTransport createTokenTransport(TTransport underlyingTransport, String tokenStrForm,
       Map<String, String> saslProps) throws IOException {
-    Token<DelegationTokenIdentifier> t = new Token<>();
-    t.decodeFromUrlString(tokenStrForm);
-    TTransport saslTransport = new TSaslClientTransport(SaslRpcServer.AuthMethod.TOKEN.getMechanismName(), null, null,
-        SaslRpcServer.SASL_DEFAULT_REALM, saslProps, new HadoopThriftAuthBridge.Client.SaslClientCallbackHandler(t),
-        underlyingTransport);
-    LOG.info(String.format("User authentication with method: %s", SaslRpcServer.AuthMethod.TOKEN.getMechanismName()));
-    return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+    try {
+      Token<DelegationTokenIdentifier> t = new Token<>();
+      t.decodeFromUrlString(tokenStrForm);
+      TTransport saslTransport = null;
+      saslTransport = new TSaslClientTransport(SaslRpcServer.AuthMethod.TOKEN.getMechanismName(), null, null,
+          SaslRpcServer.SASL_DEFAULT_REALM, saslProps, new HadoopThriftAuthBridge.Client.SaslClientCallbackHandler(t),
+          underlyingTransport);
+
+      LOG.info(String.format("User authentication with method: %s", SaslRpcServer.AuthMethod.TOKEN.getMechanismName()));
+      return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+    } catch (TTransportException e) {
+      throw new IOException("Could not instantiate SASL transport", e);
+    }
   }
 
   /**
@@ -79,17 +86,22 @@ final class ThriftTransportHelper {
    */
   static TTransport createScramTransport(TTransport underlyingTransport, String tokenStrForm,
       Map<String, String> saslProps) throws IOException {
-    Token<DelegationTokenIdentifier> token = new Token<>();
-    token.decodeFromUrlString(tokenStrForm);
-    String password = new String(getScramPassword());
-    String mechanism = getScramMechanismName();
-    SaslClientFactory saslClientFactory = new ScramSaslClient.ScramSaslClientFactory();
-    SaslClient scramSaslClient = saslClientFactory.createSaslClient(new String[] { mechanism }, null, null, null,
-        saslProps, new ScramClientCallbackHandler(password, token));
-    TTransport saslTransport = new TSaslClientTransport(scramSaslClient,
-        underlyingTransport);
-    LOG.info(String.format("User authentication with method: %s", mechanism));
-    return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+    try {
+      Token<DelegationTokenIdentifier> token = new Token<>();
+      token.decodeFromUrlString(tokenStrForm);
+      String password = new String(getScramPassword());
+      String mechanism = getScramMechanismName();
+      SaslClientFactory saslClientFactory = new ScramSaslClient.ScramSaslClientFactory();
+      SaslClient scramSaslClient =
+          saslClientFactory.createSaslClient(new String[] { mechanism }, null, null, null, saslProps,
+              new ScramClientCallbackHandler(password, token));
+      TTransport saslTransport = null;
+      saslTransport = new TSaslClientTransport(scramSaslClient, underlyingTransport);
+      LOG.info(String.format("User authentication with method: %s", mechanism));
+      return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+    } catch (TTransportException e) {
+      throw new IOException("Could not instantiate SASL transport", e);
+    }
   }
 
 
@@ -110,7 +122,7 @@ final class ThriftTransportHelper {
       LOG.info(String.format("User authentication with method: %s",
           RpcAuthRegistry.getAuthMethod(UserGroupInformation.AuthenticationMethod.CUSTOM).getMechanismName()));
       return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-    } catch (SaslException se) {
+    } catch (SaslException | TTransportException se) {
       throw new IOException("Could not instantiate SASL transport", se);
     }
   }
@@ -141,7 +153,7 @@ final class ThriftTransportHelper {
               saslProps, null, underlyingTransport);
       LOG.info(String.format("User authentication with method: %s", SaslRpcServer.AuthMethod.KERBEROS.getMechanismName()));
       return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-    } catch (SaslException se) {
+    } catch (SaslException | TTransportException se) {
       throw new IOException("Could not instantiate SASL transport", se);
     }
   }

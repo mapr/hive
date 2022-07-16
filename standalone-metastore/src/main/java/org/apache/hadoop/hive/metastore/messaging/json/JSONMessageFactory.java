@@ -260,47 +260,47 @@ public class JSONMessageFactory extends MessageFactory {
 
   static String createPrimaryKeyObjJson(SQLPrimaryKey primaryKeyObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(primaryKeyObj, "UTF-8");
+    return serializer.toString(primaryKeyObj);
   }
 
   static String createForeignKeyObjJson(SQLForeignKey foreignKeyObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(foreignKeyObj, "UTF-8");
+    return serializer.toString(foreignKeyObj);
   }
 
   static String createUniqueConstraintObjJson(SQLUniqueConstraint uniqueConstraintObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(uniqueConstraintObj, "UTF-8");
+    return serializer.toString(uniqueConstraintObj);
   }
 
   static String createNotNullConstraintObjJson(SQLNotNullConstraint notNullConstaintObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(notNullConstaintObj, "UTF-8");
+    return serializer.toString(notNullConstaintObj);
   }
 
   static String createDatabaseObjJson(Database dbObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(dbObj, "UTF-8");
+    return serializer.toString(dbObj);
   }
 
   static String createCatalogObjJson(Catalog catObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(catObj, "UTF-8");
+    return serializer.toString(catObj);
   }
 
   static String createTableObjJson(Table tableObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(tableObj, "UTF-8");
+    return serializer.toString(tableObj);
   }
 
   static String createPartitionObjJson(Partition partitionObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(partitionObj, "UTF-8");
+    return serializer.toString(partitionObj);
   }
 
   static String createFunctionObjJson(Function functionObj) throws TException {
     TSerializer serializer = new TSerializer(new TJSONProtocol.Factory());
-    return serializer.toString(functionObj, "UTF-8");
+    return serializer.toString(functionObj);
   }
 
   public static ObjectNode getJsonTree(NotificationEvent event) throws Exception {

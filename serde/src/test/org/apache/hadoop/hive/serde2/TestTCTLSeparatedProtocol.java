@@ -25,6 +25,7 @@ import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.thrift.TCTLSeparatedProtocol;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.protocol.TField;
 import org.apache.thrift.protocol.TList;
 import org.apache.thrift.protocol.TMap;
@@ -158,7 +159,7 @@ public class TestTCTLSeparatedProtocol extends TestCase {
 
     prot.writeStructEnd();
     trans.flush();
-    byte[] b = new byte[3 * 1024];
+    byte[] b = new byte[1024];
     int len = trans.read(b, 0, b.length);
     String test = new String(b, 0, len);
 
@@ -418,7 +419,7 @@ public class TestTCTLSeparatedProtocol extends TestCase {
 
     prot.writeStructEnd();
 
-    byte b[] = new byte[3 * 1024];
+    byte b[] = new byte[1024];
     int len = trans.read(b, 0, b.length);
     String written = new String(b, 0, len);
 
@@ -498,6 +499,21 @@ public class TestTCTLSeparatedProtocol extends TestCase {
 
       @Override
       public void write(byte[] buf, int off, int len) throws TTransportException {
+      }
+
+      @Override
+      public TConfiguration getConfiguration() {
+        return null;
+      }
+
+      @Override
+      public void updateKnownMessageSize(long l) throws TTransportException {
+
+      }
+
+      @Override
+      public void checkReadBytesAvailable(long l) throws TTransportException {
+
       }
     });
     separatedProtocol.initialize(null, new Properties());
