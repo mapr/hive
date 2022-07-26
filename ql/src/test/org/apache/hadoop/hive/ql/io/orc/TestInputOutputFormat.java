@@ -1364,7 +1364,7 @@ public class TestInputOutputFormat {
       checkAccess();
       path = path.makeQualified(this);
       List<LocatedFileStatus> result = new ArrayList<>();
-      String pathname = path.toString();
+      String pathname = normalize(path.toString());
       String pathnameAsDir = pathname + "/";
       Set<String> dirs = new TreeSet<String>();
       MockFile file = findFile(path);
@@ -1424,7 +1424,7 @@ public class TestInputOutputFormat {
         List<MockFile> files, String pathnameAsDir, Set<String> dirs, List<LocatedFileStatus> result)
         throws IOException {
       for (MockFile file: files) {
-        String filename = file.path.toString();
+        String filename = normalize(file.path.toString());
         if (filename.startsWith(pathnameAsDir)) {
           String tail = filename.substring(pathnameAsDir.length());
           int nextSlash = tail.indexOf('/');
@@ -1557,6 +1557,10 @@ public class TestInputOutputFormat {
     public static void clearGlobalFiles() {
       globalFiles.clear();
     }
+  }
+
+  private static String normalize(String path){
+    return path == null ? null : path.replaceAll("///", "/");
   }
 
   static void fill(DataOutputBuffer out, long length) throws IOException {
