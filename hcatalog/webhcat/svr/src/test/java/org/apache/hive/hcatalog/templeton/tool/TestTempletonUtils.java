@@ -219,8 +219,8 @@ public class TestTempletonUtils {
       String[] tmp2
         = TempletonUtils.hadoopFsListAsArray(tmpFileName1 + "," + tmpFileName2,
                                              conf, null);
-      Assert.assertEquals("file:" + tmpFileName1, tmp2[0]);
-      Assert.assertEquals("file:" + tmpFileName2, tmp2[1]);
+      Assert.assertEquals("file://" + tmpFileName1, tmp2[0]);
+      Assert.assertEquals("file://" + tmpFileName2, tmp2[1]);
       tmpFile1.delete();
       tmpFile2.delete();
     } catch (FileNotFoundException e) {
@@ -257,7 +257,7 @@ public class TestTempletonUtils {
         null, null) == null);
       Configuration conf = new Configuration();
       conf.set("fs.defaultFS", "file:///");
-      Assert.assertEquals("file:" + tmpFileName1 + ",file:" + tmpFileName2,
+      Assert.assertEquals("file://" + tmpFileName1 + ",file://" + tmpFileName2,
         TempletonUtils.hadoopFsListAsString
         (tmpFileName1 + "," + tmpFileName2, conf, null));
     } catch (FileNotFoundException e) {
