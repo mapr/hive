@@ -777,6 +777,9 @@ public class TezSessionState {
   public TezClient getSession() {
     if (session == null && sessionFuture != null) {
       if (!sessionFuture.isDone()) {
+        if (console == null) {
+          console = new LogHelper(LOG);
+        }
         console.printInfo("Waiting for Tez session and AM to be ready...");
       }
       try {
