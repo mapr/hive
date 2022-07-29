@@ -962,14 +962,6 @@
                   <include>io.dropwizard.metrics:metrics-jvm</include>
                   <include>io.dropwizard.metrics:metrics-json</include>
                   <include>com.zaxxer:HikariCP</include>
-                  <include>io.netty:*</include>
-                  <!-- some netty-based classes are included in arrow jars with original
-                 io.netty package name (e.g. io.netty.buffer.ArrowBuf in arrow-memory)
-                 so we should include them in the shaded jars in order to make shade plugin
-                 be triggered on them, but we should not relocate arrow (this is why arrow
-                 is not included in relocations)
-                 -->
-                  <include>org.apache.arrow:*</include>
                 </includes>
               </artifactSet>
               <relocations>
@@ -992,10 +984,6 @@
                 <relocation>
                   <pattern>com.zaxxer.hikari</pattern>
                   <shadedPattern>org.apache.hive.com.zaxxer.hikari</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>io.netty</pattern>
-                  <shadedPattern>org.apache.hive.io.netty</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
