@@ -564,6 +564,7 @@ public class QTestUtil {
       String confDir, String hadoopVer, String initScript, String cleanupScript,
       boolean withLlapIo, FsType fsType)
     throws Exception {
+    logClassPath();
     LOG.info("Setting up QTestUtil with outDir={}, logDir={}, clusterType={}, confDir={}," +
         " hadoopVer={}, initScript={}, cleanupScript={}, withLlapIo={}," +
             " fsType={}"
@@ -641,6 +642,13 @@ public class QTestUtil {
 
     init();
   }
+
+  private void logClassPath() {
+    String classpath = System.getProperty("java.class.path");
+    String[] classpathEntries = classpath.split(File.pathSeparator);
+    LOG.info("QTestUtil classpath: " + String.join("\n", Arrays.asList(classpathEntries)));
+  }
+
   private String getScriptsDir() {
     // Use the current directory if it is not specified
     String scriptsDir = conf.get("test.data.scripts");
