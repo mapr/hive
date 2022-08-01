@@ -91,7 +91,7 @@
     <!-- Determines the log level of the console logger, hive.log is independent of this-->
     <test.console.log.level>INFO</test.console.log.level>
     <test.warehouse.dir>${project.build.directory}/warehouse</test.warehouse.dir>
-    <test.warehouse.scheme>pfile://</test.warehouse.scheme>
+    <test.warehouse.scheme>file://</test.warehouse.scheme>
 
     <!-- To add additional exclude patterns set this property -->
     <test.excludes.additional></test.excludes.additional>
