@@ -1420,6 +1420,7 @@
             <SPARK_SCALA_VERSION>2.11</SPARK_SCALA_VERSION>
             <SPARK_HOME>${spark.home}</SPARK_HOME>
             <PATH>${env.PATH}${test.extra.path}</PATH>
+            <SKIP_MAPR_SPECIFIC_PROPERTIES>true</SKIP_MAPR_SPECIFIC_PROPERTIES>
           </environmentVariables>
           <systemPropertyVariables>
             <build.dir>${project.build.directory}</build.dir>
