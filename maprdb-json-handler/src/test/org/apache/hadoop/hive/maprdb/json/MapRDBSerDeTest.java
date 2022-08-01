@@ -38,8 +38,10 @@ import org.ojai.types.ODate;
 import org.ojai.types.OTimestamp;
 
 import java.nio.ByteBuffer;
+
 import org.apache.hadoop.hive.common.type.Date;
 import org.apache.hadoop.hive.common.type.Timestamp;
+
 import java.util.*;
 
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.ID_KEY;
@@ -84,7 +86,8 @@ public class MapRDBSerDeTest {
     Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
     assertThat(value, equalTo(result));
 
-    ObjectInspector innerInspector = PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Integer.class);
+    ObjectInspector innerInspector =
+        PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Integer.class);
     Document document = MapRDBImpl.newDocument();
     document.set(columnNames, value);
 
@@ -102,7 +105,8 @@ public class MapRDBSerDeTest {
     Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
     assertThat(value, equalTo(result));
 
-    ObjectInspector innerInspector = PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Boolean.class);
+    ObjectInspector innerInspector =
+        PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Boolean.class);
     Document document = MapRDBImpl.newDocument();
     document.set(columnNames, value);
 
@@ -192,12 +196,11 @@ public class MapRDBSerDeTest {
     Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
     assertThat(map, equalTo(result));
 
-    ObjectInspector keyInspector =
-      PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(String.class);
+    ObjectInspector keyInspector = PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(String.class);
     ObjectInspector valueInspector =
-      PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Integer.class);
+        PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Integer.class);
     MapObjectInspector mapInspector =
-      ObjectInspectorFactory.getStandardMapObjectInspector(keyInspector, valueInspector);
+        ObjectInspectorFactory.getStandardMapObjectInspector(keyInspector, valueInspector);
 
     Document document = MapRDBImpl.newDocument();
     document.set(columnNames, map);
@@ -238,8 +241,8 @@ public class MapRDBSerDeTest {
     innerFieldsList.add("one");
     innerFieldsList.add("two");
 
-    StructObjectInspector structInspector = ObjectInspectorFactory.
-      getStandardStructObjectInspector(innerFieldsList, innerInspectorList);
+    StructObjectInspector structInspector =
+        ObjectInspectorFactory.getStandardStructObjectInspector(innerFieldsList, innerInspectorList);
     StructObjectInspector oi = createObjectInspector(columnNames, structInspector);
 
     Document document = MapRDBImpl.newDocument();
@@ -266,8 +269,7 @@ public class MapRDBSerDeTest {
     Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
     assertEquals(sqlDate.toString(), result.toString());
 
-    ObjectInspector innerInspector = PrimitiveObjectInspectorFactory
-      .getPrimitiveObjectInspectorFromClass(Date.class);
+    ObjectInspector innerInspector = PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Date.class);
     Document document = MapRDBImpl.newDocument();
     document.set(columnNames, value);
 
@@ -288,8 +290,8 @@ public class MapRDBSerDeTest {
     Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
     assertEquals(result, timestamp);
 
-    ObjectInspector innerInspector = PrimitiveObjectInspectorFactory
-      .getPrimitiveObjectInspectorFromClass(Timestamp.class);
+    ObjectInspector innerInspector =
+        PrimitiveObjectInspectorFactory.getPrimitiveObjectInspectorFromClass(Timestamp.class);
     Document document = MapRDBImpl.newDocument();
     document.set(columnNames, value);
 
@@ -355,7 +357,7 @@ public class MapRDBSerDeTest {
   public void testBinary() throws SerDeException {
     String columnNames = "bin";
     String columnTypes = "binary";
-    byte[] bytes = {1, 2, 3, 125, 37, 64};
+    byte[] bytes = { 1, 2, 3, 125, 37, 64 };
     ByteBuffer value = ByteBuffer.wrap(bytes);
 
     Value ojaiValue = DBValueBuilderImpl.KeyValueBuilder.initFrom(value);
@@ -390,7 +392,7 @@ public class MapRDBSerDeTest {
   }
 
   private Object serialize(String columnNames, ObjectInspector innerInspector, Object value, MapRDBSerDe serDe)
-    throws SerDeException {
+      throws SerDeException {
     StructObjectInspector oi = createObjectInspector(columnNames, innerInspector);
     ArrayList<Object> obj = new ArrayList<>();
     obj.add(value);
@@ -398,7 +400,7 @@ public class MapRDBSerDeTest {
   }
 
   private Object deserialize(MapRDBSerDe serDe, String columnNames, String columnTypes, Object value)
-    throws SerDeException {
+      throws SerDeException {
     Properties tblProperties = new Properties();
     tblProperties.setProperty(MAPRDB_COLUMN_ID, ID_KEY);
     tblProperties.setProperty(serdeConstants.LIST_COLUMNS, columnNames);

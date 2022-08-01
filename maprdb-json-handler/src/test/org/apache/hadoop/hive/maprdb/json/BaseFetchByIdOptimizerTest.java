@@ -18,7 +18,8 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
 public class BaseFetchByIdOptimizerTest extends BaseExplainTest {
   private static final String TABLE_NAME = "t";
 
-  @Override void createTables() throws HiveException {
+  @Override
+  void createTables() throws HiveException {
     Map<String, String> commonParams = new HashMap<>();
     commonParams.put(MAPRDB_COLUMN_ID, "id");
     commonParams.put(MAPRDB_IS_IN_TEST_MODE, "true");

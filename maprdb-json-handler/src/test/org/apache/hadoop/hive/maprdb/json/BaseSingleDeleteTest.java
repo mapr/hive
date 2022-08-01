@@ -21,13 +21,17 @@ class BaseSingleDeleteTest extends BaseExplainTest {
 
   private static final String CUSTOMER_DB_JSON = "customer_db_json";
   private static final String DEPARTMENT = "department";
+
   BaseSingleDeleteTest(String query) {
     this.query = query;
   }
 
-  BaseSingleDeleteTest(){query = "";}
+  BaseSingleDeleteTest() {
+    query = "";
+  }
 
-  @Override void createTables() throws HiveException {
+  @Override
+  void createTables() throws HiveException {
     Map<String, String> commonParams = new HashMap<>();
     commonParams.put(MAPRDB_COLUMN_ID, "id");
     commonParams.put(MAPRDB_IS_IN_TEST_MODE, "true");
@@ -39,8 +43,8 @@ class BaseSingleDeleteTest extends BaseExplainTest {
 
     cleanupTables();
     List<String> columns = Arrays.asList("id", "first_name", "last_name", "age");
-    db.createTable(CUSTOMER_DB_JSON, columns, null, HiveMapRDBJsonInputFormat.class,
-        HiveMapRDBJsonOutputFormat.class, -1, null, targetParams, MapRDBSerDe.class);
+    db.createTable(CUSTOMER_DB_JSON, columns, null, HiveMapRDBJsonInputFormat.class, HiveMapRDBJsonOutputFormat.class,
+        -1, null, targetParams, MapRDBSerDe.class);
     db.createTable(DEPARTMENT, columnsDepartment, null, HiveInputFormat.class, HiveBinaryOutputFormat.class);
 
   }

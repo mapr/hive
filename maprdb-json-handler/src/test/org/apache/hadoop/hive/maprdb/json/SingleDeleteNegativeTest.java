@@ -7,7 +7,6 @@ import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -16,20 +15,22 @@ import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.containsString;
 
-@Ignore//FIXME
 public class SingleDeleteNegativeTest extends BaseSingleDeleteTest {
   private static final Logger LOG = LoggerFactory.getLogger(SingleDeleteNegativeTest.class.getName());
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  public SingleDeleteNegativeTest(){};
+  public SingleDeleteNegativeTest() {
+  }
 
-  @Before public void setup() throws HiveException {
+  @Before
+  public void setup() throws HiveException {
     super.setup();
   }
 
-  @Test public void testDeleteFromNonMapRDbJson() throws Exception {
+  @Test
+  public void testDeleteFromNonMapRDbJson() throws Exception {
     try {
       thrown.expect(SemanticException.class);
       thrown.expectMessage(containsString("Operation is not supported. Table is nor ACID neither MapRDbJSON"));
@@ -43,10 +44,12 @@ public class SingleDeleteNegativeTest extends BaseSingleDeleteTest {
     }
   }
 
-  @Test public void testWithNonKeyColumn() throws Exception {
+  @Test
+  public void testWithNonKeyColumn() throws Exception {
     try {
       thrown.expect(SemanticException.class);
-      thrown.expectMessage(containsString("Deletion over column name is forbidden. Use only key column of MapR Db Json table: id"));
+      thrown.expectMessage(
+          containsString("Deletion over column name is forbidden. Use only key column of MapR Db Json table: id"));
       query = IOUtils.toString(Resources.getResource("single-delete-negative/delete-with-non-key-column.sql"));
       ReturnInfo rc = parseAndAnalyze(query);
       String result = explain((SemanticAnalyzer) rc.sem, rc.plan);
@@ -57,7 +60,8 @@ public class SingleDeleteNegativeTest extends BaseSingleDeleteTest {
     }
   }
 
-  @Test public void testWithNonSupportedCondition() throws Exception {
+  @Test
+  public void testWithNonSupportedCondition() throws Exception {
     try {
       thrown.expect(SemanticException.class);
       thrown.expectMessage(containsString("This condition is not supported for MapR Db Json deletions."));

@@ -9,7 +9,6 @@ import org.apache.hadoop.hive.ql.io.HiveInputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -27,8 +26,8 @@ import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_IS_
 import static org.apache.hadoop.hive.maprdb.json.conf.MapRDBConstants.MAPRDB_TABLE_NAME;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
-@Ignore//FIXME
-@RunWith(Parameterized.class) public class MapRDbJsonUpdateDeleteSemanticAnalyzerTest extends BaseExplainTest {
+@RunWith(Parameterized.class)
+public class MapRDbJsonUpdateDeleteSemanticAnalyzerTest extends BaseExplainTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(MapRDbJsonUpdateDeleteSemanticAnalyzerTest.class.getName());
   private static final String CUSTOMER_DB_JSON_TARGET = "customer_db_json_target";
@@ -42,7 +41,8 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
     this.query = query;
   }
 
-  @Parameterized.Parameters public static Collection queries() throws IOException, URISyntaxException {
+  @Parameterized.Parameters
+  public static Collection queries() throws IOException, URISyntaxException {
     List<String> queries = new ArrayList<>();
     URL url = Resources.getResource("update-merge");
     File folder = new File(url.toURI());
@@ -56,11 +56,13 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
     return arguments;
   }
 
-  @Before public void setup() throws HiveException {
+  @Before
+  public void setup() throws HiveException {
     super.setup();
   }
 
-  @Override void createTables() throws HiveException {
+  @Override
+  void createTables() throws HiveException {
 
     Map<String, String> commonParams = new HashMap<>();
     commonParams.put(MAPRDB_COLUMN_ID, "id");
@@ -92,7 +94,8 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
     db.createTable(CUSTOMER_EAST, columnsCustomer, null, HiveInputFormat.class, HiveBinaryOutputFormat.class);
   }
 
-  @Test public void testPositive() throws Exception {
+  @Test
+  public void testPositive() throws Exception {
     try {
       ReturnInfo rc = parseAndAnalyze(query);
       LOG.info(explain((SemanticAnalyzer) rc.sem, rc.plan));

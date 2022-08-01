@@ -5,7 +5,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,8 +19,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Ignore//FIXME
-@RunWith(Parameterized.class) public class MapRDbJsonFetchByIdOptimizerPositiveTest extends BaseFetchByIdOptimizerTest {
+@RunWith(Parameterized.class)
+public class MapRDbJsonFetchByIdOptimizerPositiveTest extends BaseFetchByIdOptimizerTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(MapRDbJsonFetchByIdOptimizerPositiveTest.class.getName());
 
@@ -29,7 +28,8 @@ import java.util.List;
     this.query = query;
   }
 
-  @Parameterized.Parameters public static Collection queries() throws IOException, URISyntaxException {
+  @Parameterized.Parameters
+  public static Collection queries() throws IOException, URISyntaxException {
     List<String> queries = new ArrayList<>();
     URL url = Resources.getResource("fetch-by-id-optimizer-positive");
     File folder = new File(url.toURI());
@@ -43,11 +43,13 @@ import java.util.List;
     return arguments;
   }
 
-  @Before public void setup() throws HiveException {
+  @Before
+  public void setup() throws HiveException {
     super.setup();
   }
 
-  @Test public void testPositive() throws Exception {
+  @Test
+  public void testPositive() throws Exception {
     try {
       ReturnInfo rc = parseAndAnalyze(query);
       String output = explain((SemanticAnalyzer) rc.sem, rc.plan);

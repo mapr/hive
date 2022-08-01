@@ -7,7 +7,6 @@ import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -16,15 +15,14 @@ import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.containsString;
 
-@Ignore//FIXME
 public class OptimizedDeleteInMergeNegativeTest extends BaseOptimizedDeleteInMergeTest {
   private static final Logger LOG = LoggerFactory.getLogger(OptimizedDeleteInMergeNegativeTest.class.getName());
 
-  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   public OptimizedDeleteInMergeNegativeTest() {
   }
-
 
   @Before
   public void setup() throws HiveException {
@@ -67,8 +65,7 @@ public class OptimizedDeleteInMergeNegativeTest extends BaseOptimizedDeleteInMer
   public void testNonSupportedSubQuery() throws Exception {
     try {
       thrown.expect(SemanticException.class);
-      thrown.expectMessage(
-          containsString("Sub queries are not supported as a source when DELETE is used."));
+      thrown.expectMessage(containsString("Sub queries are not supported as a source when DELETE is used."));
       query = IOUtils.toString(Resources.getResource("optimized-delete-in-merge-negative/not-supported-sub-query.sql"));
       ReturnInfo rc = parseAndAnalyze(query);
       String result = explain((SemanticAnalyzer) rc.sem, rc.plan);

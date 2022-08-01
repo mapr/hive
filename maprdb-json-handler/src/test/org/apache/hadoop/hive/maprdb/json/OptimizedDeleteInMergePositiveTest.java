@@ -5,7 +5,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,8 +19,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Ignore//FIXME
-@RunWith(Parameterized.class) public class OptimizedDeleteInMergePositiveTest extends BaseOptimizedDeleteInMergeTest {
+@RunWith(Parameterized.class)
+public class OptimizedDeleteInMergePositiveTest extends BaseOptimizedDeleteInMergeTest {
   private static final Logger LOG = LoggerFactory.getLogger(OptimizedDeleteInMergePositiveTest.class.getName());
 
   public OptimizedDeleteInMergePositiveTest(String query) {
