@@ -40,7 +40,6 @@ import static org.apache.hive.conftool.TestConfToolUtil.getStringVal;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
-@Ignore//FIXME
 public class SslDefaultTest {
   private static final HiveConf.ConfVars HS2_SSL_KEYSTORE_PATH = HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH;
   private static final HiveConf.ConfVars HS2_SSL_KEYSTORE_PSWD = HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD;
@@ -57,15 +56,35 @@ public class SslDefaultTest {
   @Before
   public void init() throws IOException {
     String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    String mapRHadoopPath = System.getenv("MAPR_HOME") + "hadoop";
+    String mapREtcHadoopPath = System.getenv("MAPR_HOME") + "hadoop" + File.separator + "hadoop-3.3.3"
+        + File.separator + "etc" + File.separator + "hadoop";
     File mapRConfDir = new File(mapRConfPath);
+    File mapRHadoopDir = new File(mapRHadoopPath);
+    File mapREtcHadoopDir = new File(mapREtcHadoopPath);
     if (mapRConfDir.exists()) {
       FileUtils.deleteDirectory(mapRConfDir);
     }
     if (!mapRConfDir.mkdirs()) {
       Assert.fail(String.format("Error creating test dir %s", mapRConfPath));
     }
+    if (mapRHadoopDir.exists()) {
+      FileUtils.deleteDirectory(mapRHadoopDir);
+    }
+    if (!mapRHadoopDir.mkdirs()) {
+      Assert.fail(String.format("Error creating test dir %s", mapRHadoopDir));
+    }
+    if (mapREtcHadoopDir.exists()) {
+      FileUtils.deleteDirectory(mapREtcHadoopDir);
+    }
+    if (!mapREtcHadoopDir.mkdirs()) {
+      Assert.fail(String.format("Error creating test dir %s", mapREtcHadoopDir));
+    }
     File src = new File(getPath("maprsasl-enabled" + File.separator + "mapr-clusters.conf"));
     File tgt = new File(mapRConfPath + File.separator + "mapr-clusters.conf");
+    FileUtils.copyFile(src, tgt);
+    src = new File(getPath("maprsasl-enabled" + File.separator + "maprtrustcreds.jceks"));
+    tgt = new File(mapRConfPath + File.separator + "maprtrustcreds.jceks");
     FileUtils.copyFile(src, tgt);
     src = new File(getPath("maprsasl-enabled" + File.separator + "mapruserticket"));
     tgt = new File(mapRConfPath + File.separator + "mapruserticket");
@@ -80,6 +99,12 @@ public class SslDefaultTest {
     tgt = new File(mapRConfPath + File.separator + "daemon.conf");
     FileUtils.copyFile(src, tgt);
     processClusterAdminUser(tgt);
+    src = new File(getPath("maprsasl-enabled" + File.separator + "hadoopversion"));
+    tgt = new File(mapRHadoopDir + File.separator + "hadoopversion");
+    FileUtils.copyFile(src, tgt);
+    src = new File(getPath("maprsasl-enabled" + File.separator + "core-site.xml"));
+    tgt = new File(mapREtcHadoopDir + File.separator + "core-site.xml");
+    FileUtils.copyFile(src, tgt);
   }
 
   @After
@@ -88,6 +113,17 @@ public class SslDefaultTest {
     File mapRConfDir = new File(mapRConfPath);
     if (mapRConfDir.exists()) {
       FileUtils.deleteDirectory(mapRConfDir);
+    }
+    String mapRHadoopPath = System.getenv("MAPR_HOME") + "hadoop";
+    File mapRHadoopDir = new File(mapRHadoopPath);
+    if (mapRHadoopDir.exists()) {
+      FileUtils.deleteDirectory(mapRHadoopDir);
+    }
+    String mapREtcHadoopPath = System.getenv("MAPR_HOME") + "hadoop" + File.separator + "hadoop-3.3.3"
+        + File.separator + "etc" + File.separator + "hadoop";
+    File mapREtcHadoopDir = new File(mapREtcHadoopPath);
+    if (mapREtcHadoopDir.exists()) {
+      FileUtils.deleteDirectory(mapREtcHadoopDir);
     }
   }
 
