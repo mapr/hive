@@ -996,7 +996,7 @@ public class HiveServer2 extends CompositeService {
 
     PolicyProviderContainer policyContainer = new PolicyProviderContainer();
     HiveAuthorizer authorizer = SessionState.get().getAuthorizerV2();
-    if (authorizer.getHivePolicyProvider() != null) {
+    if (authorizer != null && authorizer.getHivePolicyProvider() != null) {
       policyContainer.addAuthorizer(authorizer);
     }
     if (hiveConf.get(MetastoreConf.ConfVars.PRE_EVENT_LISTENERS.getVarname()) != null &&
