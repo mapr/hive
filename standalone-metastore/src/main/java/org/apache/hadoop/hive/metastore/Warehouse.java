@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hive.metastore.api.Catalog;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars;
@@ -659,6 +660,9 @@ public class Warehouse {
     try {
       fs = getFs(f);
       FileStatus fstatus = fs.getFileStatus(f);
+      if (fstatus.isSymlink()) {
+        fstatus = fs.getFileStatus(FileUtil.fixSymlinkFileStatus(fstatus));
+      }
       if (!fstatus.isDir()) {
         return false;
       }

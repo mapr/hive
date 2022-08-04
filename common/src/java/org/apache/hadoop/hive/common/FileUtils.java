@@ -51,6 +51,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.Trash;
 import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveConfUtil;
@@ -578,7 +579,11 @@ public final class FileUtils {
    */
   public static boolean mkdir(FileSystem fs, Path f, Configuration conf) throws IOException {
     LOG.info("Creating directory if it doesn't exist: " + f);
-    return fs.mkdirs(f);
+    Path fixedPath = f;
+    if (fs.exists(f) && fs.getFileStatus(f).isSymlink()) {
+      fixedPath = FileUtil.fixSymlinkPath(new PathData(f.toString(), fs.getConf()));
+    }
+    return fs.mkdirs(fixedPath);
   }
 
   public static Path makeAbsolute(FileSystem fileSystem, Path path) throws IOException {

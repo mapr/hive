@@ -33,9 +33,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import com.mapr.fs.MapRFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hive.common.FileUtils;
@@ -84,6 +86,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public final class HiveFileFormatUtils {
   private static final Logger LOG = LoggerFactory.getLogger(HiveFileFormatUtils.class);
+  private static final Configuration CONF = new Configuration();
 
   public static class FileChecker {
     // we don't have many file formats that implement InputFormatChecker. We won't be holding
@@ -407,6 +410,24 @@ public final class HiveFileFormatUtils {
       }
       part = getFromPath(newPathToPartitionInfo, dir);
     }
+
+    // if still null, consider symlink case and fix the path
+    if (part == null) {
+      FileSystem maprFs = MapRFileSystem.get(CONF);
+      Map<Path, T> symlinkPathToPartitionInfo = new HashMap<>();
+      for (Map.Entry<Path, T> entry : pathToPartitionInfo.entrySet()) {
+        FileStatus fileStatus = maprFs.getFileStatus(entry.getKey());
+        if (fileStatus.isSymlink()){
+          Path p = FileUtil.fixSymlinkFileStatus(fileStatus);
+          symlinkPathToPartitionInfo.put(p, entry.getValue());
+        }else{
+          symlinkPathToPartitionInfo.put(entry.getKey(), entry.getValue());
+        }
+      }
+      part = getFromPath(symlinkPathToPartitionInfo, dir);
+      pathToPartitionInfo = symlinkPathToPartitionInfo;
+    }
+
     if (part != null || ifPresent) {
       return part;
     } else {
