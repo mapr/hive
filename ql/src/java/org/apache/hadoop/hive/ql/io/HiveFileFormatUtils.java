@@ -374,25 +374,133 @@ public final class HiveFileFormatUtils {
         .finalDestination(conf.getDestPath()));
   }
 
-  public static <T> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
+  public static <T extends PartitionDesc> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
       Map<Map<Path, T>, Map<Path, T>> cacheMap, Configuration conf) throws IOException {
     return getFromPathRecursively(pathToPartitionInfo, dir, cacheMap, false, conf);
   }
 
-  public static <T> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
+  public static <T extends PartitionDesc> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
       Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema, Configuration conf) throws IOException {
     return getFromPathRecursively(pathToPartitionInfo, dir, cacheMap, ignoreSchema, false, conf);
   }
 
-  public static <T> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
+  public static <T extends PartitionDesc> T getFromPathRecursively(Map<Path, T> pathToPartitionInfo, Path dir,
       Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema, boolean ifPresent, Configuration conf)
           throws IOException {
+    T part = getFromPathRecursivelyInternal(pathToPartitionInfo, dir, cacheMap, ignoreSchema);
+    part = processSymLinks(part, pathToPartitionInfo, dir, conf);
+    return processOutput(part, pathToPartitionInfo, dir, ifPresent);
+  }
+
+  /**
+   * This method is used only for partitions. This means generic type T is PartitionDesc or extends it. It replaces
+   * symlinks with the folder that symlinks points to.
+   *
+   * @param part partition description
+   * @param pathToPartitionInfo input data for processing
+   * @param dir folder with partitions
+   * @param conf object for file system creation
+   * @param <T> this is PartitionDesc
+   * @return processed symlinks
+   * @throws IOException
+   */
+  private static <T extends PartitionDesc> T processSymLinks(T part, Map<Path, T> pathToPartitionInfo, Path dir, Configuration conf)
+      throws IOException {
+    // if still null, consider symlink cases
+    if (part == null && FileSystem.get(conf) instanceof MapRFileSystem && isSymLinkSupportEnabled(conf)) {
+      FileSystem maprFs = MapRFileSystem.get(conf);
+      Map<Path, T> symlinkPathToPartitionInfo = new HashMap<>();
+      for (Map.Entry<Path, T> entry : pathToPartitionInfo.entrySet()) {
+        boolean isFound = false;
+        // symlink can be a case of dir-to-dir or file-to-file
+        FileStatus fileStatus = maprFs.getFileStatus(entry.getKey());
+        if (fileStatus.isSymlink()){ // dir-to-dir case; MAPR-HIVE-880
+          Path p = FileUtil.fixSymlinkFileStatus(fileStatus);
+          entry.getValue().setBaseFileName(p.getName());
+          symlinkPathToPartitionInfo.put(p, entry.getValue());
+          isFound = true;
+        } else { // file-to-file case; MAPR-HIVE-884
+          FileStatus[] candidates = maprFs.listStatus(entry.getKey());
+          for (FileStatus file : candidates) {
+            if (file.isSymlink()) {
+              Path p = FileUtil.fixSymlinkFileStatus(file);
+              if (maprFs.getFileStatus(p).compareTo(maprFs.getFileStatus(dir)) == 0) {
+                p = p.getParent();
+                entry.getValue().setBaseFileName(p.getName());
+                symlinkPathToPartitionInfo.put(p, entry.getValue());
+                isFound = true;
+                break;
+              }
+            }
+          }
+        }
+        if (!isFound) {
+          symlinkPathToPartitionInfo.put(entry.getKey(), entry.getValue());
+        }
+      }
+      part = getFromPath(symlinkPathToPartitionInfo, dir);
+    }
+    return part;
+  }
+
+  /**
+   *  This method is used only when the generic type C is ArrayList<String>
+   *
+   * @param pathToPartitionInfo input data for processing
+   * @param dir folder with partitions
+   * @param cacheMap
+   * @param ignoreSchema
+   * @param ifPresent
+   * @param <T> this is either PartitionDesc or ArrayList<String>
+   * @return data from path recursively
+   * @throws IOException
+   */
+  public static <T> T getFromPathRecursivelyCommon(Map<Path, T> pathToPartitionInfo, Path dir,
+      Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema, boolean ifPresent)
+      throws IOException {
+    T part = getFromPathRecursivelyInternal(pathToPartitionInfo, dir, cacheMap, ignoreSchema);
+    return processOutput(part, pathToPartitionInfo, dir, ifPresent);
+  }
+
+  /**
+   * This method decides what to return: either value of part or throw an exception
+   *
+   * @param part we just return this value without changing
+   * @param pathToPartitionInfo input data for processing
+   * @param dir folder with partitions
+   * @param ifPresent
+   * @param <T> this is either PartitionDesc or ArrayList<String>
+   * @return value that comes from input without change
+   * @throws IOException when part is null ot ifPresent is false
+   */
+  private static <T> T processOutput(T part, Map<Path, T> pathToPartitionInfo,  Path dir, boolean ifPresent)
+      throws IOException {
+    if (part != null || ifPresent) {
+      return part;
+    } else {
+      throw new IOException("cannot find dir = " + dir.toString()
+          + " in pathToPartitionInfo: " + pathToPartitionInfo.keySet());
+    }
+  }
+
+  /**
+   * This is internal method for all kinds of generic T: both PartitionDesc and ArrayList<String>
+   *
+   * @param pathToPartitionInfo input data for processing
+   * @param dir folder with partitions
+   * @param cacheMap
+   * @param ignoreSchema
+   * @param <T> this is either PartitionDesc or ArrayList<String>
+   * @return
+   */
+  private static <T> T getFromPathRecursivelyInternal(Map<Path, T> pathToPartitionInfo, Path dir,
+      Map<Map<Path, T>, Map<Path, T>> cacheMap, boolean ignoreSchema) {
     T part = getFromPath(pathToPartitionInfo, dir);
 
     if (part == null
         && (ignoreSchema
-            || (dir.toUri().getScheme() == null || dir.toUri().getScheme().trim().equals(""))
-            || FileUtils.pathsContainNoScheme(pathToPartitionInfo.keySet()))) {
+        || (dir.toUri().getScheme() == null || dir.toUri().getScheme().trim().equals(""))
+        || FileUtils.pathsContainNoScheme(pathToPartitionInfo.keySet()))) {
 
       Map<Path, T> newPathToPartitionInfo = null;
       if (cacheMap != null) {
@@ -408,47 +516,7 @@ public final class HiveFileFormatUtils {
       }
       part = getFromPath(newPathToPartitionInfo, dir);
     }
-
-    // if still null, consider symlink cases
-    if (part == null && FileSystem.get(conf) instanceof MapRFileSystem && isSymLinkSupportEnabled(conf)) {
-      FileSystem maprFs = MapRFileSystem.get(conf);
-      Map<Path, T> symlinkPathToPartitionInfo = new HashMap<>();
-      for (Map.Entry<Path, T> entry : pathToPartitionInfo.entrySet()) {
-        boolean isFound = false;
-        // symlink can be a case of dir-to-dir or file-to-file
-        FileStatus fileStatus = maprFs.getFileStatus(entry.getKey());
-        if (fileStatus.isSymlink()){ // dir-to-dir case; MAPR-HIVE-880
-          Path p = FileUtil.fixSymlinkFileStatus(fileStatus);
-          symlinkPathToPartitionInfo.put(p, entry.getValue());
-          isFound = true;
-        } else { // file-to-file case; MAPR-HIVE-884
-          FileStatus[] candidates = maprFs.listStatus(entry.getKey());
-          for (FileStatus file : candidates) {
-            if (file.isSymlink()) {
-              Path p = FileUtil.fixSymlinkFileStatus(file);
-              if (maprFs.getFileStatus(p).compareTo(maprFs.getFileStatus(dir)) == 0) {
-                p = p.getParent();
-                symlinkPathToPartitionInfo.put(p, entry.getValue());
-                isFound = true;
-                break;
-              }
-            }
-          }
-        }
-        if (!isFound) {
-          symlinkPathToPartitionInfo.put(entry.getKey(), entry.getValue());
-        }
-      }
-      part = getFromPath(symlinkPathToPartitionInfo, dir);
-      pathToPartitionInfo = symlinkPathToPartitionInfo;
-    }
-
-    if (part != null || ifPresent) {
-      return part;
-    } else {
-      throw new IOException("cannot find dir = " + dir.toString()
-                          + " in pathToPartitionInfo: " + pathToPartitionInfo.keySet());
-    }
+    return part;
   }
 
   private static <T> Map<Path, T> populateNewT(Map<Path, T> pathToPartitionInfo) {

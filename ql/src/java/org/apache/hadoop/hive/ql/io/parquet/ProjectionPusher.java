@@ -85,8 +85,8 @@ public class ProjectionPusher {
 
     final Set<String> aliases = new HashSet<String>();
     try {
-      ArrayList<String> a = HiveFileFormatUtils.getFromPathRecursively(
-          mapWork.getPathToAliases(), new Path(splitPath), null, false, true, jobConf);
+      ArrayList<String> a = HiveFileFormatUtils.getFromPathRecursivelyCommon(
+          mapWork.getPathToAliases(), new Path(splitPath), null, false, true);
       if (a != null) {
         aliases.addAll(a);
       }
