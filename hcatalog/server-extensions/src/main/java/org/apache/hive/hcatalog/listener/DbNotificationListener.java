@@ -19,10 +19,12 @@ package org.apache.hive.hcatalog.listener;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -646,6 +648,7 @@ public class DbNotificationListener extends TransactionalMetaStoreEventListener 
       return;
     }
     Statement stmt = null;
+    PreparedStatement pst = null;
     ResultSet rs = null;
     try {
       stmt = dbConn.createStatement();
@@ -686,21 +689,20 @@ public class DbNotificationListener extends TransactionalMetaStoreEventListener 
       LOG.debug("Going to execute update <" + s + ">");
       stmt.executeUpdate(s);
 
-      List<String> insert = new ArrayList<>();
+      String insertVal = "(" + nextNLId + "," + nextEventId + "," + now() + ", ?, ?," +
+          quoteString(" ") + ",?, ?)";
 
-      insert.add(0, nextNLId + "," + nextEventId + "," + now() + "," +
-              quoteString(event.getEventType()) + "," + quoteString(event.getDbName()) + "," +
-              quoteString(" ") + "," + quoteString(event.getMessage()) + "," +
-              quoteString(event.getMessageFormat()));
+      s = "insert into \"NOTIFICATION_LOG\" (\"NL_ID\", \"EVENT_ID\", \"EVENT_TIME\", " +
+          " \"EVENT_TYPE\", \"DB_NAME\", " +
+          " \"TBL_NAME\", \"MESSAGE\", \"MESSAGE_FORMAT\") VALUES " + insertVal;
+      List<String> params = Arrays.asList(
+          event.getEventType(), event.getDbName(), event.getMessage(), event.getMessageFormat());
+      pst = sqlGenerator.prepareStmtWithParameters(dbConn, s, params);
 
-      List<String> sql = sqlGenerator.createInsertValuesStmt(
-              "\"NOTIFICATION_LOG\" (\"NL_ID\", \"EVENT_ID\", \"EVENT_TIME\", " +
-                      " \"EVENT_TYPE\", \"DB_NAME\"," +
-                      " \"TBL_NAME\", \"MESSAGE\", \"MESSAGE_FORMAT\")", insert);
-      for (String q : sql) {
-        LOG.info("Going to execute insert <" + q + ">");
-        stmt.execute(q);
-      }
+      LOG.debug("Going to execute insert <" + s.replaceAll("\\?", "{}") + ">",
+          quoteString(event.getEventType()), quoteString(event.getDbName()),
+          quoteString(event.getMessage()), quoteString(event.getMessageFormat()));
+      pst.execute();
 
       // Set the DB_NOTIFICATION_EVENT_ID for future reference by other listeners.
       if (event.isSetEventId()) {
@@ -715,6 +717,13 @@ public class DbNotificationListener extends TransactionalMetaStoreEventListener 
       if (stmt != null && !stmt.isClosed()) {
         try {
           stmt.close();
+        } catch (SQLException e) {
+          LOG.warn("Failed to close statement " + e.getMessage());
+        }
+      }
+      if (pst != null && !pst.isClosed()) {
+        try {
+          pst.close();
         } catch (SQLException e) {
           LOG.warn("Failed to close statement " + e.getMessage());
         }

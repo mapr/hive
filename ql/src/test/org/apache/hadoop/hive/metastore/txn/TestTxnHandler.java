@@ -1668,7 +1668,6 @@ public class TestTxnHandler {
     allocMsg.setReplPolicy("destdb.*");
     allocMsg.setSrcTxnToWriteIdList(srcTxnToWriteId);
 
-
     // This is an idempotent case when repl flow forcefully allocate write id if it doesn't match
     // the next write id.
     try {
