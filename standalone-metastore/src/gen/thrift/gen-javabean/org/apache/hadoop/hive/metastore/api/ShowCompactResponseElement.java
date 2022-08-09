@@ -24,6 +24,7 @@ package org.apache.hadoop.hive.metastore.api;
   private static final org.apache.thrift.protocol.TField END_TIME_FIELD_DESC = new org.apache.thrift.protocol.TField("endTime", org.apache.thrift.protocol.TType.I64, (short)11);
   private static final org.apache.thrift.protocol.TField HADOOP_JOB_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("hadoopJobId", org.apache.thrift.protocol.TType.STRING, (short)12);
   private static final org.apache.thrift.protocol.TField ID_FIELD_DESC = new org.apache.thrift.protocol.TField("id", org.apache.thrift.protocol.TType.I64, (short)13);
+  private static final org.apache.thrift.protocol.TField ERROR_MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("errorMessage", org.apache.thrift.protocol.TType.STRING, (short)14);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new ShowCompactResponseElementStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new ShowCompactResponseElementTupleSchemeFactory();
@@ -41,6 +42,7 @@ package org.apache.hadoop.hive.metastore.api;
   private long endTime; // optional
   private @org.apache.thrift.annotation.Nullable java.lang.String hadoopJobId; // optional
   private long id; // optional
+  private @org.apache.thrift.annotation.Nullable java.lang.String errorMessage; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -60,7 +62,8 @@ package org.apache.hadoop.hive.metastore.api;
     META_INFO((short)10, "metaInfo"),
     END_TIME((short)11, "endTime"),
     HADOOP_JOB_ID((short)12, "hadoopJobId"),
-    ID((short)13, "id");
+    ID((short)13, "id"),
+    ERROR_MESSAGE((short)14, "errorMessage");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -102,6 +105,8 @@ package org.apache.hadoop.hive.metastore.api;
           return HADOOP_JOB_ID;
         case 13: // ID
           return ID;
+        case 14: // ERROR_MESSAGE
+          return ERROR_MESSAGE;
         default:
           return null;
       }
@@ -148,7 +153,7 @@ package org.apache.hadoop.hive.metastore.api;
   private static final int __ENDTIME_ISSET_ID = 2;
   private static final int __ID_ISSET_ID = 3;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.PARTITIONNAME,_Fields.WORKERID,_Fields.START,_Fields.RUN_AS,_Fields.HIGHTEST_TXN_ID,_Fields.META_INFO,_Fields.END_TIME,_Fields.HADOOP_JOB_ID,_Fields.ID};
+  private static final _Fields optionals[] = {_Fields.PARTITIONNAME,_Fields.WORKERID,_Fields.START,_Fields.RUN_AS,_Fields.HIGHTEST_TXN_ID,_Fields.META_INFO,_Fields.END_TIME,_Fields.HADOOP_JOB_ID,_Fields.ID,_Fields.ERROR_MESSAGE};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -178,6 +183,8 @@ package org.apache.hadoop.hive.metastore.api;
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.ID, new org.apache.thrift.meta_data.FieldMetaData("id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.ERROR_MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("errorMessage", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ShowCompactResponseElement.class, metaDataMap);
   }
@@ -236,6 +243,9 @@ package org.apache.hadoop.hive.metastore.api;
       this.hadoopJobId = other.hadoopJobId;
     }
     this.id = other.id;
+    if (other.isSetErrorMessage()) {
+      this.errorMessage = other.errorMessage;
+    }
   }
 
   public ShowCompactResponseElement deepCopy() {
@@ -262,6 +272,7 @@ package org.apache.hadoop.hive.metastore.api;
 
     setIdIsSet(false);
     this.id = 0;
+    this.errorMessage = null;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -576,6 +587,30 @@ package org.apache.hadoop.hive.metastore.api;
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __ID_ISSET_ID, value);
   }
 
+  @org.apache.thrift.annotation.Nullable
+  public java.lang.String getErrorMessage() {
+    return this.errorMessage;
+  }
+
+  public void setErrorMessage(@org.apache.thrift.annotation.Nullable java.lang.String errorMessage) {
+    this.errorMessage = errorMessage;
+  }
+
+  public void unsetErrorMessage() {
+    this.errorMessage = null;
+  }
+
+  /** Returns true if field errorMessage is set (has been assigned a value) and false otherwise */
+  public boolean isSetErrorMessage() {
+    return this.errorMessage != null;
+  }
+
+  public void setErrorMessageIsSet(boolean value) {
+    if (!value) {
+      this.errorMessage = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
     case DBNAME:
@@ -682,6 +717,14 @@ package org.apache.hadoop.hive.metastore.api;
       }
       break;
 
+    case ERROR_MESSAGE:
+      if (value == null) {
+        unsetErrorMessage();
+      } else {
+        setErrorMessage((java.lang.String)value);
+      }
+      break;
+
     }
   }
 
@@ -727,6 +770,9 @@ package org.apache.hadoop.hive.metastore.api;
     case ID:
       return getId();
 
+    case ERROR_MESSAGE:
+      return getErrorMessage();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -764,6 +810,8 @@ package org.apache.hadoop.hive.metastore.api;
       return isSetHadoopJobId();
     case ID:
       return isSetId();
+    case ERROR_MESSAGE:
+      return isSetErrorMessage();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -898,6 +946,15 @@ package org.apache.hadoop.hive.metastore.api;
         return false;
     }
 
+    boolean this_present_errorMessage = true && this.isSetErrorMessage();
+    boolean that_present_errorMessage = true && that.isSetErrorMessage();
+    if (this_present_errorMessage || that_present_errorMessage) {
+      if (!(this_present_errorMessage && that_present_errorMessage))
+        return false;
+      if (!this.errorMessage.equals(that.errorMessage))
+        return false;
+    }
+
     return true;
   }
 
@@ -956,6 +1013,10 @@ package org.apache.hadoop.hive.metastore.api;
     hashCode = hashCode * 8191 + ((isSetId()) ? 131071 : 524287);
     if (isSetId())
       hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(id);
+
+    hashCode = hashCode * 8191 + ((isSetErrorMessage()) ? 131071 : 524287);
+    if (isSetErrorMessage())
+      hashCode = hashCode * 8191 + errorMessage.hashCode();
 
     return hashCode;
   }
@@ -1098,6 +1159,16 @@ package org.apache.hadoop.hive.metastore.api;
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.compare(isSetErrorMessage(), other.isSetErrorMessage());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetErrorMessage()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.errorMessage, other.errorMessage);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1222,6 +1293,16 @@ package org.apache.hadoop.hive.metastore.api;
       if (!first) sb.append(", ");
       sb.append("id:");
       sb.append(this.id);
+      first = false;
+    }
+    if (isSetErrorMessage()) {
+      if (!first) sb.append(", ");
+      sb.append("errorMessage:");
+      if (this.errorMessage == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.errorMessage);
+      }
       first = false;
     }
     sb.append(")");
@@ -1389,6 +1470,14 @@ package org.apache.hadoop.hive.metastore.api;
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 14: // ERROR_MESSAGE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.errorMessage = iprot.readString();
+              struct.setErrorMessageIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1477,6 +1566,13 @@ package org.apache.hadoop.hive.metastore.api;
         oprot.writeI64(struct.id);
         oprot.writeFieldEnd();
       }
+      if (struct.errorMessage != null) {
+        if (struct.isSetErrorMessage()) {
+          oprot.writeFieldBegin(ERROR_MESSAGE_FIELD_DESC);
+          oprot.writeString(struct.errorMessage);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1526,7 +1622,10 @@ package org.apache.hadoop.hive.metastore.api;
       if (struct.isSetId()) {
         optionals.set(8);
       }
-      oprot.writeBitSet(optionals, 9);
+      if (struct.isSetErrorMessage()) {
+        optionals.set(9);
+      }
+      oprot.writeBitSet(optionals, 10);
       if (struct.isSetPartitionname()) {
         oprot.writeString(struct.partitionname);
       }
@@ -1554,6 +1653,9 @@ package org.apache.hadoop.hive.metastore.api;
       if (struct.isSetId()) {
         oprot.writeI64(struct.id);
       }
+      if (struct.isSetErrorMessage()) {
+        oprot.writeString(struct.errorMessage);
+      }
     }
 
     @Override
@@ -1567,7 +1669,7 @@ package org.apache.hadoop.hive.metastore.api;
       struct.setTypeIsSet(true);
       struct.state = iprot.readString();
       struct.setStateIsSet(true);
-      java.util.BitSet incoming = iprot.readBitSet(9);
+      java.util.BitSet incoming = iprot.readBitSet(10);
       if (incoming.get(0)) {
         struct.partitionname = iprot.readString();
         struct.setPartitionnameIsSet(true);
@@ -1603,6 +1705,10 @@ package org.apache.hadoop.hive.metastore.api;
       if (incoming.get(8)) {
         struct.id = iprot.readI64();
         struct.setIdIsSet(true);
+      }
+      if (incoming.get(9)) {
+        struct.errorMessage = iprot.readString();
+        struct.setErrorMessageIsSet(true);
       }
     }
   }

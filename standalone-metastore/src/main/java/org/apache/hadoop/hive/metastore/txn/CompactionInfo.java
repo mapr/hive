@@ -49,6 +49,7 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
   public long highestWriteId;
   byte[] metaInfo;
   String hadoopJobId;
+  public String errorMessage;
 
   private String fullPartitionName = null;
   private String fullTableName = null;
@@ -107,7 +108,8 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
       "properties:" + properties + "," +
       "runAs:" + runAs + "," +
       "tooManyAborts:" + tooManyAborts + "," +
-      "highestWriteId:" + highestWriteId;
+      "highestWriteId:" + highestWriteId + "," +
+      "errorMessage:" + errorMessage;
   }
 
   /**
@@ -130,6 +132,7 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
     fullCi.highestWriteId = rs.getLong(11);
     fullCi.metaInfo = rs.getBytes(12);
     fullCi.hadoopJobId = rs.getString(13);
+    fullCi.errorMessage = rs.getString(14);
     return fullCi;
   }
   static void insertIntoCompletedCompactions(PreparedStatement pStmt, CompactionInfo ci, long endTime) throws SQLException {
@@ -147,5 +150,6 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
     pStmt.setLong(12, ci.highestWriteId);
     pStmt.setBytes(13, ci.metaInfo);
     pStmt.setString(14, ci.hadoopJobId);
+    pStmt.setString(15, ci.errorMessage);
   }
 }

@@ -87,6 +87,11 @@ class ShowCompactResponseElement
             'isRequired' => false,
             'type' => TType::I64,
         ),
+        14 => array(
+            'var' => 'errorMessage',
+            'isRequired' => false,
+            'type' => TType::STRING,
+        ),
     );
 
     /**
@@ -141,6 +146,10 @@ class ShowCompactResponseElement
      * @var int
      */
     public $id = null;
+    /**
+     * @var string
+     */
+    public $errorMessage = null;
 
     public function __construct($vals = null)
     {
@@ -183,6 +192,9 @@ class ShowCompactResponseElement
             }
             if (isset($vals['id'])) {
                 $this->id = $vals['id'];
+            }
+            if (isset($vals['errorMessage'])) {
+                $this->errorMessage = $vals['errorMessage'];
             }
         }
     }
@@ -297,6 +309,13 @@ class ShowCompactResponseElement
                         $xfer += $input->skip($ftype);
                     }
                     break;
+                case 14:
+                    if ($ftype == TType::STRING) {
+                        $xfer += $input->readString($this->errorMessage);
+                    } else {
+                        $xfer += $input->skip($ftype);
+                    }
+                    break;
                 default:
                     $xfer += $input->skip($ftype);
                     break;
@@ -374,6 +393,11 @@ class ShowCompactResponseElement
         if ($this->id !== null) {
             $xfer += $output->writeFieldBegin('id', TType::I64, 13);
             $xfer += $output->writeI64($this->id);
+            $xfer += $output->writeFieldEnd();
+        }
+        if ($this->errorMessage !== null) {
+            $xfer += $output->writeFieldBegin('errorMessage', TType::STRING, 14);
+            $xfer += $output->writeString($this->errorMessage);
             $xfer += $output->writeFieldEnd();
         }
         $xfer += $output->writeFieldStop();

@@ -316,6 +316,7 @@ public class Cleaner extends CompactorThread {
     } catch (Exception e) {
       LOG.error("Caught exception when cleaning, unable to complete cleaning of " + ci + " " +
           StringUtils.stringifyException(e));
+      ci.errorMessage = e.getMessage();
       txnHandler.markFailed(ci);
     }
   }

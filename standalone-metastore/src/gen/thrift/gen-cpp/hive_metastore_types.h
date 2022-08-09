@@ -8369,7 +8369,7 @@ void swap(ShowCompactRequest &a, ShowCompactRequest &b);
 std::ostream& operator<<(std::ostream& out, const ShowCompactRequest& obj);
 
 typedef struct _ShowCompactResponseElement__isset {
-  _ShowCompactResponseElement__isset() : partitionname(false), workerid(false), start(false), runAs(false), hightestTxnId(false), metaInfo(false), endTime(false), hadoopJobId(true), id(false) {}
+  _ShowCompactResponseElement__isset() : partitionname(false), workerid(false), start(false), runAs(false), hightestTxnId(false), metaInfo(false), endTime(false), hadoopJobId(true), id(false), errorMessage(false) {}
   bool partitionname :1;
   bool workerid :1;
   bool start :1;
@@ -8379,6 +8379,7 @@ typedef struct _ShowCompactResponseElement__isset {
   bool endTime :1;
   bool hadoopJobId :1;
   bool id :1;
+  bool errorMessage :1;
 } _ShowCompactResponseElement__isset;
 
 class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
@@ -8398,7 +8399,8 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
                                  metaInfo(),
                                  endTime(0),
                                  hadoopJobId("None"),
-                                 id(0) {
+                                 id(0),
+                                 errorMessage() {
   }
 
   virtual ~ShowCompactResponseElement() noexcept;
@@ -8419,6 +8421,7 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
   int64_t endTime;
   std::string hadoopJobId;
   int64_t id;
+  std::string errorMessage;
 
   _ShowCompactResponseElement__isset __isset;
 
@@ -8447,6 +8450,8 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
   void __set_hadoopJobId(const std::string& val);
 
   void __set_id(const int64_t val);
+
+  void __set_errorMessage(const std::string& val);
 
   bool operator == (const ShowCompactResponseElement & rhs) const
   {
@@ -8493,6 +8498,10 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
     if (__isset.id != rhs.__isset.id)
       return false;
     else if (__isset.id && !(id == rhs.id))
+      return false;
+    if (__isset.errorMessage != rhs.__isset.errorMessage)
+      return false;
+    else if (__isset.errorMessage && !(errorMessage == rhs.errorMessage))
       return false;
     return true;
   }

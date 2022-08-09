@@ -17,7 +17,6 @@
  */
 
 package org.apache.hadoop.hive.metastore;
-
 import java.sql.SQLException;
 import java.sql.SQLTransactionRollbackException;
 

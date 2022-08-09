@@ -176,10 +176,11 @@ public class Worker extends CompactorThread {
             UserGroupInformation ugi = UserGroupInformation.createProxyUser(t.getOwner(),
               UserGroupInformation.getLoginUser());
             final Partition fp = p;
+            final CompactionInfo fci = ci;
             ugi.doAs(new PrivilegedExceptionAction<Object>() {
               @Override
               public Object run() throws Exception {
-                mr.run(conf, jobName.toString(), t, fp, sd, tblValidWriteIds, ci, su, txnHandler);
+                mr.run(conf, jobName.toString(), t, fp, sd, tblValidWriteIds, fci, su, txnHandler);
                 return null;
               }
             });
@@ -197,6 +198,7 @@ public class Worker extends CompactorThread {
         } catch (Exception e) {
           LOG.error("Caught exception while trying to compact " + ci +
               ".  Marking failed to avoid repeated failures, " + StringUtils.stringifyException(e));
+          ci.errorMessage = e.getMessage();
           txnHandler.markFailed(ci);
         }
       } catch (Throwable t) {

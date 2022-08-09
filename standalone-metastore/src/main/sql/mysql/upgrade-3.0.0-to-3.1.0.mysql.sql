@@ -49,6 +49,10 @@ CREATE TABLE MATERIALIZATION_REBUILD_LOCKS (
   PRIMARY KEY(MRL_TXN_ID)
 );
 
+-- HIVE-22729
+ALTER TABLE COMPACTION_QUEUE ADD CQ_ERROR_MESSAGE mediumtext;
+ALTER TABLE COMPLETED_COMPACTIONS ADD CC_ERROR_MESSAGE mediumtext;
+
 -- These lines need to be last.  Insert any changes above.
 UPDATE VERSION SET SCHEMA_VERSION='3.1.0', VERSION_COMMENT='Hive release version 3.1.0' where VER_ID=1;
 SELECT 'Finished upgrading MetaStore schema from 3.0.0 to 3.1.0' AS ' ';

@@ -21285,6 +21285,11 @@ void ShowCompactResponseElement::__set_id(const int64_t val) {
   this->id = val;
 __isset.id = true;
 }
+
+void ShowCompactResponseElement::__set_errorMessage(const std::string& val) {
+  this->errorMessage = val;
+__isset.errorMessage = true;
+}
 std::ostream& operator<<(std::ostream& out, const ShowCompactResponseElement& obj)
 {
   obj.printTo(out);
@@ -21423,6 +21428,14 @@ uint32_t ShowCompactResponseElement::read(::apache::thrift::protocol::TProtocol*
           xfer += iprot->skip(ftype);
         }
         break;
+      case 14:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->errorMessage);
+          this->__isset.errorMessage = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -21509,6 +21522,11 @@ uint32_t ShowCompactResponseElement::write(::apache::thrift::protocol::TProtocol
     xfer += oprot->writeI64(this->id);
     xfer += oprot->writeFieldEnd();
   }
+  if (this->__isset.errorMessage) {
+    xfer += oprot->writeFieldBegin("errorMessage", ::apache::thrift::protocol::T_STRING, 14);
+    xfer += oprot->writeString(this->errorMessage);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -21529,6 +21547,7 @@ void swap(ShowCompactResponseElement &a, ShowCompactResponseElement &b) {
   swap(a.endTime, b.endTime);
   swap(a.hadoopJobId, b.hadoopJobId);
   swap(a.id, b.id);
+  swap(a.errorMessage, b.errorMessage);
   swap(a.__isset, b.__isset);
 }
 
@@ -21546,6 +21565,7 @@ ShowCompactResponseElement::ShowCompactResponseElement(const ShowCompactResponse
   endTime = other801.endTime;
   hadoopJobId = other801.hadoopJobId;
   id = other801.id;
+  errorMessage = other801.errorMessage;
   __isset = other801.__isset;
 }
 ShowCompactResponseElement& ShowCompactResponseElement::operator=(const ShowCompactResponseElement& other802) {
@@ -21562,6 +21582,7 @@ ShowCompactResponseElement& ShowCompactResponseElement::operator=(const ShowComp
   endTime = other802.endTime;
   hadoopJobId = other802.hadoopJobId;
   id = other802.id;
+  errorMessage = other802.errorMessage;
   __isset = other802.__isset;
   return *this;
 }
@@ -21581,6 +21602,7 @@ void ShowCompactResponseElement::printTo(std::ostream& out) const {
   out << ", " << "endTime="; (__isset.endTime ? (out << to_string(endTime)) : (out << "<null>"));
   out << ", " << "hadoopJobId="; (__isset.hadoopJobId ? (out << to_string(hadoopJobId)) : (out << "<null>"));
   out << ", " << "id="; (__isset.id ? (out << to_string(id)) : (out << "<null>"));
+  out << ", " << "errorMessage="; (__isset.errorMessage ? (out << to_string(errorMessage)) : (out << "<null>"));
   out << ")";
 }
 

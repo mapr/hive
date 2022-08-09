@@ -12282,11 +12282,12 @@ class ShowCompactResponseElement(object):
      - endTime
      - hadoopJobId
      - id
+     - errorMessage
 
     """
 
 
-    def __init__(self, dbname=None, tablename=None, partitionname=None, type=None, state=None, workerid=None, start=None, runAs=None, hightestTxnId=None, metaInfo=None, endTime=None, hadoopJobId="None", id=None,):
+    def __init__(self, dbname=None, tablename=None, partitionname=None, type=None, state=None, workerid=None, start=None, runAs=None, hightestTxnId=None, metaInfo=None, endTime=None, hadoopJobId="None", id=None, errorMessage=None,):
         self.dbname = dbname
         self.tablename = tablename
         self.partitionname = partitionname
@@ -12300,6 +12301,7 @@ class ShowCompactResponseElement(object):
         self.endTime = endTime
         self.hadoopJobId = hadoopJobId
         self.id = id
+        self.errorMessage = errorMessage
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -12375,6 +12377,11 @@ class ShowCompactResponseElement(object):
                     self.id = iprot.readI64()
                 else:
                     iprot.skip(ftype)
+            elif fid == 14:
+                if ftype == TType.STRING:
+                    self.errorMessage = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -12436,6 +12443,10 @@ class ShowCompactResponseElement(object):
         if self.id is not None:
             oprot.writeFieldBegin('id', TType.I64, 13)
             oprot.writeI64(self.id)
+            oprot.writeFieldEnd()
+        if self.errorMessage is not None:
+            oprot.writeFieldBegin('errorMessage', TType.STRING, 14)
+            oprot.writeString(self.errorMessage.encode('utf-8') if sys.version_info[0] == 2 else self.errorMessage)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -21088,6 +21099,7 @@ ShowCompactResponseElement.thrift_spec = (
     (11, TType.I64, 'endTime', None, None, ),  # 11
     (12, TType.STRING, 'hadoopJobId', 'UTF8', "None", ),  # 12
     (13, TType.I64, 'id', None, None, ),  # 13
+    (14, TType.STRING, 'errorMessage', 'UTF8', None, ),  # 14
 )
 all_structs.append(ShowCompactResponse)
 ShowCompactResponse.thrift_spec = (
