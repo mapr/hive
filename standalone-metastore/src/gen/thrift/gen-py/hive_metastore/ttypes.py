@@ -12283,11 +12283,12 @@ class ShowCompactResponseElement(object):
      - hadoopJobId
      - id
      - errorMessage
+     - enqueueTime
 
     """
 
 
-    def __init__(self, dbname=None, tablename=None, partitionname=None, type=None, state=None, workerid=None, start=None, runAs=None, hightestTxnId=None, metaInfo=None, endTime=None, hadoopJobId="None", id=None, errorMessage=None,):
+    def __init__(self, dbname=None, tablename=None, partitionname=None, type=None, state=None, workerid=None, start=None, runAs=None, hightestTxnId=None, metaInfo=None, endTime=None, hadoopJobId="None", id=None, errorMessage=None, enqueueTime=None,):
         self.dbname = dbname
         self.tablename = tablename
         self.partitionname = partitionname
@@ -12302,6 +12303,7 @@ class ShowCompactResponseElement(object):
         self.hadoopJobId = hadoopJobId
         self.id = id
         self.errorMessage = errorMessage
+        self.enqueueTime = enqueueTime
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -12382,6 +12384,11 @@ class ShowCompactResponseElement(object):
                     self.errorMessage = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
+            elif fid == 15:
+                if ftype == TType.I64:
+                    self.enqueueTime = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -12447,6 +12454,10 @@ class ShowCompactResponseElement(object):
         if self.errorMessage is not None:
             oprot.writeFieldBegin('errorMessage', TType.STRING, 14)
             oprot.writeString(self.errorMessage.encode('utf-8') if sys.version_info[0] == 2 else self.errorMessage)
+            oprot.writeFieldEnd()
+        if self.enqueueTime is not None:
+            oprot.writeFieldBegin('enqueueTime', TType.I64, 15)
+            oprot.writeI64(self.enqueueTime)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -21100,6 +21111,7 @@ ShowCompactResponseElement.thrift_spec = (
     (12, TType.STRING, 'hadoopJobId', 'UTF8', "None", ),  # 12
     (13, TType.I64, 'id', None, None, ),  # 13
     (14, TType.STRING, 'errorMessage', 'UTF8', None, ),  # 14
+    (15, TType.I64, 'enqueueTime', None, None, ),  # 15
 )
 all_structs.append(ShowCompactResponse)
 ShowCompactResponse.thrift_spec = (

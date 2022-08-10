@@ -8369,7 +8369,7 @@ void swap(ShowCompactRequest &a, ShowCompactRequest &b);
 std::ostream& operator<<(std::ostream& out, const ShowCompactRequest& obj);
 
 typedef struct _ShowCompactResponseElement__isset {
-  _ShowCompactResponseElement__isset() : partitionname(false), workerid(false), start(false), runAs(false), hightestTxnId(false), metaInfo(false), endTime(false), hadoopJobId(true), id(false), errorMessage(false) {}
+  _ShowCompactResponseElement__isset() : partitionname(false), workerid(false), start(false), runAs(false), hightestTxnId(false), metaInfo(false), endTime(false), hadoopJobId(true), id(false), errorMessage(false), enqueueTime(false) {}
   bool partitionname :1;
   bool workerid :1;
   bool start :1;
@@ -8380,6 +8380,7 @@ typedef struct _ShowCompactResponseElement__isset {
   bool hadoopJobId :1;
   bool id :1;
   bool errorMessage :1;
+  bool enqueueTime :1;
 } _ShowCompactResponseElement__isset;
 
 class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
@@ -8400,7 +8401,8 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
                                  endTime(0),
                                  hadoopJobId("None"),
                                  id(0),
-                                 errorMessage() {
+                                 errorMessage(),
+                                 enqueueTime(0) {
   }
 
   virtual ~ShowCompactResponseElement() noexcept;
@@ -8422,6 +8424,7 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
   std::string hadoopJobId;
   int64_t id;
   std::string errorMessage;
+  int64_t enqueueTime;
 
   _ShowCompactResponseElement__isset __isset;
 
@@ -8452,6 +8455,8 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
   void __set_id(const int64_t val);
 
   void __set_errorMessage(const std::string& val);
+
+  void __set_enqueueTime(const int64_t val);
 
   bool operator == (const ShowCompactResponseElement & rhs) const
   {
@@ -8502,6 +8507,10 @@ class ShowCompactResponseElement : public virtual ::apache::thrift::TBase {
     if (__isset.errorMessage != rhs.__isset.errorMessage)
       return false;
     else if (__isset.errorMessage && !(errorMessage == rhs.errorMessage))
+      return false;
+    if (__isset.enqueueTime != rhs.__isset.enqueueTime)
+      return false;
+    else if (__isset.enqueueTime && !(enqueueTime == rhs.enqueueTime))
       return false;
     return true;
   }

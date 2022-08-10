@@ -36,6 +36,7 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
   char state;
   public CompactionType type;
   String workerId;
+  public long enqueueTime;
   long start;
   public String runAs;
   public String properties;
@@ -105,6 +106,8 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
       "partName:" + partName + "," +
       "state:" + state + "," +
       "type:" + type + "," +
+      "enqueueTime:" + enqueueTime + "," +
+      "start:" + start + "," +
       "properties:" + properties + "," +
       "runAs:" + runAs + "," +
       "tooManyAborts:" + tooManyAborts + "," +
@@ -133,6 +136,7 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
     fullCi.metaInfo = rs.getBytes(12);
     fullCi.hadoopJobId = rs.getString(13);
     fullCi.errorMessage = rs.getString(14);
+    fullCi.enqueueTime = rs.getLong(15);
     return fullCi;
   }
   static void insertIntoCompletedCompactions(PreparedStatement pStmt, CompactionInfo ci, long endTime) throws SQLException {
@@ -151,5 +155,6 @@ public class CompactionInfo implements Comparable<CompactionInfo> {
     pStmt.setBytes(13, ci.metaInfo);
     pStmt.setString(14, ci.hadoopJobId);
     pStmt.setString(15, ci.errorMessage);
+    pStmt.setLong(16, ci.enqueueTime);
   }
 }

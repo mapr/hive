@@ -25,6 +25,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLTransactionRollbackException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.EnumMap;
 import java.util.Properties;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -36,6 +38,12 @@ import org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.hive.metastore.DatabaseProduct.DERBY;
+import static org.apache.hadoop.hive.metastore.DatabaseProduct.MYSQL;
+import static org.apache.hadoop.hive.metastore.DatabaseProduct.ORACLE;
+import static org.apache.hadoop.hive.metastore.DatabaseProduct.POSTGRES;
+import static org.apache.hadoop.hive.metastore.DatabaseProduct.SQLSERVER;
+
 /**
  * Utility methods for creating and destroying txn database/schema, plus methods for
  * querying against metastore tables.
@@ -45,6 +53,17 @@ public final class TxnDbUtil {
 
   static final private Logger LOG = LoggerFactory.getLogger(TxnDbUtil.class.getName());
   private static final String TXN_MANAGER = "org.apache.hadoop.hive.ql.lockmgr.DbTxnManager";
+
+  private static final EnumMap<DatabaseProduct, String> DB_EPOCH_FN =
+      new EnumMap<DatabaseProduct, String>(DatabaseProduct.class) {{
+        put(DERBY, "{ fn timestampdiff(sql_tsi_frac_second, timestamp('" + new Timestamp(0) +
+            "'), current_timestamp) } / 1000000");
+        put(MYSQL, "round(unix_timestamp(now(3)) * 1000)");
+        put(POSTGRES, "round(extract(epoch from current_timestamp) * 1000)");
+        put(ORACLE, "(cast(systimestamp at time zone 'UTC' as date) - date '1970-01-01')*24*60*60*1000 " +
+            "+ cast(mod( extract( second from systimestamp ), 1 ) * 1000 as int)");
+        put(SQLSERVER, "datediff_big(millisecond, '19700101', sysutcdatetime())");
+      }};
 
   private static int deadlockCnt = 0;
 
@@ -149,6 +168,7 @@ public final class TxnDbUtil {
           " CQ_TYPE char(1) NOT NULL," +
           " CQ_TBLPROPERTIES varchar(2048)," +
           " CQ_WORKER_ID varchar(128)," +
+          " CQ_ENQUEUE_TIME bigint,"+
           " CQ_START bigint," +
           " CQ_RUN_AS varchar(128)," +
           " CQ_HIGHEST_WRITE_ID bigint," +
@@ -168,6 +188,7 @@ public final class TxnDbUtil {
           " CC_TYPE char(1) NOT NULL," +
           " CC_TBLPROPERTIES varchar(2048)," +
           " CC_WORKER_ID varchar(128)," +
+          " CC_ENQUEUE_TIME bigint,"+
           " CC_START bigint," +
           " CC_END bigint," +
           " CC_RUN_AS varchar(128)," +
@@ -483,6 +504,22 @@ public final class TxnDbUtil {
       } catch (SQLException e) {
         System.err.println("Error closing Connection: " + e.getMessage());
       }
+    }
+  }
+
+  /**
+   * Get database specific function which returns the milliseconds value after the epoch.
+   * @param dbProduct The type of the db which is used
+   * @throws MetaException For unknown database type.
+   */
+  static String getEpochFn(DatabaseProduct dbProduct) throws MetaException {
+    String epochFn = DB_EPOCH_FN.get(dbProduct);
+    if (epochFn != null) {
+      return epochFn;
+    } else {
+      String msg = "Unknown database product: " + dbProduct.toString();
+      LOG.error(msg);
+      throw new MetaException(msg);
     }
   }
 }

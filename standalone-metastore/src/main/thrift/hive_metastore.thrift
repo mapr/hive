@@ -1032,6 +1032,7 @@ struct ShowCompactResponseElement {
     12: optional string hadoopJobId = "None",
     13: optional i64 id,
     14: optional string errorMessage,
+    15: optional i64 enqueueTime,
 }
 
 struct ShowCompactResponse {

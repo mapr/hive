@@ -92,6 +92,9 @@ import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
+
+import static org.apache.hadoop.hive.metastore.txn.TxnDbUtil.getEpochFn;
+
 /**
  * A handler to answer transaction related calls that come into the metastore
  * server.
@@ -2649,7 +2652,7 @@ abstract class TxnHandler implements TxnStore, TxnStore.MutexAPI {
           "cq_table, ");
         String partName = rqst.getPartitionname();
         if (partName != null) buf.append("cq_partition, ");
-        buf.append("cq_state, cq_type");
+        buf.append("\"CQ_STATE\", \"CQ_TYPE\", \"CQ_ENQUEUE_TIME\"");
         if (rqst.getProperties() != null) {
           buf.append(", cq_tblproperties");
         }
@@ -2683,7 +2686,8 @@ abstract class TxnHandler implements TxnStore, TxnStore.MutexAPI {
             dbConn.rollback();
             throw new MetaException("Unexpected compaction type " + rqst.getType().toString());
         }
-        buf.append("'");
+        buf.append("',");
+        buf.append(getEpochFn(dbProduct));
         if (rqst.getProperties() != null) {
           buf.append(", ?");
           params.add(new StringableMap(rqst.getProperties()).toString());
@@ -2741,11 +2745,15 @@ abstract class TxnHandler implements TxnStore, TxnStore.MutexAPI {
       try {
         dbConn = getDbConn(Connection.TRANSACTION_READ_COMMITTED);
         stmt = dbConn.createStatement();
-        String s = "select cq_database, cq_table, cq_partition, cq_state, cq_type, cq_worker_id, " +
-          //-1 because 'null' literal doesn't work for all DBs...
-          "cq_start, -1 cc_end, cq_run_as, cq_hadoop_job_id, cq_id, cq_error_message from COMPACTION_QUEUE union all " +
-          "select cc_database, cc_table, cc_partition, cc_state, cc_type, cc_worker_id, " +
-          "cc_start, cc_end, cc_run_as, cc_hadoop_job_id, cc_id, cc_error_message from COMPLETED_COMPACTIONS";
+        String s = "SELECT \"CQ_DATABASE\", \"CQ_TABLE\", \"CQ_PARTITION\", \"CQ_STATE\", \"CQ_TYPE\", \"CQ_WORKER_ID\", " +
+            //-1 because 'null' literal doesn't work for all DBs...
+            "\"CQ_START\", -1 \"CC_END\", \"CQ_RUN_AS\", \"CQ_HADOOP_JOB_ID\", \"CQ_ID\", \"CQ_ERROR_MESSAGE\", " +
+            "\"CQ_ENQUEUE_TIME\" " +
+            "FROM \"COMPACTION_QUEUE\" UNION ALL " +
+            "SELECT \"CC_DATABASE\", \"CC_TABLE\", \"CC_PARTITION\", \"CC_STATE\", \"CC_TYPE\", \"CC_WORKER_ID\", " +
+            "\"CC_START\", \"CC_END\", \"CC_RUN_AS\", \"CC_HADOOP_JOB_ID\", \"CC_ID\", \"CC_ERROR_MESSAGE\", " +
+            "\"CC_ENQUEUE_TIME\" " +
+            " FROM \"COMPLETED_COMPACTIONS\""; //todo: sort by cq_id?
         //what I want is order by cc_end desc, cc_start asc (but derby has a bug https://issues.apache.org/jira/browse/DERBY-6013)
         //to sort so that currently running jobs are at the end of the list (bottom of screen)
         //and currently running ones are in sorted by start time
@@ -2777,6 +2785,10 @@ abstract class TxnHandler implements TxnStore, TxnStore.MutexAPI {
           e.setHadoopJobId(rs.getString(10));
           e.setId(rs.getLong(11));
           e.setErrorMessage(rs.getString(12));
+          long enqueueTime = rs.getLong(13);
+          if(!rs.wasNull()) {
+            e.setEnqueueTime(enqueueTime);
+          }
           response.addToCompacts(e);
         }
         LOG.debug("Going to rollback");
