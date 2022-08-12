@@ -33,6 +33,12 @@ public class TestXmlUtil {
   }
 
   @Test
+  public void existsInUrlIsNullTest() {
+    URL url = null;
+    Assert.assertFalse(existsIn(url, "hive.metastore.sasl.enabled"));
+  }
+
+  @Test
   public void existsInNegativeTest() {
     URL url = getClass().getClassLoader().getResource("hive-site-xml-util-test.xml");
     Assert.assertFalse(existsIn(url, "hive.metastore.authentication"));

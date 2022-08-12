@@ -31,10 +31,14 @@ public final class XmlUtil {
    *
    * @param url hive-site location
    * @param property property name
-   * @return true if property is in hive-site.xml
+   * @return true if property is in hive-site.xml, false if URL is null
    */
 
   public static boolean existsIn(URL url, String property) {
+    if (url == null) {
+      LOG.warn("URL is null or blank");
+      return false;
+    }
     try {
       Document doc = readDocument(url);
       return propertyExists(doc, property);
