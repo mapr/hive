@@ -91,7 +91,7 @@ public class LoadFileDesc extends LoadDesc implements Serializable {
     this.targetDir = targetDir;
   }
 
-  @Explain(displayName = "hdfs directory")
+  @Explain(displayName = "maprfs directory")
   public boolean getIsDfsDir() {
     return isDfsDir;
   }

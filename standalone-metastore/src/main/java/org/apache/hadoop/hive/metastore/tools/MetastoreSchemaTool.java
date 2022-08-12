@@ -1151,7 +1151,7 @@ public class MetastoreSchemaTool {
     Option dryRunOpt = new Option("dryRun", "list SQL scripts (no execute)");
     Option verboseOpt = new Option("verbose", "only print SQL statements");
     Option serversOpt = OptionBuilder.withArgName("serverList")
-        .hasArgs().withDescription("a comma-separated list of servers used in location validation in the format of scheme://authority (e.g. hdfs://localhost:8000)")
+        .hasArgs().withDescription("a comma-separated list of servers used in location validation in the format of scheme://authority (e.g. maprfs://localhost:8000)")
         .create("servers");
     cmdLineOptions.addOption(help);
     cmdLineOptions.addOption(dryRunOpt);

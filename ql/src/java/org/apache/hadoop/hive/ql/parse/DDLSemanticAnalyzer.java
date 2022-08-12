@@ -191,6 +191,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import static org.apache.hadoop.hive.ql.io.TableUtils.verifyLocation;
+
 /**
  * DDLSemanticAnalyzer.
  *
@@ -814,6 +816,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private void analyzeAlterDatabaseLocation(ASTNode ast) throws SemanticException {
     String dbName = getUnescapedName((ASTNode) ast.getChild(0));
     String newLocation = unescapeSQLString(ast.getChild(1).getText());
+    verifyLocation(newLocation);
     addLocationToOutputs(newLocation);
     AlterDatabaseDesc alterDesc = new AlterDatabaseDesc(dbName, newLocation);
     addAlterDbDesc(alterDesc);
@@ -1343,6 +1346,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case TOK_DATABASELOCATION:
         dbLocation = unescapeSQLString(childNode.getChild(0).getText());
+        verifyLocation(dbLocation);
         addLocationToOutputs(dbLocation);
         break;
       default:
@@ -1949,6 +1953,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       HashMap<String, String> partSpec) throws SemanticException {
 
     String newLocation = unescapeSQLString(ast.getChild(0).getText());
+    verifyLocation(newLocation);
     try {
       // To make sure host/port pair is valid, the status of the location
       // does not matter
@@ -3485,6 +3490,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
           throw new SemanticException("LOCATION clause illegal for view partition");
         }
         currentLocation = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(currentLocation);
         inputs.add(toReadEntity(currentLocation));
         break;
       default:
@@ -4291,6 +4297,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private void validateSkewedLocationString(String newLocation) throws SemanticException {
     /* Validate location string. */
     try {
+      verifyLocation(newLocation);
       URI locUri = new URI(newLocation);
       if (!locUri.isAbsolute() || locUri.getScheme() == null
           || locUri.getScheme().trim().equals("")) {

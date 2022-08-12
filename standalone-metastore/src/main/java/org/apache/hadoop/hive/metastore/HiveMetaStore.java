@@ -7036,7 +7036,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         // a copy is required to allow incremental replication to work correctly.
         if (func.getResourceUris() != null && !func.getResourceUris().isEmpty()) {
           for (ResourceUri uri : func.getResourceUris()) {
-            if (uri.getUri().toLowerCase().startsWith("hdfs:") && isSourceOfReplication) {
+            if (uri.getUri().toLowerCase().startsWith("maprfs:") && isSourceOfReplication) {
               wh.addToChangeManagement(new Path(uri.getUri()));
             }
           }

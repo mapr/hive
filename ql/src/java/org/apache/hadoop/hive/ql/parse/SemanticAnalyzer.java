@@ -281,6 +281,7 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVESTATSDBCLASS;
+import static org.apache.hadoop.hive.ql.io.TableUtils.verifyLocation;
 
 /**
  * Implementation of the semantic analyzer. It generates the query plan.
@@ -13213,6 +13214,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case HiveParser.TOK_TABLELOCATION:
         location = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(location);
         location = EximUtil.relativeToAbsolutePath(conf, location);
         inputs.add(toReadEntity(location));
         break;
@@ -13533,6 +13535,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
       case HiveParser.TOK_TABLELOCATION:
         location = unescapeSQLString(child.getChild(0).getText());
+        verifyLocation(location);
         location = EximUtil.relativeToAbsolutePath(conf, location);
         inputs.add(toReadEntity(location));
         break;
