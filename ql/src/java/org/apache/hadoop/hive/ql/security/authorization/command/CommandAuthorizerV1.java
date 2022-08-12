@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.hooks.Entity;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
@@ -61,25 +63,46 @@ final class CommandAuthorizerV1 {
     Hive db = sem.getDb();
     HiveAuthorizationProvider authorizer = ss.getAuthorizer();
 
-    authorizeOperation(op, sem, db, authorizer);
+    authorizeOperation(op, sem, outputs, authorizer);
     authorizeOutputs(op, outputs, db, authorizer);
     authorizeInputs(op, sem, inputs, authorizer);
   }
 
-  private static void authorizeOperation(HiveOperation op, BaseSemanticAnalyzer sem, Hive db,
+  private static void authorizeOperation(HiveOperation op, BaseSemanticAnalyzer sem, Set<WriteEntity> outputs,
       HiveAuthorizationProvider authorizer) throws HiveException {
     if (op.equals(HiveOperation.CREATEDATABASE)) {
       authorizer.authorize(op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
     } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT) || op.equals(HiveOperation.CREATETABLE)) {
-      authorizer.authorize(db.getDatabase(SessionState.get().getCurrentDatabase()), null,
-          HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
+      authorizer.authorize(getDbFrom(outputs), null, HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
+    } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION) || op
+        .equals(HiveOperation.CREATETABLE_WITH_LOCATION)) {
+      authorizer.authorize(getLocationFrom(outputs), null,
+          HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION.getOutputRequiredPrivileges());
     } else  if (op.equals(HiveOperation.IMPORT)) {
       ImportSemanticAnalyzer isa = (ImportSemanticAnalyzer) sem;
       if (!isa.existsTable()) {
-        authorizer.authorize(db.getDatabase(SessionState.get().getCurrentDatabase()), null,
+        authorizer.authorize(getDbFrom(outputs), null,
             HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
       }
     }
+  }
+
+  private static Database getDbFrom(Set<WriteEntity> outputs) throws HiveException {
+    for (WriteEntity write : outputs) {
+      if (write.getType() == Entity.Type.DATABASE) {
+        return write.getDatabase();
+      }
+    }
+    throw new HiveException("No database in the output");
+  }
+
+  private static Path getLocationFrom(Set<WriteEntity> outputs) throws HiveException {
+    for (WriteEntity write : outputs) {
+      if (write.getType() == Entity.Type.TABLE) {
+        return new Path(write.getT().getSd().getLocation());
+      }
+    }
+    throw new HiveException("No table object in the output");
   }
 
   private static void authorizeOutputs(HiveOperation op, Set<WriteEntity> outputs, Hive db,
