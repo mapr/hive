@@ -3015,7 +3015,7 @@ public class HiveConf extends Configuration {
     HIVE_SSL_PROTOCOL_BLACKLIST("hive.ssl.protocol.blacklist", "SSLv2,SSLv3,SSLv2Hello,TLSv1,TLSv1.1",
         "SSL Versions to disable for all Hive Servers"),
 
-    HIVE_SSL_PROTOCOL_VERSION("hive.ssl.protocol.version", "TLSv1.2",
+    HIVE_SSL_PROTOCOL_VERSION("hive.ssl.protocol.version", "TLSv1.3",
         "SSL protocol versions for all Hive Servers"),
 
     HIVE_PRIVILEGE_SYNCHRONIZER_INTERVAL("hive.privilege.synchronizer.interval",
