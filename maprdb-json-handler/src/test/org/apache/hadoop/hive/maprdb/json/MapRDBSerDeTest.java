@@ -34,6 +34,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.ojai.Document;
 import org.ojai.Value;
+import org.ojai.joda.DateTimeZone;
+import org.ojai.joda.LocalDate;
 import org.ojai.types.ODate;
 import org.ojai.types.OTimestamp;
 
@@ -263,7 +265,7 @@ public class MapRDBSerDeTest {
     long dateNow = System.currentTimeMillis();
 
     Date sqlDate = Date.ofEpochMilli(dateNow);
-    ODate value = new ODate(dateNow);
+    ODate value = new ODate(new LocalDate(dateNow, DateTimeZone.UTC).toDate());
     Value ojaiValue = DBValueBuilderImpl.KeyValueBuilder.initFrom(value);
 
     Object result = deserialize(serDe, columnNames, columnTypes, ojaiValue);
