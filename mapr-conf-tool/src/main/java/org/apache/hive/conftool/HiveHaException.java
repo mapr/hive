@@ -15,31 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hive.conftool;
 
 /**
- * This enum contains possible values of authentication method.
+ * Throw when can not configure HA for Hive.
  */
-
-public enum AuthMethod {
-  NONE("none"), MAPRSASL("maprsasl"), CUSTOM("custom"), KERBEROS("kerberos");
-  private final String value;
-
-  AuthMethod(String value) {
-    this.value = value;
-  }
-
-  public String value() {
-    return value;
-  }
-
-  public static AuthMethod parse(String value) {
-    for (AuthMethod authMethod : AuthMethod.values()) {
-      if (authMethod.value().equalsIgnoreCase(value.trim())) {
-        return authMethod;
-      }
-    }
-    throw new IllegalArgumentException(String.format("%s is not valid value for security", value));
+public class HiveHaException extends RuntimeException{
+  public HiveHaException(String message) {
+    super(message);
   }
 }

@@ -24,6 +24,8 @@ HIVE_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}" )/.." && pwd)"
 HIVE_LIB=${HIVE_HOME}/lib
 HIVE_CONF=${HIVE_HOME}/conf
 LOG_FILE="conftool-log4j2.properties"
+MAPR_HOME="${BASEMAPR:-/opt/mapr}"
+export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
 
 if [ "$HADOOP_CLASSPATH" != "" ]; then
   HADOOP_CLASSPATH="$HIVE_LIB/*:${HADOOP_CLASSPATH}"

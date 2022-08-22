@@ -235,7 +235,7 @@ public final class TestConfToolUtil {
     return sb.toString();
   }
 
-  private static String preProcess(String value) throws IOException {
+  public static String preProcess(String value) throws IOException {
     if (value != null && !value.isEmpty()) {
       if (value.contains("${mapr.user}")) {
         value = value.replace("${mapr.user}", System.getProperty("mapr.user"));

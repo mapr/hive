@@ -18,57 +18,10 @@
 package org.apache.hive.conftool;
 
 /**
- * ConfToolUtil class for configuration tool
+ * ConfToolUtil class for configuration tool.
  */
 public final class ConfToolUtil {
   private ConfToolUtil() {
-  }
-
-  private static final String TRUE = "true";
-  private static final String FALSE = "false";
-
-  /**
-   * Check if string not empty and not null.
-   *
-   * @param value string to check
-   * @return true if string not empty and not null
-   */
-  static boolean isNotNullNotEmpty(String value) {
-    return value != null && !value.trim().isEmpty();
-  }
-
-  /**
-   * Check if string has true or false value.
-   *
-   * @param value string to check
-   * @return true if string has true or false value
-   */
-  static boolean isTrueOrFalse(String value) {
-    return TRUE.equalsIgnoreCase(value) || FALSE.equalsIgnoreCase(value);
-  }
-
-  /**
-   * Print boolean value to stdout.
-   *
-   * @param value value to print
-   */
-  static void printBool(boolean value) {
-    System.out.print(Boolean.toString(value));
-  }
-
-  /**
-   * Check if string has 'true' or 'false' or 'custom' value .
-   *
-   * @param value string to check
-   * @return true if string has 'true' or 'false' or 'custom' value
-   */
-  static boolean isValid(String value) {
-    for (AuthMethod authMethod : AuthMethod.values()) {
-      if (authMethod.value().equalsIgnoreCase(value.trim())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

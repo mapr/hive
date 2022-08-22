@@ -17,565 +17,482 @@
  */
 package org.apache.hive.conftool;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.hive.common.util.MapRSecurityUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.beeline.HiveSchemaTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.GroupPrincipal;
+import java.nio.file.attribute.UserPrincipal;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static org.apache.hive.conftool.ConfToolUtil.printBool;
-import static org.apache.hive.conftool.ConfToolUtil.isTrueOrFalse;
-import static org.apache.hive.conftool.ConfToolUtil.isValid;
-import static org.apache.hive.conftool.ConfToolUtil.isNotNullNotEmpty;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORECONNECTURLKEY;
+import static org.apache.hive.common.util.MapRSecurityUtil.getMapRHome;
+import static org.apache.hive.conftool.ConfCommonUtilities.changeGroup;
+import static org.apache.hive.conftool.ConfCommonUtilities.changeOwner;
+import static org.apache.hive.conftool.ConfCommonUtilities.exists;
+import static org.apache.hive.conftool.ConfCommonUtilities.findGroupByName;
+import static org.apache.hive.conftool.ConfCommonUtilities.findUserByName;
+import static org.apache.hive.conftool.ConfCommonUtilities.normalize;
+import static org.apache.hive.conftool.ConfTool.configureHiveMetastoreMetricsFileLocation;
+import static org.apache.hive.conftool.ConfTool.configureHiveServer2MetricsFileLocation;
+import static org.apache.hive.conftool.ConfTool.configureHs2Metrics;
+import static org.apache.hive.conftool.ConfTool.configureMetastoreMetrics;
+import static org.apache.hive.conftool.ConfTool.configureMetricsReporterType;
+import static org.apache.hive.conftool.ConfTool.configureTokenAuth;
+import static org.apache.hive.conftool.ConfTool.enableHs2Ha;
+import static org.apache.hive.conftool.ConfTool.initMetaStoreUri;
+import static org.apache.hive.conftool.ConfTool.propertyExists;
+import static org.apache.hive.conftool.ConfTool.setAdminUser;
+import static org.apache.hive.conftool.ConfTool.setConnectionUrl;
+import static org.apache.hive.conftool.ConfTool.setEncryption;
+import static org.apache.hive.conftool.ConfTool.setFallbackAuthorizer;
+import static org.apache.hive.conftool.ConfTool.setHs2Ssl;
+import static org.apache.hive.conftool.ConfTool.setHs2WebUiPamSsl;
+import static org.apache.hive.conftool.ConfTool.setMetaStoreAuthManager;
+import static org.apache.hive.conftool.ConfTool.setMetaStoreAuthPreEventListener;
+import static org.apache.hive.conftool.ConfTool.setMetaStoreUgi;
+import static org.apache.hive.conftool.ConfTool.setMetaStoreUseThriftSasl;
+import static org.apache.hive.conftool.ConfTool.setRestrictedList;
+import static org.apache.hive.conftool.ConfTool.setWebHCatHeaders;
+import static org.apache.hive.conftool.ConfTool.setWebHCatSsl;
+import static org.apache.hive.conftool.ConfTool.setWebUiHeaders;
+import static org.apache.hive.conftool.ConfToolParseUtil.readDocument;
+import static org.apache.hive.conftool.ConfToolParseUtil.saveToFile;
 
 /**
- CLI manager to configure Hive components.
+ * This class is used for configuring xml files (hive-site.xml and others).
+ * Here we read xml files, change its contents and write changes to file. We created this
+ * class to avoid multiple call of conftool script from bash shel, since
+ * each time we perform that call, a new JVM is created and it takes time, which leads to performance degradation.
+ * Here we process all actions that need JVM in a singe class, starting new JVM only once.
  */
 public final class ConfCli {
   private ConfCli() {
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(ConfCli.class.getName());
-  private static final Options CMD_LINE_OPTIONS = new Options();
-  private static final HelpFormatter HELP_FORMATTER = new HelpFormatter();
-  private static final String HELP = "help";
-  private static final String AUTH_METHOD = "authMethod";
-  private static final String PATH = "path";
-  private static final String TOOL_NAME = "conftool";
-  private static final String HS2_HA = "hs2ha";
-  private static final String ZK_QUORUM = "zkquorum";
-  private static final String INIT_META_STORE_URI = "initMetastoreUri";
-  private static final String CONNECTION_URL = "connurl";
-  private static final String WEB_UI_PAM_SSL = "webuipamssl";
-  private static final String EXIST_PROPERTY = "existProperty";
-  private static final String GET_AUTH_METHOD = "getAuthMethod";
-  private static final String WEBHCAT_SSL = "webhcatssl";
-  private static final String HS2_SSL = "hs2ssl";
-  private static final String METASTORE_SSL = "hmetassl";
-  private static final String ADMIN_USER = "adminUser";
-  private static final String ADD_PROPERTY = "addProperty";
-  private static final String APPEND_PROPERTY = "appendProperty";
-  private static final String RESTRICTED_LIST = "restrictedList";
-  private static final String DEL_PROPERTY = "delProperty";
-  private static final String GET_PROPERTY = "getProperty";
-  private static final String FALLBACK_AUTHORIZER = "fallBackAuthorizer";
-  private static final String HIVE_SERVER2_METRICS_ENABLED = "hiveserver2_metrics_enabled";
-  private static final String METASTORE_METRICS_ENABLED = "metastore_metrics_enabled";
-  private static final String REPORTER_ENABLED = "reporter_enabled";
-  private static final String METRICS_REPORTER_TYPE = "reporter_type";
-  private static final String JSON_JMX_METASTORE_METRICS_FILE_LOCATION = "hmeta_report_file";
-  private static final String JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION = "hs2_report_file";
-  private static final String WEBHCAT_HEADERS = "webhcat_headers";
-  private static final String WEBUI_HEADERS = "webui_headers";
-  private static final String TOKEN_AUTH = "tokenAuth";
 
-  static {
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Print help information");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HELP));
+  private static final String MAPR_HOME = getMapRHome();
+  private static final String MAPR_ROLES = findMapRRoles();
+  private static final String HIVE_HOME = findHiveHome();
+  private static final String HIVE_CONF = findHiveConf();
+  private static final String HIVE_BIN = findHiveBin();
 
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("'maprsasl', 'kerberos' or 'custom' when security is on and 'none' when security is off");
-    OptionBuilder.withDescription("Shows authentication method for the security");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(AUTH_METHOD));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("path to xml file");
-    OptionBuilder.withDescription("Path to xml file to configure (hive-site.xml, webhcat-site" + ".xml etc).");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(PATH));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures hive-site.xml for HiveServer2 High Availability");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HS2_HA));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Initializes Hive metastore Uri to run on local host");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(INIT_META_STORE_URI));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("quorum");
-    OptionBuilder.withDescription("Hive Zookeeper Quorum");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ZK_QUORUM));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("connection-url");
-    OptionBuilder.withDescription("Metastore DB connection URL");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(CONNECTION_URL));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder
-        .withDescription("Configures hive-site.xml for HiveServer2 web UI PAM authentication and SSL encryption");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEB_UI_PAM_SSL));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures webhcat-site.xml for webHCat SSL encryption");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBHCAT_SSL));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures hive-site.xml for HS2 SSL encryption");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HS2_SSL));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures hive-site.xml for Hive Metastore SSL encryption");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METASTORE_SSL));
-
-    OptionBuilder.withValueSeparator();
-    OptionBuilder.hasArgs(1);
-    OptionBuilder.withArgName("user name");
-    OptionBuilder.withDescription("Admin user will be appended to existing property(hive.user.in.admin.role) "
-        + "using coma separator. In case it does not exist, it will be added as a new value.");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ADMIN_USER));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("property to check");
-    OptionBuilder.withDescription("Checks if property is set in xml file.");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(EXIST_PROPERTY));
-
-    OptionBuilder.withValueSeparator();
-    OptionBuilder.hasArgs(2);
-    OptionBuilder.withArgName("property=value");
-    OptionBuilder.withDescription("Key, value of property that should be written to xml file. In "
-        + "case it already exists, it is replaced with new value. Property is added like: \n" + "<property>\n"
-        + "  <name>property-name<\\name>\n" + "  <value>property-value<\\value>\n" + "<\\property>");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(ADD_PROPERTY));
-
-    OptionBuilder.withValueSeparator();
-    OptionBuilder.hasArgs(2);
-    OptionBuilder.withArgName("property=appendedValue");
-    OptionBuilder.withDescription("Value will be appended to existing property using coma separator. In "
-        + "case it does not exist, it will be added as a new value.");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(APPEND_PROPERTY));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures restricted list of options that are immutable at runtime");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(RESTRICTED_LIST));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures FallbackHiveAuthorizerFactory by default on MapR SASL cluster");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(FALLBACK_AUTHORIZER));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("property-name");
-    OptionBuilder.withDescription("Removes property from xml file");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(DEL_PROPERTY));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("property-name");
-    OptionBuilder.withDescription("Retrieves the property value.");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_PROPERTY));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("true/false value");
-    OptionBuilder.withDescription("Enables/disables Hiveserver2 for collecting metrics");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(HIVE_SERVER2_METRICS_ENABLED));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("true/false value");
-    OptionBuilder.withDescription("Enables/disables Hive Metastore for collecting metrics");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METASTORE_METRICS_ENABLED));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("true/false value");
-    OptionBuilder.withDescription("Enables/disables reporter for collecting metrics");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(REPORTER_ENABLED));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("metrics reporter type");
-    OptionBuilder.withDescription("Configures metrics reporter type");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(METRICS_REPORTER_TYPE));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("metrics file location");
-    OptionBuilder.withDescription("Configures HiveServer2 metrics output file location");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("metrics file location");
-    OptionBuilder.withDescription("Configures Metastore metrics output file location");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(JSON_JMX_METASTORE_METRICS_FILE_LOCATION));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Returns authentication method to MapR FS");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(GET_AUTH_METHOD));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("path to headers xml file");
-    OptionBuilder.withDescription("Path to headers xml file to configure security headers for webHCat server");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBHCAT_HEADERS));
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withArgName("path to headers xml file");
-    OptionBuilder.withDescription("Path to headers xml file to configure security headers for HS2 web UI server");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(WEBUI_HEADERS));
-
-    OptionBuilder.hasArg(false);
-    OptionBuilder.withDescription("Configures token authentication depending on cluster type: FIPS enabled or FIPS disabled");
-    CMD_LINE_OPTIONS.addOption(OptionBuilder.create(TOKEN_AUTH));
-  }
-
+  /**
+   * Enter point method for all configurations.
+   *
+   * @param args not used here
+   */
   public static void main(String[] args)
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
-    CommandLineParser cmdParser = new GnuParser();
-    CommandLine line;
-    try {
-      line = cmdParser.parse(CMD_LINE_OPTIONS, args);
-    } catch (ParseException e) {
-      printHelp();
-      throw new IllegalArgumentException(TOOL_NAME + ": Parsing failed.  Reason: " + e.getLocalizedMessage());
+    String pathToHiveSite = findHiveSite();
+    String pathToWebHCatSite = findWebHCatSite();
+    String headers = findHeaders();
+    AuthMethod authMethod = AuthMethod.parse(MapRSecurityUtil.getAuthMethod());
+    String adminUser = MapRSecurityUtil.findAdminUser();
+    Document hiveSite = readDocument(pathToHiveSite);
+    Document webHCatSite = readDocument(pathToWebHCatSite);
+
+    saveAuthMethodFlag(authMethod);
+
+    if (securityHasToBeConfigured()) {
+      configureSecurity(hiveSite, webHCatSite, authMethod, headers, adminUser);
     }
-    if (line == null) {
-      throw new IllegalArgumentException(TOOL_NAME + ": parsing failed.  Reason: unknown");
+
+    if (isHiveServer2HA()) {
+      configureHiveServer2HA(hiveSite);
     }
-    if (line.hasOption(HELP)) {
-      printHelp();
-    } else if (line.hasOption(PATH)) {
-      String pathToXmlFile = line.getOptionValue(PATH);
-      if (isHiveSite(pathToXmlFile)) {
-        configureHiveSite(pathToXmlFile, line);
-      }
-      if (isWebHCatSite(pathToXmlFile)) {
-        configureWebHCatSite(pathToXmlFile, line);
-      }
-      processPropertyCmd(pathToXmlFile, line);
-    } else if (isGetAuthMethod(line)) {
-      System.out.println(MapRSecurityUtil.getAuthMethod());
-    } else {
-      printHelp();
+    initDerbySchema(hiveSite);
+    configureHiveServer2MetricAndReport(hiveSite);
+    configureMetastoreMetricAndReport(hiveSite);
+    configureReporterType(hiveSite);
+
+    saveToFile(hiveSite, pathToHiveSite);
+    saveToFile(webHCatSite, pathToWebHCatSite);
+  }
+
+  /**
+   * Reporter type for metric class org.apache.hadoop.hive.common.metrics.metrics2.CodahaleMetrics.
+   * Comma separated list of JMX, CONSOLE, JSON_FILE, HADOOP2.
+   *
+   * For metric class org.apache.hadoop.hive.common.metrics.metrics2.CodahaleMetrics JSON_FILE reporter,
+   * the location of local JSON metrics file.This file will get overwritten at every interval.
+   *
+   *
+   * @param hiveSite parsed hive-site.xml
+   */
+  private static void configureReporterType(Document hiveSite) {
+    if (isHiveNotConfiguredYet()) {
+      LOG.info("Configuring report type");
+      configureMetricsReporterType(hiveSite, true, "JSON_FILE,JMX");
     }
   }
 
-  private static void processPropertyCmd(String pathToXmlFile, CommandLine line)
-      throws SAXException, TransformerException, ParserConfigurationException, IOException {
-    if (isExistVerification(line)) {
-      if (hasValidExistPropertyOptions(line)) {
-        String property = line.getOptionValue(EXIST_PROPERTY);
-        printBool(ConfTool.exists(pathToXmlFile, property));
-      } else {
-        printHelp();
-        throw new IllegalArgumentException("Incorrect property verification options");
-      }
-    }
-
-    if (isDelProperty(line)) {
-      String property = line.getOptionValue(DEL_PROPERTY);
-      ConfTool.delProperty(pathToXmlFile, property);
-    }
-
-    if (isAddProperty(line)) {
-      String[] optionValues = line.getOptionValues(ADD_PROPERTY);
-      if (optionValues.length == 2) {
-        String property = optionValues[0];
-        String value = optionValues[1];
-        ConfTool.addProperty(pathToXmlFile, property, value);
-      }
-    }
-
-    if (isAppendProperty(line)) {
-      String[] optionValues = line.getOptionValues(APPEND_PROPERTY);
-      if (optionValues.length == 2) {
-        String property = optionValues[0];
-        String value = optionValues[1];
-        ConfTool.appendProperty(pathToXmlFile, property, value);
-      }
-    }
-
-    if (isGetProperty(line)) {
-      String property = line.getOptionValue(GET_PROPERTY);
-      String propertyValue = ConfTool.getProperty(pathToXmlFile, property);
-      if (!propertyValue.isEmpty()) {
-        System.out.print(propertyValue);
-      } else {
-        throw new IllegalArgumentException("Property does not exist!");
-      }
+  /**
+   * Configures Metastore for collecting metrics in hive-site.xml.
+   * Property com.sun.management.jmxremote is configured in $HIVE_BIN/hive
+   *
+   * @param hiveSite parsed hive-site.xml
+   */
+  private static void configureMetastoreMetricAndReport(Document hiveSite) {
+    if (isHiveNotConfiguredYet()) {
+      LOG.info("Configuring Metastore metric and report location");
+      configureMetastoreMetrics(hiveSite, true);
+      configureHiveMetastoreMetricsFileLocation(hiveSite, true, "/tmp/hivemetastore_report.json");
     }
   }
 
-  private static void configureHiveSite(String pathToXmlFile, CommandLine line)
-      throws ParserConfigurationException, TransformerException, SAXException, IOException {
-    if (isAuthMethodConfig(line)) {
-      configureSecurity(pathToXmlFile, getAuthMethod(line));
-    }
-
-    if (isHs2HaConfig(line)) {
-      if (hasValidHs2HaOptions(line)) {
-        String zookeeperQuorum = line.getOptionValue(ZK_QUORUM);
-        ConfTool.enableHs2Ha(pathToXmlFile, zookeeperQuorum);
-      } else {
-        printHelp();
-        throw new IllegalArgumentException("Incorrect HS2 HA configuration options");
-      }
-    }
-
-    if (isMetaStoreUriConfig(line)) {
-      ConfTool.initMetaStoreUri(pathToXmlFile);
-    }
-
-    if (isConnectionUrlConfig(line)) {
-      if (hasValidConnectionUrlOptions(line)) {
-        String connectionUrl = line.getOptionValue(CONNECTION_URL);
-        ConfTool.setConnectionUrl(pathToXmlFile, connectionUrl);
-      } else {
-        printHelp();
-        throw new IllegalArgumentException("Incorrect connection URL configuration options");
-      }
-    }
-
-    if (isRestrictedList(line)) {
-      ConfTool.setRestrictedList(pathToXmlFile, getAuthMethod(line));
-    }
-
-    if (isWebUiHs2PamSslConfig(line)) {
-      ConfTool.setHs2WebUiPamSsl(pathToXmlFile, getAuthMethod(line));
-    }
-
-    if (isHs2SslConfig(line)) {
-      ConfTool.setHs2Ssl(pathToXmlFile, getAuthMethod(line));
-    }
-
-    if (isHMetaSslConfig(line)) {
-      ConfTool.setHMetaSsl(pathToXmlFile, getAuthMethod(line));
-    }
-
-    if (isAdminUser(line)) {
-      String adminUser = line.getOptionValue(ADMIN_USER);
-      ConfTool.setAdminUser(pathToXmlFile, adminUser, getAuthMethod(line));
-    }
-
-    if (isFallbackAuthorizer(line)) {
-      ConfTool.setFallbackAuthorizer(pathToXmlFile, getAuthMethod(line));
-    }
-
-    if (isHiveServer2Metrics(line)) {
-      boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
-      ConfTool.configureHs2Metrics(pathToXmlFile, isMetricsEnabled);
-    }
-
-    if (isMetasoreMetrics(line)) {
-      boolean isMetricsEnabled = Boolean.parseBoolean(line.getOptionValue(METASTORE_METRICS_ENABLED));
-      ConfTool.configureMetastoreMetrics(pathToXmlFile, isMetricsEnabled);
-    }
-
-    if (isReporterConfig(line)) {
-      configureReporter(pathToXmlFile, line);
-    }
-
-    if (isWebUiHeadersConfig(line)) {
-      String headers = line.getOptionValue(WEBUI_HEADERS);
-      ConfTool.setWebUiHeaders(pathToXmlFile, getAuthMethod(line), headers);
-    }
-
-    if (isTokenAuthMethodConfig(line)){
-      ConfTool.configureTokenAuth(pathToXmlFile, getAuthMethod(line));
+  /**
+   * Configures HiveServer2 for collecting metrics in hive-site.xml.
+   * Property com.sun.management.jmxremote is configured in $HIVE_BIN/hive
+   *
+   * @param hiveSite parsed hive-site.xml
+   */
+  private static void configureHiveServer2MetricAndReport(Document hiveSite) {
+    if (isHiveNotConfiguredYet()) {
+      LOG.info("Configuring HiveServer2 metric and report location");
+      configureHs2Metrics(hiveSite, true);
+      configureHiveServer2MetricsFileLocation(hiveSite, true, "/tmp/hiveserver2_report.json");
     }
   }
 
-  private static void configureReporter(String pathToXmlFile, CommandLine line)
-      throws SAXException, TransformerException, ParserConfigurationException, IOException {
-    boolean isReporterEnabled = Boolean.parseBoolean(line.getOptionValue(REPORTER_ENABLED));
-    if (isMetricsReporterType(line)) {
-      String reporterType = line.getOptionValue(METRICS_REPORTER_TYPE);
-      if (isNotNullNotEmpty(reporterType)) {
-        ConfTool.configureMetricsReporterType(pathToXmlFile, isReporterEnabled, reporterType);
-      } else {
-        throw new IllegalArgumentException("Incorrect metrics reporter type: empty string");
-      }
-    }
+  /**
+   * Enables HiveServer2 High Availability
+   *
+   * @param hiveSite parsed hive-site.xml
+   */
+  private static void configureHiveServer2HA(Document hiveSite) {
+    int numHiveServer2 = findNumHiveServer2();
+    String zookeeperQuorum = findZookeeperQuorum();
+    LOG.info("Configuring HiveServer2 HA for zookeeper quorum {} and amount of HiveServers2 is {}", zookeeperQuorum,
+        numHiveServer2);
+    enableHs2Ha(hiveSite, zookeeperQuorum);
+    setNumberOfHiveServer2inWardenFile(numHiveServer2);
+  }
 
-    if (isHiveServer2MetricsReporterFileLocation(line)) {
-      String fileLocation = line.getOptionValue(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
-      if (isNotNullNotEmpty(fileLocation)) {
-        ConfTool.configureHiveServer2MetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
-      } else {
-        throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
-      }
+  private static void saveAuthMethodFlag(AuthMethod authMethod) throws FileNotFoundException {
+    try (PrintWriter out = new PrintWriter(HIVE_CONF + File.separator + ".authMethod")) {
+      out.println(authMethod.value());
     }
+  }
 
-    if (isMetastoreMetricsReporterFileLocation(line)) {
-      String fileLocation = line.getOptionValue(JSON_JMX_METASTORE_METRICS_FILE_LOCATION);
-      if (isNotNullNotEmpty(fileLocation)) {
-        ConfTool.configureHiveMetastoreMetricsFileLocation(pathToXmlFile, isReporterEnabled, fileLocation);
-      } else {
-        throw new IllegalArgumentException("Incorrect metrics reporter file location: empty string");
+  /**
+   * This is helper method for checking existence of Tez in the node.
+   *
+   * @return true if Tez is installed
+   */
+  private static boolean isTezInstalled() {
+    return exists(MAPR_ROLES + File.separator + "tez");
+  }
+
+  /**
+   * Initialize Derby Db schema for mapr admin user.
+   *
+   * @param hiveSite parsed hive-site.xml
+   * @throws IOException
+   */
+  private static void initDerbySchema(Document hiveSite) throws IOException {
+    if (!isConnectionUrlConfigured(hiveSite) && isHiveNotConfiguredYet()) {
+      LOG.info("Start processing derby DB schema");
+      String derbyDefaultName = findDefaultDerbyName();
+      if (exists(derbyDefaultName)) {
+        LOG.info("Deleting {}", derbyDefaultName);
+        FileUtils.deleteDirectory(new File(derbyDefaultName));
+      }
+      String connectionUrl = String.format("jdbc:derby:;databaseName=%s/metastore_db;create=true", HIVE_BIN);
+      setConnectionUrl(hiveSite, connectionUrl);
+      setAdminGroupTo(HIVE_BIN);
+      setAdminOwnerTo(HIVE_BIN);
+      runDerbySchemaTool(connectionUrl);
+      if (hasMetastore() && !isMetastoreUrisConfigured(hiveSite)) {
+        initMetaStoreUri(hiveSite);
       }
     }
   }
 
+  /**
+   * Execute schema tool for derby DB in a separate thread.
+   */
+  private static void runDerbySchemaTool(final String connectionUrl) {
+    LOG.info("Starting schema tool for derby DB");
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    executor.submit(() -> {
+      HiveConf hiveConf = new HiveConf(HiveSchemaTool.class);
+      hiveConf.setVar(METASTORECONNECTURLKEY, connectionUrl);
+      HiveSchemaTool.main(new String[] { "-dbType", "derby", "-initSchema" }, hiveConf, HIVE_HOME);
+    });
+  }
 
-  private static void configureWebHCatSite(String pathToXmlFile, CommandLine line)
-      throws IOException, ParserConfigurationException, SAXException, TransformerException {
-    if (isWeHCatSslConfig(line)) {
-      ConfTool.setWebHCatSsl(pathToXmlFile, getAuthMethod(line));
+
+  /**
+   * Check if metastore URIs are configured.
+   *
+   * @param hiveSite parsed hive-site.xml
+   * @return true if metastore URIs are configured
+   */
+  private static boolean isMetastoreUrisConfigured(Document hiveSite) {
+    return propertyExists(hiveSite, "hive.metastore.uris");
+  }
+
+  /**
+   * Checks if Metastore is installed using roles files for that.
+   *
+   * @return true if Metastore is installed
+   */
+  private static boolean hasMetastore() {
+    return exists(MAPR_ROLES + File.separator + "hivemetastore");
+  }
+
+  /**
+   * Finds cluster admin and sets it as owner to certain path.
+   * Works as chown in shell.
+   *
+   * @param path path to set up owner.
+   * @throws IOException
+   */
+  private static void setAdminOwnerTo(String path) throws IOException {
+    String adminUser = MapRSecurityUtil.findAdminUser();
+    LOG.info("Setting owner {} for path {}", adminUser, path);
+    UserPrincipal adminGroup = findUserByName(adminUser);
+    changeOwner(path, adminGroup);
+  }
+
+  /**
+   * Finds cluster admin group and sets it to certain path.
+   * Works as chgr in shell.
+   *
+   * @param path path to set up group.
+   * @throws IOException
+   */
+  private static void setAdminGroupTo(String path) throws IOException {
+    String adminUser = MapRSecurityUtil.findAdminUser();
+    LOG.info("Setting group {} for path {}", adminUser, path);
+    GroupPrincipal adminGroup = findGroupByName(adminUser);
+    changeGroup(path, adminGroup);
+  }
+
+  /**
+   * Check if javax.jdo.option.ConnectionURL is configured or not.
+   *
+   * @param hiveSite parsed hive-site.xml
+   * @return true if javax.jdo.option.ConnectionURL is configured
+   */
+  private static boolean isConnectionUrlConfigured(Document hiveSite) {
+    return propertyExists(hiveSite, "javax.jdo.option.ConnectionURL");
+  }
+
+  /**
+   * Gets default location for derby DB.
+   *
+   * @return path to derby DB location
+   */
+  private static String findDefaultDerbyName() {
+    return HIVE_BIN + File.separator + "metastore_db";
+  }
+
+  /**
+   * Checks whether there is a need to configure security.
+   * We have to configure security if security type was changed, and it is not in custom format
+   * or if hive was not configured yet.
+   *
+   * @return true if we need to configure security
+   * @throws IOException
+   */
+  private static boolean securityHasToBeConfigured() throws IOException {
+    return (isAuthMethodChanged() || isHiveNotConfiguredYet()) && !isCustomSecurity();
+  }
+
+  /**
+   * Returns true if security flag was changed comparing current and previous run of configure.sh.
+   * E.g. user switches off the security (security ON --> security OFF) or
+   * user turns on security (security OFF --> security ON) then method returns true
+   * and false otherwise. This method is used for triggering security related configuration
+   *
+   * @return true if authentication method changed
+   * @throws IOException
+   */
+  private static boolean isAuthMethodChanged() throws IOException {
+    String authMethodPath = HIVE_CONF + File.separator + ".authMethod";
+    String authMethodPathBackup = HIVE_CONF + File.separator + ".authMethod.backup";
+    if (exists(authMethodPath) && exists(authMethodPathBackup)) {
+      String authMethodBackup = Files.readString(Path.of(authMethodPathBackup));
+      String currentAuthMethod = Files.readString(Path.of(authMethodPath));
+      return !authMethodBackup.equals(currentAuthMethod);
     }
+    LOG.warn("No HIVE_HOME/conf/.authMethod or HIVE_HOME/conf/.authMethod.backup files");
+    return false;
+  }
 
-    if (isWebHCatHeadersConfig(line)) {
-      String headers = line.getOptionValue(WEBHCAT_HEADERS);
-      ConfTool.setWebHCatHeaders(pathToXmlFile, getAuthMethod(line), headers);
+  /**
+   * Checks if Hive has been already configured.
+   *
+   * @return true if Hive is not configured
+   * @throws IOException
+   */
+  private static boolean isHiveNotConfiguredYet() {
+    return exists(findHiveConf() + File.separator + ".not_configured_yet");
+  }
+
+  /**
+   * Returns true if security is custom.
+   *
+   * @return true if security is custom.
+   */
+  private static boolean isCustomSecurity() {
+    return exists(findHiveConf() + File.separator + ".customSecure");
+  }
+
+  /**
+   * Find Hive home folder.
+   *
+   * @return Hive home
+   */
+  private static String findHiveHome() {
+    String hiveHome = System.getenv("HIVE_HOME");
+    if (hiveHome == null) {
+      hiveHome = System.getProperty("hive.home.dir");
+      if (hiveHome == null) {
+        String hiveVersion = null;
+        try {
+          hiveVersion = Files.readString(Path.of(MAPR_HOME + File.separator + "hive" + File.separator + "hiveversion"));
+        } catch (IOException e) {
+          throw new HiveHomeException("Can not find HIVE_HOME");
+        }
+        hiveHome = MAPR_HOME + File.separator + "hive" + File.separator + "hive-" + hiveVersion;
+      }
+    }
+    return normalize(hiveHome);
+  }
+
+  /**
+   * Checks if we need to enable HiveServer2 High Availability.
+   *
+   * @return true if HA is required
+   */
+  private static boolean isHiveServer2HA() {
+    return exists(HIVE_CONF + File.separator + "enable_hs2_ha");
+  }
+
+  /**
+   * Check if Metastore  database is initialized.
+   *
+   * @return true if Metastore  database is initialized.
+   */
+  private static boolean isMetaDbInitialized() {
+    return exists(HIVE_CONF + File.separator + ".meta_db_init_done");
+  }
+
+  /**
+   * Get amount of HiveServer2 instances for configuring HA.
+   * Value is set in mapR installer.
+   *
+   * @return amount of HiveServer2 instances for configuring HA.
+   */
+  private static int findNumHiveServer2() {
+    String path = HIVE_CONF + File.separator + "num_hs2";
+    if (exists(path)) {
+      try {
+        return Integer.parseInt(Files.readString(Path.of(path)));
+      } catch (IOException e) {
+        throw new HiveHaException(String.format("Error reading %s", path));
+      }
+    }
+    return 1;
+  }
+
+  /**
+   * Get zookeeper quorum for configuring HA.
+   * Value is set in mapR installer.
+   *
+   * @return zookeeper quorum for configuring HA.
+   */
+
+  private static String findZookeeperQuorum() {
+    String path = HIVE_CONF + File.separator + "zk_hosts";
+    if (exists(path)) {
+      try {
+        return Files.readString(Path.of(path));
+      } catch (IOException e) {
+        throw new HiveHaException(String.format("Error reading %s", path));
+      }
+    }
+    return "localhost";
+  }
+
+  /**
+   * Updates hs2 warden file with number of HS2.
+   *
+   * @param numHiveServer2 amount of HiveServer2 instances
+   */
+  private static void setNumberOfHiveServer2inWardenFile(int numHiveServer2) {
+    String path = MAPR_HOME + File.separator + File.separator + "conf" + File.separator + "conf.d" + File.separator
+        + "warden.hs2.conf";
+    if (exists(path)) {
+      ConfCommonUtilities.replaceLine(path, "services=", String.format("services=hs2:%d:cldb", numHiveServer2));
     }
   }
 
-  private static boolean isWebHCatSite(String pathToXmlFile) {
-    return pathToXmlFile != null && !pathToXmlFile.isEmpty() && pathToXmlFile.matches(".*/webhcat-site.*\\.xml$");
+  /**
+   * Configure security related properties.
+   *
+   * @param hiveSite parsed hive-site.xml
+   * @param authMethod authentication method
+   */
+  private static void configureSecurity(Document hiveSite, Document webHCatSite, AuthMethod authMethod, String headers,
+      String adminUser) {
+    LOG.info("Configuring security");
+    setMetaStoreUseThriftSasl(hiveSite, authMethod);
+    setEncryption(hiveSite, authMethod);
+    setMetaStoreUgi(hiveSite, authMethod);
+    setMetaStoreAuthManager(hiveSite, authMethod);
+    setMetaStoreAuthPreEventListener(hiveSite, authMethod);
+    setHs2WebUiPamSsl(hiveSite, authMethod);
+    setHs2Ssl(hiveSite, authMethod);
+    setWebUiHeaders(hiveSite, authMethod, headers);
+    configureTokenAuth(hiveSite, authMethod);
+    setAdminUser(hiveSite, adminUser, authMethod);
+    setRestrictedList(hiveSite, authMethod);
+    setFallbackAuthorizer(hiveSite, authMethod);
+    setWebHCatSsl(webHCatSite, authMethod);
+    setWebHCatHeaders(webHCatSite, authMethod, headers);
   }
 
-  private static boolean isHiveSite(String pathToXmlFile) {
-    return pathToXmlFile != null && !pathToXmlFile.isEmpty() && pathToXmlFile.matches(".*/hive-site.*\\.xml$");
+  private static String findHiveConf() {
+    return HIVE_HOME + File.separator + "conf";
   }
 
-  private static boolean isConnectionUrlConfig(CommandLine line) {
-    return line.hasOption(CONNECTION_URL);
+  private static String findHiveBin() {
+    return HIVE_HOME + File.separator + "bin";
   }
 
-  private static boolean hasValidConnectionUrlOptions(CommandLine line) {
-    return line.getOptionValue(CONNECTION_URL) != null && !line.getOptionValue(CONNECTION_URL).isEmpty();
+  private static String findMapRRoles() {
+    return MAPR_HOME + File.separator + "roles";
   }
 
-  private static boolean isAuthMethodConfig(CommandLine line) {
-    return line.hasOption(AUTH_METHOD);
+  private static String findHiveSite() {
+    return HIVE_CONF + File.separator + "hive-site.xml";
   }
 
-  private static boolean isValidAuthMethodAndOption(CommandLine line) {
-    return isAuthMethodConfig(line) && isValid(line.getOptionValue(AUTH_METHOD));
+  private static String findWebHCatSite() {
+    return HIVE_HOME + File.separator + "hcatalog" + File.separator + "etc" + File.separator + "webhcat"
+        + File.separator + "webhcat-site.xml";
   }
 
-  private static void configureSecurity(String pathToHiveSite, AuthMethod authMethod)
-      throws IOException, ParserConfigurationException, SAXException, TransformerException {
-    ConfTool.setMetaStoreUseThriftSasl(pathToHiveSite, authMethod);
-    ConfTool.setEncryption(pathToHiveSite, authMethod);
-    ConfTool.setMetaStoreUgi(pathToHiveSite, authMethod);
-    ConfTool.setMetaStoreAuthManager(pathToHiveSite, authMethod);
-    ConfTool.setMetaStoreAuthPreEventListener(pathToHiveSite, authMethod);
-  }
-
-  private static AuthMethod getAuthMethod(CommandLine line) {
-    if (isValidAuthMethodAndOption(line)) {
-      return AuthMethod.parse(line.getOptionValue(AUTH_METHOD));
-    } else {
-      printHelp();
-      throw new IllegalArgumentException("Incorrect security configuration options");
-    }
-  }
-
-  private static boolean isHs2HaConfig(CommandLine line) {
-    return line.hasOption(HS2_HA);
-  }
-
-  private static boolean isMetaStoreUriConfig(CommandLine line) {
-    return line.hasOption(INIT_META_STORE_URI);
-  }
-
-  private static boolean hasValidHs2HaOptions(CommandLine line) {
-    return line.hasOption(HS2_HA) && line.getOptionValue(ZK_QUORUM) != null && !line.getOptionValue(ZK_QUORUM)
-        .isEmpty();
-  }
-
-  private static boolean isDelProperty(CommandLine line) {
-    return line.hasOption(DEL_PROPERTY);
-  }
-
-  private static boolean isAddProperty(CommandLine line) {
-    return line.hasOption(ADD_PROPERTY);
-  }
-
-  private static boolean isAppendProperty(CommandLine line) {
-    return line.hasOption(APPEND_PROPERTY);
-  }
-
-  private static boolean isRestrictedList(CommandLine line) {
-    return line.hasOption(RESTRICTED_LIST);
-  }
-
-  private static boolean isGetProperty(CommandLine line) {
-    return line.hasOption(GET_PROPERTY);
-  }
-
-  private static boolean isWebUiHs2PamSslConfig(CommandLine line) {
-    return line.hasOption(WEB_UI_PAM_SSL);
-  }
-
-  private static boolean isExistVerification(CommandLine line) {
-    return line.hasOption(EXIST_PROPERTY);
-  }
-
-  private static boolean isGetAuthMethod(CommandLine line) {
-    return line.hasOption(GET_AUTH_METHOD);
-  }
-
-  private static boolean hasValidExistPropertyOptions(CommandLine line) {
-    return line.hasOption(EXIST_PROPERTY) && line.getOptionValue(EXIST_PROPERTY) != null && !line
-        .getOptionValue(EXIST_PROPERTY).isEmpty();
-  }
-
-  private static boolean isWeHCatSslConfig(CommandLine line) {
-    return line.hasOption(WEBHCAT_SSL);
-  }
-
-  private static boolean isWebHCatHeadersConfig(CommandLine line) {
-    return line.hasOption(WEBHCAT_HEADERS) && line.getOptionValue(WEBHCAT_HEADERS) != null && !line
-        .getOptionValue(WEBHCAT_HEADERS).isEmpty();
-  }
-
-
-  private static boolean isWebUiHeadersConfig(CommandLine line) {
-    return line.hasOption(WEBUI_HEADERS) && line.getOptionValue(WEBUI_HEADERS) != null && !line
-        .getOptionValue(WEBUI_HEADERS).isEmpty();
-  }
-
-  private static boolean isHs2SslConfig(CommandLine line) {
-    return line.hasOption(HS2_SSL);
-  }
-
-  private static boolean isHMetaSslConfig(CommandLine line) {
-    return line.hasOption(METASTORE_SSL);
-  }
-
-  private static boolean isAdminUser(CommandLine line) {
-    return line.hasOption(ADMIN_USER);
-  }
-
-  private static boolean isFallbackAuthorizer(CommandLine line) {
-    return line.hasOption(FALLBACK_AUTHORIZER);
-  }
-
-  private static boolean isHiveServer2Metrics(CommandLine line) {
-    return line.hasOption(HIVE_SERVER2_METRICS_ENABLED) && isTrueOrFalse(
-        line.getOptionValue(HIVE_SERVER2_METRICS_ENABLED));
-  }
-
-  private static boolean isMetasoreMetrics(CommandLine line) {
-    return line.hasOption(METASTORE_METRICS_ENABLED) && isTrueOrFalse(line.getOptionValue(METASTORE_METRICS_ENABLED));
-  }
-
-  private static boolean isReporterConfig(CommandLine line) {
-    return line.hasOption(REPORTER_ENABLED) && isTrueOrFalse(line.getOptionValue(REPORTER_ENABLED));
-  }
-
-  private static boolean isMetricsReporterType(CommandLine line) {
-    return line.hasOption(METRICS_REPORTER_TYPE);
-  }
-
-  private static boolean isMetastoreMetricsReporterFileLocation(CommandLine line) {
-    return line.hasOption(JSON_JMX_METASTORE_METRICS_FILE_LOCATION);
-  }
-
-  private static boolean isHiveServer2MetricsReporterFileLocation(CommandLine line) {
-    return line.hasOption(JSON_JMX_HIVE_SERVER2_METRICS_FILE_LOCATION);
-  }
-
-  private static boolean isTokenAuthMethodConfig(CommandLine line) {
-    return line.hasOption(TOKEN_AUTH);
-  }
-
-  private static void printHelp() {
-    HELP_FORMATTER.printHelp(TOOL_NAME, CMD_LINE_OPTIONS);
+  private static String findHeaders() {
+    return HIVE_CONF + File.separator + "headers.xml";
   }
 }

@@ -92,9 +92,6 @@ public class HiveSchemaTool {
 
   static final private Logger LOG = LoggerFactory.getLogger(HiveSchemaTool.class.getName());
 
-  public HiveSchemaTool(String dbType, String metaDbType) throws HiveMetaException {
-    this(System.getenv("HIVE_HOME"), new HiveConf(HiveSchemaTool.class), dbType, metaDbType);
-  }
 
   public HiveSchemaTool(String hiveHome, HiveConf hiveConf, String dbType, String metaDbType)
       throws HiveMetaException {
@@ -1408,6 +1405,10 @@ public class HiveSchemaTool {
   }
 
   public static void main(String[] args) {
+    main(args, new HiveConf(HiveSchemaTool.class), System.getenv("HIVE_HOME"));
+  }
+
+  public static void main(String[] args, HiveConf hiveConf, String hiveHome) {
     CommandLineParser parser = new GnuParser();
     CommandLine line = null;
     String dbType = null;
@@ -1470,7 +1471,8 @@ public class HiveSchemaTool {
 
     System.setProperty(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.varname, "true");
     try {
-      HiveSchemaTool schemaTool = new HiveSchemaTool(dbType, metaDbType);
+
+      HiveSchemaTool schemaTool = new HiveSchemaTool(hiveHome, hiveConf, dbType, metaDbType);
 
       if (line.hasOption("userName")) {
         schemaTool.setUserName(line.getOptionValue("userName"));

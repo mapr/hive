@@ -55,9 +55,9 @@ public class SslDefaultTest {
 
   @Before
   public void init() throws IOException {
-    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
-    String mapRHadoopPath = System.getenv("MAPR_HOME") + "hadoop";
-    String mapREtcHadoopPath = System.getenv("MAPR_HOME") + "hadoop" + File.separator + "hadoop-3.3.3"
+    String mapRConfPath = System.getenv("MAPR_HOME") + File.separator + "conf";
+    String mapRHadoopPath = System.getenv("MAPR_HOME") + File.separator + "hadoop";
+    String mapREtcHadoopPath = System.getenv("MAPR_HOME") + File.separator + "hadoop" + File.separator + "hadoop-3.3.3"
         + File.separator + "etc" + File.separator + "hadoop";
     File mapRConfDir = new File(mapRConfPath);
     File mapRHadoopDir = new File(mapRHadoopPath);
@@ -109,17 +109,17 @@ public class SslDefaultTest {
 
   @After
   public void cleanUp() throws IOException {
-    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    String mapRConfPath = System.getenv("MAPR_HOME") + File.separator + "conf";
     File mapRConfDir = new File(mapRConfPath);
     if (mapRConfDir.exists()) {
       FileUtils.deleteDirectory(mapRConfDir);
     }
-    String mapRHadoopPath = System.getenv("MAPR_HOME") + "hadoop";
+    String mapRHadoopPath = System.getenv("MAPR_HOME") + File.separator + "hadoop";
     File mapRHadoopDir = new File(mapRHadoopPath);
     if (mapRHadoopDir.exists()) {
       FileUtils.deleteDirectory(mapRHadoopDir);
     }
-    String mapREtcHadoopPath = System.getenv("MAPR_HOME") + "hadoop" + File.separator + "hadoop-3.3.3"
+    String mapREtcHadoopPath = System.getenv("MAPR_HOME") + File.separator + "hadoop" + File.separator + "hadoop-3.3.3"
         + File.separator + "etc" + File.separator + "hadoop";
     File mapREtcHadoopDir = new File(mapREtcHadoopPath);
     if (mapREtcHadoopDir.exists()) {

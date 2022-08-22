@@ -207,7 +207,7 @@ public final class MapRSecurityUtil {
    * @return MAPR_HOME value
    */
 
-  private static String getMapRHome() {
+  public static String getMapRHome() {
     if (mapRHome == null) {
       mapRHome = findMapRHome();
     }

@@ -26,6 +26,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.apache.hive.conftool.ConfTool.readAllProperties;
@@ -34,6 +38,7 @@ import static org.apache.hive.conftool.TestConfToolUtil.copyFile;
 import static org.apache.hive.conftool.TestConfToolUtil.copyFromResources;
 import static org.apache.hive.conftool.TestConfToolUtil.mkdir;
 import static org.apache.hive.conftool.TestConfToolUtil.normalize;
+import static org.apache.hive.conftool.TestConfToolUtil.preProcess;
 import static org.apache.hive.conftool.TestConfToolUtil.setExec;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -90,9 +95,17 @@ public abstract class ConfigureShBaseTest {
     setExec(asPath(hiveBinPath, "conftool"));
     setExec(asPath(hiveBinPath, "configure.sh"));
 
+    replaceVars(asPath(mapRConfPath, "daemon.conf"));
+
     pathToConfigureSh = asPath(hiveBinPath, "configure.sh");
     pathToHiveConf = hiveConfPath;
     pathToWebHCatConf = webHCatPath;
+  }
+
+  private static void replaceVars(String file) throws IOException {
+    Path path = Paths.get(file);
+    String content = Files.readString(path, StandardCharsets.UTF_8);
+    Files.write(path, preProcess(content).getBytes(StandardCharsets.UTF_8));
   }
 
   @After
@@ -107,6 +120,7 @@ public abstract class ConfigureShBaseTest {
   @Test
   public void afterInstallTest() throws IOException, InterruptedException, ParserConfigurationException, SAXException {
     configureFreshInstall();
+    configureAuthMethodFiles();
     copyEmptyHiveSite();
     copyEmptyWebHCatSite();
     runConfigureSh();
@@ -165,6 +179,11 @@ public abstract class ConfigureShBaseTest {
     copyFromResources(asPath("e2e", "hive-files", ".not_configured_yet"), asPath(pathToHiveConf, ".not_configured_yet"));
   }
 
+  private void configureAuthMethodFiles() throws IOException {
+    copyFromResources(asPath("e2e", "hive-files", ".authMethod"), asPath(pathToHiveConf, ".authMethod"));
+    copyFromResources(asPath("e2e", "hive-files", ".authMethod.backup"), asPath(pathToHiveConf, ".authMethod.backup"));
+  }
+
   private String getPathToHiveSite() {
     return asPath(pathToHiveConf, "hive-site.xml");
   }
@@ -182,6 +201,7 @@ public abstract class ConfigureShBaseTest {
     env.put("MAPR_HOME", System.getenv("MAPR_HOME"));
     env.put("MAPR_USER", System.getenv("MAPR_USER"));
     env.put("MAPR_GROUP", System.getenv("MAPR_GROUP"));
+    env.put("LOG_FILE", System.getenv("LOG_FILE"));
     Process process = pb.start();
 
     int exitVal = process.waitFor();

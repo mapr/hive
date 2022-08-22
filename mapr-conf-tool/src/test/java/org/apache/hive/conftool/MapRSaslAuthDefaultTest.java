@@ -42,15 +42,16 @@ import static org.apache.hive.conftool.TestConfToolUtil.getStringVal;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
-@RunWith(Parameterized.class) public class MapRSaslAuthDefaultTest {
+@RunWith(Parameterized.class)
+public class MapRSaslAuthDefaultTest {
 
-  private String group;
-  private boolean isHs2AuthInHiveSite;
-  private boolean isHmsAuthInHiveSite;
-  private boolean isSaslEnabledInHiveSite;
-  private String hs2Auth;
-  private String hmsAuth;
-  private boolean saslEnabled;
+  private final String group;
+  private final boolean isHs2AuthInHiveSite;
+  private final boolean isHmsAuthInHiveSite;
+  private final boolean isSaslEnabledInHiveSite;
+  private final String hs2Auth;
+  private final String hmsAuth;
+  private final boolean saslEnabled;
 
   private static final HiveConf.ConfVars HS2_AUTH = HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
   private static final MetastoreConf.ConfVars HMS_AUTH = MetastoreConf.ConfVars.METASTORE_AUTHENTICATION;
@@ -125,7 +126,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
   @Before
   public void init() throws IOException {
-    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    String mapRConfPath = System.getenv("MAPR_HOME") + File.separator + "conf";
     File mapRConfDir = new File(mapRConfPath);
     if (mapRConfDir.exists()) {
       FileUtils.deleteDirectory(mapRConfDir);
@@ -146,7 +147,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
   @After
   public void cleanUp() throws IOException {
-    String mapRConfPath = System.getenv("MAPR_HOME") + "conf";
+    String mapRConfPath = System.getenv("MAPR_HOME") + File.separator + "conf";
     File mapRConfDir = new File(mapRConfPath);
     if(mapRConfDir.exists()) {
       FileUtils.deleteDirectory(mapRConfDir);
@@ -163,6 +164,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
     }
     HiveConf.setHiveSiteLocation(url);
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set("fs.defaultFS", "file:///");
     hiveConf.addResource(url);
 
     MetastoreConf.setHiveSiteLocation(url);
