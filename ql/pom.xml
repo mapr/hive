@@ -681,6 +681,10 @@
       <optional>true</optional>
       <exclusions>
        <exclusion>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-network-common_2.12</artifactId>
+       </exclusion>
+       <exclusion>
          <groupId>com.esotericsoftware.kryo</groupId>
          <artifactId>kryo</artifactId>
        </exclusion>

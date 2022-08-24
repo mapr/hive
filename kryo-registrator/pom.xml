@@ -43,6 +43,12 @@
       <artifactId>spark-core_${scala.binary.version}</artifactId>
       <version>${spark.version}</version>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-network-common_2.12</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
