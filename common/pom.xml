@@ -39,6 +39,12 @@
       <artifactId>maprfs</artifactId>
       <scope>provided</scope>
       <version>${mapr.core.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>xalan</groupId>
+          <artifactId>xalan</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
