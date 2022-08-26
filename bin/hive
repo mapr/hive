@@ -52,8 +52,10 @@ HIVE_BIN=$(cd "$HIVE_BIN"; pwd)
 . "$HIVE_BIN"/hive-config.sh
 
 #BASEMAPR should be set by hive-config.sh
-HADOOP_DIR=$(get_canonical_dir "/usr/bin/hadoop")
-HADOOP_DIR=`dirname $HADOOP_DIR`
+HADOOP_SHORT_VERSION=$(cat $BASEMAPR/hadoop/hadoopversion)
+HADOOP_DIR=$(get_canonical_dir "$BASEMAPR/hadoop/hadoop-${HADOOP_SHORT_VERSION}/bin/hadoop")
+HADOOP_DIR=$(dirname $HADOOP_DIR)
+
 export HADOOP_HOME=${HADOOP_HOME:-$HADOOP_DIR}
 if [ -f $BASEMAPR/hbase/hbaseversion ]; then
   MAPR_HBASE_VERSION=`cat $BASEMAPR/hbase/hbaseversion 2>/dev/null`
