@@ -38,10 +38,14 @@
       <useProjectArtifact>false</useProjectArtifact>
       <useStrictFiltering>true</useStrictFiltering>
       <excludes>
+        <exclude>org.apache.hive:hive-druid-handler</exclude>
         <exclude>org.apache.hadoop:*</exclude>
         <exclude>org.apache.hive.hcatalog:*</exclude>
         <exclude>org.slf4j:*</exclude>
-        <exclude>log4j:*</exclude>
+        <!-- note: log4j:* is commented because the only source for it left was spark-client, but it is currently excluded, -->
+        <!-- note: hence strict filtering is failing. Would need to be either uncommented or removed once spark-client included again -->
+        <!-- note: (based on if spark-client would still produce this dependency in the future) -->
+        <!-- <exclude>log4j:*</exclude> -->
         <exclude>*reload4j*</exclude>
         <exclude>junit:*</exclude>
         <exclude>co.cask.tephra:*</exclude>
