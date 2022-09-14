@@ -681,6 +681,10 @@
       <optional>true</optional>
       <exclusions>
        <exclusion>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+       </exclusion>
+       <exclusion>
          <groupId>org.apache.spark</groupId>
          <artifactId>spark-network-common_2.12</artifactId>
        </exclusion>
