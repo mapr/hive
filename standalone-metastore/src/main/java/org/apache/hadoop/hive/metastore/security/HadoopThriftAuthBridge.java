@@ -18,6 +18,7 @@
 package org.apache.hadoop.hive.metastore.security;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.hive.scram.ScramUtil.getScramMechanismName;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -692,6 +693,15 @@ public abstract class HadoopThriftAuthBridge {
                 secretManager);
             endUser = tokenId.getUser().getUserName();
             authenticationMethod.set(AuthenticationMethod.TOKEN);
+          } catch (InvalidToken e) {
+            throw new TException(e.getMessage());
+          }
+        }
+
+        if (getScramMechanismName().equalsIgnoreCase(mechanismName)) {
+          try {
+            TokenIdentifier tokenId = SaslRpcServer.getIdentifier(authId, secretManager);
+            endUser = tokenId.getUser().getUserName();
           } catch (InvalidToken e) {
             throw new TException(e.getMessage());
           }
