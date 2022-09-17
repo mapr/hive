@@ -216,7 +216,7 @@ public class Warehouse {
    * file system.
    */
   public Path getDatabasePath(Database db) throws MetaException {
-    if (db.getCatalogName().equalsIgnoreCase(DEFAULT_CATALOG_NAME) &&
+    if (db.isSetCatalogName() && db.getCatalogName().equalsIgnoreCase(DEFAULT_CATALOG_NAME) &&
         db.getName().equalsIgnoreCase(DEFAULT_DATABASE_NAME)) {
       return getWhRoot();
     }

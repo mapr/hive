@@ -414,9 +414,9 @@ public class AuthorizationPreEventListener extends MetaStorePreEventListener {
           throws InvalidOperationException, MetaException {
     try {
       for (HiveMetastoreAuthorizationProvider authorizer : tAuthorizers.get()) {
-        authorizer.authorize(
+        authorizer.authorizeDbLevelOperations(
                 HiveOperation.CREATEFUNCTION.getInputRequiredPrivileges(),
-                HiveOperation.CREATEFUNCTION.getOutputRequiredPrivileges());
+                HiveOperation.CREATEFUNCTION.getOutputRequiredPrivileges(), null, null);
       }
     } catch (AuthorizationException e) {
       throw invalidOperationException(e);
@@ -429,9 +429,9 @@ public class AuthorizationPreEventListener extends MetaStorePreEventListener {
           throws InvalidOperationException, MetaException {
     try {
       for (HiveMetastoreAuthorizationProvider authorizer : tAuthorizers.get()) {
-        authorizer.authorize(
+        authorizer.authorizeDbLevelOperations(
                 HiveOperation.DROPFUNCTION.getInputRequiredPrivileges(),
-                HiveOperation.DROPFUNCTION.getOutputRequiredPrivileges());
+                HiveOperation.DROPFUNCTION.getOutputRequiredPrivileges(), null, null);
       }
     } catch (AuthorizationException e) {
       throw invalidOperationException(e);

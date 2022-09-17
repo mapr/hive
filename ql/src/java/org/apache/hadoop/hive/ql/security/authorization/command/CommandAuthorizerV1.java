@@ -63,15 +63,16 @@ final class CommandAuthorizerV1 {
     Hive db = sem.getDb();
     HiveAuthorizationProvider authorizer = ss.getAuthorizer();
 
-    authorizeOperation(op, sem, outputs, authorizer);
+    authorizeOperation(op, sem, inputs, outputs, authorizer);
     authorizeOutputs(op, outputs, db, authorizer);
     authorizeInputs(op, sem, inputs, authorizer);
   }
 
-  private static void authorizeOperation(HiveOperation op, BaseSemanticAnalyzer sem, Set<WriteEntity> outputs,
-      HiveAuthorizationProvider authorizer) throws HiveException {
-    if (op.equals(HiveOperation.CREATEDATABASE)) {
-      authorizer.authorize(op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges());
+  private static void authorizeOperation(HiveOperation op, BaseSemanticAnalyzer sem, Set<ReadEntity> inputs,
+      Set<WriteEntity> outputs, HiveAuthorizationProvider authorizer) throws HiveException {
+    if (op.equals(HiveOperation.CREATEDATABASE) || op.equals(HiveOperation.ALTERDATABASE_LOCATION)) {
+      authorizer.authorizeDbLevelOperations(op.getInputRequiredPrivileges(), op.getOutputRequiredPrivileges(),
+          inputs, outputs);
     } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT) || op.equals(HiveOperation.CREATETABLE)) {
       authorizer.authorize(getDbFrom(outputs), null, HiveOperation.CREATETABLE_AS_SELECT.getOutputRequiredPrivileges());
     } else if (op.equals(HiveOperation.CREATETABLE_AS_SELECT_WITH_LOCATION) || op

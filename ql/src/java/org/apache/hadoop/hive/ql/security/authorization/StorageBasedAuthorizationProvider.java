@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.ql.security.authorization;
 import java.io.IOException;
 import java.security.AccessControlException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -28,6 +29,8 @@ import javax.security.auth.login.LoginException;
 
 import org.apache.hadoop.hive.metastore.IHMSHandler;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
+import org.apache.hadoop.hive.ql.hooks.ReadEntity;
+import org.apache.hadoop.hive.ql.hooks.WriteEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -118,7 +121,8 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
   }
 
   @Override
-  public void authorize(Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv)
+  public void authorizeDbLevelOperations(Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv,
+      Collection<ReadEntity> inputs, Collection<WriteEntity> outputs)
       throws HiveException, AuthorizationException {
     // Currently not used in hive code-base, but intended to authorize actions
     // that are directly user-level. As there's no storage based aspect to this,
@@ -142,6 +146,17 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
     try {
       initWh();
       root = wh.getWhRoot();
+      if (outputs != null) {
+        // When we have some path in outputs, we should check access on that path, usually happens when
+        // we have HiveOperation.CREATEDATABASE query with some location
+        // or we have HiveOperation.ALTERDATABASE_LOCATION
+        for (WriteEntity writeEntity : outputs) {
+          if (WriteEntity.WriteType.PATH_WRITE.equals(writeEntity.getWriteType())) {
+            root = new Path(writeEntity.getName());
+            break;
+          }
+        }
+      }
       authorize(root, readRequiredPriv, writeRequiredPriv);
     } catch (MetaException ex) {
       throw hiveException(ex);
@@ -151,6 +166,13 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
   @Override
   public void authorize(Database db, Privilege[] readRequiredPriv, Privilege[] writeRequiredPriv)
       throws HiveException, AuthorizationException {
+
+    try {
+      initWh();
+    } catch (MetaException ex) {
+      throw hiveException(ex);
+    }
+
     Path path = getDbLocation(db);
 
     // extract drop privileges

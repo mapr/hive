@@ -48,17 +48,17 @@ public class TestStorageBasedAuthorizationProviderWarehouse {
     db.setName(Warehouse.DEFAULT_DATABASE_NAME);
 
     MetastoreConf.setVar(metastoreConf, warehouse, testWarehouseDir + "/test1");
-    sbap.authorize(privileges, privileges);
+    sbap.authorizeDbLevelOperations(privileges, privileges, null, null);
     assertThat(normalize(sbap.getDbLocation(db).toString()),
         is(normalize(MetastoreConf.getVar(metastoreConf, warehouse))));
 
     MetastoreConf.setVar(metastoreConf, warehouse, testWarehouseDir + "/test2");
-    sbap.authorize(privileges, privileges);
+    sbap.authorizeDbLevelOperations(privileges, privileges, null, null);
     assertThat(normalize(sbap.getDbLocation(db).toString()),
         is(normalize(MetastoreConf.getVar(metastoreConf, warehouse))));
 
     MetastoreConf.setVar(metastoreConf, warehouse, testWarehouseDir + "/test3");
-    sbap.authorize(privileges, privileges);
+    sbap.authorizeDbLevelOperations(privileges, privileges, null, null);
     assertThat(normalize(sbap.getDbLocation(db).toString()),
         is(normalize(MetastoreConf.getVar(metastoreConf, warehouse))));
   }
