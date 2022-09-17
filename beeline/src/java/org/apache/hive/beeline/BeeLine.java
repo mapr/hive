@@ -27,10 +27,12 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.SequenceInputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -925,7 +927,7 @@ public class BeeLine implements Closeable {
     String propertyFile = cl.getOptionValue("property-file");
     if (propertyFile != null) {
       try {
-        this.consoleReader = new ConsoleReader();
+        this.consoleReader = new ConsoleReader(new FileInputStream(FileDescriptor.in), findPrintStream());
       } catch (IOException e) {
         handleException(e);
       }
@@ -1349,10 +1351,10 @@ public class BeeLine implements Closeable {
       // by appending a newline to the end of inputstream
       InputStream inputStreamAppendedNewline = new SequenceInputStream(inputStream,
           new ByteArrayInputStream((new String("\n")).getBytes()));
-      consoleReader = new ConsoleReader(inputStreamAppendedNewline, getErrorStream());
+      consoleReader = new ConsoleReader(inputStreamAppendedNewline, findPrintStream());
       consoleReader.setCopyPasteDetection(true); // jline will detect if <tab> is regular character
     } else {
-      consoleReader = new ConsoleReader(getInputStream(), getErrorStream());
+      consoleReader = new ConsoleReader(getInputStream(), findPrintStream());
     }
 
     //disable the expandEvents for the purpose of backward compatibility
@@ -1376,6 +1378,14 @@ public class BeeLine implements Closeable {
 
     consoleReader.addCompleter(new BeeLineCompleter(this));
     return consoleReader;
+  }
+
+  private PrintStream findPrintStream() {
+    return (getOpts().isSilent() && getOpts().getScriptFile() != null) ? new PrintStream(new OutputStream() {
+      public void write(int b) {
+        //DO NOTHING
+      }
+    }) : getErrorStream();
   }
 
   void usage() {
