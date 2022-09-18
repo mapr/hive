@@ -13277,6 +13277,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     storageFormat.fillDefaultStorageFormat(isExt, false);
 
+    if (location == null) {
+      addDbAndTabToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps);
+    } else {
+      addTabWithLocationToOutputs(qualifiedTabName, TableType.MANAGED_TABLE, tblProps, location);
+    }
+
     // check for existence of table
     if (ifNotExists) {
       try {
