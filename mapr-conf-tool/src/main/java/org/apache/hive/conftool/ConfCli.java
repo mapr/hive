@@ -72,6 +72,8 @@ import static org.apache.hive.conftool.ConfTool.setWebHCatSsl;
 import static org.apache.hive.conftool.ConfTool.setWebUiHeaders;
 import static org.apache.hive.conftool.ConfToolParseUtil.readDocument;
 import static org.apache.hive.conftool.ConfToolParseUtil.saveToFile;
+import static org.apache.hive.conftool.PropertyProcessor.processArgs;
+import static org.apache.hive.conftool.PropertyProcessor.requiresArgProcessing;
 
 /**
  * This class is used for configuring xml files (hive-site.xml and others).
@@ -99,6 +101,27 @@ public final class ConfCli {
    */
   public static void main(String[] args)
       throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    if (requiresArgProcessing(args)) {
+      processArgs(args);
+    } else {
+      configureRegularXmlFiles();
+    }
+  }
+
+  /**
+   * Configures hive-site.xml and webhcat-site.xml.
+   *
+   * Method assumes that hive-site.xml, webhcat-site.xml and headers.xml exist and located at their default
+   * paths in HIVE-HOME. It also assumes that MAPR_HOME/conf/mapr-clusters.conf exists and contains
+   * security configuration information.
+   *
+   * @throws ParserConfigurationException
+   * @throws IOException
+   * @throws SAXException
+   * @throws TransformerException
+   */
+  private static void configureRegularXmlFiles()
+      throws ParserConfigurationException, IOException, SAXException, TransformerException {
     String pathToHiveSite = findHiveSite();
     String pathToWebHCatSite = findWebHCatSite();
     String headers = findHeaders();
@@ -188,15 +211,6 @@ public final class ConfCli {
     try (PrintWriter out = new PrintWriter(HIVE_CONF + File.separator + ".authMethod")) {
       out.println(authMethod.value());
     }
-  }
-
-  /**
-   * This is helper method for checking existence of Tez in the node.
-   *
-   * @return true if Tez is installed
-   */
-  private static boolean isTezInstalled() {
-    return exists(MAPR_ROLES + File.separator + "tez");
   }
 
   /**
@@ -385,15 +399,6 @@ public final class ConfCli {
    */
   private static boolean isHiveServer2HA() {
     return exists(HIVE_CONF + File.separator + "enable_hs2_ha");
-  }
-
-  /**
-   * Check if Metastore  database is initialized.
-   *
-   * @return true if Metastore  database is initialized.
-   */
-  private static boolean isMetaDbInitialized() {
-    return exists(HIVE_CONF + File.separator + ".meta_db_init_done");
   }
 
   /**

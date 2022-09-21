@@ -15,40 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.hive.conftool;
 
 /**
- * ConfToolUtil class for configuration tool.
+ * Indicates any problem in parsing of conftool argument.
  */
-public final class ConfToolUtil {
-  private ConfToolUtil() {
-  }
-
-  /**
-   * Get path of file in resources.
-   *
-   * @param fileName file in resources
-   * @return path of file in resources
-   */
-  static String getPath(String fileName) {
-    return Thread.currentThread().getContextClassLoader().getResource(fileName).toExternalForm();
-  }
-  
-  /**
-   * Finds document transformer file location.
-   *
-   * @return transformer file location from conf dir
-   */
-  static String getTransformerLocation() {
-    return getPath("docTransformer.xslt");
-  }
-
-  /**
-   * Print boolean value to stdout.
-   *
-   * @param value value to print
-   */
-  static void printBool(boolean value) {
-    System.out.print(value);
+public class ConfToolParseException extends IllegalArgumentException {
+  public ConfToolParseException(String message) {
+    super(message);
   }
 }

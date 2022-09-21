@@ -70,6 +70,7 @@
       <configuration>
         <environmentVariables>
           <MAPR_HOME>${test.tmp.dir}/opt/mapr</MAPR_HOME>
+          <HIVE_HOME>${test.tmp.dir}/opt/mapr/hive/hive-3.1.3</HIVE_HOME>
           <MAPR_USER>${user.name}</MAPR_USER>
           <MAPR_GROUP>${user.name}</MAPR_GROUP>
           <BASEMAPR>${test.tmp.dir}/opt/mapr</BASEMAPR>
