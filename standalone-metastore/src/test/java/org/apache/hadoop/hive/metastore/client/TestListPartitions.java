@@ -1227,7 +1227,7 @@ public class TestListPartitions extends MetaStoreClientTest {
     }
   }
 
-  @Test(expected = MetaException.class)
+  @Test(expected = NoSuchObjectException.class)
   public void testListPartitionValuesNoDbName() throws Exception {
     createTable4PartColsParts(client);
     List<FieldSchema> partitionSchema = Lists.newArrayList(
@@ -1239,7 +1239,7 @@ public class TestListPartitions extends MetaStoreClientTest {
     client.listPartitionValues(request);
   }
 
-  @Test(expected = MetaException.class)
+  @Test(expected = NoSuchObjectException.class)
   public void testListPartitionValuesNoTblName() throws Exception {
     createTable4PartColsParts(client);
     List<FieldSchema> partitionSchema = Lists.newArrayList(
