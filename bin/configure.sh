@@ -507,6 +507,47 @@ fi
 }
 
 #
+# Creates backup of current HIVE_HOME value.
+#
+backup_hive_home(){
+  echo "$HIVE_HOME" > "$HIVE_CONF"/.hive_home.backup
+}
+
+#
+# Checks if Hive home value backup exists.
+#
+hive_home_backup_exists(){
+  if [ -f "$HIVE_CONF"/.hive_home.backup ]; then
+    return 0; # 0 = true
+  else
+    return 1; # 1 = false
+  fi
+}
+
+#
+# true if HIVE_HOME is changed during upgrade. E.g.
+# - before upgrade /opt/mapr/hive/hive-2.3     after upgrade /opt/mapr/hive/hive-3.1.3
+# - before upgrade /opt/mapr/hive/hive-3.1.3   after upgrade /opt/mapr/hive/hive-3.1.4
+# and so on
+# false in other cases.
+#
+is_hive_home_changed(){
+  if hive_home_backup_exists; then
+    OLD_HIVE_HOME=$(cat "$HIVE_CONF"/.hive_home.backup)
+    if [ "$OLD_HIVE_HOME" = "$HIVE_HOME" ]; then
+      return 1; # 1 = false
+    else
+      return 0; # 0 = true
+    fi
+  else
+    return 0; # 0 = true.
+    # If there is no backup file, this means
+    # (1) Hive version is changed. E.g. 2.3 --> 3.1.3 or
+    # (2) MapR home is changed. E.g. /opt/mapr/hive/hive-3.1.3 --> /new/path/hive/hive-3.1.3. Hive version is the same
+    # so the HIVE_HOME has been changed in both cases.
+  fi
+}
+#
 # Configure Hive roles
 #
 configure_roles(){
@@ -517,7 +558,7 @@ for ROLE in "${ROLES[@]}"; do
     check_port_for "${ROLE}"
     # copy warden files only if there is fresh install and Hive is not configured yet,
     # in order not to overwrite existing custom Warden configuration (e.g. HA configuration)
-    if is_hive_not_configured_yet || ! is_warden_file_available_for "${ROLE}"; then
+    if is_hive_home_changed || is_hive_not_configured_yet || ! is_warden_file_available_for "${ROLE}"; then
       copy_warden_files_for "${ROLE}"
       grant_owner_group_for "${ROLE}"
     fi
@@ -770,4 +811,5 @@ configure_roles
 copy_log4j_for_hadoop_common_classpath
 remove_fresh_install_indicator
 configure_permissions
+backup_hive_home
 save_all_checksums
