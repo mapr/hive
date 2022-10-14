@@ -1638,11 +1638,6 @@ public class Commands {
       props.setProperty(JdbcConnectionParams.AUTH_PASSWD, password);
     }
 
-    if (JdbcConnectionParams.AUTH_MAPRSASL.equals(auth) && getHiveConf(true).getBoolVar(
-        HiveConf.ConfVars.HIVE_VALIDATE_EXPIRY_TIME_FOR_MAPR_TICKET)) {
-      MapRTicketUtil.validateExpiryTime();
-    }
-
     try {
       beeLine.getDatabaseConnections().setConnection(
           new DatabaseConnection(beeLine, driver, url, props));
