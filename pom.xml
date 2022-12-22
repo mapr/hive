@@ -200,7 +200,7 @@
     <mina.version>2.0.0-M5</mina.version>
     <netty.version>4.1.75.Final</netty.version>
     <netty3.version>3.10.6.Final</netty3.version>
-    <ojai.version>3.1.1-mapr</ojai.version>
+    <ojai.version>3.2.0</ojai.version>
     <parquet.version>1.11.0</parquet.version>
     <pig.version>0.16.0</pig.version>
     <plexus.utils.version>3.3.0</plexus.utils.version>
