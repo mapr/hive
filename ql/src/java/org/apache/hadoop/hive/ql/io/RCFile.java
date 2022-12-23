@@ -1876,6 +1876,14 @@ public class RCFile {
       return readRowsIndexInBuffer < recordsNumInValBuffer;
     }
 
+    public void getCurrentRowDebug(BytesRefArrayWritable ret) throws IOException {
+      try {
+        getCurrentRow(ret);
+      } catch (IOException e) {
+        throw new IOException(String.format("RCFile DEBUG: exception on file '%s'", file.toString()), e);
+      }
+    }
+
     /**
      * get the current row used,make sure called {@link #next(LongWritable)}
      * first.

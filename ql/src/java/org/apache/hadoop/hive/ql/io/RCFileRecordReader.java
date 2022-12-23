@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -51,6 +53,8 @@ public class RCFileRecordReader<K extends LongWritable, V extends BytesRefArrayW
   protected Configuration conf;
   private final FileSplit split;
   private final boolean useCache;
+  private static final Logger LOG = LoggerFactory.getLogger(RCFileRecordReader.class);
+
 
   private static RCFileSyncCache syncCache = new RCFileSyncCache();
 
@@ -146,7 +150,11 @@ public class RCFileRecordReader<K extends LongWritable, V extends BytesRefArrayW
     more = next(key);
 
     if (more) {
-      in.getCurrentRow(value);
+      if (LOG.isDebugEnabled()) {
+        in.getCurrentRowDebug(value);
+      } else {
+        in.getCurrentRow(value);
+      }
     }
     return more;
   }
