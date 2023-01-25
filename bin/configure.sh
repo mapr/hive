@@ -441,29 +441,6 @@ function copy_log4j_for_hadoop_common_classpath() {
 }
 
 #
-# Create restart file for rm/tl
-#
-create_rm_tl_restart_file(){
-service=$1
-ip="$2"
-ip=$(echo "$ip" | cut -d',' -f1)
-mkdir -p "$RESTART_DIR"
-cat <<EOF > "$RESTART_DIR/${service}.restart"
-#!/bin/bash
-if ${MAPR_HOME}/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-  isSecured=\$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
-  if [ "\${isSecured}" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
-    export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
-  fi
-  nohup maprcli node services -action restart -name $service -nodes $ip > ${RESTART_LOG_DIR}/${service}_restart_$(date +%s)_$$.log 2>&1 &
-fi
-EOF
-chmod a+x "$RESTART_DIR/${service}.restart"
-chown "$MAPR_USER":"$MAPR_GROUP" "$RESTART_DIR/${service}.restart"
-logInfo "Created restart file ['$RESTART_DIR'/'$service'.restart] for service ['$service']"
-}
-
-#
 # Checks id hive-site.xml is changed
 #
 is_hive_site_changed(){
@@ -570,9 +547,9 @@ for ROLE in "${ROLES[@]}"; do
     if is_hive_site_changed || is_hive_not_configured_yet ; then
       if [ -n "$tl_ip" ] ; then
         if [ -n "$rm_ip" ] ; then
-          create_rm_tl_restart_file resourcemanager "$rm_ip"
+          logInfo "hive configuration: RM ip/host '$rm_ip' was provided, consider RM restart"
         fi
-        create_rm_tl_restart_file timelineserver "$tl_ip"
+        logInfo "hive configuration: TL ip/host '$tl_ip' was provided, consider TL restart"
       fi
     fi
   fi
