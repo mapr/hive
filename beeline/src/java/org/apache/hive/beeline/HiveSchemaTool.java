@@ -79,6 +79,7 @@ public class HiveSchemaTool {
   private String passWord = null;
   private boolean dryRun = false;
   private boolean verbose = false;
+  private boolean silent = false;
   private String dbOpts = null;
   private String url = null;
   private String driver = null;
@@ -142,6 +143,10 @@ public class HiveSchemaTool {
     this.verbose = verbose;
   }
 
+  public void setSilent(boolean silent) {
+    this.silent = silent;
+  }
+
   public void setDbOpts(String dbOpts) {
     this.dbOpts = dbOpts;
   }
@@ -179,19 +184,19 @@ public class HiveSchemaTool {
   public void showInfo() throws HiveMetaException {
     String hiveVersion = metaStoreSchemaInfo.getHiveSchemaVersion();
     String dbVersion = metaStoreSchemaInfo.getMetaStoreSchemaVersion(getConnectionInfo(true));
-    System.out.println("Hive distribution version:\t " + hiveVersion);
-    System.out.println("Metastore schema version:\t " + dbVersion);
+    logAndPrintToOut("Hive distribution version:\t " + hiveVersion);
+    logAndPrintToOut("Metastore schema version:\t " + dbVersion);
     assertCompatibleVersion(hiveVersion, dbVersion);
   }
 
   boolean validateLocations(Connection conn, URI[] defaultServers) throws HiveMetaException {
-    System.out.println("Validating DFS locations");
+    logAndPrintToOut("Validating DFS locations");
     boolean rtn;
     rtn = checkMetaStoreDBLocation(conn, defaultServers);
     rtn = checkMetaStoreTableLocation(conn, defaultServers) && rtn;
     rtn = checkMetaStorePartitionLocation(conn, defaultServers) && rtn;
     rtn = checkMetaStoreSkewedColumnsLocation(conn, defaultServers) && rtn;
-    System.out.println((rtn ? "Succeeded" : "Failed") + " in DFS location validation.");
+    logAndPrintToOut((rtn ? "Succeeded" : "Failed") + " in DFS location validation.");
     return rtn;
   }
 
@@ -469,7 +474,7 @@ public class HiveSchemaTool {
 
   // test the connection metastore using the config property
   private void testConnectionToMetastore() throws HiveMetaException {
-    Connection conn = getConnectionToMetastore(true);
+    Connection conn = getConnectionToMetastore(true && !silent);
     try {
       conn.close();
     } catch (SQLException e) {
@@ -527,23 +532,23 @@ public class HiveSchemaTool {
    */
   public void doUpgrade(String fromSchemaVer) throws HiveMetaException {
     if (metaStoreSchemaInfo.getHiveSchemaVersion().equals(fromSchemaVer)) {
-      System.out.println("No schema upgrade required from version " + fromSchemaVer);
+      logAndPrintToOut("No schema upgrade required from version " + fromSchemaVer);
       return;
     }
     // Find the list of scripts to execute for this upgrade
     List<String> upgradeScripts =
         metaStoreSchemaInfo.getUpgradeScripts(fromSchemaVer);
     testConnectionToMetastore();
-    System.out.println("Starting upgrade metastore schema from version " +
+    logAndPrintToOut("Starting upgrade metastore schema from version " +
         fromSchemaVer + " to " + metaStoreSchemaInfo.getHiveSchemaVersion());
     String scriptDir = metaStoreSchemaInfo.getMetaStoreScriptDir();
     try {
       for (String scriptFile : upgradeScripts) {
-        System.out.println("Upgrade script " + scriptFile);
+        logAndPrintToOut("Upgrade script " + scriptFile);
         if (!dryRun) {
           runPreUpgrade(scriptDir, scriptFile);
           runBeeLine(scriptDir, scriptFile);
-          System.out.println("Completed " + scriptFile);
+          logAndPrintToOut("Completed " + scriptFile);
         }
       }
     } catch (IOException eIO) {
@@ -576,16 +581,16 @@ public class HiveSchemaTool {
    */
   public void doInit(String toVersion) throws HiveMetaException {
     testConnectionToMetastore();
-    System.out.println("Starting metastore schema initialization to " + toVersion);
+    logAndPrintToOut("Starting metastore schema initialization to " + toVersion);
 
     String initScriptDir = metaStoreSchemaInfo.getMetaStoreScriptDir();
     String initScriptFile = metaStoreSchemaInfo.generateInitFileName(toVersion);
 
     try {
-      System.out.println("Initialization script " + initScriptFile);
+      logAndPrintToOut("Initialization script " + initScriptFile);
       if (!dryRun) {
         runBeeLine(initScriptDir, initScriptFile);
-        System.out.println("Initialization script completed");
+        logAndPrintToOut("Initialization script completed");
       }
     } catch (IOException e) {
       throw new HiveMetaException("Schema initialization FAILED!" +
@@ -594,37 +599,37 @@ public class HiveSchemaTool {
   }
 
   public void doValidate() throws HiveMetaException {
-    System.out.println("Starting metastore validation\n");
+    logAndPrintToOut("Starting metastore validation\n");
     Connection conn = getConnectionToMetastore(false);
     boolean success = true;
     try {
       if (validateSchemaVersions()) {
-        System.out.println("[SUCCESS]\n");
+        logAndPrintToOut("[SUCCESS]\n");
       } else {
         success = false;
-        System.out.println("[FAIL]\n");
+        logAndPrintToOut("[FAIL]\n");
       }
       if (validateSequences(conn)) {
-        System.out.println("[SUCCESS]\n");
+        logAndPrintToOut("[SUCCESS]\n");
       } else {
         success = false;
-        System.out.println("[FAIL]\n");
+        logAndPrintToOut("[FAIL]\n");
       }
       if (validateSchemaTables(conn)) {
-        System.out.println("[SUCCESS]\n");
+        logAndPrintToOut("[SUCCESS]\n");
       } else {
         success = false;
-        System.out.println("[FAIL]\n");
+        logAndPrintToOut("[FAIL]\n");
       }
       if (validateLocations(conn, this.validationServers)) {
-        System.out.println("[SUCCESS]\n");
+        logAndPrintToOut("[SUCCESS]\n");
       } else {
-        System.out.println("[WARN]\n");
+        logAndPrintToOut("[WARN]\n");
       }
       if (validateColumnNullValues(conn)) {
-        System.out.println("[SUCCESS]\n");
+        logAndPrintToOut("[SUCCESS]\n");
       } else {
-        System.out.println("[WARN]\n");
+        logAndPrintToOut("[WARN]\n");
       }
     } finally {
       if (conn != null) {
@@ -636,12 +641,12 @@ public class HiveSchemaTool {
       }
     }
 
-    System.out.print("Done with metastore validation: ");
+    logAndPrintToOut("Done with metastore validation: ");
     if (!success) {
-      System.out.println("[FAIL]");
+      logAndPrintToOut("[FAIL]");
       System.exit(1);
     } else {
-      System.out.println("[SUCCESS]");
+      logAndPrintToOut("[SUCCESS]");
     }
   }
 
@@ -664,7 +669,7 @@ public class HiveSchemaTool {
         .put("MStringList", Pair.of("SKEWED_STRING_LIST", "STRING_LIST_ID"))
         .build();
 
-    System.out.println("Validating sequence number for SEQUENCE_TABLE");
+    logAndPrintToOut("Validating sequence number for SEQUENCE_TABLE");
 
     boolean isValid = true;
     try {
@@ -699,7 +704,7 @@ public class HiveSchemaTool {
         }
       }
 
-      System.out.println((isValid ? "Succeeded" :"Failed") + " in sequence number validation for SEQUENCE_TABLE.");
+      logAndPrintToOut((isValid ? "Succeeded" :"Failed") + " in sequence number validation for SEQUENCE_TABLE.");
       return isValid;
     } catch(SQLException e) {
         throw new HiveMetaException("Failed to validate sequence number for SEQUENCE_TABLE", e);
@@ -707,7 +712,7 @@ public class HiveSchemaTool {
   }
 
   boolean validateSchemaVersions() throws HiveMetaException {
-    System.out.println("Validating schema version");
+    logAndPrintToOut("Validating schema version");
     try {
       String newSchemaVersion = metaStoreSchemaInfo.getMetaStoreSchemaVersion(getConnectionInfo(false));
       assertCompatibleVersion(metaStoreSchemaInfo.getHiveSchemaVersion(), newSchemaVersion);
@@ -716,13 +721,13 @@ public class HiveSchemaTool {
         || hme.getMessage().contains("Multiple versions were found in metastore")
         || hme.getMessage().contains("Could not find version info in metastore VERSION table")) {
         System.err.println(hme.getMessage());
-        System.out.println("Failed in schema version validation.");
+        logAndPrintToOut("Failed in schema version validation.");
         return false;
       } else {
         throw hme;
       }
     }
-    System.out.println("Succeeded in schema version validation.");
+    logAndPrintToOut("Succeeded in schema version validation.");
     return true;
   }
 
@@ -735,12 +740,12 @@ public class HiveSchemaTool {
     List<String> subScripts   = new ArrayList<String>();
     Connection hmsConn        = getConnectionToMetastore(false);
 
-    System.out.println("Validating metastore schema tables");
+    logAndPrintToOut("Validating metastore schema tables");
     try {
       version = metaStoreSchemaInfo.getMetaStoreSchemaVersion(getConnectionInfo(false));
     } catch (HiveMetaException he) {
       System.err.println("Failed to determine schema version from Hive Metastore DB. " + he.getMessage());
-      System.out.println("Failed in schema table validation.");
+      logAndPrintToOut("Failed in schema table validation.");
       LOG.debug("Failed to determine schema version from Hive Metastore DB," + he.getMessage());
       return false;
     }
@@ -756,7 +761,7 @@ public class HiveSchemaTool {
       } catch (SQLFeatureNotSupportedException e) {
         LOG.debug("schema is not supported");
       }
-      
+
       metadata       = conn.getMetaData();
       String[] types = {"TABLE"};
       rs             = metadata.getTables(null, schema, "%", types);
@@ -794,7 +799,7 @@ public class HiveSchemaTool {
       }
     } catch (Exception e) {
       System.err.println("Exception in parsing schema file. Cause:" + e.getMessage());
-      System.out.println("Failed in schema table validation.");
+      logAndPrintToOut("Failed in schema table validation.");
       return false;
     }
 
@@ -806,10 +811,10 @@ public class HiveSchemaTool {
       Collections.sort(schemaTables);
       System.err.println("Table(s) [ " + Arrays.toString(schemaTables.toArray())
           + " ] are missing from the metastore database schema.");
-      System.out.println("Failed in schema table validation.");
+      logAndPrintToOut("Failed in schema table validation.");
       return false;
     } else {
-      System.out.println("Succeeded in schema table validation.");
+      logAndPrintToOut("Succeeded in schema table validation.");
       return true;
     }
   }
@@ -864,7 +869,7 @@ public class HiveSchemaTool {
   }
 
   boolean validateColumnNullValues(Connection conn) throws HiveMetaException {
-    System.out.println("Validating columns for incorrect NULL values.");
+    logAndPrintToOut("Validating columns for incorrect NULL values.");
     boolean isValid = true;
     try {
       Statement stmt = conn.createStatement();
@@ -881,7 +886,7 @@ public class HiveSchemaTool {
          System.err.println("SD_ID in TBLS should not be NULL for Table Name=" + tableName + ", Table ID=" + tableId + ", Table Type=" + tableType);
       }
 
-      System.out.println((isValid ? "Succeeded" : "Failed") + " in column validation for incorrect NULL values.");
+      logAndPrintToOut((isValid ? "Succeeded" : "Failed") + " in column validation for incorrect NULL values.");
       return isValid;
     } catch(SQLException e) {
         throw new HiveMetaException("Failed to validate columns for incorrect NULL values", e);
@@ -892,9 +897,9 @@ public class HiveSchemaTool {
   void createCatalog(String catName, String location, String description, boolean ifNotExists)
       throws HiveMetaException {
     catName = normalizeIdentifier(catName);
-    System.out.println("Create catalog " + catName + " at location " + location);
+    logAndPrintToOut("Create catalog " + catName + " at location " + location);
 
-    Connection conn = getConnectionToMetastore(true);
+    Connection conn = getConnectionToMetastore(true && !silent);
     boolean success = false;
     try {
       conn.setAutoCommit(false);
@@ -907,7 +912,7 @@ public class HiveSchemaTool {
           LOG.debug("Going to run " + query);
           ResultSet rs = stmt.executeQuery(query);
           if (rs.next()) {
-            System.out.println("Catalog " + catName + " already exists");
+            logAndPrintToOut("Catalog " + catName + " already exists");
             return;
           }
         }
@@ -952,9 +957,9 @@ public class HiveSchemaTool {
           " but not given any changes to update");
     }
     catName = normalizeIdentifier(catName);
-    System.out.println("Updating catalog " + catName);
+    logAndPrintToOut("Updating catalog " + catName);
 
-    Connection conn = getConnectionToMetastore(true);
+    Connection conn = getConnectionToMetastore(true && !silent);
     boolean success = false;
     try {
       conn.setAutoCommit(false);
@@ -1005,9 +1010,9 @@ public class HiveSchemaTool {
     fromCatName = normalizeIdentifier(fromCatName);
     toCatName = normalizeIdentifier(toCatName);
     dbName = normalizeIdentifier(dbName);
-    System.out.println("Moving database " + dbName + " from catalog " + fromCatName +
+    logAndPrintToOut("Moving database " + dbName + " from catalog " + fromCatName +
         " to catalog " + toCatName);
-    Connection conn = getConnectionToMetastore(true);
+    Connection conn = getConnectionToMetastore(true && !silent);
     boolean success = false;
     try {
       conn.setAutoCommit(false);
@@ -1055,7 +1060,7 @@ public class HiveSchemaTool {
     fromDb = normalizeIdentifier(fromDb);
     toDb = normalizeIdentifier(toDb);
     tableName = normalizeIdentifier(tableName);
-    Connection conn = getConnectionToMetastore(true);
+    Connection conn = getConnectionToMetastore(true && !silent);
     boolean success = false;
     try {
       conn.setAutoCommit(false);
@@ -1162,7 +1167,7 @@ public class HiveSchemaTool {
 
       try {
         runBeeLine(scriptDir, preUpgradeScript);
-        System.out.println("Completed " + preUpgradeScript);
+        logAndPrintToOut("Completed " + preUpgradeScript);
       } catch (Exception e) {
         // Ignore the pre-upgrade script errors
         System.err.println("Warning in pre-upgrade script " + preUpgradeScript + ": "
@@ -1349,6 +1354,7 @@ public class HiveSchemaTool {
                 .create("dbOpts");
     Option dryRunOpt = new Option("dryRun", "list SQL scripts (no execute)");
     Option verboseOpt = new Option("verbose", "only print SQL statements");
+    Option silentOpt = new Option("silent", "print info output only to the log");
     Option serversOpt = OptionBuilder.withArgName("serverList")
         .hasArgs().withDescription("a comma-separated list of servers used in location validation in the format of scheme://authority (e.g. hdfs://localhost:8000)")
         .create("servers");
@@ -1389,6 +1395,7 @@ public class HiveSchemaTool {
     cmdLineOptions.addOption(passwdOpt);
     cmdLineOptions.addOption(dbTypeOpt);
     cmdLineOptions.addOption(verboseOpt);
+    cmdLineOptions.addOption(silentOpt);
     cmdLineOptions.addOption(metaDbTypeOpt);
     cmdLineOptions.addOption(urlOpt);
     cmdLineOptions.addOption(driverOpt);
@@ -1402,6 +1409,13 @@ public class HiveSchemaTool {
     cmdLineOptions.addOption(toDatabase);
     cmdLineOptions.addOption(fromDatabase);
     cmdLineOptions.addOptionGroup(optGroup);
+  }
+
+  private void logAndPrintToOut(String msg) {
+    LOG.info(msg);
+    if (!silent) {
+      System.out.println(msg);
+    }
   }
 
   public static void main(String[] args) {
@@ -1502,6 +1516,9 @@ public class HiveSchemaTool {
       if (line.hasOption("verbose")) {
         schemaTool.setVerbose(true);
       }
+      if (line.hasOption("silent")) {
+        schemaTool.setSilent(true);
+      }
       if (line.hasOption("dbOpts")) {
         schemaTool.setDbOpts(line.getOptionValue("dbOpts"));
       }
@@ -1559,7 +1576,9 @@ public class HiveSchemaTool {
       System.err.println("*** schemaTool failed ***");
       System.exit(1);
     }
-    System.out.println("schemaTool completed");
+    if (!line.hasOption("silent")) {
+      System.out.println("schemaTool completed");
+    }
     System.exit(0);
   }
 }

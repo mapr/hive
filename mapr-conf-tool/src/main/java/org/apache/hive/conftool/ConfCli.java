@@ -247,7 +247,7 @@ public final class ConfCli {
     executor.submit(() -> {
       HiveConf hiveConf = new HiveConf(HiveSchemaTool.class);
       hiveConf.setVar(METASTORECONNECTURLKEY, connectionUrl);
-      HiveSchemaTool.main(new String[] { "-dbType", "derby", "-initSchema" }, hiveConf, HIVE_HOME);
+      HiveSchemaTool.main(new String[] { "-dbType", "derby", "-initSchema", "-silent" }, hiveConf, HIVE_HOME);
     });
   }
 
