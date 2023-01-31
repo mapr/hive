@@ -580,7 +580,7 @@ echo "$(echo -e "${STRING}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 #
 exists_in_mapr_fs(){
 dir="$1"
-if $(sudo -u "$MAPR_USER" -E hadoop fs -test -d "$dir") ; then
+if $(hadoop fs -test -d "$dir") ; then
   return 0; # 0 = true
 else
   return 1;
@@ -595,16 +595,23 @@ fi
 configure_impersonation(){
 authMethod="$1"
 if "${MAPR_HOME}"/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-  if [ "${authMethod}" = "maprsasl" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
-    export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
+  if [ "${authMethod}" = "maprsasl" ] && [ -z "${MAPR_TICKETFILE_LOCATION}" ]; then
+    isSecured="false"
+    if [ -f "${MAPR_HOME}/conf/mapr-clusters.conf" ]; then
+      isSecured=$(head -n1 "${MAPR_HOME}/conf/mapr-clusters.conf" | grep -o 'secure=\w*' | cut -d '=' -f 2)
+    fi
+    if [ "$isSecured" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
+      export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
+    fi
   fi
+
   if is_hive_not_configured_yet ; then
     logInfo "Configuring impersonation ..."
     if ! exists_in_mapr_fs "$METASTOREWAREHOUSE" ; then
-      sudo -u "$MAPR_USER" -E hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
+      hadoop fs -mkdir -p "$METASTOREWAREHOUSE"
       logInfo "Create warehouse folder ['$METASTOREWAREHOUSE'] in MapR-FS"
     fi
-    sudo -u "$MAPR_USER" -E hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
+    hadoop fs -chmod 777 "$METASTOREWAREHOUSE"
     logInfo "Set 777 permissions to warehouse folder ['$METASTOREWAREHOUSE']"
     logInfo "Impersonation has been configured"
   fi
