@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Stack;
 
 import com.mapr.fs.MapRFileSystem;
 import org.apache.hadoop.conf.Configuration;
@@ -434,6 +435,35 @@ public final class HiveFileFormatUtils {
             }
           }
         }
+
+        // This is to consider symlink somewhere in the middle of the path
+        if (!isFound) {
+          Path p = entry.getKey();
+          // We have already considered the case when symlink points full link
+          // So, skipping first node
+          Stack<String> nodes = new Stack<>();
+          nodes.push(p.getName());
+          p = p.getParent();
+          while (p != null) {
+            fileStatus = maprFs.getFileStatus(p);
+            if (fileStatus.isSymlink()) {
+              isFound = true;
+              p = FileUtil.fixSymlinkFileStatus(fileStatus);
+              break;
+            }
+            nodes.push(p.getName());
+            p = p.getParent();
+          }
+          if (isFound) {
+            String processedPath = p.toString();
+            while (!nodes.isEmpty()) {
+              processedPath = processedPath + Path.SEPARATOR + nodes.pop();
+            }
+            p = new Path(processedPath);
+            symlinkPathToPartitionInfo.put(p, entry.getValue());
+          }
+        }
+
         if (!isFound) {
           symlinkPathToPartitionInfo.put(entry.getKey(), entry.getValue());
         }

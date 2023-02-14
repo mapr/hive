@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import com.mapr.fs.MapRFileSystem;
@@ -113,8 +114,10 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
         if (FileSystem.get(internalConf) instanceof MapRFileSystem && isSymLinkSupportEnabled(internalConf)) {
           FileSystem maprFS = MapRFileSystem.get(internalConf);
           FileStatus fileStatus = maprFS.getFileStatus(onepath);
+          boolean isFound = false;
           if (fileStatus.isSymlink()) { // symlink to a dir; MAPR-HIVE-880
             onepath = FileUtil.fixSymlinkFileStatus(fileStatus);
+            isFound = true;
           } else { // symlink to a file; MAPR-HIVE-884
             FileStatus[] fileStatuses = maprFS.listStatus(onepath);
             for (FileStatus each : fileStatuses) {
@@ -122,9 +125,36 @@ public abstract class AbstractMapOperator extends Operator<MapWork>
                 Path p = FileUtil.fixSymlinkFileStatus(each);
                 if (maprFS.getFileStatus(p).compareTo(maprFS.getFileStatus(fpath)) == 0) {
                   onepath = p.getParent();
+                  isFound = true;
                   break;
                 }
               }
+            }
+          }
+
+          // This is to consider symlink somewhere in the middle of the path
+          if (!isFound) {
+            // We have already considered the case when symlink points full link
+            // So, skipping first node
+            Stack<String> nodes = new Stack<>();
+            nodes.push(onepath.getName());
+            Path p = onepath.getParent();
+            while (p != null) {
+              fileStatus = maprFS.getFileStatus(p);
+              if (fileStatus.isSymlink()) {
+                p = FileUtil.fixSymlinkFileStatus(fileStatus);
+                isFound = true;
+                break;
+              }
+              nodes.push(p.getName());
+              p = p.getParent();
+            }
+            if (isFound) {
+              String processedPath = p.toString();
+              while (!nodes.isEmpty()) {
+                processedPath = processedPath + Path.SEPARATOR + nodes.pop();
+              }
+              onepath = new Path(processedPath);
             }
           }
         }
