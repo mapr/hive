@@ -23,6 +23,7 @@ MAKEFILE_ARG_BRANCH_NAME = " HIVE_BRANCH_NAME"
 CHECKSTYLE_CONDITION = true
 env.PR_ERROR = ''
 env.TARGET_ERROR = ''
+env.COMMIT_MESSAGE = ''
 
 pipeline {
   agent none
@@ -124,8 +125,8 @@ pipeline {
       agent {label "redhat8"}
       when {
         allOf {
-             expression { CHECKSTYLE_CONDITION == true }
-             expression { env.BRANCH_NAME ==~ /PR-.*/ }
+           expression { CHECKSTYLE_CONDITION == true && env.BRANCH_NAME ==~ /PR-.*/ }
+           expression { !(env.COMMIT_MESSAGE ==~ /.*prskiptest.*/) }
         }
       }
       steps {
@@ -160,11 +161,14 @@ pipeline {
         }
       }
     }
+
     stage ("Main CI process") {
       when {
         anyOf {
           expression { env.BRANCH_NAME ==~ /.*branch.*/}
-          changeRequest target: "^branch-.+-mapr(\$|.+)", comparator: "REGEXP"
+          expression {
+            env.COMMIT_MESSAGE ==~ /.*prbuild.*/ && changeRequest (target: "^branch-.+-mapr(\$|.+)", comparator: "REGEXP")
+          }
         }
       }
       parallel {
