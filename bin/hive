@@ -238,14 +238,6 @@ if [[ -n $SENTRY_HOME ]] ; then
   done
 fi
 
-# add Spark assembly jar to the classpath
-if [[ -n "$SPARK_HOME" && !("$HIVE_SKIP_SPARK_ASSEMBLY" = "true") ]]
-then
-  sparkAssemblyPath=$(find_spark_assembly_path "$SPARK_HOME")
-  CLASSPATH="${CLASSPATH}:${sparkAssemblyPath}"
-  CLASSPATH="${CLASSPATH}:$SPARK_CONF"
-fi
-
 
 JMX_JAR=$(echo ${MAPR_HOME:-/opt/mapr}/lib/jmxagent*)
 if [ -n "$JMX_JAR" ] && [ -f ${JMX_JAR} ]; then
