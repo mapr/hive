@@ -624,10 +624,10 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         // indicates if Metastore is up and running
         try {
           statusServer = builder.build();
+          statusServer.addServlet("service_status", "/status", MetastoreStatusServlet.class);
         } catch (IOException e) {
-          throw new MetaException(e.getMessage());
+          HMSHandler.LOG.warn("Error creating Metastore status server: ", e);
         }
-        statusServer.addServlet("service_status", "/status", MetastoreStatusServlet.class);
       }
     }
 
