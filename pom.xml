@@ -179,7 +179,7 @@
     <jcommander.version>1.75</jcommander.version>
     <jettison.version>1.1</jettison.version>
     <jetty.version>9.4.44.v20210927</jetty.version>
-    <glassfish.jersey.version>2.29</glassfish.jersey.version>
+    <glassfish.jersey.version>2.36</glassfish.jersey.version>
     <glassfish.jersey.guava.version>2.25.1</glassfish.jersey.guava.version>
     <jline.version>2.14.6</jline.version>
     <jms.version>2.0.2</jms.version>
