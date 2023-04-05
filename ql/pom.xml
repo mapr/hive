@@ -335,6 +335,10 @@
           in hive's use of datanucleus.
         -->
         <exclusion>
+          <groupId>org.pentaho</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+	<exclusion>
           <groupId>net.hydromatic</groupId>
           <artifactId>aggdesigner-algorithm</artifactId>
         </exclusion>
@@ -366,6 +370,10 @@
       <version>${calcite.version}</version>
       <exclusions>
         <exclusion>
+          <groupId>org.pentaho</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+	<exclusion>
           <groupId>org.apache.calcite.avatica</groupId>
           <artifactId>avatica-core</artifactId>
         </exclusion>

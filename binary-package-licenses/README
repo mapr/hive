@@ -70,7 +70,6 @@ metrics*
 netty*
 opencsv*
 parquet-hadoop-bundle
-pentaho-aggdesigner-algorithm
 plexus-utils
 regexp
 server-metrics
