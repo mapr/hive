@@ -177,7 +177,7 @@
     <javolution.version>5.5.1</javolution.version>
     <jdo-api.version>3.0.1</jdo-api.version>
     <jcommander.version>1.75</jcommander.version>
-    <jettison.version>1.1</jettison.version>
+    <jettison.version>1.5.4</jettison.version>
     <jetty.version>9.4.44.v20210927</jetty.version>
     <glassfish.jersey.version>2.36</glassfish.jersey.version>
     <glassfish.jersey.guava.version>2.25.1</glassfish.jersey.guava.version>
