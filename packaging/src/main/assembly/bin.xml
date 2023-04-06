@@ -48,7 +48,6 @@
         <!-- <exclude>log4j:*</exclude> -->
         <exclude>*reload4j*</exclude>
         <exclude>junit:*</exclude>
-        <exclude>co.cask.tephra:*</exclude>
         <exclude>commons-configuration:commons-configuration</exclude>
         <exclude>org.apache.hive:hive-jdbc:*:standalone</exclude>
         <exclude>org.apache.hbase:*</exclude>
