@@ -166,7 +166,7 @@
     <httpcomponents.client.version>4.5.13</httpcomponents.client.version>
     <httpcomponents.core.version>4.4.13</httpcomponents.core.version>
     <hk2.version>2.6.1</hk2.version>
-    <ivy.version>2.4.0</ivy.version>
+    <ivy.version>2.5.1</ivy.version>
     <jackson.version>2.13.3</jackson.version>
     <jackson1.version>1.9.14-atlassian-6</jackson1.version>
     <jamon.plugin.version>2.3.4</jamon.plugin.version>
