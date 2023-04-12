@@ -45,7 +45,7 @@
 
   <property>
     <name>templeton.libjars</name>
-    <value>${env.MAPR_HOME}/lib/zookeeper-${zookeeper.version}.jar,${env.TEMPLETON_HOME}/../lib/hive-common-${project.version}.jar</value>
+    <value>${env.TEMPLETON_HOME}/../lib/hive-common-${project.version}.jar</value>
     <description>Jars to add to the classpath.</description>
   </property>
 
