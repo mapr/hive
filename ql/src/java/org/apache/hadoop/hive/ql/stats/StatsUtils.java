@@ -1274,7 +1274,8 @@ public class StatsUtils {
 
         // constant list projection of known length
         StandardConstantListObjectInspector scloi = (StandardConstantListObjectInspector) oi;
-        length = scloi.getWritableConstantValue().size();
+        List<?> value = scloi.getWritableConstantValue();
+        length = value == null ? 0 : value.size();
 
         // check if list elements are primitive or Objects
         ObjectInspector leoi = scloi.getListElementObjectInspector();
