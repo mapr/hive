@@ -39,6 +39,8 @@
       <useStrictFiltering>true</useStrictFiltering>
       <excludes>
         <exclude>org.apache.hive:hive-druid-handler</exclude>
+        <exclude>org.apache.hive:hive-llap-server</exclude>
+        <exclude>io.netty:netty</exclude>
         <exclude>org.apache.hadoop:*</exclude>
         <exclude>org.apache.hive.hcatalog:*</exclude>
         <exclude>org.slf4j:*</exclude>
