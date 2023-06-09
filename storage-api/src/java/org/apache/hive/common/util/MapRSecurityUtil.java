@@ -195,7 +195,7 @@ public final class MapRSecurityUtil {
       properties.load(is);
       return properties.getProperty("mapr.daemon.user");
     } catch (IOException e) {
-      LOG.error(e.toString());
+      LOG.info(e.toString());
     }
     return "";
   }
