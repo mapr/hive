@@ -647,6 +647,21 @@ public class VectorizationContext {
     public void setReuseColumns(boolean reuseColumns) {
       this.reuseScratchColumns = reuseColumns;
     }
+
+    public String toString() {
+      StringBuilder builder = new StringBuilder();
+      builder.append(String.format(
+          "OutputColumnManager: initialOutputCol: %d, outputColCount: %d, usedOutputColumns#: %d"
+              + ", reuseScratchColumns: %s, output cols:",
+          initialOutputCol, outputColCount, usedOutputColumns.size(), reuseScratchColumns));
+      for (int i = 0; i < outputColCount; i++) {
+        builder.append(String.format(
+            "\n%d (%d): used: %s, scratchVectorTypeName: %s" + ", physicalVariation: %s, trackWasUsed: %s", i,
+            i + initialOutputCol, usedOutputColumns.contains(i), scratchVectorTypeNames[i],
+            scratchDataTypePhysicalVariations[i]));
+      }
+      return builder.toString();
+    }
   }
 
   public int allocateScratchColumn(TypeInfo typeInfo) throws HiveException {
@@ -2106,7 +2121,9 @@ public class VectorizationContext {
       return;
     }
     for (VectorExpression v : vectorChildren) {
-      if (!(v instanceof IdentityExpression)) {
+      if (!(v instanceof IdentityExpression
+          // it's not safe to reuse ConstantVectorExpression's output as a scratch column, see HIVE-26408
+          || v instanceof ConstantVectorExpression)) {
         ocm.freeOutputColumn(v.getOutputColumnNum());
       }
     }
