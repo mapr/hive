@@ -215,7 +215,6 @@
     <scala.binary.version>2.12</scala.binary.version>
     <scala.version>2.12.15</scala.version>
     <scala-compiler.version>2.12.15</scala-compiler.version>
-    <snakeyaml.version>1.26</snakeyaml.version>
     <tempus-fugit.version>1.1</tempus-fugit.version>
     <snappy.version>1.1.4</snappy.version>
     <wadl-resourcedoc-doclet.version>1.19.4</wadl-resourcedoc-doclet.version>
@@ -1191,11 +1190,6 @@
         <groupId>org.apache.tez</groupId>
         <artifactId>tez-common</artifactId>
         <version>${tez.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.yaml</groupId>
-        <artifactId>snakeyaml</artifactId>
-        <version>${snakeyaml.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
