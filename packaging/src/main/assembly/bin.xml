@@ -56,7 +56,6 @@
         <!--<exclude>org.apache.zookeeper:*</exclude> TODO: uncomment after adding MapR Hadoop 3.x.x  -->
         <exclude>org.apache.pig:*</exclude>
         <!--<exclude>com.mapr.hadoop:*</exclude>  TODO: uncomment after adding MapR Hadoop 3.x.x -->
-        <exclude>com.mapr.hadoop:*</exclude>
         <exclude>com.sun.jersey:jersey-client:*</exclude>
         <exclude>com.sun.jersey:jersey-core:*</exclude>
         <exclude>com.sun.jersey:jersey-servlet:*</exclude>
