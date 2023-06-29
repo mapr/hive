@@ -90,7 +90,7 @@
     <jline.version>2.14.6</jline.version>
     <storage-api.version>2.6.1.300-eep-912-SNAPSHOT</storage-api.version>
 
-    <jetty.version>9.4.44.v20210927</jetty.version>
+    <jetty.version>9.4.51.v20230217</jetty.version>
 
     <!-- Thrift properties -->
     <thrift.home>you-must-set-this-to-run-thrift</thrift.home>
