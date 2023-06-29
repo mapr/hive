@@ -69,7 +69,7 @@
     <datanucleus-api-jdo.version>5.2.4</datanucleus-api-jdo.version>
     <datanucleus-core.version>5.2.3</datanucleus-core.version>
     <datanucleus-rdbms.version>5.2.3</datanucleus-rdbms.version>
-    <datanucleus-jdo.version>3.2.0-m13</datanucleus-jdo.version>
+    <datanucleus-jdo.version>3.2.1</datanucleus-jdo.version>
 
     <derby.version>10.14.2.0</derby.version>
     <dropwizard-metrics-hadoop-metrics2-reporter.version>0.1.2</dropwizard-metrics-hadoop-metrics2-reporter.version>
