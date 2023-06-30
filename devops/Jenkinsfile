@@ -189,7 +189,7 @@ pipeline {
                   configFileProvider([configFile(fileId: 'maven_settings', variable: 'mvn_settings')]) {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
-                  docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu16-java11-gcc7").inside (
+                  docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu16-java11-gcc7:maven363").inside (
                   "-e MAPR_MIRROR=${MAPR_MIRROR} \
                   -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                   -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
