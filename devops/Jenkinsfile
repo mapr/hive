@@ -251,7 +251,7 @@ pipeline {
                   configFileProvider([configFile(fileId: 'maven_settings', variable: 'mvn_settings')]) {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
-                  docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc8").inside (
+                  docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc8:maven363").inside (
                   "-e MAPR_MIRROR=${MAPR_MIRROR} \
                   -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                   -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -273,7 +273,7 @@ pipeline {
                       rm -rf ${PROJECT}; git clone git@github.com:mapr/private-pkg.git ${PROJECT}; \
                       cd ${PROJECT}; \
                       git checkout MEP-9.1.2 ; \
-
+                      mvn --version ;\
                       make ${PROJECT} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                       make mapr-hiveserver2-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
                       make mapr-hivemetastore-${COMPONENT_VERSION} ${MAKEFILE_ARGS} TIMESTAMP=${ID}; \
