@@ -91,6 +91,7 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-spark-client</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- inter-project -->
     <dependency>
