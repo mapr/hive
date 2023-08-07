@@ -177,14 +177,14 @@ final class CommandAuthorizerV2 {
     case DATABASE:
       Database database = privObject.getDatabase();
       hivePrivObject = new HivePrivilegeObject(privObjType, database.getName(), null, null,
-          null, actionType, null, null);
+          null, actionType, null, null, database.getOwnerName(), database.getOwnerType());
       break;
     case TABLE:
       Table table = privObject.getTable();
       List<String> columns = tableName2Cols == null ? null :
           tableName2Cols.get(Table.getCompleteName(table.getDbName(), table.getTableName()));
       hivePrivObject = new HivePrivilegeObject(privObjType, table.getDbName(), table.getTableName(),
-          null, columns, actionType, null, null);
+          null, columns, actionType, null, null, table.getOwner(), table.getOwnerType());
       break;
     case DFS_DIR:
     case LOCAL_DIR:
