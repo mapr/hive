@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.apache.hive</groupId>
     <artifactId>hive</artifactId>
-    <version>3.1.3.300-eep-912-SNAPSHOT</version>
+    <version>3.1.3.400-eep-913-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.hive.encryptiontool</groupId>
