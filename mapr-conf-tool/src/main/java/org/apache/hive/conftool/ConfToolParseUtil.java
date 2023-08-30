@@ -52,10 +52,25 @@ public final class ConfToolParseUtil {
    * @throws IOException
    * @throws SAXException
    */
-  public static Document readDocument(String pathToXml) throws ParserConfigurationException, IOException, SAXException {
+  public static Document readDocument(String pathToXml)
+      throws ParserConfigurationException, IOException, SAXException {
     DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    return docBuilder.parse(pathToXml);
+    File f = new File(pathToXml);
+    if (f.createNewFile()) {
+      Document newDoc = docBuilder.newDocument();
+      newDoc.appendChild(newDoc.createElement("configuration"));
+      try {
+        saveToFile(newDoc, pathToXml);
+      } catch (TransformerException e) {
+        LOG.error("Failed to save new config file {}", pathToXml);
+        throw new IOException(e);
+      }
+      LOG.info("Created new config file '{}'", pathToXml);
+    } else {
+      LOG.info("Found existing config file '{}'", pathToXml);
+    }
+    return docBuilder.parse(f);
   }
 
   /**
