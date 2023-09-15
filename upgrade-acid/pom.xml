@@ -92,7 +92,7 @@
         <repository>
             <id>mapr</id>
             <name>MapR Maven repository</name>
-            <url>https://repository.mapr.com/nexus/content/repositories/releases/</url>
+            <url>https://repository.mapr.hpe.com/nexus/content/repositories/releases/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -102,7 +102,7 @@
             </snapshots>
         </repository> 
         <repository>
-            <id>mapr.release</id>
+            <id>mapr-releases</id>
             <name>MapR Release Maven repository</name>
             <url>${env.MAPR_RELEASES_REPO}</url>
             <releases>
