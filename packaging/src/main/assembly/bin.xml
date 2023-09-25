@@ -187,6 +187,7 @@
       <includes>
         <include>hive</include>
         <include>configure.sh</include>
+        <include>configure-java17.sh</include>
         <include>llap/**/*</include>
         <include>metatool</include>
         <include>hplsql</include>
