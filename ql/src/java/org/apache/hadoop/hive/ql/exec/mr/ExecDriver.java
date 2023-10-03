@@ -181,7 +181,11 @@ public class ExecDriver extends Task<MapredWork> implements Serializable, Hadoop
     Iterator<Map.Entry<String, String>> iter = conf.iterator();
     while(iter.hasNext()) {
       String key = iter.next().getKey();
-      conf.set(key, conf.get(key));
+      // EEP-HIVE-1444: these two props should remain templated
+      if (!(key.equals("mapr.mapred.localvolume.mount.path") ||
+            key.equals("mapr.mapred.localvolume.root.dir.path"))) {
+        conf.set(key, conf.get(key));
+      }
     }
 
     job = new JobConf(conf, ExecDriver.class);
