@@ -584,7 +584,6 @@ public class HiveConnection implements java.sql.Connection {
    */
   private TTransport createBinaryTransport() throws SQLException, TTransportException {
     try {
-      TTransport socketTransport = createUnderlyingTransport();
       // handle secure connection if specified
       if (!JdbcConnectionParams.AUTH_SIMPLE.equals(sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
         // If Kerberos
@@ -602,6 +601,7 @@ public class HiveConnection implements java.sql.Connection {
           // If the client did not specify qop then just negotiate the one supported by server
           saslProps.put(Sasl.QOP, "auth-conf,auth-int,auth");
         }
+
         saslProps.put(Sasl.SERVER_AUTH, "true");
         if (JdbcConnectionParams.AUTH_MAPRSASL.equalsIgnoreCase(sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
           if (JdbcConnectionParams.TRUE.equalsIgnoreCase(sessConfMap.get(JdbcConnectionParams.USE_SSL))) {
@@ -613,24 +613,24 @@ public class HiveConnection implements java.sql.Connection {
         else if (sessConfMap.containsKey(JdbcConnectionParams.AUTH_PRINCIPAL)) {
           transport = KerberosSaslHelper.getKerberosTransport(
               sessConfMap.get(JdbcConnectionParams.AUTH_PRINCIPAL), host,
-              socketTransport, saslProps, assumeSubject);
+                  createUnderlyingTransport(), saslProps, assumeSubject);
         } else {
           // If there's a delegation token available then use token based connection
           String tokenStr = getClientDelegationToken(sessConfMap);
           if (tokenStr != null) {
             transport = KerberosSaslHelper.getTokenTransport(tokenStr,
-                host, socketTransport, saslProps);
+                host, createUnderlyingTransport(), saslProps);
           } else {
             // we are using PLAIN Sasl connection with user/password
             String userName = getUserName();
             String passwd = getPassword();
             // Overlay the SASL transport on top of the base socket transport (SSL or non-SSL)
-            transport = PlainSaslHelper.getPlainTransport(userName, passwd, socketTransport);
+            transport = PlainSaslHelper.getPlainTransport(userName, passwd, createUnderlyingTransport());
           }
         }
       } else {
         // Raw socket connection (non-sasl)
-        transport = socketTransport;
+        transport = createUnderlyingTransport();
       }
     } catch (SaslException e) {
       throw new SQLException("Could not create secure connection to "
