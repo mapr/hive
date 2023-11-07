@@ -309,6 +309,13 @@ pipeline {
             }
           }
         }
+        stage("Whitesource scan") {
+          steps {
+            script {
+               ws.dockerScan()
+            }
+          }
+        }
       }
     }
   }
