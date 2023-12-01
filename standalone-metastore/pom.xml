@@ -75,7 +75,7 @@
     <dropwizard-metrics-hadoop-metrics2-reporter.version>0.1.2</dropwizard-metrics-hadoop-metrics2-reporter.version>
     <dropwizard.version>3.1.0</dropwizard.version>
     <guava.version>31.1-jre</guava.version>
-    <hadoop.version>3.3.5.200-eep-921-SNAPSHOT</hadoop.version>
+
     <hikaricp.version>2.6.1</hikaricp.version>
     <jackson.version>2.13.5</jackson.version>
     <javolution.version>5.5.1</javolution.version>
@@ -88,7 +88,6 @@
     <protobuf.version>3.21.12</protobuf.version>
     <sqlline.version>1.9.0</sqlline.version>
     <jline.version>2.14.6</jline.version>
-    <storage-api.version>2.6.1.500-eep-921-SNAPSHOT</storage-api.version>
 
     <jetty.version>9.4.51.v20230217</jetty.version>
 
@@ -97,6 +96,10 @@
     <thrift.gen.dir>${basedir}/src/gen/thrift</thrift.gen.dir>
     <thrift.args>-I ${thrift.home} --gen java:beans,generated_annotations=undated --gen cpp --gen php --gen py --gen rb</thrift.args>
     <javax.annotation-api.version>1.2</javax.annotation-api.version>
+
+    <!-- MAPR dependencies -->
+    <storage-api.version>2.6.1.500-eep-921-SNAPSHOT</storage-api.version>
+    <hadoop.version>3.3.5.200-eep-921-SNAPSHOT</hadoop.version>
 
   </properties>
 
