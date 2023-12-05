@@ -346,13 +346,19 @@ fi
 # Save all checksums in configuration_file
 #
 save_all_checksums(){
-if is_hive_env_file; then
-  beforeConfigurationFileCksum=$(cksum "$HPLSQL_SITE" "$HIVE_SITE" "$WEBHCAT_SITE" "$HIVE_ENV"| cut -d' ' -f 1,3)
-else
-  beforeConfigurationFileCksum=$(cksum "$HPLSQL_SITE" "$HIVE_SITE" "$WEBHCAT_SITE" | cut -d' ' -f 1,3)
-fi
-echo "$beforeConfigurationFileCksum" > "$HIVE_CONF"/.configuration_file_check_sum
-logInfo "Save all checksums into configuration file ['$HIVE_CONF'/.configuration_file_check_sum]"
+  to_check=""
+
+  for file in "${FILES[@]}"; do
+    [[ -f "${file}" ]] && to_check+=" ${file}"
+  done
+
+  if [ -z "${to_check}" ]; then
+    logInfo "No configuration files detected to save checksum!"
+  else
+    beforeConfigurationFileCksum=$(cksum ${to_check} | cut -d' ' -f 1,3)
+    echo "$beforeConfigurationFileCksum" > "$HIVE_CONF"/.configuration_file_check_sum
+    logInfo "Save all checksums into configuration file ['$HIVE_CONF'/.configuration_file_check_sum]"
+  fi
 }
 
 #
