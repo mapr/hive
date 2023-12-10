@@ -340,11 +340,11 @@ class CompactionTxnHandler extends TxnHandler {
       ResultSet rs = null;
       try {
         dbConn = getDbConn(Connection.TRANSACTION_READ_COMMITTED);
-        pStmt = dbConn.prepareStatement("SELECT \"CQ_ID\", \"CQ_DATABASE\", \"CQ_TABLE\", \"CQ_PARTITION\", "
-            + "\"CQ_STATE\", \"CQ_TYPE\", \"CQ_TBLPROPERTIES\", \"CQ_WORKER_ID\", \"CQ_START\", \"CQ_RUN_AS\", "
-            + "\"CQ_HIGHEST_WRITE_ID\", \"CQ_META_INFO\", \"CQ_HADOOP_JOB_ID\", \"CQ_ERROR_MESSAGE\", "
-            + "\"CQ_ENQUEUE_TIME\" "
-            + "FROM \"COMPACTION_QUEUE\" WHERE \"CQ_ID\" = ?");
+        pStmt = dbConn.prepareStatement("SELECT CQ_ID, CQ_DATABASE, CQ_TABLE, CQ_PARTITION, "
+            + "CQ_STATE, CQ_TYPE, CQ_TBLPROPERTIES, CQ_WORKER_ID, CQ_START, CQ_RUN_AS, "
+            + "CQ_HIGHEST_WRITE_ID, CQ_META_INFO, CQ_HADOOP_JOB_ID, CQ_ERROR_MESSAGE, "
+            + "CQ_ENQUEUE_TIME "
+            + "FROM COMPACTION_QUEUE WHERE CQ_ID = ?");
         pStmt.setLong(1, info.id);
         rs = pStmt.executeQuery();
         if(rs.next()) {
@@ -364,10 +364,10 @@ class CompactionTxnHandler extends TxnHandler {
           LOG.debug("Going to rollback");
           dbConn.rollback();
         }
-        pStmt = dbConn.prepareStatement("INSERT INTO \"COMPLETED_COMPACTIONS\"(\"CC_ID\", \"CC_DATABASE\", "
-            + "\"CC_TABLE\", \"CC_PARTITION\", \"CC_STATE\", \"CC_TYPE\", \"CC_TBLPROPERTIES\", \"CC_WORKER_ID\", "
-            + "\"CC_START\", \"CC_END\", \"CC_RUN_AS\", \"CC_HIGHEST_WRITE_ID\", \"CC_META_INFO\", "
-            + "\"CC_HADOOP_JOB_ID\", \"CC_ERROR_MESSAGE\", \"CC_ENQUEUE_TIME\")"
+        pStmt = dbConn.prepareStatement("INSERT INTO COMPLETED_COMPACTIONS(CC_ID, CC_DATABASE, "
+            + "CC_TABLE, CC_PARTITION, CC_STATE, CC_TYPE, CC_TBLPROPERTIES, CC_WORKER_ID, "
+            + "CC_START, CC_END, CC_RUN_AS, CC_HIGHEST_WRITE_ID, CC_META_INFO, "
+            + "CC_HADOOP_JOB_ID, CC_ERROR_MESSAGE, CC_ENQUEUE_TIME)"
             + " VALUES(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?)");
         info.state = SUCCEEDED_STATE;
         CompactionInfo.insertIntoCompletedCompactions(pStmt, info, getDbTime(dbConn));
@@ -1031,11 +1031,11 @@ class CompactionTxnHandler extends TxnHandler {
       try {
         dbConn = getDbConn(Connection.TRANSACTION_READ_COMMITTED);
         stmt = dbConn.createStatement();
-        pStmt = dbConn.prepareStatement("SELECT \"CQ_ID\", \"CQ_DATABASE\", \"CQ_TABLE\", \"CQ_PARTITION\", "
-            + "\"CQ_STATE\", \"CQ_TYPE\", \"CQ_TBLPROPERTIES\", \"CQ_WORKER_ID\", \"CQ_START\", \"CQ_RUN_AS\", "
-            + "\"CQ_HIGHEST_WRITE_ID\", \"CQ_META_INFO\", \"CQ_HADOOP_JOB_ID\", \"CQ_ERROR_MESSAGE\", "
-            + "\"CQ_ENQUEUE_TIME\" "
-            + "FROM \"COMPACTION_QUEUE\" WHERE \"CQ_ID\" = ?");
+        pStmt = dbConn.prepareStatement("SELECT CQ_ID, CQ_DATABASE, CQ_TABLE, CQ_PARTITION, "
+            + "CQ_STATE, CQ_TYPE, CQ_TBLPROPERTIES, CQ_WORKER_ID, CQ_START, CQ_RUN_AS, "
+            + "CQ_HIGHEST_WRITE_ID, CQ_META_INFO, CQ_HADOOP_JOB_ID, CQ_ERROR_MESSAGE, "
+            + "CQ_ENQUEUE_TIME "
+            + "FROM COMPACTION_QUEUE WHERE CQ_ID = ?");
         pStmt.setLong(1, ci.id);
         rs = pStmt.executeQuery();
         if(rs.next()) {
@@ -1069,11 +1069,11 @@ class CompactionTxnHandler extends TxnHandler {
         close(rs, stmt, null);
         closeStmt(pStmt);
 
-        pStmt = dbConn.prepareStatement("INSERT INTO \"COMPLETED_COMPACTIONS\" "
-            + "(\"CC_ID\", \"CC_DATABASE\", \"CC_TABLE\", \"CC_PARTITION\", \"CC_STATE\", \"CC_TYPE\", "
-            + "\"CC_TBLPROPERTIES\", \"CC_WORKER_ID\", \"CC_START\", \"CC_END\", \"CC_RUN_AS\", "
-            + "\"CC_HIGHEST_WRITE_ID\", \"CC_META_INFO\", \"CC_HADOOP_JOB_ID\", \"CC_ERROR_MESSAGE\", "
-            + "\"CC_ENQUEUE_TIME\") "
+        pStmt = dbConn.prepareStatement("INSERT INTO COMPLETED_COMPACTIONS "
+            + "(CC_ID, CC_DATABASE, CC_TABLE, CC_PARTITION, CC_STATE, CC_TYPE, "
+            + "CC_TBLPROPERTIES, CC_WORKER_ID, CC_START, CC_END, CC_RUN_AS, "
+            + "CC_HIGHEST_WRITE_ID, CC_META_INFO, CC_HADOOP_JOB_ID, CC_ERROR_MESSAGE, "
+            + "CC_ENQUEUE_TIME) "
             + "VALUES(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?)");
         if (errorMessage != null) {
           ci.errorMessage = errorMessage;
