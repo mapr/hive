@@ -1341,7 +1341,8 @@ public class MetastoreConf {
   }
 
   private static boolean isInHiveSite(ConfVars confVars) {
-    return existsIn(hiveSiteURL, confVars.varname);
+    return existsIn(hiveSiteURL, confVars.hiveName)
+        || existsIn(hiveSiteURL, confVars.varname);
   }
 
   private static boolean isInHiveSite(String property) {
