@@ -112,7 +112,7 @@ import jline.console.history.FileHistory;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
 import static org.apache.hive.FipsUtil.isFips;
 
 

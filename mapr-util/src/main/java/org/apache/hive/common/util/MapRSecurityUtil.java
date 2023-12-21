@@ -19,7 +19,6 @@
 package org.apache.hive.common.util;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

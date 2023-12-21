@@ -71,11 +71,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystoreLocation;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientKeystorePassword;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
-import static org.apache.hive.common.util.MapRSecurityUtil.getAuthMethod;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isClusterAdminProcess;
 import static org.apache.hive.common.util.MapRSecurityUtil.isCustomSecurityEnabled;
 import static org.apache.hive.common.util.MapRSecurityUtil.isKerberosEnabled;

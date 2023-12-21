@@ -119,8 +119,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.getSslProtocolVersion;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststoreLocation;
-import static org.apache.hadoop.hive.conf.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
 
 /**
  * HiveConnection.

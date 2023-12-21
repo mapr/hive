@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.hive.conf;
+package org.apache.hive.common.util;
 
 import com.mapr.web.security.ClientXmlSslConfig;
 
