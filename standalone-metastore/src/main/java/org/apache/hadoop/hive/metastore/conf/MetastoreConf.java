@@ -50,9 +50,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.METASTORE_AUTHENTICATION;
-import static org.apache.hadoop.hive.metastore.conf.MetastoreConf.ConfVars.USE_THRIFT_SASL;
-import static org.apache.hive.common.util.MapRSecurityUtil.getAuthMethod;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRSecurityUtil.isClusterAdminProcess;
 import static org.apache.hive.common.util.MapRSecurityUtil.isCustomSecurityEnabled;
 import static org.apache.hive.common.util.MapRSecurityUtil.isKerberosEnabled;
 import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
@@ -1245,22 +1247,44 @@ public class MetastoreConf {
         LOG.isDebugEnabled()) {
       LOG.debug(dumpConfig(conf));
     }
-    initializeAuth(conf);
+    initializeMapRSsl(conf);
+    initializeMapRAuth(conf);
     return conf;
+  }
+
+
+  private static void initializeMapRSsl(Configuration conf) {
+    if (getBoolVar(conf, ConfVars.USE_SSL)) {
+      // Configure keystore path / password for Metastore
+      if (getVar(conf, ConfVars.SSL_KEYSTORE_PATH).isEmpty()) {
+        propagateVar(conf, ConfVars.SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      }
+      if (getVar(conf, ConfVars.SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
+        propagateVar(conf, ConfVars.SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+      }
+
+      // Configure truststore path / password for Metastore
+      if (getVar(conf, ConfVars.SSL_TRUSTSTORE_PATH).isEmpty()) {
+        propagateVar(conf, ConfVars.SSL_TRUSTSTORE_PATH, getClientTruststoreLocation());
+      }
+      if (getVar(conf, ConfVars.SSL_TRUSTSTORE_PASSWORD).isEmpty()) {
+        propagateVar(conf, ConfVars.SSL_TRUSTSTORE_PASSWORD, getClientTruststorePassword());
+      }
+    }
   }
 
 
   /**
    * Initializes authentication for HS2 HMS and sasl.enabled if it not has been initialized yet.
    */
-  private  static void initializeAuth(Configuration conf) {
+  private  static void initializeMapRAuth(Configuration conf) {
     // Do not change value if it already has been configured directly in hive-site.xml
     // Init for HiveMeta auth
-    if (!isInHiveSite(METASTORE_AUTHENTICATION)) {
+    if (!isInHiveSite(ConfVars.METASTORE_AUTHENTICATION)) {
       initMetaAuth(conf);
     }
     // Init for HiveMeta use thrift sasl
-    if (!isInHiveSite(USE_THRIFT_SASL)) {
+    if (!isInHiveSite(ConfVars.USE_THRIFT_SASL)) {
       initUseThriftSasl(conf);
     }
   }
@@ -1268,11 +1292,11 @@ public class MetastoreConf {
 
   private static void initUseThriftSasl(Configuration conf) {
     if (isMapRSecurityEnabled() || isKerberosEnabled()) {
-      propagateBoolVar(conf, USE_THRIFT_SASL, true);
+      propagateBoolVar(conf, ConfVars.USE_THRIFT_SASL, true);
       return;
     }
     if (isNoSecurity() || isCustomSecurityEnabled()) {
-      propagateBoolVar(conf, USE_THRIFT_SASL, false);
+      propagateBoolVar(conf, ConfVars.USE_THRIFT_SASL, false);
     }
   }
 
@@ -1308,8 +1332,8 @@ public class MetastoreConf {
    * @param hs2Auth hive server2 authentication
    */
   private static void configureHmsInSecure(Configuration conf, String hs2Auth) {
-    if (isInHiveSite(HS2_AUTH) && isInHiveSite(USE_THRIFT_SASL)) {
-      if (getBoolVar(conf, USE_THRIFT_SASL) && "KERBEROS".equals(hs2Auth)) {
+    if (isInHiveSite(HS2_AUTH) && isInHiveSite(ConfVars.USE_THRIFT_SASL)) {
+      if (getBoolVar(conf, ConfVars.USE_THRIFT_SASL) && "KERBEROS".equals(hs2Auth)) {
         setHmsAuthKrb(conf);
         return;
       }
@@ -1333,11 +1357,11 @@ public class MetastoreConf {
   }
 
   private static void setHmsAuthMapRSasl(Configuration conf){
-    propagateVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
+    propagateVar(conf, ConfVars.METASTORE_AUTHENTICATION, "MAPRSASL");
   }
 
   private static void setHmsAuthKrb(Configuration conf){
-    propagateVar(conf, METASTORE_AUTHENTICATION, "KERBEROS");
+    propagateVar(conf, ConfVars.METASTORE_AUTHENTICATION, "KERBEROS");
   }
 
   private static boolean isInHiveSite(ConfVars confVars) {
@@ -1355,27 +1379,27 @@ public class MetastoreConf {
 
   private static void initializeMetaAuth(Configuration conf) {
     // Do not change metastore.authentication if it already has been configured directly
-    if (!getVar(conf, METASTORE_AUTHENTICATION).isEmpty()) {
+    if (!getVar(conf, ConfVars.METASTORE_AUTHENTICATION).isEmpty()) {
       return;
     }
     // Hive configured to be MapR secure
     if (isMapRSecurityEnabled()) {
-      propagateVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
+      propagateVar(conf, ConfVars.METASTORE_AUTHENTICATION, "MAPRSASL");
       return;
     }
     // If user enables Sasl for Metastore we expect it to be MapR Sasl.
     if (isMetaStoreSaslEnabled(conf)) {
-      propagateVar(conf, METASTORE_AUTHENTICATION, "MAPRSASL");
+      propagateVar(conf, ConfVars.METASTORE_AUTHENTICATION, "MAPRSASL");
       return;
     }
     // Hive configured to be custom (usually Kerberos) secure
     if (isCustomSecurityEnabled()) {
-      propagateVar(conf, METASTORE_AUTHENTICATION, "KERBEROS");
+      propagateVar(conf, ConfVars.METASTORE_AUTHENTICATION, "KERBEROS");
       return;
     }
     // Non secure configuration
     if (isNoSecurity()) {
-      propagateVar(conf, METASTORE_AUTHENTICATION, "NONE");
+      propagateVar(conf, ConfVars.METASTORE_AUTHENTICATION, "NONE");
     }
   }
 
@@ -1386,7 +1410,7 @@ public class MetastoreConf {
    * @return true if configured to be secure
    */
   private static boolean isMetaStoreSaslEnabled(Configuration conf){
-    return getBoolVar(conf, USE_THRIFT_SASL);
+    return getBoolVar(conf, ConfVars.USE_THRIFT_SASL);
   }
 
   private static URL findConfigFile(ClassLoader classLoader, String name) {
