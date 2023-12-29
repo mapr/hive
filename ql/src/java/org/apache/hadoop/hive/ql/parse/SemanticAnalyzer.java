@@ -13414,9 +13414,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           if (locStats != null && locStats.isDir()) {
             FileStatus[] lStats = curFs.listStatus(locPath);
             if(lStats != null && lStats.length != 0) {
-              // Don't throw an exception if the target location only contains the staging-dirs
+              // Don't throw an exception if the target location only contains the staging-dirs . . .
+              // . . . or a scratch dir which would already be created with a dummy table if
+              // CTAS used with 'select 1' and 'changeDFSScratchDir' optimized scratch dir location
               for (FileStatus lStat : lStats) {
-                if (!lStat.getPath().getName().startsWith(HiveConf.getVar(conf, HiveConf.ConfVars.STAGINGDIR))) {
+                if (!lStat.getPath().getName().startsWith(HiveConf.getVar(conf, HiveConf.ConfVars.STAGINGDIR)) &&
+                    !lStat.getPath().getName().startsWith(HiveConf.getVar(conf, HiveConf.ConfVars.HIVE_SCRATCH_DIR_IN_DEST))) {
                   throw new SemanticException(ErrorMsg.CTAS_LOCATION_NONEMPTY.getMsg(location));
                 }
               }
