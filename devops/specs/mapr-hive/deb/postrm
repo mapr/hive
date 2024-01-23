@@ -1,0 +1,29 @@
+#!/bin/bash
+
+[ -n "$VERBOSE" ] && echo "postrm called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+if [ \( "$1" = "upgrade" \) ]; then
+    echo "POSTRM hive $1"
+fi
+
+#
+# If the package is being purged/uninstalled,
+# the remove entire directory.
+# (We may need to remove $MAPR_HOME_/hive/hive-X/.)
+#
+VERSION_FILE_CONTENT=$(cat __PREFIX__/hive/hiveversion 2>/dev/null)
+if [ \( "$1" = "purge" -o "$1" = "remove" \) ] || [ \( -n "$VERSION_FILE_CONTENT" -a __VERSION_3DIGIT__ != "$VERSION_FILE_CONTENT" \) ]; then
+  rm -Rf __INSTALL_3DIGIT__
+  shopt -s nullglob
+  HIVE_PID_FILES=( __PREFIX__/pid/hive*pid )
+  for HIVE_PID_FILE in "${HIVE_PID_FILES[@]}"; do
+    if [ -f "${HIVE_PID_FILE}" ]; then
+      rm "${HIVE_PID_FILE}"
+    fi
+  done
+fi
+if [ \( "$1" = "purge" -o "$1" = "remove" \) ]; then
+  rm -f __PREFIX__/bin/hive
+  rm -f /usr/bin/hive
+fi

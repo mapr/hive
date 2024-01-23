@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+# Automatically added by dh_installdocs
+if [ \( "$1" = "upgrade" -o "$1" = "remove" \) ]; then
+    echo PRERM hive
+fi
+
+#
+# if package is getting purged remove entire directory
+# we may need to remove hive/hive-X/logs
+#
+if [ \( "$1" = "purge" \) ]; then
+   rm -Rf __INSTALL_3DIGIT__/logs
+   rm -Rf __INSTALL_3DIGIT__/conf
+fi
+
+# End automatically added section

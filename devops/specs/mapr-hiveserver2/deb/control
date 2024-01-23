@@ -1,0 +1,10 @@
+Package: mapr-hiveserver2
+Version: __RELEASE_VERSION__
+Section: base
+Priority: optional
+Architecture: all
+Depends: mapr-hive (>= __RELEASE_VERSION__) | mapr-hive (<= __RELEASE_VERSION__)
+Maintainer: Hewlett Packard Enterprise <ezmeral_software_support@hpe.com>
+Description: Ezmeral Ecosystem Pack: HiveServer2 roles package.
+  Tag: __RELEASE_BRANCH__
+  Commit: __GIT_COMMIT__

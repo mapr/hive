@@ -1,0 +1,53 @@
+#!/bin/bash
+
+[ -n "$VERBOSE" ] && echo "preinst called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+# expected version examples are as follows:
+#
+# for Hive 2.x: 2.3.202202110247
+# ----OLD_VERSION--> 2.3
+# --OLD_TIMESTAMP--> 202202110247
+#
+# for Hive 3.x.x: 3.1.3.100.202301180349
+# ----OLD_VERSION--> 3.1.3
+# --OLD_TIMESTAMP--> 202301180349
+
+if [ "$1" = "upgrade" ]; then
+    RAW_OLD_VERSION=$2
+    DOTS_COUNT="$(echo "$RAW_OLD_VERSION" | awk -F"." '{print NF-1}')"
+
+    if [ "$DOTS_COUNT" -eq 2  ]; then
+      #
+      # This is 2.x --> 3.y upgrade scenario
+      #
+      OLD_TIMESTAMP="$(echo $RAW_OLD_VERSION | cut -d '.' -f 3)"
+      OLD_VERSION="$(echo $RAW_OLD_VERSION | cut -d '.' -f 1-2)"
+    elif [ "$DOTS_COUNT" -eq 4  ]; then
+      #
+      # This is 3.x --> 3.y (y > x) upgrade scenario
+      #
+      OLD_TIMESTAMP="$(echo $RAW_OLD_VERSION | cut -d '.' -f 5)"
+      OLD_VERSION="$(echo $RAW_OLD_VERSION | cut -d '.' -f 1-3)"
+    else
+      # should never get here. if does, probably package naming has changed
+      echo "WARNING: unexpected state in mapr-hive preinst routine."
+    fi
+
+    BACKUP_HOME="__PREFIX__/hive/hive-${OLD_VERSION}.${OLD_TIMESTAMP}"
+    BACKUP_CONF="$BACKUP_HOME/conf"
+    OLD_HIVE_HOME="__PREFIX__/hive/hive-${OLD_VERSION}"
+    mkdir -p "$BACKUP_CONF"
+    cp -r "$OLD_HIVE_HOME"/conf/* "$BACKUP_CONF"
+    rm "$BACKUP_CONF"/*.template
+    cp -r "$OLD_HIVE_HOME"/hcatalog/etc/webhcat/* "$BACKUP_HOME"
+
+    DAEMON_CONF="__PREFIX__/conf/daemon.conf"
+    if [ -f "$DAEMON_CONF" ]; then
+        MAPR_USER=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' $DAEMON_CONF)
+        MAPR_GROUP=$( awk -F = '$1 == "mapr.daemon.group" { print $2 }' $DAEMON_CONF)
+        if [ -n "$MAPR_USER" ]; then
+            chown -R "${MAPR_USER}":"${MAPR_GROUP}" "__PREFIX__/hive/hive-${OLD_VERSION}.${OLD_TIMESTAMP}"
+        fi
+    fi
+fi

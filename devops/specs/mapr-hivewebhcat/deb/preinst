@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "upgrade" ]; then
+    HIVE_HOME=__PREFIX__/hive/hive-__VERSION_3DIGIT__
+    DAEMON_CONF="__PREFIX__/conf/daemon.conf"
+    OLD_HIVE_VERSION="$( ls -1 $(dirname $HIVE_HOME) | head -1 | cut -d'-' -f2 )"
+    OLD_HCAT_FILE=__PREFIX__/hive/hive-"$OLD_HIVE_VERSION"/hcatalog/sbin/webhcat_server.sh
+    HIVE_HOSTNAME="$(hostname -f)"
+    if [ -z "$HIVE_WEBHCAT_HOSTNAME" ]; then
+      HIVE_HOSTNAME="$(hostname)"
+    fi
+
+    if [ -f "$DAEMON_CONF" ]; then
+        export HIVE_IDENT_STRING=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' $DAEMON_CONF)
+    else
+        export HIVE_IDENT_STRING="mapr"
+    fi
+
+    MAPR_USER=$HIVE_IDENT_STRING
+
+    if [ -f "$OLD_HCAT_FILE" ]; then
+        if sudo -u "$MAPR_USER" "$OLD_HCAT_FILE" status > /dev/null 2>&1 ; then
+            echo "Stopping hive WebHcat service"
+            OUTPUT=$(sudo -u "$MAPR_USER" "$OLD_HCAT_FILE" stop 2>&1)
+            if [ $? -ne 0 ]; then
+                echo "$OUTPUT"
+            fi
+        fi
+    fi
+fi

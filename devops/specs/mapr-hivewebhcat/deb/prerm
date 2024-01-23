@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+
+
+if [ \( "$1" = "remove" \) ]; then
+    echo PRERM
+fi
+
+# In order for the hcat startup/shutdown script to stop the hcat,
+# it needs the user who started the hcat so that it can find the proper
+# pid file in HIVE_HOME/logs directory.
+MAPR_HOME="__PREFIX__"
+DAEMON_CONF="$MAPR_HOME/conf/daemon.conf"
+if [ -f "$DAEMON_CONF" ]; then
+  MAPR_USER=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' $DAEMON_CONF)
+else
+  MAPR_USER="mapr"
+fi
+
+# Removing an deb. Need to remove warden*conf file.
+if [ \( "$1" = "remove" \) ]; then
+  if [ -f  __PREFIX__/conf/conf.d/warden.hcat.conf ]; then
+   rm -Rf __PREFIX__/conf/conf.d/warden.hcat.conf
+  fi
+fi
+
+if sudo -u "$MAPR_USER" "$MAPR_HOME"/hive/hive-__VERSION_3DIGIT__/hcatalog/sbin/webhcat_server.sh status > /dev/null 2>&1 ; then
+  echo "Stopping hive WebHcat service"
+  OUTPUT=$(sudo -u "$MAPR_USER" "$MAPR_HOME"/hive/hive-__VERSION_3DIGIT__/hcatalog/sbin/webhcat_server.sh stop 2>&1)
+  if [ $? -ne 0 ]; then
+    echo "$OUTPUT"
+  fi
+fi

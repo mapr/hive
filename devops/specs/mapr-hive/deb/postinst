@@ -1,0 +1,82 @@
+#!/bin/sh
+set -e
+
+#
+# Configure service log location
+#
+
+set_service_log_location() {
+SERVICE_CONF_FILE=$1
+SERVICE_LOG_LOCATION=$2
+sed -i "s|.*service.logs.location=.*|service.logs.location=$SERVICE_LOG_LOCATION|g" "$SERVICE_CONF_FILE"
+}
+
+[ -n "$VERBOSE" ] && echo "postinst called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+DAEMON_CONF="__PREFIX__/conf/daemon.conf"
+WARDEN_HCAT_CONF="__INSTALL_3DIGIT__"/conf.new/warden.hcat.conf.template
+WARDEN_HIVEMETA_CONF="__INSTALL_3DIGIT__"/conf.new/warden.hivemeta.conf.template
+WARDEN_HS2_CONF="__INSTALL_3DIGIT__"/conf.new/warden.hs2.conf.template
+
+if [ -f "$DAEMON_CONF" ]; then
+  MAPR_USER=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' "$DAEMON_CONF")
+  if [ ! -z "$MAPR_USER" ]; then
+    HIVE_MAPR_USER_LOG_DIR="__INSTALL_3DIGIT__/logs/$MAPR_USER"
+    set_service_log_location "$WARDEN_HCAT_CONF" "$HIVE_MAPR_USER_LOG_DIR"
+    set_service_log_location "$WARDEN_HIVEMETA_CONF" "$HIVE_MAPR_USER_LOG_DIR"
+    set_service_log_location "$WARDEN_HS2_CONF" "$HIVE_MAPR_USER_LOG_DIR"
+  fi
+fi
+
+
+#
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+#
+
+if [ "$1" = "configure" ]; then
+  echo Post Configuration
+
+  mkdir -p "__INSTALL_3DIGIT__"/conf
+  mkdir -p "__INSTALL_3DIGIT__"/hcatalog/etc/webhcat
+
+  if [ -z "$2" ]; then
+    touch "__INSTALL_3DIGIT__/conf/.not_configured_yet"
+  fi
+
+  diffR=$(diff -r "__INSTALL_3DIGIT__"/conf "__INSTALL_3DIGIT__"/conf.new | grep "^Only in " | grep "conf.new" | sed "s/^Only in //" | sed "s/: /\//")
+  for i in ${diffR}; do
+    j=$(echo "$i" | sed 's/conf.new/conf/g')
+    cp -Rp "$i" "$j"
+  done
+  diffR=$(diff -r "__INSTALL_3DIGIT__"/hcatalog/etc/webhcat "__INSTALL_3DIGIT__"/hcatalog/etc/webhcat.new | grep "^Only in " | grep "webhcat.new" | sed "s/^Only in //" | sed "s/: /\//")
+  for i in ${diffR}; do
+    j=$(echo "$i" | sed 's/webhcat.new/webhcat/g')
+    cp -Rp "$i" "$j"
+  done
+  rm -f  __PREFIX__/bin/hive
+  ln -sf __INSTALL_3DIGIT__/bin/hive __PREFIX__/bin/hive
+  ln -sf __INSTALL_3DIGIT__/bin/hive /usr/bin/hive
+
+  rm -f  __PREFIX__/bin/hcat
+  ln -sf __INSTALL_3DIGIT__/hcatalog/bin/hcat __PREFIX__/bin/hcat
+  ln -sf __INSTALL_3DIGIT__/hcatalog/bin/hcat /usr/bin/hcat
+
+  rm -f  __PREFIX__/bin/webhcat_server
+  ln -sf __INSTALL_3DIGIT__/hcatalog/sbin/webhcat_server.sh __PREFIX__/bin/webhcat_server
+  ln -sf __INSTALL_3DIGIT__/hcatalog/sbin/webhcat_server.sh /usr/bin/webhcat_server
+fi
+
+#
+# create logs directory and grant permissions
+#
+mkdir -p __INSTALL_3DIGIT__/logs
+chmod 1777 __INSTALL_3DIGIT__/logs

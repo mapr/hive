@@ -1,0 +1,40 @@
+#!/bin/sh
+set -e
+
+
+if [ \( "$1" = "remove" \) ]; then
+    echo PRERM
+fi
+
+# In order for the metastore startup/shutdown script to stop the metastore,
+# it needs the user who started the metastore so that it can find the proper
+# pid file in HIVE_HOME/logs directory.
+DAEMON_CONF="__PREFIX__/conf/daemon.conf"
+
+if [ -f "$DAEMON_CONF" ]; then
+  export HIVE_IDENT_STRING=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' $DAEMON_CONF)
+else
+  export HIVE_IDENT_STRING="mapr"
+fi
+
+MAPR_USER="$HIVE_IDENT_STRING"
+
+# Removing an deb. Need to remove warden*conf file.
+if [ \( "$1" = "remove" \) ]; then
+  if [ -f __PREFIX__/conf/conf.d/warden.hivemeta.conf ]; then
+    rm -Rf __PREFIX__/conf/conf.d/warden.hivemeta.conf
+  fi
+fi
+
+HIVE_FILE=__PREFIX__/hive/hive-__VERSION_3DIGIT__/bin/hive
+if [ -f "$HIVE_FILE" ]; then
+    if sudo -u "$MAPR_USER" "$HIVE_FILE" --service metastore --status > /dev/null 2>&1 ; then
+        echo "Stopping hive Metastore service"
+        OUTPUT=$(sudo -u "$MAPR_USER" "$HIVE_FILE" --service metastore --stop 1>&2)
+        STATUS=$?
+
+        if [ $STATUS -ne 0 ]; then
+            echo "$OUTPUT"
+        fi
+    fi
+fi

@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+if [ \( "$1" = "purge" \) ]; then
+    echo POSTRM
+fi
+
+if [ -f __PREFIX__/conf/restart/hivemetastore-__VERSION_3DIGIT__.restart ]; then
+    rm -f __PREFIX__/conf/restart/hivemetastore-__VERSION_3DIGIT__.restart
+fi

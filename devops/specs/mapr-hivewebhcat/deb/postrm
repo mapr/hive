@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+if [ \( "$1" = "upgrade" \) ]; then
+  echo "POSTRM hive $1"
+fi
+#
+# If the package is being purged/uninstalled,
+# the remove entire directory.
+# (We may need to remove $MAPR_HOME_/hive/hive-X/.)
+#
+if [ \( "$1" = "purge" -o "$1" = "remove" \) ]; then
+  rm -f __PREFIX__/bin/hcat
+  rm -f /usr/bin/hcat
+  rm -f __PREFIX__/bin/webhcat_server
+  rm -f /usr/bin/webhcat_server
+fi
+
+if [ -f __PREFIX__/conf/restart/hivewebhcat-__VERSION_3DIGIT__.restart ]; then
+  rm -f __PREFIX__/conf/restart/hivewebhcat-__VERSION_3DIGIT__.restart
+fi
