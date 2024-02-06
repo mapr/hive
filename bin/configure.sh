@@ -54,6 +54,7 @@ initCfgEnv
 #
 # Globals
 #
+HIVE_CURRENT_LINK="$MAPR_HOME"/hive/current
 HIVE_VERSION_FILE="$MAPR_HOME"/hive/hiveversion
 HIVE_VERSION=$(cat "$HIVE_VERSION_FILE")
 HIVE_HOME="$MAPR_HOME"/hive/hive-"$HIVE_VERSION"
@@ -697,6 +698,7 @@ set_log_dir_owner_group
 set_read_only_permissions
 set_admin_user_group_to "$HIVE_VERSION_FILE"
 set_admin_user_group_to "$HIVE_HOME"
+set_admin_user_group_to "$HIVE_CURRENT_LINK" -h
 grant_permissions_to_hive_site
 grant_write_permission_in_logs_dir
 logInfo "Permissions has been configured"

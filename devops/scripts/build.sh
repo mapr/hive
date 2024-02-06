@@ -21,9 +21,11 @@ build_hive() {
   cecho "PKG_INSTALL_ROOT    : '$PKG_INSTALL_ROOT'"
   cecho "DIST_DIR            : '$DIST_DIR'"
   cecho "BUILD_ROOT          : '$BUILD_ROOT'"
+  cecho "mvn_goals           : '$mvn_goals'"
+  cecho "mvn_args            : '$mvn_args'"
 
   cecho "maven start"
-  mvn clean package -DskipTests -Pdist
+  mvn ${mvn_goals} ${mvn_args}
 
   cecho "untar start"
   mkdir -p "${BUILD_ROOT}/build"
@@ -35,17 +37,24 @@ build_hive() {
   # note #2: actually, could we just copy the folder that was just tarred?
   tar xvf ${package_archive} --strip-components=1 -C "${BUILD_ROOT}/build"
 
+  cp -rv ext-conf/* ${BUILD_ROOT}/build/conf
   mv -v ${BUILD_ROOT}/build/conf ${BUILD_ROOT}/build/conf.new;
   mv -v ${BUILD_ROOT}/build/hcatalog/etc/webhcat ${BUILD_ROOT}/build/hcatalog/etc/webhcat.new;
 }
 
 main() {
   echo "Cleaning '${BUILD_ROOT}' dir..."
-  rm -rf "$BUILD_ROOT"
+  rm -rf "${BUILD_ROOT}"
 
-  if [ "$DO_DEPLOY" = "true" ] && [ "$OS" = "redhat" ]; then
+  # setting up maven
+  # default hive building command: "mvn clean package -DskipTests -Pdist"
+  mvn_goals="clean package"
+  mvn_args="-DskipTests -Pdist"
+
+  if [ "${DO_DEPLOY}" = "true" ] && [ "${OS}" = "redhat" ]; then
     echo "Deploy is enabled"
-    export MVN_BUILD_COMMAND_ARGS="deploy $DEPLOY_ARGS"
+    mvn_goals+=" deploy"
+    mvn_args+=" -DaltDeploymentRepository=deploy-repo-override::default::${MAPR_MAVEN_REPO}"
   fi
 
   echo "Building project..."
@@ -66,7 +75,7 @@ main() {
   build_package "mapr-hivewebhcat"
 
   echo "Resulting packages:"
-  find "$DIST_DIR" -exec readlink -f {} \;
+  find "${DIST_DIR}" -exec readlink -f {} \;
 }
 
 main
