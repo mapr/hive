@@ -53,7 +53,7 @@ public class GenericUDAFMax extends AbstractGenericUDAFResolver {
       throw new UDFArgumentTypeException(parameters.length - 1,
           "Exactly one argument is expected.");
     }
-    ObjectInspector oi = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(parameters[0]);
+    ObjectInspector oi = TypeInfoUtils.getStandardWritableObjectInspectorFromTypeInfo(parameters[0]);
     if (!ObjectInspectorUtils.compareSupported(oi)) {
       throw new UDFArgumentTypeException(parameters.length - 1,
           "Cannot support comparison of map<> type or complex type containing map<>.");
@@ -85,7 +85,7 @@ public class GenericUDAFMax extends AbstractGenericUDAFResolver {
       // Note that on average the number of copies is log(N) so that's not
       // very important.
       outputOI = ObjectInspectorUtils.getStandardObjectInspector(inputOI,
-          ObjectInspectorCopyOption.JAVA);
+          ObjectInspectorCopyOption.WRITABLE);
       return outputOI;
     }
 
@@ -133,7 +133,7 @@ public class GenericUDAFMax extends AbstractGenericUDAFResolver {
         int r = ObjectInspectorUtils.compare(myagg.o, outputOI, partial, inputOI);
         if (myagg.o == null || r < 0) {
           myagg.o = ObjectInspectorUtils.copyToStandardObject(partial, inputOI,
-              ObjectInspectorCopyOption.JAVA);
+              ObjectInspectorCopyOption.WRITABLE);
         }
       }
     }
@@ -264,7 +264,7 @@ public class GenericUDAFMax extends AbstractGenericUDAFResolver {
        */
       if (!wFrameDef.isStartUnbounded() || s.maxChain.isEmpty()) {
         o = o == null ? null : ObjectInspectorUtils.copyToStandardObject(o,
-            inputOI(), ObjectInspectorCopyOption.JAVA);
+            inputOI(), ObjectInspectorCopyOption.WRITABLE);
         s.maxChain.addLast(new Object[] { o, s.numRows });
       }
 
