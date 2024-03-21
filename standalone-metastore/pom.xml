@@ -99,7 +99,7 @@
 
     <!-- MAPR dependencies -->
     <storage-api.version>2.6.1.550-eep-922-SNAPSHOT</storage-api.version>
-    <hadoop.version>3.3.5.200-eep-921-SNAPSHOT</hadoop.version>
+    <hadoop.version>3.3.5.300-eep-922-SNAPSHOT</hadoop.version>
 
   </properties>
 
@@ -140,7 +140,7 @@
       <name>MapR Maven repository</name>
       <url>https://repository.mapr.hpe.com/nexus/content/repositories/releases/</url>
       <releases>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
         <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>

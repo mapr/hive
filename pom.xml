@@ -228,10 +228,10 @@
 
     <tez.version>0.10.2.400-eep-921-SNAPSHOT</tez.version>
     <hbase.version>1.4.14.600-eep-921-SNAPSHOT</hbase.version>
-    <hadoop.version>3.3.5.300-eep-930-SNAPSHOT</hadoop.version>
+    <hadoop.version>3.3.5.300-eep-922-SNAPSHOT</hadoop.version>
 
     <zookeeper.version>3.5.6.0-mapr-SNAPSHOT</zookeeper.version>
-    <mapr.core.version>7.6.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
+    <mapr.core.version>7.7.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
   </properties>
 
   <repositories>
@@ -271,7 +271,7 @@
       <name>MapR Maven repository</name>
       <url>https://repository.mapr.hpe.com/nexus/content/repositories/releases/</url>
       <releases>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
         <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>

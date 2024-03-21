@@ -55,7 +55,7 @@
         <test.warehouse.scheme>file://</test.warehouse.scheme>
         <test.forkcount>1</test.forkcount>
         <skipITests>true</skipITests>
-        <hive2.version>2.3.9.100-eep-811-SNAPSHOT</hive2.version>
+        <hive2.version>2.3.9.200-eep-812-SNAPSHOT</hive2.version>
     </properties>
     <repositories>
         <repository>
@@ -94,7 +94,7 @@
             <name>MapR Maven repository</name>
             <url>https://repository.mapr.hpe.com/nexus/content/repositories/releases/</url>
             <releases>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
             <snapshots>

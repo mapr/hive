@@ -39,8 +39,8 @@
     <checkstyle.conf.dir>${basedir}/checkstyle/</checkstyle.conf.dir>
 
     <!-- MAPR dependencies -->
-    <hadoop.version>3.3.5.200-eep-921-SNAPSHOT</hadoop.version>
-    <mapr.core.version>7.5.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
+    <hadoop.version>3.3.5.300-eep-922-SNAPSHOT</hadoop.version>
+    <mapr.core.version>7.7.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
   </properties>
 
   <repositories>
@@ -80,7 +80,7 @@
       <name>MapR Maven repository</name>
       <url>https://repository.mapr.hpe.com/nexus/content/repositories/releases/</url>
       <releases>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
         <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>
