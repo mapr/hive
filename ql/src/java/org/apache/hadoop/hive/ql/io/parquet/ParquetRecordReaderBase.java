@@ -69,6 +69,12 @@ public class ParquetRecordReaderBase {
     final org.apache.hadoop.mapred.InputSplit oldSplit,
     final JobConf conf
   ) throws IOException {
+    boolean ignoreCorrupted = jobConf.getBoolean(HiveConf.ConfVars.HIVE_PARQUET_IGNORE_CORRUPTED.varname, false);
+    if (ignoreCorrupted &&
+        oldSplit.getLength() >= 0 &&
+        oldSplit.getLength() < 12) {
+      return null;
+    }
     ParquetInputSplit split;
     if (oldSplit instanceof FileSplit) {
       final Path finalPath = ((FileSplit) oldSplit).getPath();
