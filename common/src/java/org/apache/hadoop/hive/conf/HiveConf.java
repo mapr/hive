@@ -1735,6 +1735,9 @@ public class HiveConf extends Configuration {
         "when using UDTF's to prevent the task getting killed because of inactivity.  Users should be cautious \n" +
         "because this may prevent TaskTracker from killing tasks with infinite loops."),
 
+    HIVEDEFAULTBUCKETINGVERSION("hive.default.bucketingversion", "2",
+        "Default bucketing version to use for newely created tables. Normally should not be changed,"
+            + "but could be used to mitigate some rare issues with particular complex queries. See EEP-HIVE-1500 for details."),
     HIVEDEFAULTFILEFORMAT("hive.default.fileformat", "TextFile", new StringSet("TextFile", "SequenceFile", "RCfile", "ORC", "parquet"),
         "Default file format for CREATE TABLE statement. Users can explicitly override it by CREATE TABLE ... STORED AS [FORMAT]"),
     HIVEDEFAULTMANAGEDFILEFORMAT("hive.default.fileformat.managed", "none",
