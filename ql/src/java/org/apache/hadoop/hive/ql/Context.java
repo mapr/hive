@@ -353,7 +353,7 @@ public class Context {
 
 
   public void changeDFSScratchDir(String newScratchDir) {
-    if (isNonLocalScratchDirUsed)
+    if (isNonLocalScratchDirUsed && isCboSucceeded())
       throw new RuntimeException("Configured scratchdir already in use");
 
     nonLocalScratchPath = new Path(newScratchDir + "_" + executionId);
