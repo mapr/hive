@@ -45,7 +45,6 @@ import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.thrift.TConfiguration;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TSocket;
@@ -75,13 +74,61 @@ public class HiveAuthUtils {
     }
   }
 
-  public static TTransport getSocketTransport(String host, int port, int loginTimeout) throws TTransportException {
-    return new TSocket(new TConfiguration(), host, port, loginTimeout);
+  /**
+   * Configure the provided T transport's max message size.
+   * @param transport Transport to configure maxMessage for
+   * @param maxMessageSize Maximum allowed message size in bytes, less than or equal to 0 means use the Thrift library
+   *                       default.
+   * @return The passed in T transport configured with desired max message size. The same object passed in is returned.
+   */
+  public static <T extends TTransport> T configureThriftMaxMessageSize(T transport, int maxMessageSize) {
+    if (maxMessageSize > 0) {
+      if (transport.getConfiguration() == null) {
+        LOG.warn("TTransport {} is returning a null Configuration, Thrift max message size is not getting configured",
+                transport.getClass().getName());
+        return transport;
+      }
+      transport.getConfiguration().setMaxMessageSize(maxMessageSize);
+    }
+    return transport;
   }
 
+  /**
+   * Create a TSocket for the provided host and port with specified loginTimeout. Thrift maxMessageSize
+   * will default to Thrift library default.
+   * @param host Host to connect to.
+   * @param port Port to connect to.
+   * @param loginTimeout Socket timeout (0 means no timeout).
+   * @return TTransport TSocket for host/port.
+   */
+  public static TTransport getSocketTransport(String host, int port, int loginTimeout) throws TTransportException {
+    return getSocketTransport(host, port, loginTimeout, /* maxMessageSize */ -1);
+  }
 
+  /**
+   * Create a TSocket for the provided host and port with specified loginTimeout and maxMessageSize.
+   * will default to Thrift library default.
+   * @param host Host to connect to.
+   * @param port Port to connect to.
+   * @param loginTimeout Socket timeout (0 means no timeout).
+   * @param maxMessageSize Size in bytes for max allowable Thrift message size, less than or equal to 0
+   *                       results in using the Thrift library default.
+   * @return TTransport TSocket for host/port
+   */
+  public static TTransport getSocketTransport(String host, int port, int loginTimeout, int maxMessageSize)
+          throws TTransportException {
+    TSocket tSocket = new TSocket(host, port, loginTimeout);
+    return configureThriftMaxMessageSize(tSocket, maxMessageSize);
+  }
+
+  // Added for backward compatibility after maxMessageSize implementation for Thrift
   public static TTransport getSSLSocket(String host, int port, int loginTimeout,
     String trustStorePath, String trustStorePassWord, String sslProtocolVersion) throws TTransportException {
+    return getSSLSocket(host, port, loginTimeout, trustStorePath, trustStorePassWord, sslProtocolVersion, -1);
+  }
+
+  public static TTransport getSSLSocket(String host, int port, int loginTimeout,
+    String trustStorePath, String trustStorePassWord, String sslProtocolVersion, int maxMessageSize) throws TTransportException {
     TSSLTransportFactory.TSSLTransportParameters params =
         new TSSLTransportFactory.TSSLTransportParameters(sslProtocolVersion, null);
     String trustManagerType = TrustManagerFactory.getDefaultAlgorithm();
@@ -91,17 +138,18 @@ public class HiveAuthUtils {
     // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT and
     // SSLContext created with the given params
     TSocket tSSLSocket = TSSLTransportFactory.getClientSocket(host, port, loginTimeout, params);
-    return getSSLSocketWithHttps(tSSLSocket);
+    return getSSLSocketWithHttps(tSSLSocket, maxMessageSize);
   }
 
   // Using endpoint identification algorithm as HTTPS enables us to do
   // CNAMEs/subjectAltName verification
-  private static TSocket getSSLSocketWithHttps(TSocket tSSLSocket) throws TTransportException {
+  private static TSocket getSSLSocketWithHttps(TSocket tSSLSocket, int maxMessageSize) throws TTransportException {
     SSLSocket sslSocket = (SSLSocket) tSSLSocket.getSocket();
     SSLParameters sslParams = sslSocket.getSSLParameters();
     sslParams.setEndpointIdentificationAlgorithm("HTTPS");
     sslSocket.setSSLParameters(sslParams);
-    return new TSocket(sslSocket);
+    TSocket tSocket = new TSocket(sslSocket);
+    return configureThriftMaxMessageSize(tSocket, maxMessageSize);
   }
 
   public static TServerSocket getServerSocket(String hiveHost, int portNum, int socketTimeout)

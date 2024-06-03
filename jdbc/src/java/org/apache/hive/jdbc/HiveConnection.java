@@ -376,6 +376,7 @@ public class HiveConnection implements java.sql.Connection {
     // Create an http client from the configs
     httpClient = getHttpClient(useSsl);
     transport = new THttpClient(getServerHttpUrl(useSsl), httpClient);
+    HiveAuthUtils.configureThriftMaxMessageSize(transport, getMaxMessageSize());
     return transport;
   }
 
@@ -542,8 +543,10 @@ public class HiveConnection implements java.sql.Connection {
    *
    * @return TTransport
    * @throws TTransportException
+   * @throws SQLException
    */
-  private TTransport createUnderlyingTransport() throws TTransportException {
+  private TTransport createUnderlyingTransport() throws TTransportException, SQLException {
+    int maxMessageSize = getMaxMessageSize();
     TTransport transport = null;
     // Note: Thrift returns an SSL socket that is already bound to the specified host:port
     // Therefore an open called on this would be a no-op later
@@ -561,12 +564,28 @@ public class HiveConnection implements java.sql.Connection {
         sslTrustStore = getClientTruststoreLocation();
         sslTrustStorePassword = getClientTruststorePassword();
       }
-      transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout, sslTrustStore, sslTrustStorePassword, sslProtocolVersion);
+      transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout, sslTrustStore, sslTrustStorePassword, sslProtocolVersion, maxMessageSize);
     } else {
       // get non-SSL socket transport
       transport = HiveAuthUtils.getSocketTransport(host, port, loginTimeout);
     }
     return transport;
+  }
+
+  private int getMaxMessageSize() throws SQLException {
+    String maxMessageSize = sessConfMap.get(JdbcConnectionParams.THRIFT_CLIENT_MAX_MESSAGE_SIZE);
+    if (maxMessageSize == null) {
+      return -1;
+    }
+
+    try {
+      return Integer.parseInt(maxMessageSize);
+    } catch (Exception e) {
+      String errFormat = "Invalid {} configuration of '{}'. Expected an integer specifying number of bytes. " +
+              "A configuration of <= 0 uses default max message size.";
+      String errMsg = String.format(errFormat, JdbcConnectionParams.THRIFT_CLIENT_MAX_MESSAGE_SIZE, maxMessageSize);
+      throw new SQLException(errMsg, "42000", e);
+    }
   }
 
   /**

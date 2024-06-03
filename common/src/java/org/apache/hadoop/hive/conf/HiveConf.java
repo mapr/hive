@@ -2408,6 +2408,10 @@ public class HiveConf extends Configuration {
         "filter operators."),
     HIVE_STATS_IN_MIN_RATIO("hive.stats.filter.in.min.ratio", (float) 0.05,
         "Output estimation of an IN filter can't be lower than this ratio"),
+    HIVE_THRIFT_CLIENT_MAX_MESSAGE_SIZE("hive.thrift.client.max.message.size", "1gb",
+        new SizeValidator(-1L, true, (long) Integer.MAX_VALUE, true),
+        "Thrift client configuration for max message size. 0 or -1 will use the default defined in the Thrift " +
+        "library. The upper limit is 2147483648 bytes (or 2gb)."),
     // Concurrency
     HIVE_SUPPORT_CONCURRENCY("hive.support.concurrency", false,
         "Whether Hive supports concurrency control or not. \n" +
