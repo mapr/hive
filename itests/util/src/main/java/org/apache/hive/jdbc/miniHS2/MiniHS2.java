@@ -80,6 +80,7 @@ public class MiniHS2 extends AbstractHiveService {
   private MiniClusterType miniClusterType = MiniClusterType.LOCALFS_ONLY;
   private boolean usePortsFromConf = false;
   private PamAuthenticator pamAuthenticator;
+  private int hmsPort = 0;
 
   public enum MiniClusterType {
     MR,
@@ -343,7 +344,7 @@ public class MiniHS2 extends AbstractHiveService {
 
   public void start(Map<String, String> confOverlay) throws Exception {
     if (isMetastoreRemote) {
-      MetaStoreTestUtils.startMetaStoreWithRetry(getHiveConf());
+      hmsPort = MetaStoreTestUtils.startMetaStoreWithRetry(getHiveConf());
     }
 
     // Set confOverlay parameters
@@ -637,5 +638,9 @@ public class MiniHS2 extends AbstractHiveService {
     } catch (FileNotFoundException e) {
       // Ignore. Safe if it does not exist.
     }
+  }
+
+  public int getHmsPort() {
+    return hmsPort;
   }
 }
