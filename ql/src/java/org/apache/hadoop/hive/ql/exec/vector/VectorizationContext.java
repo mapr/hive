@@ -3285,27 +3285,33 @@ public class VectorizationContext {
     if (mode != VectorExpressionDescriptor.Mode.PROJECTION) {
       return null;
     }
-    final int size = childExpr.size();
-
-    final ExprNodeDesc whenDesc = childExpr.get(0);
-    final ExprNodeDesc thenDesc = childExpr.get(1);
-    final ExprNodeDesc elseDesc;
-
-    if (size == 2) {
-      elseDesc = new ExprNodeConstantDesc(returnType, null);
-    } else if (size == 3) {
-      elseDesc = childExpr.get(2);
-    } else {
-      final GenericUDFWhen udfWhen = new GenericUDFWhen();
-      elseDesc = new ExprNodeGenericFuncDesc(returnType, udfWhen, udfWhen.getUdfName(),
-          childExpr.subList(2, childExpr.size()));
+    if (childExpr.size() != 3) {
+      // For now, we only optimize the 2 value case.
+      return null;
     }
 
-    // Transform CASE WHEN with just a THEN/ELSE into an IF statement.
-    final GenericUDFIf genericUDFIf = new GenericUDFIf();
-    final List<ExprNodeDesc> ifChildExpr =
-        Arrays.<ExprNodeDesc>asList(whenDesc, thenDesc, elseDesc);
-    return getIfExpression(genericUDFIf, ifChildExpr, mode, returnType);
+    /*
+     * When we have 2 simple values:
+     *                          CASE WHEN boolExpr THEN column | const ELSE column | const END
+     * then we can convert to:        IF (boolExpr THEN column | const ELSE column | const)
+     */
+    // CONSIDER: Adding a version of IfExpr* than can handle a non-column/const expression in the
+    //           THEN or ELSE.
+    ExprNodeDesc exprNodeDesc1 = childExpr.get(1);
+    ExprNodeDesc exprNodeDesc2 = childExpr.get(2);
+    if (isNullConst(exprNodeDesc1) &&
+            isNullConst(exprNodeDesc2)) {
+      // Yes.
+      GenericUDFIf genericUDFIf = new GenericUDFIf();
+      return
+              getVectorExpressionForUdf(
+                      genericUDFIf,
+                      GenericUDFIf.class,
+                      childExpr,
+                      mode,
+                      returnType);
+    }
+    return null;   // Not handled by vector classes yet.
   }
 
   /*
