@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+MAPR_HOME="${BASEMAPR:-/opt/mapr}"
+HIVE_VERSION_FILE="$MAPR_HOME/hive/hiveversion"
+HIVE_VERSION=$(cat "$HIVE_VERSION_FILE")
+HIVE_HOME="$MAPR_HOME/hive/hive-$HIVE_VERSION"
+
 THISSERVICE=metastore
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
@@ -39,6 +44,28 @@ metastore_help() {
 timestamp()
 {
  date +"%Y-%m-%d %T"
+}
+
+set_mode_flag() {
+  # Path to the hive-site.xml file
+  local hive_site_xml="${HIVE_HOME}/conf/hive-site.xml"
+
+  # Check if the file exists
+  if [[ ! -f "$hive_site_xml" ]]; then
+    echo "Error: hive-site.xml file not found at $hive_site_xml"
+  fi
+
+  # Extract the value of the ConnectionURL property
+  local connection_url
+  connection_url=$(grep -A1 "<name>javax.jdo.option.ConnectionURL</name>" "$hive_site_xml" | grep -oP '(?<=<value>).*?(?=</value>)')
+
+  if [[ -z "$connection_url" ]]; then
+    echo "Error: ConnectionURL property not found or empty in $hive_site_xml"
+  elif [[ "$connection_url" == *":derby:"* ]]; then
+    maprcli insight cluster -trialmode true -json
+  else
+    maprcli insight cluster -trialmode false -json
+  fi
 }
 
 metastore_start() {
@@ -71,6 +98,9 @@ pid=$HIVE_PID_DIR/hive-$HIVE_IDENT_STRING-metastore.pid
   else
     export HADOOP_OPTS="$HADOOP_OPTS ${MAPR_HIVE_SERVER_LOGIN_OPTS}"
   fi
+
+  # setting mode flag
+  set_mode_flag
 
   ln -sf $pid ${BASEMAPR}/pid
   nohup $HADOOP jar $JAR $CLASS "$@" >> "$log" 2>&1 < /dev/null &
