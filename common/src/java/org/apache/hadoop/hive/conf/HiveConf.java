@@ -71,10 +71,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystorePassword;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerKeystoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerKeystorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isClusterAdminProcess;
 import static org.apache.hive.common.util.MapRSecurityUtil.isCustomSecurityEnabled;
 import static org.apache.hive.common.util.MapRSecurityUtil.isKerberosEnabled;
@@ -5262,42 +5262,42 @@ public class HiveConf extends Configuration {
   private void configureHs2WebUiSsl(){
     // Configure keystore path / password for web UI
     if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH).isEmpty()) {
-      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
-      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+      setVar(ConfVars.HIVE_SERVER2_WEBUI_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
     }
   }
 
   private void configureHs2Ssl(){
     // Configure keystore path / password for Hive Server2
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).isEmpty()) {
-      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
     }
 
     if (getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
-      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+      setVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
     }
   }
 
   private void configureHmsSsl() {
     // Configure keystore path / password for Hive Metastore
     if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH).isEmpty()) {
-      setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+      setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH, getServerKeystoreLocation());
     }
 
     if (getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
-      setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+      setVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
     }
 
     // Configure truststore path / password for Hive Metastore
     if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH).isEmpty()) {
-      setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH, getClientTruststoreLocation());
+      setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH, getServerTruststoreLocation());
     }
 
     if (getVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD).isEmpty()) {
-      setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD, getClientTruststorePassword());
+      setVar(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD, getServerTruststorePassword());
     }
   }
 

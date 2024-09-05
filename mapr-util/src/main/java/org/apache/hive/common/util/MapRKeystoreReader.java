@@ -19,6 +19,8 @@
 package org.apache.hive.common.util;
 
 import com.mapr.web.security.ClientXmlSslConfig;
+import com.mapr.web.security.SslConfig;
+import com.mapr.web.security.WebSecurityManager;
 
 /**
  * Utility class for ssl default configuration.
@@ -70,6 +72,49 @@ public final class MapRKeystoreReader {
   public static String getClientTruststorePassword() {
     try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
       return new String(clientXmlSslConfig.getClientTruststorePassword());
+    }
+  }
+
+  public static String getServerKeystoreLocation() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return sslConfig.getServerKeystoreLocation();
+    }
+  }
+
+  public static String getServerKeystorePassword() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return new String(sslConfig.getServerKeystorePassword());
+    }
+  }
+
+
+  public static String getServerKeyPassword() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return new String(sslConfig.getServerKeyPassword());
+    }
+  }
+
+  public static String getServerKeystoreType() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return sslConfig.getServerKeystoreType();
+    }
+  }
+
+  public static String getServerTruststoreLocation() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return sslConfig.getServerTruststoreLocation();
+    }
+  }
+
+  public static String getServerTruststorePassword() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return new String(sslConfig.getServerTruststorePassword());
+    }
+  }
+
+  public static String getServerTruststoreType() {
+    try (SslConfig sslConfig = WebSecurityManager.getSslConfig(SslConfig.SslConfigScope.SCOPE_ALL)) {
+      return sslConfig.getServerTruststoreType();
     }
   }
 }

@@ -112,7 +112,7 @@ import jline.console.history.FileHistory;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststorePassword;
 import static org.apache.hive.FipsUtil.isFips;
 
 
@@ -549,7 +549,7 @@ public class BeeLine implements Closeable {
     if (isFips()) {
       Security.addProvider(new BouncyCastleFipsProvider());
       Security.addProvider(new BouncyCastleJsseProvider());
-      String clientTruststorePassword = getClientTruststorePassword();
+      String clientTruststorePassword = getServerTruststorePassword();
       System.setProperty(TRUSTSTORE_TYPE_SYSTEM_PROPERTY, BCFKS_KEYSTORE_TYPE);
       System.setProperty(TRUSTSTORE_PASS_SYSTEM_PROPERTY, clientTruststorePassword);
     }

@@ -23,6 +23,8 @@ import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.CAT_NAME;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.getDefaultCatalog;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.parseDbName;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.prependCatalogToDbName;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststorePassword;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -459,11 +461,22 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
             try {
               String trustStorePath = MetastoreConf.getVar(conf, ConfVars.SSL_TRUSTSTORE_PATH).trim();
               if (trustStorePath.isEmpty()) {
-                throw new IllegalArgumentException(ConfVars.SSL_TRUSTSTORE_PATH.toString()
-                    + " Not configured for SSL connection");
+                try {
+                  trustStorePath = getServerTruststoreLocation().trim();
+                } catch (Exception e) {
+                  throw new IllegalArgumentException(ConfVars.SSL_TRUSTSTORE_PATH
+                          + " is not configured and could not be retrieved through MapR utilities due to: ", e);
+                }
+                if (trustStorePath.isEmpty()) {
+                  throw new IllegalArgumentException(ConfVars.SSL_TRUSTSTORE_PATH
+                          + " is not configured for SSL connection.");
+                }
               }
               String trustStorePassword =
                   MetastoreConf.getPassword(conf, MetastoreConf.ConfVars.SSL_TRUSTSTORE_PASSWORD);
+              if (trustStorePassword.isEmpty()) {
+                trustStorePassword = getServerTruststorePassword();
+              }
 
               // Create an SSL socket and connect
               String sslProtocolVersion = MetastoreConf.getVar(conf, ConfVars.SSL_PROTOCOL_VERSION);

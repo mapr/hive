@@ -50,10 +50,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystorePassword;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerKeystoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerKeystorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isClusterAdminProcess;
 import static org.apache.hive.common.util.MapRSecurityUtil.isCustomSecurityEnabled;
 import static org.apache.hive.common.util.MapRSecurityUtil.isKerberosEnabled;
@@ -1257,18 +1257,18 @@ public class MetastoreConf {
     if (getBoolVar(conf, ConfVars.USE_SSL)) {
       // Configure keystore path / password for Metastore
       if (getVar(conf, ConfVars.SSL_KEYSTORE_PATH).isEmpty()) {
-        propagateVar(conf, ConfVars.SSL_KEYSTORE_PATH, getClientKeystoreLocation());
+        propagateVar(conf, ConfVars.SSL_KEYSTORE_PATH, getServerKeystoreLocation());
       }
       if (getVar(conf, ConfVars.SSL_KEYSTORE_PASSWORD).isEmpty() && isClusterAdminProcess()) {
-        propagateVar(conf, ConfVars.SSL_KEYSTORE_PASSWORD, getClientKeystorePassword());
+        propagateVar(conf, ConfVars.SSL_KEYSTORE_PASSWORD, getServerKeystorePassword());
       }
 
       // Configure truststore path / password for Metastore
       if (getVar(conf, ConfVars.SSL_TRUSTSTORE_PATH).isEmpty()) {
-        propagateVar(conf, ConfVars.SSL_TRUSTSTORE_PATH, getClientTruststoreLocation());
+        propagateVar(conf, ConfVars.SSL_TRUSTSTORE_PATH, getServerTruststoreLocation());
       }
       if (getVar(conf, ConfVars.SSL_TRUSTSTORE_PASSWORD).isEmpty()) {
-        propagateVar(conf, ConfVars.SSL_TRUSTSTORE_PASSWORD, getClientTruststorePassword());
+        propagateVar(conf, ConfVars.SSL_TRUSTSTORE_PASSWORD, getServerTruststorePassword());
       }
     }
   }

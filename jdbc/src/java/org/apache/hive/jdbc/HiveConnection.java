@@ -119,8 +119,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.getSslProtocolVersion;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststorePassword;
 
 /**
  * HiveConnection.
@@ -561,8 +561,8 @@ public class HiveConnection implements java.sql.Connection {
       String sslProtocolVersion = getSslProtocolVersion();
 
       if (sslTrustStore == null || sslTrustStore.isEmpty()) {
-        sslTrustStore = getClientTruststoreLocation();
-        sslTrustStorePassword = getClientTruststorePassword();
+        sslTrustStore = getServerTruststoreLocation();
+        sslTrustStorePassword = getServerTruststorePassword();
       }
       transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout, sslTrustStore, sslTrustStorePassword, sslProtocolVersion, maxMessageSize);
     } else {
