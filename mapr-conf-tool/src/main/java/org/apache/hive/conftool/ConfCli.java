@@ -66,6 +66,7 @@ import static org.apache.hive.conftool.ConfTool.setMetaStoreAuthManager;
 import static org.apache.hive.conftool.ConfTool.setMetaStoreAuthPreEventListener;
 import static org.apache.hive.conftool.ConfTool.setMetaStoreUgi;
 import static org.apache.hive.conftool.ConfTool.setMetaStoreUseThriftSasl;
+import static org.apache.hive.conftool.ConfTool.setMetaStoreSsl;
 import static org.apache.hive.conftool.ConfTool.setRestrictedList;
 import static org.apache.hive.conftool.ConfTool.setWebHCatHeaders;
 import static org.apache.hive.conftool.ConfTool.setWebHCatSsl;
@@ -461,6 +462,7 @@ public final class ConfCli {
       String adminUser) {
     LOG.info("Configuring security");
     setMetaStoreUseThriftSasl(hiveSite, authMethod);
+    setMetaStoreSsl(hiveSite, authMethod);
     setEncryption(hiveSite, authMethod);
     setMetaStoreUgi(hiveSite, authMethod);
     setMetaStoreAuthManager(hiveSite, authMethod);

@@ -134,6 +134,33 @@ public final class ConfTool {
   }
 
   /**
+   * Configures Ssl encryption for HMS.
+   *
+   * @param doc xml document
+   * @param authMethod true if MaprSASL or Kerberos security is enabled on the cluster
+   * @throws TransformerException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  public static void setMetaStoreSsl(Document doc, AuthMethod authMethod) {
+    switch (authMethod) {
+      case CUSTOM:
+        return;
+      case MAPRSASL:
+      case KERBEROS:
+        LOG.info("Configuring HMS for SSL encryption");
+        set(doc, ConfVars.HIVE_METASTORE_USE_SSL, TRUE);
+        break;
+      case NONE:
+        remove(doc, ConfVars.HIVE_METASTORE_USE_SSL);
+        break;
+      default:
+        return;
+    }
+  }
+
+  /**
    * Configures hive.metastore.execute.setugi. When one need to set "true" value, this method
    * just removes property from hive-site.xml since it has default true value.
    *
