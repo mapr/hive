@@ -84,8 +84,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.apache.hadoop.hive.common.auth.HiveAuthUtils.getSslProtocolVersion;
-import static org.apache.hive.common.util.MapRKeystoreReader.getServerKeystoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getServerKeystorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientKeystorePassword;
 import static org.apache.hive.common.util.MapRSecurityUtil.isMapRSecurityEnabled;
 import static org.apache.hive.FipsUtil.isFips;
 import static org.apache.hive.http.CustomHeadersFilter.HEADERS;
@@ -355,8 +355,8 @@ import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
           .split(Strings.nullToEmpty(conf.get(AppConfig.SSL_PROTOCOL_BLACKLIST, DEFAULT_SSL_PROTOCOL_BLACKLIST))));
       sslContextFactory.addExcludeProtocols(excludedSSLProtocols.toArray(new String[excludedSSLProtocols.size()]));
       String sslProtocolVersion = getSslProtocolVersion();
-      String keyStorePath = getServerKeystoreLocation();
-      String keyStorePassword = getServerKeystorePassword();
+      String keyStorePath = getClientKeystoreLocation();
+      String keyStorePassword = getClientKeystorePassword();
       sslContextFactory.setProtocol(sslProtocolVersion);
       sslContextFactory.setKeyStorePath(keyStorePath);
       sslContextFactory.setKeyStorePassword(keyStorePassword);
@@ -387,12 +387,12 @@ import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
   private static void configureSsl(SslContextFactory sslContextFactory) throws IOException {
     if (conf.get(AppConfig.KEY_STORE_PATH) == null || conf.get(AppConfig.KEY_STORE_PATH).isEmpty()) {
-      sslContextFactory.setKeyStorePath(getServerKeystoreLocation());
+      sslContextFactory.setKeyStorePath(getClientKeystoreLocation());
     } else {
       sslContextFactory.setKeyStorePath(conf.get(AppConfig.KEY_STORE_PATH));
     }
     if (conf.getPassword(AppConfig.KEY_STORE_PASSWORD) == null) {
-      sslContextFactory.setKeyStorePassword(getServerKeystorePassword());
+      sslContextFactory.setKeyStorePassword(getClientKeystorePassword());
     } else {
       sslContextFactory.setKeyStorePassword(new String(conf.getPassword(AppConfig.KEY_STORE_PASSWORD)));
     }

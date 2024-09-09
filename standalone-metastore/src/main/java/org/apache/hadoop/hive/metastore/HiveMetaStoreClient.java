@@ -23,8 +23,8 @@ import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.CAT_NAME;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.getDefaultCatalog;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.parseDbName;
 import static org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.prependCatalogToDbName;
-import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststoreLocation;
-import static org.apache.hive.common.util.MapRKeystoreReader.getServerTruststorePassword;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststoreLocation;
+import static org.apache.hive.common.util.MapRKeystoreReader.getClientTruststorePassword;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -462,7 +462,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
               String trustStorePath = MetastoreConf.getVar(conf, ConfVars.SSL_TRUSTSTORE_PATH).trim();
               if (trustStorePath.isEmpty()) {
                 try {
-                  trustStorePath = getServerTruststoreLocation().trim();
+                  trustStorePath = getClientTruststoreLocation().trim();
                 } catch (Exception e) {
                   throw new IllegalArgumentException(ConfVars.SSL_TRUSTSTORE_PATH
                           + " is not configured and could not be retrieved through MapR utilities due to: ", e);
@@ -475,7 +475,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
               String trustStorePassword =
                   MetastoreConf.getPassword(conf, MetastoreConf.ConfVars.SSL_TRUSTSTORE_PASSWORD);
               if (trustStorePassword.isEmpty()) {
-                trustStorePassword = getServerTruststorePassword();
+                trustStorePassword = getClientTruststorePassword();
               }
 
               // Create an SSL socket and connect

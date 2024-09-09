@@ -34,7 +34,6 @@ public final class MapRKeystoreReader {
    * Reads client keystore location.
    * @return client keystore location as string
    */
-
   public static String getClientKeystoreLocation() {
     try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
       return clientXmlSslConfig.getClientKeystoreLocation();
@@ -45,19 +44,16 @@ public final class MapRKeystoreReader {
    * Reads client truststore location.
    * @return client truststore location as string
    */
-
   public static String getClientTruststoreLocation() {
     try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
       return clientXmlSslConfig.getClientTruststoreLocation();
     }
   }
 
-
   /**
    * Reads client keystore password value.
    * @return client keystore password value as string
    */
-
   public static String getClientKeystorePassword() {
     try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
       return new String(clientXmlSslConfig.getClientKeystorePassword());
@@ -68,7 +64,6 @@ public final class MapRKeystoreReader {
    * Reads client truststore password value.
    * @return client truststore password value as string
    */
-
   public static String getClientTruststorePassword() {
     try (ClientXmlSslConfig clientXmlSslConfig = new ClientXmlSslConfig()) {
       return new String(clientXmlSslConfig.getClientTruststorePassword());

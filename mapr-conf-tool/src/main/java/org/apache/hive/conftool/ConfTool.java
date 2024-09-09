@@ -35,6 +35,8 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,7 +93,6 @@ public final class ConfTool {
   private static final String TRUE = "true";
   private static final String FALSE = "false";
   private static final String AUTH_CONF = "auth-conf";
-  private static final String THRIFT_LOCAL_HOST = "thrift://localhost:9083";
   private static final String METASTORE_SECURE_AUTH_MANAGER =
       "org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider";
   private static final HiveConf.ConfVars[] IMMUTABLE_OPTIONS =
@@ -719,7 +720,14 @@ public final class ConfTool {
    */
 
   public static void initMetaStoreUri(Document doc) {
-    set(doc, METASTOREURIS, THRIFT_LOCAL_HOST);
+    String hostname = "";
+    try {
+      hostname = InetAddress.getLocalHost().getCanonicalHostName();
+    } catch (UnknownHostException uhe) {
+      LOG.warn("FQDN could not be configured. Proceeding with 'localhost' for HMS uri.");
+      hostname = "localhost";
+    }
+    set(doc, METASTOREURIS, "thrift://" + hostname + ":9083");
   }
 
   /**
