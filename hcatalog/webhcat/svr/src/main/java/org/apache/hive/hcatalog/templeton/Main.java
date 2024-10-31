@@ -323,15 +323,20 @@ import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
     cmt.setMethod("TRACE");
     cmt.setPathSpec("/*");
 
+    ConstraintMapping cmtrck = new ConstraintMapping();
+    cmtrck.setConstraint(c);
+    cmtrck.setMethod("TRACK");
+    cmtrck.setPathSpec("/*");
+
     ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
     if (!allowOptionsMethod) {
       ConstraintMapping cmo = new ConstraintMapping();
       cmo.setConstraint(c);
       cmo.setMethod("OPTIONS");
       cmo.setPathSpec("/*");
-      securityHandler.setConstraintMappings(new ConstraintMapping[] {cmt, cmo});
+      securityHandler.setConstraintMappings(new ConstraintMapping[] {cmt, cmtrck, cmo});
     } else {
-      securityHandler.setConstraintMappings(new ConstraintMapping[] {cmt});
+      securityHandler.setConstraintMappings(new ConstraintMapping[] {cmt, cmtrck});
     }
     ctxHandler.setSecurityHandler(securityHandler);
   }
