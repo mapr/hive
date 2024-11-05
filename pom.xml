@@ -1018,11 +1018,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-shaded-guava</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
         <artifactId>hbase-hadoop2-compat</artifactId>
         <version>${hbase.version}</version>
         <exclusions>

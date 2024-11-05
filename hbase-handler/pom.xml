@@ -111,10 +111,6 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-hadoop-compat</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-shaded-guava</artifactId>
-    </dependency>
 
     <!-- test inter-project -->
     <dependency>

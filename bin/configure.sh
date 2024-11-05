@@ -705,6 +705,31 @@ logInfo "Permissions has been configured"
 }
 
 #
+# Tez adds HBase jar to its lib and some jars are conflicting with Hive jars.
+# Please see https://maprdrill.atlassian.net/browse/HIVE-1437
+#
+configure_hbase_jars() {
+  # Jars to configure
+  local HBASE_JAR_NAME_PATTERN="hbase-shaded-guava-*"
+
+  # Clean up first, then configure
+  find "$HIVE_LIB" -type l -name "$HBASE_JAR_NAME_PATTERN" -delete
+
+  if [ -f "${MAPR_HOME}/roles/hbase" ]; then
+    logInfo "HBase is installed, Hive will configure HBase jar(s)."
+
+    # Locate HBase version and corresponding jar
+    local HBASE_VERSION_FILE="${MAPR_HOME}/hbase/hbaseversion"
+    local HBASE_VERSION=$(cat "$HBASE_VERSION_FILE")
+    local HBASE_LIB="${MAPR_HOME}/hbase/hbase-${HBASE_VERSION}/lib"
+    local HBASE_JAR=$(find "$HBASE_LIB" -name "$HBASE_JAR_NAME_PATTERN")
+
+    # Link the file
+    ln -sf "$HBASE_JAR" "$HIVE_LIB"
+  fi
+}
+
+#
 # main
 #
 # typically called from core configure.sh
@@ -800,6 +825,7 @@ find_mapr_user_and_group
 configure_xml_files
 configure_impersonation "$authMethod"
 configure_roles
+configure_hbase_jars
 copy_log4j_for_hadoop_common_classpath
 remove_fresh_install_indicator
 configure_permissions

@@ -65,15 +65,6 @@
       </excludes>
     </dependencySet>
     <dependencySet>
-    <outputDirectory>lib</outputDirectory>
-    <unpack>false</unpack>
-    <useProjectArtifact>false</useProjectArtifact>
-    <useStrictFiltering>true</useStrictFiltering>
-      <includes>
-        <include>org.apache.hbase:hbase-shaded-guava</include>
-      </includes>
-    </dependencySet>
-    <dependencySet>
       <outputDirectory>jdbc/</outputDirectory>
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
