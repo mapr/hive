@@ -56,8 +56,22 @@ set_mode_flag() {
   fi
 
   # Extract the value of the ConnectionURL property
+  # This will exclude the commented out lines
   local connection_url
-  connection_url=$(grep -A1 "<name>javax.jdo.option.ConnectionURL</name>" "$hive_site_xml" | grep -oP '(?<=<value>).*?(?=</value>)')
+  connection_url=$(awk '
+    BEGIN {inside_property = 0; found = 0; connection_url = ""}
+    /<property>/ {inside_property = 1}
+    /<\/property>/ {
+        inside_property = 0
+        found = 0
+    }
+    inside_property && /<name>javax.jdo.option.ConnectionURL<\/name>/ {found = 1}
+    found && /<value>/ && !/<!--/ {
+        gsub(/<\/?value>/, "", $0)
+        connection_url = $0
+    }
+    END {print connection_url}
+  ' "$hive_site_xml")
 
   if [[ -z "$connection_url" ]]; then
     echo "Error: ConnectionURL property not found or empty in $hive_site_xml"
