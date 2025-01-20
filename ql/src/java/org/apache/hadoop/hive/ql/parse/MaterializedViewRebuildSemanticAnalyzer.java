@@ -74,7 +74,7 @@ public class MaterializedViewRebuildSemanticAnalyzer extends CalcitePlanner {
       rewrittenAST = ParseUtils.parse("insert overwrite table " +
           "`" + qualifiedTableName[0] + "`.`" + qualifiedTableName[1] + "` " +
           viewText, ctx, conf);
-      this.ctx.addRewrittenStatementContext(ctx);
+      this.ctx.addSubContext(ctx);
 
       if (!this.ctx.isExplainPlan() && AcidUtils.isTransactionalTable(tab)) {
         // Acquire lock for the given materialized view. Only one rebuild per materialized
