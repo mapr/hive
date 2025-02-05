@@ -226,8 +226,8 @@
     <!-- MAPR dependencies -->
     <storage-api.version>2.6.1.750-eep-940-SNAPSHOT</storage-api.version>
 
-    <tez.version>0.10.2.450-eep-931-SNAPSHOT</tez.version>
-    <hbase.version>1.4.14.700-eep-922-SNAPSHOT</hbase.version>
+    <tez.version>0.10.2.500-eep-940-SNAPSHOT</tez.version>
+    <hbase.version>1.4.14.750-eep-940-SNAPSHOT</hbase.version>
     <hadoop.version>3.4.1.0-eep-940-SNAPSHOT</hadoop.version>
 
     <zookeeper.version>3.8.3.0-mapr-SNAPSHOT</zookeeper.version>
