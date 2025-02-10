@@ -942,6 +942,7 @@ public class MetastoreConf {
     HIVE_METASTORE_AUTHORIZATION_AUTH_READS("hive.security.metastore.authorization.auth.reads",
         "hive.security.metastore.authorization.auth.reads", true,
         "If this is true, metastore authorizer authorizes read actions on database, table"),
+    HIVE_METASTORE_OPA_URL("hive.metastore.opa.url", "hive.metastore.opa.url", "", "URL for OPA server"),
     // The metastore shouldn't care what txn manager Hive is running, but in various tests it
     // needs to set these values.  We should do the work to detangle this.
     HIVE_TXN_MANAGER("hive.txn.manager", "hive.txn.manager",
