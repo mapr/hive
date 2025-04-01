@@ -432,22 +432,6 @@ grant_write_permission_in_logs_dir() {
 }
 
 #
-# Copy log4j api lib to hadoop common libs
-#
-function copy_log4j_for_hadoop_common_classpath() {
-  if has_webhcat ; then
-    LOG4J_API_JAR_PATH=$(ls "${HIVE_LIB}"/log4j-api* | awk '{print $1}')
-    LOG4J_API_JAR_NAME=$(basename "${LOG4J_API_JAR_PATH}")
-    HADOOP_VERSION=$(cat "${MAPR_HOME}"/hadoop/hadoopversion | awk -F'=' '{print $1}')
-    HADOOP_SHARE_COMMON_PATH="${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}/share/hadoop/common/lib/"
-    if [ -f "$LOG4J_API_JAR_PATH" ] && [ ! -L "$HADOOP_SHARE_COMMON_PATH/$LOG4J_API_JAR_NAME" ] ; then
-      ln -s "$LOG4J_API_JAR_PATH" "$HADOOP_SHARE_COMMON_PATH"
-      logInfo "Copy log4j api lib ['$LOG4J_API_JAR_PATH'] to ['$HADOOP_SHARE_COMMON_PATH']"
-    fi
-  fi
-}
-
-#
 # Checks id hive-site.xml is changed
 #
 is_hive_site_changed(){
@@ -729,6 +713,40 @@ configure_hbase_jars() {
   fi
 }
 
+# Some properties are not good to be added by ConfTool as things get complicated while setting their values
+# Below functions are another way to set those properties
+# Please use ConfTool for setting properties wherever possible
+# Below functions are the last resort
+function add_property() {
+  local property_name=$1
+  local property_value=$2
+  local site_file=$3
+  sed -i -e "s|</configuration>|  <property>\n    <name>${property_name}</name>\n    <value>${property_value}</value>\n  </property>\n</configuration>|" ${site_file}
+}
+
+function set_property() {
+  property_name=$1
+  property_value=$2
+  local site_file=$3
+  if ! grep -q $property_name "$site_file" ; then
+    add_property ${property_name} ${property_value} ${site_file}
+  else
+    sed -i '/'${property_name}'/{:a;N;/<\/value>/!ba; s|<value>.*</value>|<value>'${property_value}'</value>|}' ${site_file}
+  fi
+}
+
+function set_webhcat_extrafiles() {
+  local property_name="templeton.hive.extra.files"
+  local site_file=$WEBHCAT_SITE
+
+  local LOG4J_JAR=$(find "$HIVE_LIB"/log4j-api-*)
+  # The property value is comma separated list of jars
+  # For additional files, use property_value=$property_value,$<OTHER_FILE_NAME>
+  local property_value=$LOG4J_JAR
+
+  set_property "${property_name}" "${property_value}" "${site_file}"
+}
+
 #
 # main
 #
@@ -826,7 +844,7 @@ configure_xml_files
 configure_impersonation "$authMethod"
 configure_roles
 configure_hbase_jars
-copy_log4j_for_hadoop_common_classpath
+set_webhcat_extrafiles
 remove_fresh_install_indicator
 configure_permissions
 backup_hive_home
