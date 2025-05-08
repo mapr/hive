@@ -30,6 +30,11 @@ class ThriftHiveMetastoreHandler : virtual public ThriftHiveMetastoreIf {
     printf("setMetaConf\n");
   }
 
+  bool init_schema(const std::string& dbType, const std::string& username, const std::string& password) {
+    // Your implementation goes here
+    printf("init_schema\n");
+  }
+
   void create_catalog(const CreateCatalogRequest& catalog) {
     // Your implementation goes here
     printf("create_catalog\n");

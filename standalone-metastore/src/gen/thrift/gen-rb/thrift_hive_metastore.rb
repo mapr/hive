@@ -43,6 +43,22 @@ module ThriftHiveMetastore
       return
     end
 
+    def init_schema(dbType, username, password)
+      send_init_schema(dbType, username, password)
+      return recv_init_schema()
+    end
+
+    def send_init_schema(dbType, username, password)
+      send_message('init_schema', Init_schema_args, :dbType => dbType, :username => username, :password => password)
+    end
+
+    def recv_init_schema()
+      result = receive_message(Init_schema_result)
+      return result.success unless result.success.nil?
+      raise result.ex unless result.ex.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'init_schema failed: unknown result')
+    end
+
     def create_catalog(catalog)
       send_create_catalog(catalog)
       recv_create_catalog()
@@ -3483,6 +3499,17 @@ module ThriftHiveMetastore
       write_result(result, oprot, 'setMetaConf', seqid)
     end
 
+    def process_init_schema(seqid, iprot, oprot)
+      args = read_args(iprot, Init_schema_args)
+      result = Init_schema_result.new()
+      begin
+        result.success = @handler.init_schema(args.dbType, args.username, args.password)
+      rescue ::MetaException => ex
+        result.ex = ex
+      end
+      write_result(result, oprot, 'init_schema', seqid)
+    end
+
     def process_create_catalog(seqid, iprot, oprot)
       args = read_args(iprot, Create_catalog_args)
       result = Create_catalog_result.new()
@@ -6114,6 +6141,44 @@ module ThriftHiveMetastore
 
     FIELDS = {
       O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Init_schema_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    DBTYPE = 1
+    USERNAME = 2
+    PASSWORD = 3
+
+    FIELDS = {
+      DBTYPE => {:type => ::Thrift::Types::STRING, :name => 'dbType'},
+      USERNAME => {:type => ::Thrift::Types::STRING, :name => 'username'},
+      PASSWORD => {:type => ::Thrift::Types::STRING, :name => 'password'}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Init_schema_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    EX = 1
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::BOOL, :name => 'success'},
+      EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => ::MetaException}
     }
 
     def struct_fields; FIELDS; end

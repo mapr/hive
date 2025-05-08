@@ -107,7 +107,7 @@ public class MetastoreSchemaTool {
   MetastoreSchemaTool(String metastoreHome, Configuration conf, String dbType)
       throws HiveMetaException {
     if (metastoreHome == null || metastoreHome.isEmpty()) {
-      throw new HiveMetaException("No Metastore home directory provided");
+      throw new HiveMetaException("No Metastore or/and Hive home directory provided");
     }
     this.conf = conf;
     this.dbType = dbType;

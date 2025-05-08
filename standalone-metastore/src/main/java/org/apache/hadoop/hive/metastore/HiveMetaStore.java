@@ -80,6 +80,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.tools.MetastoreSchemaTool;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.metastore.events.AddForeignKeyEvent;
@@ -8811,6 +8812,28 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         throw e;
       } finally {
         endFunction("get_runtime_stats", ex == null, ex);
+      }
+    }
+
+    @Override
+    public boolean init_schema(String dbType, String username, String password) throws MetaException {
+      try {
+        // Authorization check
+        this.authorizeProxyPrivilege();
+
+        // Schema options
+        String[] args = new String[] {
+                "-initSchema",
+                "-dbType", dbType,
+                "-userName", username,
+                "-passWord", password
+        };
+
+        // Using schema tool to initialize
+        MetastoreSchemaTool.main(args);
+        return true;
+      } catch (Exception e) {
+        throw new MetaException("init_schema failed: " + e.getMessage());
       }
     }
   }

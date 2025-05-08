@@ -28,6 +28,7 @@ class ThriftHiveMetastoreIf : virtual public  ::facebook::fb303::FacebookService
   virtual ~ThriftHiveMetastoreIf() {}
   virtual void getMetaConf(std::string& _return, const std::string& key) = 0;
   virtual void setMetaConf(const std::string& key, const std::string& value) = 0;
+  virtual bool init_schema(const std::string& dbType, const std::string& username, const std::string& password) = 0;
   virtual void create_catalog(const CreateCatalogRequest& catalog) = 0;
   virtual void alter_catalog(const AlterCatalogRequest& rqst) = 0;
   virtual void get_catalog(GetCatalogResponse& _return, const GetCatalogRequest& catName) = 0;
@@ -267,6 +268,10 @@ class ThriftHiveMetastoreNull : virtual public ThriftHiveMetastoreIf , virtual p
   }
   void setMetaConf(const std::string& /* key */, const std::string& /* value */) override {
     return;
+  }
+  bool init_schema(const std::string& /* dbType */, const std::string& /* username */, const std::string& /* password */) override {
+    bool _return = false;
+    return _return;
   }
   void create_catalog(const CreateCatalogRequest& /* catalog */) override {
     return;
@@ -1135,6 +1140,136 @@ class ThriftHiveMetastore_setMetaConf_presult {
   MetaException o1;
 
   _ThriftHiveMetastore_setMetaConf_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _ThriftHiveMetastore_init_schema_args__isset {
+  _ThriftHiveMetastore_init_schema_args__isset() : dbType(false), username(false), password(false) {}
+  bool dbType :1;
+  bool username :1;
+  bool password :1;
+} _ThriftHiveMetastore_init_schema_args__isset;
+
+class ThriftHiveMetastore_init_schema_args {
+ public:
+
+  ThriftHiveMetastore_init_schema_args(const ThriftHiveMetastore_init_schema_args&);
+  ThriftHiveMetastore_init_schema_args& operator=(const ThriftHiveMetastore_init_schema_args&);
+  ThriftHiveMetastore_init_schema_args() noexcept
+                                       : dbType(),
+                                         username(),
+                                         password() {
+  }
+
+  virtual ~ThriftHiveMetastore_init_schema_args() noexcept;
+  std::string dbType;
+  std::string username;
+  std::string password;
+
+  _ThriftHiveMetastore_init_schema_args__isset __isset;
+
+  void __set_dbType(const std::string& val);
+
+  void __set_username(const std::string& val);
+
+  void __set_password(const std::string& val);
+
+  bool operator == (const ThriftHiveMetastore_init_schema_args & rhs) const
+  {
+    if (!(dbType == rhs.dbType))
+      return false;
+    if (!(username == rhs.username))
+      return false;
+    if (!(password == rhs.password))
+      return false;
+    return true;
+  }
+  bool operator != (const ThriftHiveMetastore_init_schema_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ThriftHiveMetastore_init_schema_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ThriftHiveMetastore_init_schema_pargs {
+ public:
+
+
+  virtual ~ThriftHiveMetastore_init_schema_pargs() noexcept;
+  const std::string* dbType;
+  const std::string* username;
+  const std::string* password;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ThriftHiveMetastore_init_schema_result__isset {
+  _ThriftHiveMetastore_init_schema_result__isset() : success(false), ex(false) {}
+  bool success :1;
+  bool ex :1;
+} _ThriftHiveMetastore_init_schema_result__isset;
+
+class ThriftHiveMetastore_init_schema_result {
+ public:
+
+  ThriftHiveMetastore_init_schema_result(const ThriftHiveMetastore_init_schema_result&);
+  ThriftHiveMetastore_init_schema_result& operator=(const ThriftHiveMetastore_init_schema_result&);
+  ThriftHiveMetastore_init_schema_result() noexcept
+                                         : success(0) {
+  }
+
+  virtual ~ThriftHiveMetastore_init_schema_result() noexcept;
+  bool success;
+  MetaException ex;
+
+  _ThriftHiveMetastore_init_schema_result__isset __isset;
+
+  void __set_success(const bool val);
+
+  void __set_ex(const MetaException& val);
+
+  bool operator == (const ThriftHiveMetastore_init_schema_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(ex == rhs.ex))
+      return false;
+    return true;
+  }
+  bool operator != (const ThriftHiveMetastore_init_schema_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ThriftHiveMetastore_init_schema_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ThriftHiveMetastore_init_schema_presult__isset {
+  _ThriftHiveMetastore_init_schema_presult__isset() : success(false), ex(false) {}
+  bool success :1;
+  bool ex :1;
+} _ThriftHiveMetastore_init_schema_presult__isset;
+
+class ThriftHiveMetastore_init_schema_presult {
+ public:
+
+
+  virtual ~ThriftHiveMetastore_init_schema_presult() noexcept;
+  bool* success;
+  MetaException ex;
+
+  _ThriftHiveMetastore_init_schema_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -26530,6 +26665,9 @@ class ThriftHiveMetastoreClient : virtual public ThriftHiveMetastoreIf, public  
   void setMetaConf(const std::string& key, const std::string& value) override;
   void send_setMetaConf(const std::string& key, const std::string& value);
   void recv_setMetaConf();
+  bool init_schema(const std::string& dbType, const std::string& username, const std::string& password) override;
+  void send_init_schema(const std::string& dbType, const std::string& username, const std::string& password);
+  bool recv_init_schema();
   void create_catalog(const CreateCatalogRequest& catalog) override;
   void send_create_catalog(const CreateCatalogRequest& catalog);
   void recv_create_catalog();
@@ -27157,6 +27295,7 @@ class ThriftHiveMetastoreProcessor : public  ::facebook::fb303::FacebookServiceP
   ProcessMap processMap_;
   void process_getMetaConf(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_setMetaConf(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_init_schema(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_create_catalog(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_alter_catalog(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_get_catalog(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -27368,6 +27507,7 @@ class ThriftHiveMetastoreProcessor : public  ::facebook::fb303::FacebookServiceP
     iface_(iface) {
     processMap_["getMetaConf"] = &ThriftHiveMetastoreProcessor::process_getMetaConf;
     processMap_["setMetaConf"] = &ThriftHiveMetastoreProcessor::process_setMetaConf;
+    processMap_["init_schema"] = &ThriftHiveMetastoreProcessor::process_init_schema;
     processMap_["create_catalog"] = &ThriftHiveMetastoreProcessor::process_create_catalog;
     processMap_["alter_catalog"] = &ThriftHiveMetastoreProcessor::process_alter_catalog;
     processMap_["get_catalog"] = &ThriftHiveMetastoreProcessor::process_get_catalog;
@@ -27623,6 +27763,15 @@ class ThriftHiveMetastoreMultiface : virtual public ThriftHiveMetastoreIf, publi
       ifaces_[i]->setMetaConf(key, value);
     }
     ifaces_[i]->setMetaConf(key, value);
+  }
+
+  bool init_schema(const std::string& dbType, const std::string& username, const std::string& password) override {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->init_schema(dbType, username, password);
+    }
+    return ifaces_[i]->init_schema(dbType, username, password);
   }
 
   void create_catalog(const CreateCatalogRequest& catalog) override {
@@ -29617,6 +29766,9 @@ class ThriftHiveMetastoreConcurrentClient : virtual public ThriftHiveMetastoreIf
   void setMetaConf(const std::string& key, const std::string& value) override;
   int32_t send_setMetaConf(const std::string& key, const std::string& value);
   void recv_setMetaConf(const int32_t seqid);
+  bool init_schema(const std::string& dbType, const std::string& username, const std::string& password) override;
+  int32_t send_init_schema(const std::string& dbType, const std::string& username, const std::string& password);
+  bool recv_init_schema(const int32_t seqid);
   void create_catalog(const CreateCatalogRequest& catalog) override;
   int32_t send_create_catalog(const CreateCatalogRequest& catalog);
   void recv_create_catalog(const int32_t seqid);

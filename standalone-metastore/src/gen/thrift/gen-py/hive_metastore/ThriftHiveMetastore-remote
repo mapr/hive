@@ -26,6 +26,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  string getMetaConf(string key)')
     print('  void setMetaConf(string key, string value)')
+    print('  bool init_schema(string dbType, string username, string password)')
     print('  void create_catalog(CreateCatalogRequest catalog)')
     print('  void alter_catalog(AlterCatalogRequest rqst)')
     print('  GetCatalogResponse get_catalog(GetCatalogRequest catName)')
@@ -334,6 +335,12 @@ elif cmd == 'setMetaConf':
         print('setMetaConf requires 2 args')
         sys.exit(1)
     pp.pprint(client.setMetaConf(args[0], args[1],))
+
+elif cmd == 'init_schema':
+    if len(args) != 3:
+        print('init_schema requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.init_schema(args[0], args[1], args[2],))
 
 elif cmd == 'create_catalog':
     if len(args) != 1:

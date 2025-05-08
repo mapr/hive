@@ -34,6 +34,14 @@ interface ThriftHiveMetastoreIf extends \FacebookServiceIf
      */
     public function setMetaConf($key, $value);
     /**
+     * @param string $dbType
+     * @param string $username
+     * @param string $password
+     * @return bool
+     * @throws \metastore\MetaException
+     */
+    public function init_schema($dbType, $username, $password);
+    /**
      * @param \metastore\CreateCatalogRequest $catalog
      * @throws \metastore\AlreadyExistsException
      * @throws \metastore\InvalidObjectException
