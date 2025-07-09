@@ -445,8 +445,10 @@ public class Hive {
    */
   private Hive(HiveConf c, boolean doRegisterAllFns) throws HiveException {
     conf = c;
-    if (doRegisterAllFns) {
-      registerAllFunctionsOnce();
+    if (conf.getBoolVar(ConfVars.HIVE_METASTORE_LOAD_PERMANENT_FNS)) {
+      if (doRegisterAllFns) {
+        registerAllFunctionsOnce();
+      }
     }
   }
 

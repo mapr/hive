@@ -1527,6 +1527,9 @@ public class HiveConf extends Configuration {
         "The locations of the plugin jars, which can be a comma-separated folders or jars. Jars can be renewed\n"
         + "by executing reload command. And these jars can be "
             + "used as the auxiliary classes like creating a UDF or SerDe."),
+    HIVE_METASTORE_LOAD_PERMANENT_FNS("hive.metastore.load.permanent.fns", true,
+        "It does not register all the functions when false. Might be needed for fast HMS connection." +
+        "This flag is a wrapper around 'hive.llap.allow.permanent.fns'. So, it needs to be true so that LLAP flag can take effect."),
 
     // hive added files and jars
     HIVEADDEDFILES("hive.added.files.path", "", "This an internal parameter."),
