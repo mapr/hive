@@ -319,6 +319,16 @@ public class Hive {
     }
   }
 
+  /**
+   * Ensures that all permanent functions are registered.
+   * This is used in scenarios where function registration is deferred
+   * (e.g., when HIVE_METASTORE_LOAD_PERMANENT_FNS is false).
+   * Safe to call multiple times — registration will only occur once.
+   */
+  public void ensureFunctionsRegistered() throws HiveException {
+    registerAllFunctionsOnce();
+  }
+
   public static Hive get(Configuration c, Class<?> clazz) throws HiveException {
     return get(c instanceof HiveConf ? (HiveConf)c : new HiveConf(c, clazz));
   }

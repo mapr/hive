@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.apache.hadoop.hive.ql.exec.FunctionInfo.FunctionResource;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
@@ -574,6 +575,11 @@ public final class FunctionRegistry {
   }
 
   public static FunctionInfo getFunctionInfo(String functionName) throws SemanticException {
+    try {
+      Hive.get().ensureFunctionsRegistered();
+    } catch (HiveException e) {
+      LOG.warn("Function registration skipped due to error: ", e);
+    }
     FunctionInfo info = getTemporaryFunctionInfo(functionName);
     return info != null ? info : system.getFunctionInfo(functionName);
   }
