@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -149,6 +150,22 @@ public class ClearDanglingScratchDir implements Runnable {
               consoleMessage(message);
             }
           } else{
+            // Grace period check
+            long lastModifiedTime = scratchDir.getModificationTime();
+            long currentTime = System.currentTimeMillis();
+
+            long gracePeriodMs = HiveConf.getTimeVar(conf,
+                    HiveConf.ConfVars.HIVE_SCRATCH_DIR_CLEANUP_GRACE_PERIOD,
+                    TimeUnit.MILLISECONDS);
+
+            if ((currentTime - lastModifiedTime) < gracePeriodMs) {
+              if (verbose) {
+                consoleMessage("Skipping " + scratchDir.getPath() + " because it was modified within the grace period.");
+              }
+              continue;
+            }
+
+            // Passed all checks – mark for deletion
             scratchDirToRemove.add(scratchDir.getPath());
           }
         }
