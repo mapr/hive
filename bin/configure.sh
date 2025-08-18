@@ -688,6 +688,48 @@ grant_write_permission_in_logs_dir
 logInfo "Permissions has been configured"
 }
 
+# Setting Java options for 17 and higher
+set_java_17_hadoop_options(){
+  local LINE="export HADOOP_OPTS=\"\$HADOOP_OPTS -XX:+IgnoreUnrecognizedVMOptions --add-opens java.base/java.time=ALL-UNNAMED\""
+
+  if is_java_at_least_17; then
+    if [[ ! -f $HIVE_ENV ]]; then
+      # File doesn't exist → create it with the line
+      echo "$LINE" > "$HIVE_ENV"
+      logInfo "Created $HIVE_ENV with Java 17+ Hadoop options."
+    else
+      # File exists → check if line is already there
+      if grep -Fxq "$LINE" "$HIVE_ENV"; then
+        logInfo "Option already present in $HIVE_ENV."
+      else
+        echo "$LINE" >> "$HIVE_ENV"
+        logInfo "Added Java 17+ Hadoop options to existing $HIVE_ENV."
+      fi
+    fi
+  else
+    logInfo "Java version is lower than 17 → no changes made for Hadoop Java options."
+  fi
+}
+
+# Helper for Java 17 options
+is_java_at_least_17(){
+  # Extract major version
+  local JAVA_VERSION=$(
+    java -XshowSettings:properties -version 2>&1 \
+    | grep "java.specification.version" \
+    | awk '{print $3}'
+  )
+
+  # Convert to integer (works for "1.8" and "17", "21" etc.)
+  if [[ $JAVA_VERSION == 1.* ]]; then
+    MAJOR=${JAVA_VERSION#1.}
+  else
+    MAJOR=$JAVA_VERSION
+  fi
+
+  (( MAJOR >= 17 ))
+}
+
 #
 # Tez adds HBase jar to its lib and some jars are conflicting with Hive jars.
 # Please see https://maprdrill.atlassian.net/browse/HIVE-1437
@@ -840,6 +882,7 @@ backup_configuration
 remove_old_conf_backups
 backup_auth_method_flag
 find_mapr_user_and_group
+set_java_17_hadoop_options
 configure_xml_files
 configure_impersonation "$authMethod"
 configure_roles

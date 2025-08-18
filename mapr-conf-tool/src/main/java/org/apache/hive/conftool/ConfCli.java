@@ -70,6 +70,9 @@ import static org.apache.hive.conftool.ConfTool.setRestrictedList;
 import static org.apache.hive.conftool.ConfTool.setWebHCatHeaders;
 import static org.apache.hive.conftool.ConfTool.setWebHCatSsl;
 import static org.apache.hive.conftool.ConfTool.setWebUiHeaders;
+import static org.apache.hive.conftool.ConfTool.configureMapJavaOpts;
+import static org.apache.hive.conftool.ConfTool.configureReduceJavaOpts;
+import static org.apache.hive.conftool.ConfTool.configureYarnAppJavaOpts;
 import static org.apache.hive.conftool.ConfToolParseUtil.readDocument;
 import static org.apache.hive.conftool.ConfToolParseUtil.saveToFile;
 import static org.apache.hive.conftool.PropertyProcessor.processArgs;
@@ -138,6 +141,10 @@ public final class ConfCli {
 
     if (isHiveServer2HA()) {
       configureHiveServer2HA(hiveSite);
+    }
+
+    if(isJavaAtLeast17()) {
+      configureJava17Properties(hiveSite);
     }
     initDerbySchema(hiveSite);
     configureHiveServer2MetricAndReport(hiveSite);
@@ -402,6 +409,14 @@ public final class ConfCli {
   }
 
   /**
+   * Checks whether Java version at least 17
+   * @return boolean
+   */
+  private static boolean isJavaAtLeast17() {
+    return Runtime.version().feature() >= 17;
+  }
+
+  /**
    * Get amount of HiveServer2 instances for configuring HA.
    * Value is set in mapR installer.
    *
@@ -474,6 +489,16 @@ public final class ConfCli {
     setFallbackAuthorizer(hiveSite, authMethod);
     setWebHCatSsl(webHCatSite, authMethod);
     setWebHCatHeaders(webHCatSite, authMethod, headers);
+  }
+
+  /**
+   * This configures Java 17 related properties by default
+   * @param hiveSite
+   */
+  private static void configureJava17Properties(Document hiveSite) {
+    configureMapJavaOpts(hiveSite);
+    configureReduceJavaOpts(hiveSite);
+    configureYarnAppJavaOpts(hiveSite);
   }
 
   private static String findHiveConf() {

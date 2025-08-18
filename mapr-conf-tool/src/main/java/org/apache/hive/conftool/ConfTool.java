@@ -103,6 +103,16 @@ public final class ConfTool {
       "org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.FallbackHiveAuthorizerFactory";
   private static final String METASTORE_AUTH_PRE_EVENT_LISTENER =
        "org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener";
+  private static final String MAPREDUCE_MAP_JAVA_OPTS = "mapreduce.map.java.opts";
+  private static final String MAPREDUCE_REDUCE_JAVA_OPTS = "mapreduce.reduce.java.opts";
+  private static final String YARN_APP_JAVA_OPTS = "yarn.app.mapreduce.am.command-opts";
+  private static final String JAVA_ADD_OPTIONS = "--add-opens java.base/java.lang=ALL-UNNAMED " +
+          "--add-opens java.base/java.net=ALL-UNNAMED " +
+          "--add-opens java.base/java.nio=ALL-UNNAMED " +
+          "--add-opens java.base/java.util=ALL-UNNAMED " +
+          "--add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED " +
+          "--add-opens java.base/java.util.regex=ALL-UNNAMED " +
+          "--add-opens java.base/java.time=ALL-UNNAMED";
   private static final String EMPTY = "";
 
   /**
@@ -742,6 +752,24 @@ public final class ConfTool {
       LOG.info("Removed delegation token authentication");
       break;
     }
+  }
+
+  // This adds mapreduce.map.java.opts to hive-site.xml
+  public static void configureMapJavaOpts(Document doc) {
+    LOG.info("Setting Map Java options.");
+    set(doc, MAPREDUCE_MAP_JAVA_OPTS, "-Xmx900m -XX:+UseParallelGC " + JAVA_ADD_OPTIONS);
+  }
+
+  // This adds mapreduce.reduce.java.opts to hive-site.xml
+  public static void configureReduceJavaOpts(Document doc) {
+    LOG.info("Setting Reduce Java options.");
+    set(doc, MAPREDUCE_REDUCE_JAVA_OPTS, "-Xmx2560m -XX:+UseParallelGC " + JAVA_ADD_OPTIONS);
+  }
+
+  // This adds yarn.app.mapreduce.am.command-opts to hive-site.xml
+  public static void configureYarnAppJavaOpts(Document doc) {
+    LOG.info("Setting Yarn Java options.");
+    set(doc, YARN_APP_JAVA_OPTS, "-Xmx2560m -XX:+UseParallelGC " + JAVA_ADD_OPTIONS);
   }
 
   /**
