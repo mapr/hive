@@ -1,8 +1,8 @@
 %undefine __check_files
 
-summary:     Ezmeral
+summary:     HPE DataFabric Ecosystem Pack: Apache Hive
 license:     Hewlett Packard Enterprise, CopyRight
-Vendor:      Hewlett Packard Enterprise, <ezmeral_software_support@hpe.com>
+Vendor:      Hewlett Packard Enterprise
 name:        mapr-hive
 version:     __RELEASE_VERSION__
 release:     1
@@ -13,7 +13,7 @@ requires:    mapr-client
 AutoReqProv: no
 
 %description
-Ezmeral Ecosystem Pack: Hive Package
+Apache Hive distribution included in HPE DataFabric Software Ecosystem Pack
 Tag: __RELEASE_BRANCH__
 Commit: __GIT_COMMIT__
 

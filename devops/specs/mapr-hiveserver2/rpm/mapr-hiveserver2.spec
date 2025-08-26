@@ -1,8 +1,8 @@
 %undefine __check_files
 
-summary:     Ezmeral
+summary:     HPE DataFabric Ecosystem Pack: Apache Hive HiveServer2
 license:     Hewlett Packard Enterprise, CopyRight
-vendor:      Hewlett Packard Enterprise, <ezmeral_software_support@hpe.com>
+Vendor:      Hewlett Packard Enterprise
 name:        mapr-hiveserver2
 version:     __RELEASE_VERSION__
 release:     1
@@ -14,7 +14,7 @@ Requires(preun):    mapr-hive
 AutoReqProv: no
 
 %description
-HPE: HiveServer2 Role Package
+Apache Hive (HiveServer2) distribution included in HPE DataFabric Software Ecosystem Pack
 Tag: __RELEASE_BRANCH__
 Commit: __GIT_COMMIT__
 
