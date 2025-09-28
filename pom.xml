@@ -130,7 +130,7 @@
     <avro.version>1.11.4</avro.version>
     <bonecp.version>0.8.0.RELEASE</bonecp.version>
     <calcite.version>1.16.0</calcite.version>
-    <bouncycastle.version>1.0.2.1</bouncycastle.version>
+    <bouncycastle.version>2.1.2</bouncycastle.version>
     <datanucleus-api-jdo.version>5.2.9</datanucleus-api-jdo.version>
     <datanucleus-core.version>5.2.11</datanucleus-core.version>
     <datanucleus-rdbms.version>5.2.12</datanucleus-rdbms.version>
@@ -687,7 +687,15 @@
          <exclusion>
            <groupId>io.netty</groupId>
            <artifactId>netty-all</artifactId>
-          </exclusion>
+         </exclusion>
+            <exclusion>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bc-fips</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bctls-fips</artifactId>
+            </exclusion>
         </exclusions>
       </dependency>
       <dependency>
