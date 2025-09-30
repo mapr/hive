@@ -49,7 +49,7 @@ main() {
   # setting up maven
   # default hive building command: "mvn clean package -DskipTests -Pdist"
   mvn_goals="clean package"
-  mvn_args="-DskipTests -Pdist"
+  mvn_args="-DskipTests -Pdist -U"
 
   if [ "${DO_DEPLOY}" = "true" ] && [ "${OS}" = "redhat" ]; then
     echo "Deploy is enabled"
