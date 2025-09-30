@@ -97,7 +97,6 @@ public final class JavaUtils {
       LOG.warn("Ignoring attempt to close class loader ({}) -- not instance of UDFClassLoader.",
           loader == null ? "mull" : loader.getClass().getSimpleName());
     }
-  LogFactory.release(loader);
   }
 
   /**
