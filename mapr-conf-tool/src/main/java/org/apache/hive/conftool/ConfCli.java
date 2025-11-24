@@ -281,8 +281,8 @@ public final class ConfCli {
   private static void setAdminOwnerTo(String path) throws IOException {
     String adminUser = MapRSecurityUtil.findAdminUser();
     LOG.info("Setting owner {} for path {}", adminUser, path);
-    UserPrincipal adminGroup = findUserByName(adminUser);
-    changeOwner(path, adminGroup);
+    UserPrincipal owner = findUserByName(adminUser);
+    changeOwner(path, owner);
   }
 
   /**
@@ -293,10 +293,10 @@ public final class ConfCli {
    * @throws IOException
    */
   private static void setAdminGroupTo(String path) throws IOException {
-    String adminUser = MapRSecurityUtil.findAdminUser();
-    LOG.info("Setting group {} for path {}", adminUser, path);
-    GroupPrincipal adminGroup = findGroupByName(adminUser);
-    changeGroup(path, adminGroup);
+    String adminGroup = MapRSecurityUtil.findAdminGroup();
+    LOG.info("Setting group {} for path {}", adminGroup, path);
+    GroupPrincipal group = findGroupByName(adminGroup);
+    changeGroup(path, group);
   }
 
   /**
