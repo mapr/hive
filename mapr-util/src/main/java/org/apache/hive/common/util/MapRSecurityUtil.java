@@ -199,6 +199,23 @@ public final class MapRSecurityUtil {
     return "";
   }
 
+  /**
+   * Find admin group of the cluster
+   *
+   * @return admin group of the cluster
+   */
+  public static String findAdminGroup() {
+    String pathToDaemonConf = findMapRHome() + File.separator + "conf" + File.separator + "daemon.conf";
+    try (InputStream is = new FileInputStream(pathToDaemonConf)) {
+      Properties properties = new Properties();
+      properties.load(is);
+      return properties.getProperty("mapr.daemon.group");
+    } catch (IOException e) {
+      LOG.info(e.toString());
+    }
+    return "";
+  }
+
 
   /**
    * Lazy initialization for MapR Home.
