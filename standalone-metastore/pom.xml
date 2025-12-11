@@ -125,7 +125,7 @@
       </snapshots>
     </repository>
     <repository>
-      <id>mapr.snapshot</id>
+      <id>mapr.snapshots</id>
       <name>MapR Snapshot Maven repository</name>
       <url>${env.MAPR_SNAPSHOTS_REPO}</url>
       <releases>
