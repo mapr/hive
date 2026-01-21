@@ -228,7 +228,7 @@
 
     <tez.version>0.10.2.650-dep-1001-SNAPSHOT</tez.version>
     <hbase.version>1.4.14.900-dep-1001-SNAPSHOT</hbase.version>
-    <hadoop.version>3.4.1.300-dep-1001-SNAPSHOT</hadoop.version>
+    <hadoop.version>3.4.1.400-dep-1010-SNAPSHOT</hadoop.version>
 
     <zookeeper.version>3.8.3.0-mapr-SNAPSHOT</zookeeper.version>
     <mapr.core.version>7.10.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
