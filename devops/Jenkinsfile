@@ -117,7 +117,8 @@ def buildStage(yamlCurrentBuildItem) {
   }
 
   docker.image(IMAGE_NAMES_MAP[yamlCurrentBuildItem.name]).inside (
-  "-e MAPR_MIRROR=${MAPR_MIRROR} \
+  "--network host \
+  -e MAPR_MIRROR=${MAPR_MIRROR} \
   -e MAPR_CENTRAL=${MAPR_CENTRAL} \
   -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
   -e MAPR_MAVEN_REPO=${MAPR_MAVEN_REPO} \
@@ -130,8 +131,6 @@ def buildStage(yamlCurrentBuildItem) {
   -v /root/apt-proxy.conf:/etc/apt/apt.conf.d/proxy.conf:ro \
   -v /root/.gradle/gradle.properties:/root/.gradle/gradle.properties:ro \
   -v /etc/profile.d/proxy.sh:/etc/profile.d/proxy.sh:ro \
-  -e ANT_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
-  -e MAVEN_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
   -v /etc/localtime:/etc/localtime:ro \
   -v /root/.ssh:/root/.ssh:rw \
   -v ${WORKSPACE}/settings.xml:/root/.m2/settings.xml:ro") {
