@@ -99,7 +99,7 @@
 
     <!-- MAPR dependencies -->
     <storage-api.version>2.6.1.710-eep-933-SNAPSHOT</storage-api.version>
-    <hadoop.version>3.3.5.600-eep-932-SNAPSHOT</hadoop.version>
+    <hadoop.version>3.3.5.700-eep-933-SNAPSHOT</hadoop.version>
 
   </properties>
 

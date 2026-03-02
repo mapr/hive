@@ -39,7 +39,7 @@
     <checkstyle.conf.dir>${basedir}/checkstyle/</checkstyle.conf.dir>
 
     <!-- MAPR dependencies -->
-    <hadoop.version>3.3.5.600-eep-932-SNAPSHOT</hadoop.version>
+    <hadoop.version>3.3.5.700-eep-933-SNAPSHOT</hadoop.version>
     <mapr.core.version>7.8.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
   </properties>
 

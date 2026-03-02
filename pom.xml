@@ -228,7 +228,7 @@
 
     <tez.version>0.10.2.450-eep-931</tez.version>
     <hbase.version>1.4.14.700-eep-922</hbase.version>
-    <hadoop.version>3.3.5.600-eep-932-SNAPSHOT</hadoop.version> <!-- TODO: 933 might be available -->
+    <hadoop.version>3.3.5.700-eep-933-SNAPSHOT</hadoop.version> <!-- TODO: 933 might be available -->
 
     <zookeeper.version>3.8.3.0-mapr-SNAPSHOT</zookeeper.version>
     <mapr.core.version>7.8.0.0-mapr-SNAPSHOT</mapr.core.version> <!-- TODO: Remove SNAPSHOT After release -->
