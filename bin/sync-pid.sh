@@ -25,7 +25,7 @@
 #
 
 sync_daemon_pid(){
-  DAEMON_REAL_PID=$(pgrep -lf "$1" | grep -v grep | awk '{print $1}')
+  DAEMON_REAL_PID=$(ps -eo pid,args | grep "$1" | grep -v grep | awk '{print $1}' | head -n1)
   DAEMON_PID_FILE=$2
   DAEMON_PID_FROM_FILE=""
   if [ -f "$DAEMON_PID_FILE" ] ; then
