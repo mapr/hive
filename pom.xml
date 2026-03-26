@@ -226,7 +226,7 @@
     <!-- MAPR dependencies -->
     <storage-api.version>2.6.1.710-eep-933</storage-api.version>
 
-    <tez.version>0.10.2.450-eep-931</tez.version>
+    <tez.version>0.10.2.460-dep-933</tez.version>
     <hbase.version>1.4.14.700-eep-922</hbase.version>
     <hadoop.version>3.3.5.700-eep-933</hadoop.version> <!-- TODO: 933 might be available -->
 
