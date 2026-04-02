@@ -62,6 +62,19 @@ if [ "$1" = "configure" ]; then
     j=$(echo "$i" | sed 's/webhcat.new/webhcat/g')
     cp -Rp "$i" "$j"
   done
+
+  if [ -n "$2" ]; then
+    echo "Overriding log4j configs (upgrade case)"
+
+    if [ -f "__INSTALL_3DIGIT__"/conf.new/conftool-log4j2.properties ]; then
+      cp -f "__INSTALL_3DIGIT__"/conf.new/conftool-log4j2.properties "__INSTALL_3DIGIT__"/conf/
+    fi
+
+    if [ -f "__INSTALL_3DIGIT__"/conf.new/encrypttool-log4j2.properties ]; then
+      cp -f "__INSTALL_3DIGIT__"/conf.new/encrypttool-log4j2.properties "__INSTALL_3DIGIT__"/conf/
+    fi
+  fi
+
   rm -f  __PREFIX__/bin/hive
   ln -sf __INSTALL_3DIGIT__/bin/hive __PREFIX__/bin/hive
   ln -sf __INSTALL_3DIGIT__/bin/hive /usr/bin/hive

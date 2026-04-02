@@ -1,2 +1,11 @@
 #!/bin/sh
 set -e
+
+if [ "$1" = "configure" ]; then
+  if [ -n "$2" ]; then
+    HIVE_HOME="__PREFIX__/hive/hive-__VERSION_3DIGIT__"
+    if [ -f "$HIVE_HOME/hcatalog/etc/webhcat.new/webhcat-log4j2.properties" ]; then
+      cp -f "$HIVE_HOME/hcatalog/etc/webhcat.new/webhcat-log4j2.properties" "$HIVE_HOME/hcatalog/etc/webhcat/"
+    fi
+  fi
+fi

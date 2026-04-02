@@ -66,6 +66,12 @@ fi
 ## If this is an UPGRADE, ...
 ##
 
+if [ "$1" = "2" ]; then
+  HIVE_HOME=__PREFIX__/hive/hive-__VERSION_3DIGIT__
+  rm -f $HIVE_HOME/hcatalog/etc/webhcat/webhcat-log4j2.properties
+  cp -f $HIVE_HOME/hcatalog/etc/webhcat.new/webhcat-log4j2.properties $HIVE_HOME/hcatalog/etc/webhcat/
+fi
+
 %preun
 # In order for the hcat startup/shutdown script to stop the hcat,
 # it needs the user who started the hcat so that it can find the proper
