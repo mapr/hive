@@ -144,6 +144,15 @@ for i in ${diffR}; do
     j=$(echo "$i" | sed 's/webhcat.new/webhcat/g')
     cp -Rp "$i" "$j"
 done
+
+if [ "$1" = "2" ]; then
+  rm -f __INSTALL_3DIGIT__/conf/conftool-log4j2.properties
+  rm -f __INSTALL_3DIGIT__/conf/encrypttool-log4j2.properties
+
+  cp -f __INSTALL_3DIGIT__/conf.new/conftool-log4j2.properties __INSTALL_3DIGIT__/conf/
+  cp -f __INSTALL_3DIGIT__/conf.new/encrypttool-log4j2.properties __INSTALL_3DIGIT__/conf/
+fi
+
 rm -f  __PREFIX__/bin/hive
 ln -sf __INSTALL_3DIGIT__/bin/hive __PREFIX__/bin/hive
 ln -sf __INSTALL_3DIGIT__/bin/hive /usr/bin/hive
