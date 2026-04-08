@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.hive</groupId>
     <artifactId>hive</artifactId>
-    <version>3.1.3.950-dep-1010-SNAPSHOT</version>
+    <version>3.1.3.975-dep-1011-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.hive.maprminicluster</groupId>
