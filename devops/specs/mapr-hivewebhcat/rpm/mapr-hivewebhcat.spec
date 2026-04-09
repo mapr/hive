@@ -67,9 +67,26 @@ fi
 ##
 
 if [ "$1" = "2" ]; then
-  HIVE_HOME=__PREFIX__/hive/hive-__VERSION_3DIGIT__
-  rm -f $HIVE_HOME/hcatalog/etc/webhcat/webhcat-log4j2.properties
-  cp -f $HIVE_HOME/hcatalog/etc/webhcat.new/webhcat-log4j2.properties $HIVE_HOME/hcatalog/etc/webhcat/
+  HIVE_HOME="__PREFIX__/hive/hive-__VERSION_3DIGIT__"
+
+  TARGET_FILE="$HIVE_HOME/hcatalog/etc/webhcat/webhcat-log4j2.properties"
+  TEMPLATE_FILE="$HIVE_HOME/hcatalog/etc/webhcat.new/webhcat-log4j2.properties"
+
+  if [ -f "$TEMPLATE_FILE" ]; then
+    # Extract versions
+    CURRENT_VERSION=$(grep "^# LOG4J_VERSION=" "$TARGET_FILE" 2>/dev/null | cut -d= -f2)
+    NEW_VERSION=$(grep "^# LOG4J_VERSION=" "$TEMPLATE_FILE" | cut -d= -f2)
+
+    if [ -z "$NEW_VERSION" ]; then
+      echo "WARNING: Template missing LOG4J_VERSION, forcing update"
+      cp -f "$TEMPLATE_FILE" "$TARGET_FILE"
+    elif [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
+      echo "Updating webhcat log4j config ($CURRENT_VERSION → $NEW_VERSION)"
+      cp -f "$TEMPLATE_FILE" "$TARGET_FILE"
+    else
+      echo "Keeping existing webhcat log4j config (version $CURRENT_VERSION)"
+    fi
+  fi
 fi
 
 %preun
