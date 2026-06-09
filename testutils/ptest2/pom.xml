@@ -26,7 +26,7 @@ limitations under the License.
   <name>hive-ptest</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <log4j2.version>2.25.3</log4j2.version>
+    <log4j2.version>2.25.4</log4j2.version>
     <spring.framework.version>4.3.30.RELEASE</spring.framework.version>
     <jclouds.version>2.0.0</jclouds.version>
     <checkstyle.conf.dir>${basedir}/../../checkstyle/</checkstyle.conf.dir>

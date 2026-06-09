@@ -196,7 +196,7 @@
       It is needed for overriding logic during the upgrade.
       The ticket: https://maprdrill.atlassian.net/browse/HIVE-1647
     /-->
-    <log4j2.version>2.25.3</log4j2.version>
+    <log4j2.version>2.25.4</log4j2.version>
     <opencsv.version>2.3</opencsv.version>
     <orc.version>1.5.8</orc.version>
     <mockito-core.version>3.3.3</mockito-core.version>
