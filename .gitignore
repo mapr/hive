@@ -32,3 +32,6 @@ itests/hive-blobstore/src/test/resources/blobstore-conf.xml
 patchprocess
 standalone-metastore/src/gen/version
 jdbc/dependency-reduced-pom.xml
+.mvn/
+kafka-handler/
+standalone-metastore/metastore-common/
