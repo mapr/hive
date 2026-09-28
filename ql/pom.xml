@@ -164,6 +164,10 @@
           <groupId>org.mortbay.jetty</groupId>
           <artifactId>servlet-api</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.github.luben</groupId>
+          <artifactId>zstd-jni</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
