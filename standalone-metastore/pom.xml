@@ -391,6 +391,12 @@
       <groupId>sqlline</groupId>
       <artifactId>sqlline</artifactId>
       <version>${sqlline.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jline</groupId>
+          <artifactId>jline-builtins</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>jline</groupId>
