@@ -130,6 +130,12 @@
             <artifactId>hive-metastore</artifactId>
             <version>${hive2.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.ant</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
@@ -139,6 +145,10 @@
             <exclusions>
                 <exclusion>
                     <groupId>org.pentaho</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.ant</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
