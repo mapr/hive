@@ -89,7 +89,7 @@
     <sqlline.version>1.9.0</sqlline.version>
     <jline.version>2.14.6</jline.version>
 
-    <jetty.version>9.4.63.v20260812-df</jetty.version>
+    <jetty.version>9.4.64.v20261006-df</jetty.version>
 
     <!-- Thrift properties -->
     <thrift.home>you-must-set-this-to-run-thrift</thrift.home>
